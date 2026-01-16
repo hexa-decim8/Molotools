@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Billionaire Wealth Tax Calculator</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="calculator-container">
+        <header>
+            <h1>Billionaire Wealth Tax Calculator</h1>
+            <p class="subtitle">Calculate potential revenue from taxing billionaire wealth</p>
+        </header>
+        
+        <div class="calculator-content">
+            <div class="input-section">
+                <label for="taxRate">
+                    <span class="label-text">Tax Rate on Billionaire Wealth:</span>
+                    <span class="rate-display" id="rateDisplay">2%</span>
+                </label>
+                <input 
+                    type="range" 
+                    id="taxRate" 
+                    min="1" 
+                    max="8" 
+                    value="2" 
+                    step="0.1"
+                    class="slider"
+                >
+                <div class="range-labels">
+                    <span>1%</span>
+                    <span>8%</span>
+                </div>
+            </div>
+            
+            <div class="results-section">
+                <div class="revenue-box">
+                    <h2>Annual Tax Revenue</h2>
+                    <p class="tax-explanation" id="taxExplanation">2.0% of $15.3 trillion in billionaire wealth =</p>
+                    <p class="revenue-amount" id="revenueAmount">$306,000,000,000</p>
+                </div>
+                
+                <div class="context-box">
+                    <h3>What Could This Fund?</h3>
+                    <p class="comparison-text" id="comparisonText">Loading...</p>
+                </div>
+                
+                <div class="sources-box">
+                    <h4>Sources</h4>
+                    <ol class="sources-list" id="sourcesList">
+                        <li id="comparisonSource">Loading...</li>
+                        <li>
+                            <a href="https://home.treasury.gov/system/files/131/Distribution-of-Income-by-Source-2024.pdf" target="_blank" rel="noopener noreferrer">
+                                Distribution of Income by Source, U.S. Department of the Treasury (2024)
+                            </a>
+                            - Billionaire wealth estimate of $15.3 trillion
+                        </li>
+                    </ol>
+                </div>
+            </div>
+            
+            <div class="info-box">
+                <p class="info-text">
+                    This calculator is based on the 2024 estimate of <strong>$15.3 trillion</strong> 
+                    in billionaire wealth from U.S. Treasury data. Tax rates range from 1% to 8% 
+                    to show potential annual revenue at different taxation levels.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/calculator.js"></script>
+</body>
+</html>
