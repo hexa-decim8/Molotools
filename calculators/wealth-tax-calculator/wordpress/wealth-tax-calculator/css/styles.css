@@ -1,5 +1,16 @@
 /* Billionaire Wealth Tax Calculator — WordPress plugin styles
-   All rules are scoped to .calculator-container to avoid conflicts with the active theme. */
+   All rules are scoped to .calculator-container to avoid conflicts with the active theme.
+
+   Typefaces:
+     Primary   — Kensington (headings)   — commercial font, load via your theme or Adobe Fonts
+     Secondary — Halyard Text (body)     — commercial font, load via your theme or Adobe Fonts
+   Fallback stacks are provided for both so the layout holds if the fonts are not yet loaded. */
+
+/* ── Font stacks ──────────────────────────────────────────── */
+:root {
+    --wtc-font-primary:   'Kensington', 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+    --wtc-font-secondary: 'Halyard Text', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
 
 .calculator-container {
     max-width: 800px;
@@ -8,7 +19,7 @@
     border-radius: 12px;
     box-shadow: 0 10px 40px rgba(18, 28, 80, 0.18);
     overflow: hidden;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-family: var(--wtc-font-secondary);
     line-height: 1.6;
     color: #131110;
     box-sizing: border-box;
@@ -33,12 +44,17 @@
     margin: 0 0 10px;
     font-weight: 700;
     line-height: 1.3;
+    color: #FBF0E4;
+    font-family: var(--wtc-font-primary);
+    letter-spacing: 0.01em;
 }
 
 .calculator-container .subtitle {
     font-size: 1.1rem;
     opacity: 0.95;
     margin: 0;
+    color: #FBF0E4;
+    font-family: var(--wtc-font-secondary);
 }
 
 /* ── Calculator content ───────────────────────────────────── */
@@ -58,6 +74,7 @@
     margin-bottom: 15px;
     font-size: 1.2rem;
     font-weight: 600;
+    font-family: var(--wtc-font-secondary);
 }
 
 .calculator-container .label-text {
@@ -141,14 +158,18 @@
     font-size: 1.3rem;
     margin: 0 0 15px;
     font-weight: 600;
-    opacity: 0.95;
+    color: #FBF0E4;
+    font-family: var(--wtc-font-primary);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
 }
 
 .calculator-container .tax-explanation {
     font-size: 1.1rem;
     margin: 0 0 10px;
-    opacity: 0.9;
     font-weight: 400;
+    color: #F5CC9B;
+    font-family: var(--wtc-font-secondary);
 }
 
 .calculator-container .revenue-amount {
@@ -158,6 +179,7 @@
     word-break: break-all;
     margin: 0;
     color: #E1B682;
+    font-family: var(--wtc-font-primary);
 }
 
 /* ── Context box ──────────────────────────────────────────── */
@@ -173,6 +195,8 @@
     font-size: 1.2rem;
     margin: 0 0 12px;
     color: #233071;
+    font-family: var(--wtc-font-primary);
+    letter-spacing: 0.01em;
 }
 
 .calculator-container .comparison-text {
@@ -195,7 +219,8 @@
     margin: 0 0 12px;
     color: #233071;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.08em;
+    font-family: var(--wtc-font-primary);
 }
 
 .calculator-container .sources-list {
