@@ -1,0 +1,44 @@
+{
+  "comparisons": [
+    {
+      "minRevenue": 0,
+      "maxRevenue": 200000000000,
+      "description": "This could fund the entire annual budget of the Department of Education",
+      "amount": 79600000000,
+      "sourceText": "U.S. Department of Education FY 2024 Budget",
+      "sourceUrl": "https://www2.ed.gov/about/overview/budget/budget24/index.html"
+    },
+    {
+      "minRevenue": 200000000000,
+      "maxRevenue": 400000000000,
+      "description": "This could fund the entire annual budget of the Department of Veterans Affairs",
+      "amount": 301400000000,
+      "sourceText": "U.S. Department of Veterans Affairs FY 2024 Budget",
+      "sourceUrl": "https://www.va.gov/budget/products.asp"
+    },
+    {
+      "minRevenue": 400000000000,
+      "maxRevenue": 700000000000,
+      "description": "This could cover nearly all federal spending on Medicare",
+      "amount": 848000000000,
+      "sourceText": "CMS Medicare Spending FY 2024",
+      "sourceUrl": "https://www.cms.gov/data-research/statistics-trends-and-reports/national-health-expenditure-data"
+    },
+    {
+      "minRevenue": 700000000000,
+      "maxRevenue": 1000000000000,
+      "description": "This could fund federal Medicaid and CHIP programs for an entire year",
+      "amount": 616000000000,
+      "sourceText": "CMS Medicaid and CHIP FY 2024",
+      "sourceUrl": "https://www.medicaid.gov/medicaid/financial-management/index.html"
+    },
+    {
+      "minRevenue": 1000000000000,
+      "maxRevenue": 999999999999999,
+      "description": "This represents a substantial portion of the entire federal discretionary budget",
+      "amount": 1700000000000,
+      "sourceText": "Congressional Budget Office FY 2024 Discretionary Spending",
+      "sourceUrl": "https://www.cbo.gov/topics/budget"
+    }
+  ]
+}

@@ -30,39 +30,87 @@ This tool is designed for political campaigns and educational websites to help c
 
 ### WordPress Installation
 
-#### Option 1: As a Plugin (Recommended)
+#### Option 1: Deploy via SFTP (Recommended)
 
-1. Copy the entire `calculators/wealth-tax-calculator` directory to your WordPress plugins folder:
-   ```
-   wp-content/plugins/wealth-tax-calculator/
+The deployable plugin lives in the `wordpress/wealth-tax-calculator/` folder.
+Upload that **entire folder** to your server's plugins directory.
+
+**Folder to upload:**
+```
+wp-content/plugins/wealth-tax-calculator/     ← destination on your server
+```
+
+**Plugin source (upload this folder's contents):**
+```
+wordpress/wealth-tax-calculator/
+├── wealth-tax-calculator.php
+├── css/
+│   └── styles.css
+├── js/
+│   └── calculator.js
+└── data/
+    └── comparisons.json
+```
+
+**Step-by-step SFTP deployment:**
+
+1. Connect to your server with an SFTP client (FileZilla, Cyberduck, WinSCP, etc.)  
+   or via command line:
+   ```bash
+   sftp user@your-domain.com
    ```
 
-2. In your WordPress admin panel:
+2. Navigate to the WordPress plugins directory on the server:
+   ```
+   cd /var/www/html/wp-content/plugins
+   # path may differ — common alternatives:
+   # /home/<user>/public_html/wp-content/plugins
+   # /srv/www/wp-content/plugins
+   ```
+
+3. Upload the plugin folder (command-line SFTP example):
+   ```bash
+   put -r /local/path/to/wealth-tax-calculator/wordpress/wealth-tax-calculator
+   ```
+   In FileZilla / Cyberduck, drag-and-drop the `wordpress/wealth-tax-calculator/`
+   folder into `wp-content/plugins/` on the remote panel.
+
+4. Verify the remote structure looks like:
+   ```
+   wp-content/plugins/wealth-tax-calculator/wealth-tax-calculator.php
+   ```
+
+5. In your WordPress admin panel:
    - Go to **Plugins** → **Installed Plugins**
-   - Find "Billionaire Wealth Tax Calculator"
+   - Find **Billionaire Wealth Tax Calculator**
    - Click **Activate**
 
-3. Add the calculator to any page or post using the shortcode:
+6. Add the calculator to any page or post with the shortcode:
    ```
    [billionaire_wealth_tax]
    ```
 
-4. Optional: Customize the shortcode with attributes:
+7. Optional — override title/subtitle via shortcode attributes:
    ```
    [billionaire_wealth_tax title="Tax the Rich" subtitle="See what we could fund"]
    ```
 
-#### Option 2: Direct Embed
+#### Option 2: Upload as a ZIP through WordPress Admin
 
-If you prefer not to install a plugin, you can embed the calculator directly:
+1. Zip the `wordpress/wealth-tax-calculator/` folder into `wealth-tax-calculator.zip`
+2. WordPress admin → **Plugins** → **Add New Plugin** → **Upload Plugin**
+3. Choose the zip file and click **Install Now**, then **Activate**
 
-1. Upload the calculator files to your WordPress site (via FTP or file manager)
-2. Create a custom HTML block in your page/post
-3. Use an iframe to embed the calculator:
+#### Option 3: Direct Embed (no plugin)
+
+If you prefer not to install a plugin, embed the standalone version via iframe:
+
+1. Upload the root calculator files to your WordPress site via SFTP
+2. Create a Custom HTML block in the page/post editor:
    ```html
-   <iframe src="/path/to/calculators/wealth-tax-calculator/index.html" 
-           width="100%" 
-           height="800px" 
+   <iframe src="/path/to/wealth-tax-calculator/index.html"
+           width="100%"
+           height="800px"
            frameborder="0">
    </iframe>
    ```
@@ -129,17 +177,24 @@ The calculator automatically selects relevant spending comparisons based on the 
 
 ```
 calculators/wealth-tax-calculator/
-├── index.html                      # Main web interface
-├── wealth-tax-cli.sh              # Command-line version
-├── README.md                       # This file
+├── index.html                          # Standalone web interface
+├── wealth-tax-cli.sh                  # Command-line version
+├── README.md                           # This file
 ├── css/
-│   └── styles.css                 # Stylesheet for web interface
+│   └── styles.css                     # Stylesheet for standalone interface
 ├── js/
-│   └── calculator.js              # JavaScript calculation logic
+│   └── calculator.js                  # JS for standalone interface
 ├── data/
-│   └── comparisons.json           # Spending comparison data with sources
+│   └── comparisons.json               # Spending comparison data
 └── wordpress/
-    └── wealth-tax-widget.php      # WordPress plugin file
+    └── wealth-tax-calculator/         # ← upload this folder via SFTP
+        ├── wealth-tax-calculator.php  # WordPress plugin entry point
+        ├── css/
+        │   └── styles.css             # WP-safe styles (no body overrides)
+        ├── js/
+        │   └── calculator.js          # WP-aware JS (uses localized data URL)
+        └── data/
+            └── comparisons.json       # Spending comparison data
 ```
 
 ## Customization
@@ -215,6 +270,14 @@ For issues or questions:
 3. Test in your environment before deploying to production
 
 ## Version History
+
+- **1.1.0** (February 2026)
+  - Rebuilt WordPress plugin as a proper self-contained folder (`wordpress/wealth-tax-calculator/`)
+  - Fixed asset URL resolution in the plugin (was broken in 1.0.0)
+  - Fixed JS to use WordPress-localized data URL instead of a relative path
+  - Scoped all CSS to `.calculator-container` to prevent theme conflicts
+  - Prefixed all DOM element IDs with `wtc-` to prevent page collisions
+  - Added SFTP deployment instructions
 
 - **1.0.0** (January 2026)
   - Initial release
