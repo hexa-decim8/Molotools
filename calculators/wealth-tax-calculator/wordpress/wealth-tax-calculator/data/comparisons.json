@@ -4,41 +4,41 @@
       "minRevenue": 0,
       "maxRevenue": 200000000000,
       "description": "This could fund the entire annual budget of the Department of Education",
-      "amount": 79600000000,
-      "sourceText": "U.S. Department of Education FY 2024 Budget",
-      "sourceUrl": "https://www2.ed.gov/about/overview/budget/budget24/index.html"
+      "amount": 83300000000,
+      "sourceText": "U.S. Department of Education Budget, Congress.gov",
+      "sourceUrl": "http://Congress.gov"
     },
     {
       "minRevenue": 200000000000,
       "maxRevenue": 400000000000,
       "description": "This could fund the entire annual budget of the Department of Veterans Affairs",
-      "amount": 301400000000,
-      "sourceText": "U.S. Department of Veterans Affairs FY 2024 Budget",
-      "sourceUrl": "https://www.va.gov/budget/products.asp"
+      "amount": 307310000000,
+      "sourceText": "U.S. Department of Veterans Affairs FY 2024 Budget, Congressional Research Service",
+      "sourceUrl": "https://www.congress.gov/crs-product/R48056?utm_="
     },
     {
       "minRevenue": 400000000000,
       "maxRevenue": 700000000000,
-      "description": "This could cover nearly all federal spending on Medicare",
-      "amount": 848000000000,
-      "sourceText": "CMS Medicare Spending FY 2024",
-      "sourceUrl": "https://www.cms.gov/data-research/statistics-trends-and-reports/national-health-expenditure-data"
+      "description": "This could fund a significant portion of federal Medicare spending",
+      "amount": 1052000000000,
+      "sourceText": "CBO Medicare Spending FY 2024, Congressional Budget Office",
+      "sourceUrl": "https://www.cbo.gov/system/files/2024-06/51302-2024-06-medicare.pdf"
     },
     {
       "minRevenue": 700000000000,
       "maxRevenue": 1000000000000,
       "description": "This could fund federal Medicaid and CHIP programs for an entire year",
-      "amount": 616000000000,
-      "sourceText": "CMS Medicaid and CHIP FY 2024",
-      "sourceUrl": "https://www.medicaid.gov/medicaid/financial-management/index.html"
+      "amount": 985600000000,
+      "sourceText": "Medicaid and CHIP Spending FY 2024, MACPAC (Feb 2026)",
+      "sourceUrl": "https://www.macpac.gov/wp-content/uploads/2026/02/MACSTATS_Feb2026_WEB_508.pdf"
     },
     {
       "minRevenue": 1000000000000,
       "maxRevenue": 999999999999999,
-      "description": "This represents a substantial portion of the entire federal discretionary budget",
-      "amount": 1700000000000,
-      "sourceText": "Congressional Budget Office FY 2024 Discretionary Spending",
-      "sourceUrl": "https://www.cbo.gov/topics/budget"
+      "description": "This approaches the total annual cost of running the U.S. federal government",
+      "amount": 6752000000000,
+      "sourceText": "U.S. Department of the Treasury FY 2024 Federal Spending",
+      "sourceUrl": "https://home.treasury.gov/news/press-releases/jy2657"
     }
   ]
 }

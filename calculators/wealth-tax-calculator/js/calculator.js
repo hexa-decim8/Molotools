@@ -1,7 +1,7 @@
 // Billionaire Wealth Tax Calculator - JavaScript
 
 // Constants
-const BILLIONAIRE_WEALTH = 15.3e12; // $15.3 trillion in dollars
+const BILLIONAIRE_WEALTH = 8.1e12; // $8.1 trillion in dollars
 
 // State
 let comparisonsData = null;
@@ -18,8 +18,14 @@ async function loadComparisons() {
     }
 }
 
-// Format number with commas and dollar sign
+// Format number as human-readable billions/trillions
 function formatCurrency(amount) {
+    if (amount >= 1e12) {
+        return '$' + (amount / 1e12).toFixed(2) + ' Trillion';
+    }
+    if (amount >= 1e9) {
+        return '$' + (amount / 1e9).toFixed(1) + ' Billion';
+    }
     return '$' + amount.toLocaleString('en-US', {
         minimumFractionDigits: 0,
         maximumFractionDigits: 0
@@ -61,7 +67,7 @@ function updateDisplay() {
     
     // Update tax explanation
     document.getElementById('taxExplanation').textContent = 
-        `${taxRate.toFixed(1)}% of $15.3 trillion in billionaire wealth =`;
+        `${taxRate.toFixed(1)}% of $8.1 trillion in billionaire wealth =`;
     
     // Update revenue amount
     document.getElementById('revenueAmount').textContent = formatCurrency(revenue);

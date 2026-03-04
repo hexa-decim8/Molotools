@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Billionaire Wealth Tax Calculator
  * Plugin URI:  https://github.com/hexa-decim8/Molotools
- * Description: Interactive calculator showing potential annual tax revenue from billionaire wealth at rates of 1%–8%, based on the 2024 U.S. Treasury estimate of $15.3 trillion. Embed with [billionaire_wealth_tax].
+ * Description: Interactive calculator showing potential annual tax revenue from billionaire wealth at rates of 1%–8%, based on the 2026 Institute for Policy Studies estimate of $8.1 trillion. Embed with [billionaire_wealth_tax].
  * Version:     1.1.0
  * Author:      Molotools
  * License:     GPL v2 or later
@@ -278,8 +278,8 @@ class Billionaire_Wealth_Tax_Calculator {
                 <div class="results-section">
                     <div class="revenue-box">
                         <h2>Annual Tax Revenue</h2>
-                        <p class="tax-explanation" id="wtc-taxExplanation">2.0% of $15.3 trillion in billionaire wealth =</p>
-                        <p class="revenue-amount" id="wtc-revenueAmount">$306,000,000,000</p>
+                        <p class="tax-explanation" id="wtc-taxExplanation">2.0% of $8.1 trillion in billionaire wealth =</p>
+                        <p class="revenue-amount" id="wtc-revenueAmount">$162.0 Billion</p>
                     </div>
 
                     <div class="context-box">
@@ -292,11 +292,11 @@ class Billionaire_Wealth_Tax_Calculator {
                         <ol class="sources-list" id="wtc-sourcesList">
                             <li id="wtc-comparisonSource">Loading&hellip;</li>
                             <li>
-                                <a href="https://home.treasury.gov/system/files/131/Distribution-of-Income-by-Source-2024.pdf"
+                                <a href="https://www.ips-dc.org/resource-richest-15-u-s-centi-billionaires-see-wealth-surge-33-percent-to-3-2-trillion/"
                                    target="_blank" rel="noopener noreferrer">
-                                    Distribution of Income by Source, U.S. Department of the Treasury (2024)
+                                    Richest 15 U.S. Centi-Billionaires See Wealth Surge 33 Percent to $3.2 Trillion, Institute for Policy Studies (2026)
                                 </a>
-                                &mdash; Billionaire wealth estimate of $15.3 trillion
+                                &mdash; Billionaire wealth estimate of $8.1 trillion
                             </li>
                         </ol>
                     </div>
@@ -304,8 +304,8 @@ class Billionaire_Wealth_Tax_Calculator {
 
                 <div class="info-box">
                     <p class="info-text">
-                        This calculator is based on the 2024 estimate of <strong>$15.3 trillion</strong>
-                        in billionaire wealth from U.S. Treasury data. Tax rates range from 1% to 8%
+                        This calculator is based on the 2026 estimate of <strong>$8.1 trillion</strong>
+                        in billionaire wealth from Institute for Policy Studies data. Tax rates range from 1% to 8%
                         to show potential annual revenue at different taxation levels.
                     </p>
                 </div>

@@ -5,7 +5,7 @@
     'use strict';
 
     // ── Constants ──────────────────────────────────────────────────────────────
-    var BILLIONAIRE_WEALTH = 15.3e12; // $15.3 trillion
+    var BILLIONAIRE_WEALTH = 8.1e12; // $8.1 trillion
 
     // Resolve data directory: WordPress passes the plugin URL via wp_localize_script;
     // fall back to a relative path for standalone / development use.
@@ -20,6 +20,12 @@
     // ── Helpers ────────────────────────────────────────────────────────────────
 
     function formatCurrency(amount) {
+        if (amount >= 1e12) {
+            return '$' + (amount / 1e12).toFixed(2) + ' Trillion';
+        }
+        if (amount >= 1e9) {
+            return '$' + (amount / 1e9).toFixed(1) + ' Billion';
+        }
         return '$' + amount.toLocaleString('en-US', {
             minimumFractionDigits: 0,
             maximumFractionDigits: 0
@@ -65,7 +71,7 @@
 
         el('wtc-rateDisplay').textContent = taxRate.toFixed(1) + '%';
         el('wtc-taxExplanation').textContent =
-            taxRate.toFixed(1) + '% of $15.3 trillion in billionaire wealth =';
+            taxRate.toFixed(1) + '% of $8.1 trillion in billionaire wealth =';
         el('wtc-revenueAmount').textContent = formatCurrency(revenue);
 
         var comparison = findComparison(revenue);
