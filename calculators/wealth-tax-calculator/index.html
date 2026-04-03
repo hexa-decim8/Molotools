@@ -26,15 +26,21 @@
                     <span class="label-text">Tax Rate on Billionaire Wealth:</span>
                     <span class="rate-display" id="rateDisplay">2%</span>
                 </label>
-                <input 
-                    type="range" 
-                    id="taxRate" 
-                    min="1" 
-                    max="8" 
-                    value="2" 
-                    step="1"
-                    class="slider"
-                >
+                <div class="slider-container">
+                    <input 
+                        type="range" 
+                        id="taxRate" 
+                        min="1" 
+                        max="8" 
+                        value="2" 
+                        step="1"
+                        class="slider"
+                    >
+                    <div class="policy-marker" data-value="5">
+                        <div class="policy-marker-line"></div>
+                        <div class="policy-marker-label">Bernie Sanders &<br>Ro Khanna</div>
+                    </div>
+                </div>
                 <div class="range-labels">
                     <span>1%</span>
                     <span>8%</span>

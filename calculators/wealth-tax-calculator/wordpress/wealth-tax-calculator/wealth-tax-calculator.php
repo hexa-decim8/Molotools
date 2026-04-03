@@ -266,16 +266,22 @@ class Billionaire_Wealth_Tax_Calculator {
                         <span class="label-text">Tax Rate on Billionaire Wealth:</span>
                         <span class="rate-display" id="wtc-rateDisplay">2%</span>
                     </label>
-                    <input
-                        type="range"
-                        id="wtc-taxRate"
-                        min="1"
-                        max="8"
-                        value="2"
-                        step="1"
-                        class="slider"
-                        aria-label="Tax rate percentage"
-                    >
+                    <div class="slider-container">
+                        <input
+                            type="range"
+                            id="wtc-taxRate"
+                            min="1"
+                            max="8"
+                            value="2"
+                            step="1"
+                            class="slider"
+                            aria-label="Tax rate percentage"
+                        >
+                        <div class="policy-marker" data-value="5">
+                            <div class="policy-marker-line"></div>
+                            <div class="policy-marker-label">Bernie Sanders &<br>Ro Khanna</div>
+                        </div>
+                    </div>
                     <div class="range-labels">
                         <span>1%</span>
                         <span>8%</span>

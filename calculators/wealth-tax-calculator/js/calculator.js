@@ -15,6 +15,21 @@ const POLICY_LABELS = {
     business: 'Business'
 };
 
+// Policy-specific funding examples
+const POLICY_EXAMPLES = {
+    healthcare: [
+        {
+            minAmount: 45e9,
+            maxAmount: 52e9,
+            description: 'National Institutes of Health fully funded',
+            sourceText: 'NIH Appropriations',
+            sourceUrl: 'https://www.nih.gov/about-nih/nih-almanac/appropriations-section-1'
+        }
+    ],
+    education: [],
+    business: []
+};
+
 // Load comparison data
 async function loadComparisons() {
     try {
@@ -86,6 +101,21 @@ function updatePolicyAllocation() {
                 <span class="allocation-amount">${formatCurrency(amountPerCategory)}</span>
             </div>
         `;
+        
+        // Check for policy-specific examples
+        if (POLICY_EXAMPLES[policy]) {
+            for (let example of POLICY_EXAMPLES[policy]) {
+                if (amountPerCategory >= example.minAmount && amountPerCategory <= example.maxAmount) {
+                    html += `
+                        <div class="allocation-example">
+                            <span class="example-icon">→</span>
+                            <span class="example-text">${example.description}</span>
+                            <a href="${example.sourceUrl}" target="_blank" rel="noopener noreferrer" class="example-source">(source)</a>
+                        </div>
+                    `;
+                }
+            }
+        }
     });
     
     allocationResults.innerHTML = html;

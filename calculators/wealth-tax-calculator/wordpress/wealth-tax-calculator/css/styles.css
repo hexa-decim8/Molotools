@@ -126,6 +126,11 @@
     font-weight: 700;
 }
 
+.calculator-container .slider-container {
+    position: relative;
+    margin-bottom: 10px;
+}
+
 .calculator-container .slider {
     width: 100%;
     height: 8px;
@@ -134,7 +139,6 @@
     outline: none;
     -webkit-appearance: none;
     appearance: none;
-    margin-bottom: 10px;
     cursor: pointer;
 }
 
@@ -176,6 +180,40 @@
     justify-content: space-between;
     font-size: 0.9rem;
     color: #383533;
+}
+
+/* Policy Marker at 5% */
+.calculator-container .policy-marker {
+    position: absolute;
+    left: 57.14%; /* (5-1)/(8-1) = 4/7 ≈ 57.14% */
+    top: -5px;
+    transform: translateX(-50%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.calculator-container .policy-marker-line {
+    width: 2px;
+    height: 18px;
+    background: #e74c3c;
+    margin: 0 auto;
+}
+
+.calculator-container .policy-marker-label {
+    position: absolute;
+    top: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #e74c3c;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-align: center;
+    line-height: 1.3;
+    box-shadow: 0 2px 6px rgba(231, 76, 60, 0.3);
 }
 
 /* ── Policy allocation section ────────────────────────────── */
@@ -282,6 +320,37 @@
     font-size: 1.2rem;
     color: #406BBF;
     font-weight: 700;
+}
+
+.calculator-container .allocation-example {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0 12px 20px;
+    font-size: 0.9rem;
+    color: #555;
+    font-style: italic;
+}
+
+.calculator-container .example-icon {
+    color: #406BBF;
+    font-weight: bold;
+    font-style: normal;
+}
+
+.calculator-container .example-text {
+    flex: 1;
+}
+
+.calculator-container .example-source {
+    color: #406BBF;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-style: normal;
+}
+
+.calculator-container .example-source:hover {
+    text-decoration: underline;
 }
 
 /* ── Results section ──────────────────────────────────────── */

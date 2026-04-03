@@ -2,27 +2,75 @@
   "comparisons": [
     {
       "minRevenue": 0,
-      "maxRevenue": 200000000000,
+      "maxRevenue": 85000000000,
       "description": "This could fund the entire annual budget of the Department of Education",
       "amount": 83300000000,
       "sourceText": "U.S. Department of Education Budget, Congress.gov",
       "sourceUrl": "http://Congress.gov"
     },
     {
+      "minRevenue": 85000000000,
+      "maxRevenue": 100000000000,
+      "description": "This could fund spending for the entire fiscal year 2024 Department of Homeland Security Budget",
+      "amount": 89300000000,
+      "sourceText": "U.S. Department of Homeland Security FY 2024 Budget, U.S. Department of the Treasury",
+      "sourceUrl": "https://home.treasury.gov/news/press-releases/jy2657"
+    },
+    {
+      "minRevenue": 100000000000,
+      "maxRevenue": 200000000000,
+      "description": "This could fund spending for the entire fiscal year 2024 Supplemental Nutrition Assistance Program (SNAP) and the Women, Infants, and Children (WIC) program",
+      "amount": 107000000000,
+      "sourceText": "SNAP and WIC FY 2024 Spending, USDA Economic Research Service",
+      "sourceUrl": "https://ers.usda.gov/sites/default/files/_laserfiche/publications/112884/EIB-291.pdf?utm_source=chatgpt.com"
+    },
+    {
       "minRevenue": 200000000000,
+      "maxRevenue": 260000000000,
+      "description": "This could fund spending for the entire fiscal year 2024 Department of Agriculture budget",
+      "amount": 203400000000,
+      "sourceText": "U.S. Department of Agriculture FY 2024 Budget, U.S. Department of the Treasury",
+      "sourceUrl": "https://home.treasury.gov/news/press-releases/jy2657"
+    },
+    {
+      "minRevenue": 260000000000,
+      "maxRevenue": 300000000000,
+      "description": "This could fund spending for the entire fiscal year 2024 Department of Education budget",
+      "amount": 268400000000,
+      "sourceText": "U.S. Department of Education FY 2024 Budget, U.S. Department of the Treasury",
+      "sourceUrl": "https://home.treasury.gov/news/press-releases/jy2657"
+    },
+    {
+      "minRevenue": 300000000000,
       "maxRevenue": 400000000000,
-      "description": "This could fund the entire annual budget of the Department of Veterans Affairs",
-      "amount": 307310000000,
-      "sourceText": "U.S. Department of Veterans Affairs FY 2024 Budget, Congressional Research Service",
-      "sourceUrl": "https://www.congress.gov/crs-product/R48056?utm_="
+      "description": "This could fund spending for the entire fiscal year 2024 Department of Veterans Affairs",
+      "amount": 325000000000,
+      "sourceText": "U.S. Department of Veterans Affairs FY 2024 Budget, U.S. Department of the Treasury",
+      "sourceUrl": "https://home.treasury.gov/news/press-releases/jy2657"
     },
     {
       "minRevenue": 400000000000,
-      "maxRevenue": 700000000000,
+      "maxRevenue": 600000000000,
       "description": "This could fund a significant portion of federal Medicare spending",
       "amount": 1052000000000,
       "sourceText": "CBO Medicare Spending FY 2024, Congressional Budget Office",
       "sourceUrl": "https://www.cbo.gov/system/files/2024-06/51302-2024-06-medicare.pdf"
+    },
+    {
+      "minRevenue": 600000000000,
+      "maxRevenue": 640000000000,
+      "description": "This could fund spending for the entire fiscal year 2024 budget for the federal portion of Medicaid spending",
+      "amount": 620000000000,
+      "sourceText": "Federal Medicaid Spending FY 2024, MACPAC (Feb 2026)",
+      "sourceUrl": "https://www.macpac.gov/wp-content/uploads/2026/02/MACSTATS_Feb2026_WEB_508.pdf"
+    },
+    {
+      "minRevenue": 640000000000,
+      "maxRevenue": 700000000000,
+      "description": "This could fund spending for the entire fiscal year 2024 budget for the federal portion of Medicaid spending and the entire CHIP program",
+      "amount": 648000000000,
+      "sourceText": "Federal Medicaid and CHIP Spending FY 2024, MACPAC (Feb 2026)",
+      "sourceUrl": "https://www.macpac.gov/wp-content/uploads/2026/02/MACSTATS_Feb2026_WEB_508.pdf"
     },
     {
       "minRevenue": 700000000000,
