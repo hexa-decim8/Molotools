@@ -6,6 +6,7 @@ const BILLIONAIRE_WEALTH = 8.1e12; // $8.1 trillion in dollars
 // State
 let comparisonsData = null;
 let selectedPolicies = new Set();
+let currentMode = 'basic'; // 'basic' or 'advanced'
 
 // Policy category labels
 const POLICY_LABELS = {
@@ -104,6 +105,24 @@ function handlePolicyChange(event) {
     updatePolicyAllocation();
 }
 
+// Handle mode toggle
+function handleModeToggle(event) {
+    const button = event.target;
+    const mode = button.dataset.mode;
+    
+    if (mode === currentMode) return;
+    
+    currentMode = mode;
+    
+    // Update button states
+    document.querySelectorAll('.mode-button').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === mode);
+    });
+    
+    // Future: Show/hide advanced features based on mode
+    // For now, both modes display the same content
+}
+
 // Update the display
 function updateDisplay() {
     const taxRate = parseFloat(document.getElementById('taxRate').value);
@@ -143,6 +162,12 @@ async function init() {
     const policyCheckboxes = document.querySelectorAll('input[name="policy"]');
     policyCheckboxes.forEach(checkbox => {
         checkbox.addEventListener('change', handlePolicyChange);
+    });
+    
+    // Set up event listeners for mode toggle buttons
+    const modeButtons = document.querySelectorAll('.mode-button');
+    modeButtons.forEach(button => {
+        button.addEventListener('click', handleModeToggle);
     });
     
     // Initial display update

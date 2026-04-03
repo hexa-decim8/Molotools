@@ -254,6 +254,13 @@ class Billionaire_Wealth_Tax_Calculator {
             </header>
 
             <div class="calculator-content">
+                <div class="mode-toggle-section">
+                    <div class="mode-toggle">
+                        <button class="mode-button active" data-mode="basic">Basic</button>
+                        <button class="mode-button" data-mode="advanced">Advanced</button>
+                    </div>
+                </div>
+                
                 <div class="input-section">
                     <label for="wtc-taxRate">
                         <span class="label-text">Tax Rate on Billionaire Wealth:</span>

@@ -17,6 +17,7 @@
     // ── State ──────────────────────────────────────────────────────────────────
     var comparisonsData = null;
     var selectedPolicies = [];
+    var currentMode = 'basic'; // 'basic' or 'advanced'
 
     // Policy category labels
     var POLICY_LABELS = {
@@ -106,6 +107,29 @@
         updatePolicyAllocation();
     }
 
+    function handleModeToggle(event) {
+        var button = event.target;
+        var mode = button.getAttribute('data-mode');
+        
+        if (mode === currentMode) return;
+        
+        currentMode = mode;
+        
+        // Update button states
+        var modeButtons = document.querySelectorAll('.mode-button');
+        for (var i = 0; i < modeButtons.length; i++) {
+            var btn = modeButtons[i];
+            if (btn.getAttribute('data-mode') === mode) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        }
+        
+        // Future: Show/hide advanced features based on mode
+        // For now, both modes display the same content
+    }
+
     // ── DOM ────────────────────────────────────────────────────────────────────
 
     function el(id) {
@@ -174,6 +198,12 @@
             var policyCheckboxes = document.querySelectorAll('input[name="wtc-policy"]');
             for (var i = 0; i < policyCheckboxes.length; i++) {
                 policyCheckboxes[i].addEventListener('change', handlePolicyChange);
+            }
+
+            // Set up event listeners for mode toggle buttons
+            var modeButtons = document.querySelectorAll('.mode-button');
+            for (var j = 0; j < modeButtons.length; j++) {
+                modeButtons[j].addEventListener('click', handleModeToggle);
             }
 
             updateDisplay();
