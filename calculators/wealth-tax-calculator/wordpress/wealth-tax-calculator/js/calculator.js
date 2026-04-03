@@ -155,6 +155,16 @@
             }
         }
         
+        // Toggle policy allocation section visibility
+        var policySection = document.querySelector('.policy-allocation-section');
+        if (policySection) {
+            if (mode === 'basic') {
+                policySection.classList.add('hidden');
+            } else {
+                policySection.classList.remove('hidden');
+            }
+        }
+        
         // Update slider step based on mode
         var slider = el('wtc-taxRate');
         if (!slider) return;
@@ -180,6 +190,69 @@
         return document.getElementById(id);
     }
 
+    // Create slider tick marks
+    function createSliderTicks() {
+        var slider = el('wtc-taxRate');
+        if (!slider) return;
+
+        var sliderContainer = slider.parentElement;
+        
+        // Remove existing ticks if any
+        var existingTicks = sliderContainer.querySelector('.slider-ticks');
+        if (existingTicks) {
+            existingTicks.remove();
+        }
+        
+        // Create ticks container
+        var ticksContainer = document.createElement('div');
+        ticksContainer.className = 'slider-ticks';
+        
+        var min = parseFloat(slider.min);
+        var max = parseFloat(slider.max);
+        var range = max - min;
+        
+        // Create a tick for each integer percentage
+        for (var i = min; i <= max; i++) {
+            var tick = document.createElement('div');
+            tick.className = 'slider-tick';
+            tick.dataset.value = i;
+            
+            // Calculate position (percentage along the slider)
+            var position = ((i - min) / range) * 100;
+            tick.style.left = position + '%';
+            
+            ticksContainer.appendChild(tick);
+        }
+        
+        sliderContainer.appendChild(ticksContainer);
+        
+        // Update active tick based on current value
+        updateActiveTick();
+    }
+
+    // Update active tick mark
+    function updateActiveTick() {
+        var slider = el('wtc-taxRate');
+        if (!slider) return;
+
+        var taxRate = Math.round(parseFloat(slider.value));
+        var ticks = document.querySelectorAll('.slider-tick');
+        
+        for (var i = 0; i < ticks.length; i++) {
+            var tick = ticks[i];
+            var tickValue = parseInt(tick.dataset.value);
+            if (tickValue === taxRate) {
+                tick.classList.add('active');
+            } else {
+                tick.classList.remove('active');
+            }
+        }
+            // Create slider tick marks
+            createSliderTicks();
+            
+            
+    }
+
     function updateDisplay() {
         var slider      = el('wtc-taxRate');
         if (!slider) return;
@@ -203,6 +276,9 @@
         link.textContent = comparison.sourceText;
         sourceEl.innerHTML = '';
         sourceEl.appendChild(link);
+
+        // Update active tick mark
+        updateActiveTick();
 
         // Update policy allocation
         updatePolicyAllocation();

@@ -120,6 +120,10 @@ header h1 {
     border: 2px solid #e0e0e0;
 }
 
+.policy-allocation-section.hidden {
+    display: none;
+}
+
 .policy-header {
     font-size: 1.2rem;
     margin-bottom: 10px;
@@ -250,6 +254,7 @@ header h1 {
 .slider-container {
     position: relative;
     margin-bottom: 10px;
+    padding: 10px 0;
 }
 
 .slider {
@@ -259,6 +264,37 @@ header h1 {
     background: #e0e0e0;
     outline: none;
     -webkit-appearance: none;
+    position: relative;
+    z-index: 2;
+}
+
+/* Slider tick marks */
+.slider-ticks {
+    position: absolute;
+    top: 10px;
+    left: 0;
+    width: 100%;
+    height: 8px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.slider-tick {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid #667eea;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    transition: all 0.2s;
+}
+
+.slider-tick.active {
+    background: #667eea;
+    transform: translate(-50%, -50%) scale(1.2);
+    box-shadow: 0 0 8px rgba(102, 126, 234, 0.5);
 }
 
 .slider::-webkit-slider-thumb {

@@ -129,6 +129,7 @@
 .calculator-container .slider-container {
     position: relative;
     margin-bottom: 10px;
+    padding: 10px 0;
 }
 
 .calculator-container .slider {
@@ -140,6 +141,37 @@
     -webkit-appearance: none;
     appearance: none;
     cursor: pointer;
+    position: relative;
+    z-index: 2;
+}
+
+/* Slider tick marks */
+.calculator-container .slider-ticks {
+    position: absolute;
+    top: 10px;
+    left: 0;
+    width: 100%;
+    height: 8px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.calculator-container .slider-tick {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #FBF0E4;
+    border: 2px solid #406BBF;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    transition: all 0.2s;
+}
+
+.calculator-container .slider-tick.active {
+    background: #406BBF;
+    transform: translate(-50%, -50%) scale(1.2);
+    box-shadow: 0 0 8px rgba(64, 107, 191, 0.5);
 }
 
 .calculator-container .slider::-webkit-slider-thumb {
@@ -223,6 +255,10 @@
     background: #FCF4ED;
     border-radius: 8px;
     border: 2px solid #E1B682;
+}
+
+.calculator-container .policy-allocation-section.hidden {
+    display: none;
 }
 
 .calculator-container .policy-header {

@@ -149,6 +149,14 @@ function handleModeToggle(event) {
         btn.classList.toggle('active', btn.dataset.mode === mode);
     });
     
+    // Toggle policy allocation section visibility
+    const policySection = document.querySelector('.policy-allocation-section');
+    if (mode === 'basic') {
+        policySection.classList.add('hidden');
+    } else {
+        policySection.classList.remove('hidden');
+    }
+    
     // Update slider step based on mode
     const slider = document.getElementById('taxRate');
     if (mode === 'basic') {
@@ -164,6 +172,59 @@ function handleModeToggle(event) {
     
     // Update display with new value
     updateDisplay();
+}
+
+// Create slider tick marks
+function createSliderTicks() {
+    const sliderContainer = document.querySelector('.slider-container');
+    const slider = document.getElementById('taxRate');
+    
+    // Remove existing ticks if any
+    const existingTicks = sliderContainer.querySelector('.slider-ticks');
+    if (existingTicks) {
+        existingTicks.remove();
+    }
+    
+    // Create ticks container
+    const ticksContainer = document.createElement('div');
+    ticksContainer.className = 'slider-ticks';
+    
+    const min = parseFloat(slider.min);
+    const max = parseFloat(slider.max);
+    const range = max - min;
+    
+    // Create a tick for each integer percentage
+    for (let i = min; i <= max; i++) {
+        const tick = document.createElement('div');
+        tick.className = 'slider-tick';
+        tick.dataset.value = i;
+        
+        // Calculate position (percentage along the slider)
+        const position = ((i - min) / range) * 100;
+        tick.style.left = `${position}%`;
+        
+        ticksContainer.appendChild(tick);
+    }
+    
+    sliderContainer.appendChild(ticksContainer);
+    
+    // Update active tick based on current value
+    updateActiveTick();
+}
+
+// Update active tick mark
+function updateActiveTick() {
+    const taxRate = Math.round(parseFloat(document.getElementById('taxRate').value));
+    const ticks = document.querySelectorAll('.slider-tick');
+    
+    ticks.forEach(tick => {
+        const tickValue = parseInt(tick.dataset.value);
+        if (tickValue === taxRate) {
+            tick.classList.add('active');
+        } else {
+            tick.classList.remove('active');
+        }
+    });
 }
 
 // Update the display
@@ -188,6 +249,9 @@ function updateDisplay() {
     // Update comparison source
     const comparisonSourceElement = document.getElementById('comparisonSource');
     comparisonSourceElement.innerHTML = `<a href="${comparison.sourceUrl}" target="_blank" rel="noopener noreferrer">${comparison.sourceText}</a>`;
+    
+    // Update active tick mark
+    updateActiveTick();
     
     // Update policy allocation
     updatePolicyAllocation();

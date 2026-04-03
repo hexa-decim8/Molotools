@@ -288,7 +288,7 @@ class Billionaire_Wealth_Tax_Calculator {
                     </div>
                 </div>
                 
-                <div class="policy-allocation-section">
+                <div class="policy-allocation-section hidden">
                     <h3 class="policy-header">Allocate Revenue to Policy Categories</h3>
                     <p class="policy-description">Select one or more categories to see how the tax revenue could be allocated:</p>
                     
