@@ -16,6 +16,14 @@
 
     // ── State ──────────────────────────────────────────────────────────────────
     var comparisonsData = null;
+    var selectedPolicies = [];
+
+    // Policy category labels
+    var POLICY_LABELS = {
+        healthcare: 'Healthcare',
+        education: 'Education',
+        business: 'Business'
+    };
 
     // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -56,6 +64,48 @@
         return comparisonsData[comparisonsData.length - 1];
     }
 
+    function updatePolicyAllocation() {
+        var allocationResults = el('wtc-allocationResults');
+        if (!allocationResults) return;
+
+        var slider = el('wtc-taxRate');
+        if (!slider) return;
+
+        var revenue = calculateRevenue(parseFloat(slider.value));
+
+        if (selectedPolicies.length === 0) {
+            allocationResults.innerHTML = '<p class="allocation-prompt">Select categories above to see allocation</p>';
+            return;
+        }
+
+        var amountPerCategory = revenue / selectedPolicies.length;
+        var html = '';
+
+        for (var i = 0; i < selectedPolicies.length; i++) {
+            var policy = selectedPolicies[i];
+            html += '<div class="allocation-item">' +
+                '<span class="allocation-category">' + POLICY_LABELS[policy] + '</span>' +
+                '<span class="allocation-amount">' + formatCurrency(amountPerCategory) + '</span>' +
+                '</div>';
+        }
+
+        allocationResults.innerHTML = html;
+    }
+
+    function handlePolicyChange(event) {
+        var checkbox = event.target;
+        var policyValue = checkbox.value;
+        var index = selectedPolicies.indexOf(policyValue);
+
+        if (checkbox.checked && index === -1) {
+            selectedPolicies.push(policyValue);
+        } else if (!checkbox.checked && index > -1) {
+            selectedPolicies.splice(index, 1);
+        }
+
+        updatePolicyAllocation();
+    }
+
     // ── DOM ────────────────────────────────────────────────────────────────────
 
     function el(id) {
@@ -85,6 +135,9 @@
         link.textContent = comparison.sourceText;
         sourceEl.innerHTML = '';
         sourceEl.appendChild(link);
+
+        // Update policy allocation
+        updatePolicyAllocation();
     }
 
     // ── Bootstrap ──────────────────────────────────────────────────────────────
@@ -116,6 +169,13 @@
             var slider = el('wtc-taxRate');
             if (!slider) return; // Shortcode not present on this page.
             slider.addEventListener('input', updateDisplay);
+
+            // Set up event listeners for policy checkboxes
+            var policyCheckboxes = document.querySelectorAll('input[name="wtc-policy"]');
+            for (var i = 0; i < policyCheckboxes.length; i++) {
+                policyCheckboxes[i].addEventListener('change', handlePolicyChange);
+            }
+
             updateDisplay();
         });
     }

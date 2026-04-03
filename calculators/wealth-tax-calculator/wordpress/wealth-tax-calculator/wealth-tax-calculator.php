@@ -274,6 +274,32 @@ class Billionaire_Wealth_Tax_Calculator {
                         <span>8%</span>
                     </div>
                 </div>
+                
+                <div class="policy-allocation-section">
+                    <h3 class="policy-header">Allocate Revenue to Policy Categories</h3>
+                    <p class="policy-description">Select one or more categories to see how the tax revenue could be allocated:</p>
+                    
+                    <div class="policy-categories">
+                        <label class="policy-checkbox">
+                            <input type="checkbox" name="wtc-policy" value="healthcare" id="wtc-policyHealthcare">
+                            <span class="checkbox-label">Healthcare</span>
+                        </label>
+                        
+                        <label class="policy-checkbox">
+                            <input type="checkbox" name="wtc-policy" value="education" id="wtc-policyEducation">
+                            <span class="checkbox-label">Education</span>
+                        </label>
+                        
+                        <label class="policy-checkbox">
+                            <input type="checkbox" name="wtc-policy" value="business" id="wtc-policyBusiness">
+                            <span class="checkbox-label">Business</span>
+                        </label>
+                    </div>
+                    
+                    <div class="allocation-results" id="wtc-allocationResults">
+                        <p class="allocation-prompt">Select categories above to see allocation</p>
+                    </div>
+                </div>
 
                 <div class="results-section">
                     <div class="revenue-box">

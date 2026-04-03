@@ -139,6 +139,112 @@
     color: #383533;
 }
 
+/* ── Policy allocation section ────────────────────────────── */
+.calculator-container .policy-allocation-section {
+    margin-bottom: 40px;
+    padding: 25px;
+    background: #FCF4ED;
+    border-radius: 8px;
+    border: 2px solid #E1B682;
+}
+
+.calculator-container .policy-header {
+    font-size: 1.2rem;
+    margin: 0 0 10px;
+    color: #233071;
+    font-weight: 600;
+    font-family: var(--wtc-font-primary);
+}
+
+.calculator-container .policy-description {
+    font-size: 0.95rem;
+    color: #383533;
+    margin: 0 0 20px;
+}
+
+.calculator-container .policy-categories {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.calculator-container .policy-checkbox {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 12px 18px;
+    background: #FBF0E4;
+    border: 2px solid #E1B682;
+    border-radius: 6px;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.calculator-container .policy-checkbox:hover {
+    border-color: #406BBF;
+    background: #F5E8D8;
+}
+
+.calculator-container .policy-checkbox input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    cursor: pointer;
+    accent-color: #406BBF;
+}
+
+.calculator-container .policy-checkbox input[type="checkbox"]:checked + .checkbox-label {
+    color: #233071;
+    font-weight: 600;
+}
+
+.calculator-container .checkbox-label {
+    font-size: 1rem;
+    color: #131110;
+    transition: all 0.2s;
+}
+
+.calculator-container .allocation-results {
+    min-height: 60px;
+    padding: 20px;
+    background: #FBF0E4;
+    border-radius: 6px;
+    border: 1px solid #E1B682;
+}
+
+.calculator-container .allocation-prompt {
+    text-align: center;
+    color: #8B7E74;
+    font-style: italic;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.calculator-container .allocation-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #E8D7C3;
+}
+
+.calculator-container .allocation-item:last-child {
+    border-bottom: none;
+}
+
+.calculator-container .allocation-category {
+    font-size: 1.1rem;
+    color: #131110;
+    font-weight: 500;
+}
+
+.calculator-container .allocation-amount {
+    font-size: 1.2rem;
+    color: #406BBF;
+    font-weight: 700;
+}
+
 /* ── Results section ──────────────────────────────────────── */
 .calculator-container .results-section {
     margin-bottom: 30px;
@@ -291,6 +397,14 @@
 
     .calculator-container .rate-display {
         align-self: flex-end;
+    }
+
+    .calculator-container .policy-categories {
+        flex-direction: column;
+    }
+
+    .calculator-container .policy-checkbox {
+        width: 100%;
     }
 }
 

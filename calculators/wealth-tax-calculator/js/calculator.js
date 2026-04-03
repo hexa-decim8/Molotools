@@ -5,6 +5,14 @@ const BILLIONAIRE_WEALTH = 8.1e12; // $8.1 trillion in dollars
 
 // State
 let comparisonsData = null;
+let selectedPolicies = new Set();
+
+// Policy category labels
+const POLICY_LABELS = {
+    healthcare: 'Healthcare',
+    education: 'Education',
+    business: 'Business'
+};
 
 // Load comparison data
 async function loadComparisons() {
@@ -57,6 +65,45 @@ function findComparison(revenue) {
     return comparisonsData[comparisonsData.length - 1];
 }
 
+// Update policy allocation display
+function updatePolicyAllocation() {
+    const revenue = calculateRevenue(parseFloat(document.getElementById('taxRate').value));
+    const allocationResults = document.getElementById('allocationResults');
+    
+    if (selectedPolicies.size === 0) {
+        allocationResults.innerHTML = '<p class="allocation-prompt">Select categories above to see allocation</p>';
+        return;
+    }
+    
+    const amountPerCategory = revenue / selectedPolicies.size;
+    let html = '';
+    
+    selectedPolicies.forEach(policy => {
+        html += `
+            <div class="allocation-item">
+                <span class="allocation-category">${POLICY_LABELS[policy]}</span>
+                <span class="allocation-amount">${formatCurrency(amountPerCategory)}</span>
+            </div>
+        `;
+    });
+    
+    allocationResults.innerHTML = html;
+}
+
+// Handle policy checkbox change
+function handlePolicyChange(event) {
+    const checkbox = event.target;
+    const policyValue = checkbox.value;
+    
+    if (checkbox.checked) {
+        selectedPolicies.add(policyValue);
+    } else {
+        selectedPolicies.delete(policyValue);
+    }
+    
+    updatePolicyAllocation();
+}
+
 // Update the display
 function updateDisplay() {
     const taxRate = parseFloat(document.getElementById('taxRate').value);
@@ -79,6 +126,9 @@ function updateDisplay() {
     // Update comparison source
     const comparisonSourceElement = document.getElementById('comparisonSource');
     comparisonSourceElement.innerHTML = `<a href="${comparison.sourceUrl}" target="_blank" rel="noopener noreferrer">${comparison.sourceText}</a>`;
+    
+    // Update policy allocation
+    updatePolicyAllocation();
 }
 
 // Initialize the calculator
@@ -88,6 +138,12 @@ async function init() {
     // Set up event listener for slider
     const slider = document.getElementById('taxRate');
     slider.addEventListener('input', updateDisplay);
+    
+    // Set up event listeners for policy checkboxes
+    const policyCheckboxes = document.querySelectorAll('input[name="policy"]');
+    policyCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', handlePolicyChange);
+    });
     
     // Initial display update
     updateDisplay();
