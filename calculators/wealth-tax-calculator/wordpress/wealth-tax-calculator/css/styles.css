@@ -192,7 +192,7 @@
     top: -5px;
     transform: translateX(-50%);
     pointer-events: none;
-    z-index: 1;
+    z-index: 10;
 }
 
 .calculator-container .policy-marker-line {

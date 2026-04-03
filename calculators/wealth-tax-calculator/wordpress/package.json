@@ -1,0 +1,28 @@
+{
+  "name": "wealth-tax-calculator-wordpress",
+  "version": "1.2.0",
+  "description": "Build system for Billionaire Wealth Tax Calculator WordPress plugin",
+  "private": true,
+  "scripts": {
+    "minify:js": "terser wealth-tax-calculator/js/calculator.js -o wealth-tax-calculator/js/calculator.min.js -c -m --comments false",
+    "minify:css": "cleancss -o wealth-tax-calculator/css/styles.min.css wealth-tax-calculator/css/styles.css",
+    "minify": "npm run minify:js && npm run minify:css",
+    "zip": "node build.js",
+    "build": "npm run minify && npm run zip",
+    "version:bump": "node -e \"const fs=require('fs');const v=process.argv[1];const pkg=JSON.parse(fs.readFileSync('package.json'));pkg.version=v;fs.writeFileSync('package.json',JSON.stringify(pkg,null,2));console.log('Updated package.json to',v);\" ",
+    "release": "echo 'Build and create release zip' && npm run build && echo '\n✓ Build complete! Next steps:\n  1. Commit changes\n  2. Create GitHub release with tag v1.2.0\n  3. Upload wealth-tax-calculator.zip as release asset'"
+  },
+  "devDependencies": {
+    "archiver": "^7.0.1",
+    "clean-css-cli": "^5.6.3",
+    "terser": "^5.31.0"
+  },
+  "keywords": [
+    "wordpress",
+    "plugin",
+    "tax",
+    "calculator"
+  ],
+  "author": "Molotools",
+  "license": "GPL-2.0-or-later"
+}

@@ -5,17 +5,15 @@
     'use strict';
 
     // ── Constants ──────────────────────────────────────────────────────────────
-    var BILLIONAIRE_WEALTH = 8.1e12; // $8.1 trillion
-
-    // Resolve data directory: WordPress passes the plugin URL via wp_localize_script;
-    // fall back to a relative path for standalone / development use.
-    var DATA_URL =
-        (typeof wealthTaxConfig !== 'undefined' && wealthTaxConfig.dataUrl)
-            ? wealthTaxConfig.dataUrl
-            : 'data/';
+    // Data is injected from WordPress via wp_localize_script
+    var BILLIONAIRE_WEALTH = (typeof wealthTaxConfig !== 'undefined' && wealthTaxConfig.billionaireWealth) 
+        ? wealthTaxConfig.billionaireWealth 
+        : 15.3e12; // Fallback to $15.3 trillion
 
     // ── State ──────────────────────────────────────────────────────────────────
-    var comparisonsData = null;
+    var comparisonsData = (typeof wealthTaxConfig !== 'undefined' && wealthTaxConfig.comparisons)
+        ? wealthTaxConfig.comparisons
+        : [];
     var selectedPolicies = [];
     var currentMode = 'basic'; // 'basic' or 'advanced'
 
@@ -42,6 +40,29 @@
     };
 
     // ── Helpers ────────────────────────────────────────────────────────────────
+
+    /**
+     * Sanitize URL to prevent XSS attacks
+     * Only allows http, https, and relative URLs
+     */
+    function sanitizeUrl(url) {
+        if (!url) return '#';
+        var urlStr = String(url).trim();
+        // Allow http, https, and relative URLs only
+        if (urlStr.match(/^(https?:\/\/|\/|#)/i)) {
+            return urlStr;
+        }
+        return '#';
+    }
+
+    /**
+     * Escape HTML to prevent XSS
+     */
+    function escapeHtml(text) {
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
 
     function formatCurrency(amount) {
         if (amount >= 1e12) {
@@ -90,36 +111,67 @@
         var revenue = calculateRevenue(parseFloat(slider.value));
 
         if (selectedPolicies.length === 0) {
-            allocationResults.innerHTML = '<p class="allocation-prompt">Select categories above to see allocation</p>';
+            var prompt = document.createElement('p');
+            prompt.className = 'allocation-prompt';
+            prompt.textContent = 'Select categories above to see allocation';
+            allocationResults.innerHTML = '';
+            allocationResults.appendChild(prompt);
             return;
         }
 
         var amountPerCategory = revenue / selectedPolicies.length;
-        var html = '';
+        allocationResults.innerHTML = ''; // Clear existing content
 
         for (var i = 0; i < selectedPolicies.length; i++) {
             var policy = selectedPolicies[i];
-            html += '<div class="allocation-item">' +
-                '<span class="allocation-category">' + POLICY_LABELS[policy] + '</span>' +
-                '<span class="allocation-amount">' + formatCurrency(amountPerCategory) + '</span>' +
-                '</div>';
+            
+            // Create allocation item
+            var item = document.createElement('div');
+            item.className = 'allocation-item';
+            
+            var category = document.createElement('span');
+            category.className = 'allocation-category';
+            category.textContent = POLICY_LABELS[policy] || policy;
+            
+            var amount = document.createElement('span');
+            amount.className = 'allocation-amount';
+            amount.textContent = formatCurrency(amountPerCategory);
+            
+            item.appendChild(category);
+            item.appendChild(amount);
+            allocationResults.appendChild(item);
             
             // Check for policy-specific examples
             if (POLICY_EXAMPLES[policy]) {
                 for (var j = 0; j < POLICY_EXAMPLES[policy].length; j++) {
                     var example = POLICY_EXAMPLES[policy][j];
                     if (amountPerCategory >= example.minAmount && amountPerCategory <= example.maxAmount) {
-                        html += '<div class="allocation-example">' +
-                            '<span class="example-icon">→</span>' +
-                            '<span class="example-text">' + example.description + '</span>' +
-                            '<a href="' + example.sourceUrl + '" target="_blank" rel="noopener noreferrer" class="example-source">(source)</a>' +
-                            '</div>';
+                        var exampleDiv = document.createElement('div');
+                        exampleDiv.className = 'allocation-example';
+                        
+                        var icon = document.createElement('span');
+                        icon.className = 'example-icon';
+                        icon.textContent = '→';
+                        
+                        var text = document.createElement('span');
+                        text.className = 'example-text';
+                        text.textContent = example.description;
+                        
+                        var link = document.createElement('a');
+                        link.href = sanitizeUrl(example.sourceUrl);
+                        link.target = '_blank';
+                        link.rel = 'noopener noreferrer';
+                        link.className = 'example-source';
+                        link.textContent = '(source)';
+                        
+                        exampleDiv.appendChild(icon);
+                        exampleDiv.appendChild(text);
+                        exampleDiv.appendChild(link);
+                        allocationResults.appendChild(exampleDiv);
                     }
                 }
             }
         }
-
-        allocationResults.innerHTML = html;
     }
 
     function handlePolicyChange(event) {
@@ -201,7 +253,7 @@
 
         el('wtc-rateDisplay').textContent = taxRate.toFixed(1) + '%';
         el('wtc-taxExplanation').textContent =
-            taxRate.toFixed(1) + '% of $8.1 trillion in billionaire wealth =';
+            taxRate.toFixed(1) + '% of $15.3 trillion in billionaire wealth =';
         el('wtc-revenueAmount').textContent = formatCurrency(revenue);
 
         var comparison = findComparison(revenue);
@@ -209,7 +261,7 @@
 
         var sourceEl = el('wtc-comparisonSource');
         var link = document.createElement('a');
-        link.href = comparison.sourceUrl;
+        link.href = sanitizeUrl(comparison.sourceUrl);
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
         link.textContent = comparison.sourceText;
@@ -222,48 +274,25 @@
 
     // ── Bootstrap ──────────────────────────────────────────────────────────────
 
-    function loadComparisons(callback) {
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', DATA_URL + 'comparisons.json', true);
-        xhr.responseType = 'json';
-        xhr.onload = function () {
-            if (xhr.status >= 200 && xhr.status < 300) {
-                var data = xhr.response || JSON.parse(xhr.responseText);
-                comparisonsData = data.comparisons || [];
-            } else {
-                console.error('Wealth Tax Calculator: failed to load comparisons.json (status ' + xhr.status + ')');
-                comparisonsData = [];
-            }
-            callback();
-        };
-        xhr.onerror = function () {
-            console.error('Wealth Tax Calculator: network error loading comparisons.json');
-            comparisonsData = [];
-            callback();
-        };
-        xhr.send();
-    }
-
     function init() {
-        loadComparisons(function () {
-            var slider = el('wtc-taxRate');
-            if (!slider) return; // Shortcode not present on this page.
-            slider.addEventListener('input', updateDisplay);
+        var slider = el('wtc-taxRate');
+        if (!slider) return; // Shortcode not present on this page.
+        
+        slider.addEventListener('input', updateDisplay);
 
-            // Set up event listeners for policy checkboxes
-            var policyCheckboxes = document.querySelectorAll('input[name="wtc-policy"]');
-            for (var i = 0; i < policyCheckboxes.length; i++) {
-                policyCheckboxes[i].addEventListener('change', handlePolicyChange);
-            }
+        // Set up event listeners for policy checkboxes
+        var policyCheckboxes = document.querySelectorAll('input[name="wtc-policy"]');
+        for (var i = 0; i < policyCheckboxes.length; i++) {
+            policyCheckboxes[i].addEventListener('change', handlePolicyChange);
+        }
 
-            // Set up event listeners for mode toggle buttons
-            var modeButtons = document.querySelectorAll('.mode-button');
-            for (var j = 0; j < modeButtons.length; j++) {
-                modeButtons[j].addEventListener('click', handleModeToggle);
-            }
+        // Set up event listeners for mode toggle buttons
+        var modeButtons = document.querySelectorAll('.mode-button');
+        for (var j = 0; j < modeButtons.length; j++) {
+            modeButtons[j].addEventListener('click', handleModeToggle);
+        }
 
-            updateDisplay();
-        });
+        updateDisplay();
     }
 
     if (document.readyState === 'loading') {

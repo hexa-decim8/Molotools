@@ -2,12 +2,15 @@
 /**
  * Plugin Name: Billionaire Wealth Tax Calculator
  * Plugin URI:  https://github.com/hexa-decim8/Molotools
- * Description: Interactive calculator showing potential annual tax revenue from billionaire wealth at rates of 1%–8%, based on the 2026 Institute for Policy Studies estimate of $8.1 trillion. Embed with [billionaire_wealth_tax].
- * Version:     1.1.0
+ * Description: Interactive calculator showing potential annual tax revenue from billionaire wealth at rates of 1%–8%, based on the 2026 Institute for Policy Studies estimate of $15.3 trillion. Embed with [billionaire_wealth_tax].
+ * Version:     1.2.0
  * Author:      Molotools
  * License:     GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: wealth-tax-calculator
+ * Requires:    5.0
+ * Requires PHP: 7.4
+ * Tested up to: 6.6
  * GitHub Plugin URI: hexa-decim8/Molotools
  * GitHub Branch:     main
  * Primary Branch:    main
@@ -18,6 +21,15 @@
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
+
+// Plugin version constant - update this when releasing new versions
+define( 'WTC_VERSION', '1.2.0' );
+
+// Plugin constants
+define( 'WTC_BILLIONAIRE_WEALTH', 15.3e12 ); // $15.3 trillion
+define( 'WTC_TAX_RATE_MIN', 1 );
+define( 'WTC_TAX_RATE_MAX', 8 );
+define( 'WTC_CACHE_TTL', 12 * HOUR_IN_SECONDS ); // 12 hours
 
 // ---------------------------------------------------------------------------
 // Self-contained GitHub update checker — no extra plugins required.
@@ -31,7 +43,7 @@ class WTC_GitHub_Updater {
     private $repo;       // GitHub repo: owner/repo
     private $version;    // current installed version
     private $cache_key;
-    private $cache_ttl = 43200; // 12 hours
+    private $cache_ttl = WTC_CACHE_TTL;
 
     public function __construct( $slug, $repo, $version ) {
         $this->slug      = $slug;
@@ -180,18 +192,73 @@ class WTC_GitHub_Updater {
 new WTC_GitHub_Updater(
     'wealth-tax-calculator/wealth-tax-calculator.php',
     'hexa-decim8/Molotools',
-    '1.1.0'
+    WTC_VERSION
 );
+
+/**
+ * Activation hook - runs when plugin is activated
+ */
+function wtc_activate() {
+    // Clear any existing cached data on activation
+    global $wpdb;
+    $wpdb->query(
+        "DELETE FROM {$wpdb->options} 
+        WHERE option_name LIKE '_transient_wtc_comparisons_data_%' 
+        OR option_name LIKE '_transient_timeout_wtc_comparisons_data_%'"
+    );
+    
+    // Initialize any default options here if needed in the future
+    // add_option( 'wtc_plugin_settings', array() );
+}
+register_activation_hook( __FILE__, 'wtc_activate' );
 
 class Billionaire_Wealth_Tax_Calculator {
 
     private $plugin_url;
+    private $plugin_dir;
 
     public function __construct() {
         $this->plugin_url = plugin_dir_url( __FILE__ );
+        $this->plugin_dir = plugin_dir_path( __FILE__ );
 
         add_shortcode( 'billionaire_wealth_tax', array( $this, 'render_calculator' ) );
         add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_assets' ) );
+    }
+
+    /**
+     * Load and cache comparison data from JSON file.
+     *
+     * @return array Comparison data array.
+     */
+    private function get_comparisons_data() {
+        $cache_key = 'wtc_comparisons_data_v' . WTC_VERSION;
+        $cached_data = get_transient( $cache_key );
+
+        if ( false !== $cached_data ) {
+            return $cached_data;
+        }
+
+        $json_file = $this->plugin_dir . 'data/comparisons.json';
+        
+        if ( ! file_exists( $json_file ) ) {
+            error_log( 'Wealth Tax Calculator: comparisons.json not found' );
+            return array();
+        }
+
+        $json_content = file_get_contents( $json_file );
+        $data = json_decode( $json_content, true );
+
+        if ( json_last_error() !== JSON_ERROR_NONE ) {
+            error_log( 'Wealth Tax Calculator: JSON decode error - ' . json_last_error_msg() );
+            return array();
+        }
+
+        $comparisons = isset( $data['comparisons'] ) ? $data['comparisons'] : array();
+
+        // Cache for 30 days
+        set_transient( $cache_key, $comparisons, 30 * DAY_IN_SECONDS );
+
+        return $comparisons;
     }
 
     /**
@@ -204,27 +271,35 @@ class Billionaire_Wealth_Tax_Calculator {
             return;
         }
 
+        // Use minified files in production, source files in debug mode
+        $css_file = ( defined( 'WP_DEBUG' ) && WP_DEBUG ) ? 'styles.css' : 'styles.min.css';
+        $js_file  = ( defined( 'WP_DEBUG' ) && WP_DEBUG ) ? 'calculator.js' : 'calculator.min.js';
+
         wp_enqueue_style(
             'wealth-tax-calculator-styles',
-            $this->plugin_url . 'css/styles.css',
+            $this->plugin_url . 'css/' . $css_file,
             array(),
-            '1.1.0'
+            WTC_VERSION
         );
 
         wp_enqueue_script(
             'wealth-tax-calculator-script',
-            $this->plugin_url . 'js/calculator.js',
+            $this->plugin_url . 'js/' . $js_file,
             array(),
-            '1.1.0',
+            WTC_VERSION,
             true // Load in footer.
         );
 
-        // Pass the data directory URL so the JS can fetch comparisons.json.
+        // Inject configuration and data into JavaScript
         wp_localize_script(
             'wealth-tax-calculator-script',
             'wealthTaxConfig',
             array(
-                'dataUrl' => $this->plugin_url . 'data/',
+                'billionaireWealth' => WTC_BILLIONAIRE_WEALTH,
+                'taxRateMin'        => WTC_TAX_RATE_MIN,
+                'taxRateMax'        => WTC_TAX_RATE_MAX,
+                'comparisons'       => $this->get_comparisons_data(),
+                'version'           => WTC_VERSION,
             )
         );
     }
@@ -290,7 +365,7 @@ class Billionaire_Wealth_Tax_Calculator {
                         </datalist>
                         <div class="policy-marker" data-value="5">
                             <div class="policy-marker-line"></div>
-                            <div class="policy-marker-label">Bernie Sanders &<br>Ro Khanna</div>
+                            <div class="policy-marker-label">Abdul's plan</div>
                         </div>
                     </div>
                     <div class="range-labels">
@@ -328,8 +403,8 @@ class Billionaire_Wealth_Tax_Calculator {
                 <div class="results-section">
                     <div class="revenue-box">
                         <h2>Annual Tax Revenue</h2>
-                        <p class="tax-explanation" id="wtc-taxExplanation">2.0% of $8.1 trillion in billionaire wealth =</p>
-                        <p class="revenue-amount" id="wtc-revenueAmount">$162.0 Billion</p>
+                        <p class="tax-explanation" id="wtc-taxExplanation">2.0% of $15.3 trillion in billionaire wealth =</p>
+                        <p class="revenue-amount" id="wtc-revenueAmount">$306.0 Billion</p>
                     </div>
 
                     <div class="context-box">
@@ -346,7 +421,7 @@ class Billionaire_Wealth_Tax_Calculator {
                                    target="_blank" rel="noopener noreferrer">
                                     Richest 15 U.S. Centi-Billionaires See Wealth Surge 33 Percent to $3.2 Trillion, Institute for Policy Studies (2026)
                                 </a>
-                                &mdash; Billionaire wealth estimate of $8.1 trillion
+                                &mdash; Billionaire wealth estimate of $15.3 trillion
                             </li>
                         </ol>
                     </div>
@@ -354,7 +429,7 @@ class Billionaire_Wealth_Tax_Calculator {
 
                 <div class="info-box">
                     <p class="info-text">
-                        This calculator is based on the 2026 estimate of <strong>$8.1 trillion</strong>
+                        This calculator is based on the 2026 estimate of <strong>$15.3 trillion</strong>
                         in billionaire wealth from Institute for Policy Studies data. Tax rates range from 1% to 8%
                         to show potential annual revenue at different taxation levels.
                     </p>

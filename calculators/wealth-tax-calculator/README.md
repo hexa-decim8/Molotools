@@ -1,6 +1,8 @@
 # Billionaire Wealth Tax Calculator
 
-A calculator that shows potential tax revenue from billionaires at different tax rates (1%-8%), based on the 2024 estimate of **$15.3 trillion** in billionaire wealth from the U.S. Department of the Treasury.
+> **Note on CLI Tool**: The command-line version (`wealth-tax-cli.sh`) is deprecated and no longer maintained. Please use the WordPress plugin for the most up-to-date calculations and features.
+
+A calculator that shows potential tax revenue from billionaires at different tax rates (1%-8%), based on the 2026 estimate of **$15.3 trillion** in billionaire wealth from the Institute for Policy Studies.
 
 ## Overview
 
@@ -18,123 +20,47 @@ This tool is designed for political campaigns and educational websites to help c
 - 📚 **Contextual comparisons** to federal programs (Education, Veterans Affairs, Medicare, etc.)
 - 🔗 **Source citations** with links to official government data
 - 📱 **Mobile-responsive** design for all devices
-- 🔌 **WordPress integration** via shortcode
+- 🔌 **WordPress integration** via shortcode with auto-updates
+- ⚡ **Optimized performance** with server-side data injection and caching
+- 🔒 **Security-hardened** with XSS prevention
 
 ## Installation
 
-### Using the Web Interface
+### WordPress Plugin (Recommended)
 
-1. Open [index.html](index.html) in a web browser
-2. Adjust the tax rate slider to see different revenue scenarios
-3. The calculator works entirely in the browser - no server required
+**This is the primary, actively maintained version of the calculator.**
 
-### WordPress Installation
+See the [WordPress plugin README](wordpress/README.md) for complete installation, configuration, and build instructions.
 
-#### Option 1: Deploy via SFTP (Recommended)
+**Quick start:**
+1. Download or build `wealth-tax-calculator.zip`
+2. Upload via **WordPress Admin → Plugins → Add New → Upload Plugin**
+3. Activate and use shortcode: `[billionaire_wealth_tax]`
 
-The deployable plugin lives in the `wordpress/wealth-tax-calculator/` folder.
-Upload that **entire folder** to your server's plugins directory.
+**For developers:** The WordPress version includes an npm build system for minification and automated releases. See [wordpress/README.md](wordpress/README.md) for details.
 
-**Folder to upload:**
-```
-wp-content/plugins/wealth-tax-calculator/     ← destination on your server
-```
+### Standalone Web Version
 
-**Plugin source (upload this folder's contents):**
-```
-wordpress/wealth-tax-calculator/
-├── wealth-tax-calculator.php
-├── css/
-│   └── styles.css
-├── js/
-│   └── calculator.js
-└── data/
-    └── comparisons.json
-```
+The `index.html` file can be opened directly in a browser or embedded in any website:
 
-**Step-by-step SFTP deployment:**
-
-1. Connect to your server with an SFTP client (FileZilla, Cyberduck, WinSCP, etc.)  
-   or via command line:
-   ```bash
-   sftp user@your-domain.com
-   ```
-
-2. Navigate to the WordPress plugins directory on the server:
-   ```
-   cd /var/www/html/wp-content/plugins
-   # path may differ — common alternatives:
-   # /home/<user>/public_html/wp-content/plugins
-   # /srv/www/wp-content/plugins
-   ```
-
-3. Upload the plugin folder (command-line SFTP example):
-   ```bash
-   put -r /local/path/to/wealth-tax-calculator/wordpress/wealth-tax-calculator
-   ```
-   In FileZilla / Cyberduck, drag-and-drop the `wordpress/wealth-tax-calculator/`
-   folder into `wp-content/plugins/` on the remote panel.
-
-4. Verify the remote structure looks like:
-   ```
-   wp-content/plugins/wealth-tax-calculator/wealth-tax-calculator.php
-   ```
-
-5. In your WordPress admin panel:
-   - Go to **Plugins** → **Installed Plugins**
-   - Find **Billionaire Wealth Tax Calculator**
-   - Click **Activate**
-
-6. Add the calculator to any page or post with the shortcode:
-   ```
-   [billionaire_wealth_tax]
-   ```
-
-7. Optional — override title/subtitle via shortcode attributes:
-   ```
-   [billionaire_wealth_tax title="Tax the Rich" subtitle="See what we could fund"]
-   ```
-
-#### Option 2: Upload as a ZIP through WordPress Admin
-
-1. Zip the `wordpress/wealth-tax-calculator/` folder into `wealth-tax-calculator.zip`
-2. WordPress admin → **Plugins** → **Add New Plugin** → **Upload Plugin**
-3. Choose the zip file and click **Install Now**, then **Activate**
-
-#### Option 3: Direct Embed (no plugin)
-
-If you prefer not to install a plugin, embed the standalone version via iframe:
-
-1. Upload the root calculator files to your WordPress site via SFTP
-2. Create a Custom HTML block in the page/post editor:
+1. Open [index.html](index.html) in a web browser, or
+2. Embed via iframe:
    ```html
-   <iframe src="/path/to/wealth-tax-calculator/index.html"
-           width="100%"
-           height="800px"
-           frameborder="0">
-   </iframe>
+   <iframe src="/path/to/calculator/index.html" width="100%" height="800px" frameborder="0"></iframe>
    ```
 
-### Command-Line Tool
+> **Note**: The standalone version may be out of sync with the WordPress plugin. Use the WordPress version for the most up-to-date data.
 
-To use the bash CLI version for testing:
+### Command-Line Tool (Deprecated)
 
-1. Navigate to the calculator directory:
-   ```bash
-   cd calculators/wealth-tax-calculator
-   ```
+The bash CLI version (`wealth-tax-cli.sh`) is no longer maintained:
 
-2. Make the script executable (if not already):
-   ```bash
-   chmod +x wealth-tax-cli.sh
-   ```
+```bash
+chmod +x wealth-tax-cli.sh
+./wealth-tax-cli.sh
+```
 
-3. Run the calculator:
-   ```bash
-   ./wealth-tax-cli.sh
-   ```
-
-4. Enter tax rates (1-8) to see calculations, or type 'q' to quit
+**Deprecation reason**: The CLI uses outdated billionaire wealth data and hardcoded comparisons. All development focus is on the WordPress plugin.
 
 ## How It Works
 
