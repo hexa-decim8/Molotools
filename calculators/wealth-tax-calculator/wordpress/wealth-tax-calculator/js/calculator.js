@@ -126,8 +126,23 @@
             }
         }
         
-        // Future: Show/hide advanced features based on mode
-        // For now, both modes display the same content
+        // Update slider step based on mode
+        var slider = el('wtc-taxRate');
+        if (!slider) return;
+        
+        if (mode === 'basic') {
+            // Basic mode: lock to round percentages
+            slider.step = '1';
+            // Round current value to nearest integer
+            var currentValue = parseFloat(slider.value);
+            slider.value = Math.round(currentValue);
+        } else {
+            // Advanced mode: allow fine-grained control
+            slider.step = '0.1';
+        }
+        
+        // Update display with new value
+        updateDisplay();
     }
 
     // ── DOM ────────────────────────────────────────────────────────────────────

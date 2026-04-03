@@ -119,8 +119,21 @@ function handleModeToggle(event) {
         btn.classList.toggle('active', btn.dataset.mode === mode);
     });
     
-    // Future: Show/hide advanced features based on mode
-    // For now, both modes display the same content
+    // Update slider step based on mode
+    const slider = document.getElementById('taxRate');
+    if (mode === 'basic') {
+        // Basic mode: lock to round percentages
+        slider.step = '1';
+        // Round current value to nearest integer
+        const currentValue = parseFloat(slider.value);
+        slider.value = Math.round(currentValue);
+    } else {
+        // Advanced mode: allow fine-grained control
+        slider.step = '0.1';
+    }
+    
+    // Update display with new value
+    updateDisplay();
 }
 
 // Update the display

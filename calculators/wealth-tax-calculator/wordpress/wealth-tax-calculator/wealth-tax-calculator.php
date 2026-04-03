@@ -272,7 +272,7 @@ class Billionaire_Wealth_Tax_Calculator {
                         min="1"
                         max="8"
                         value="2"
-                        step="0.1"
+                        step="1"
                         class="slider"
                         aria-label="Tax rate percentage"
                     >
