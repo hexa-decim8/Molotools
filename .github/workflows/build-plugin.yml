@@ -1,0 +1,133 @@
+name: Build WordPress Plugin
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'calculators/wealth-tax-calculator/wordpress/wealth-tax-calculator/**'
+      - '.github/workflows/build-plugin.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    # Skip if commit message contains [skip ci]
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history needed for tag detection
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Detect version tag
+        id: version
+        run: |
+          # Check if current commit has a version tag (v*.*.*)
+          TAG=$(git tag --points-at HEAD | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
+          
+          if [ -n "$TAG" ]; then
+            # Extract version without 'v' prefix
+            VERSION="${TAG#v}"
+            echo "is_tagged=true" >> $GITHUB_OUTPUT
+            echo "tag=$TAG" >> $GITHUB_OUTPUT
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "✅ Tagged commit detected: $TAG (Version: $VERSION)"
+          else
+            # Extract current version from PHP file
+            PHP_FILE="calculators/wealth-tax-calculator/wordpress/wealth-tax-calculator/wealth-tax-calculator.php"
+            VERSION=$(grep "^\s*\*\s*Version:" "$PHP_FILE" | sed 's/.*Version:\s*//' | tr -d '[:space:]')
+            echo "is_tagged=false" >> $GITHUB_OUTPUT
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "ℹ️  Untagged commit - using existing version: $VERSION"
+          fi
+      
+      - name: Update version in PHP file
+        if: steps.version.outputs.is_tagged == 'true'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          PHP_FILE="calculators/wealth-tax-calculator/wordpress/wealth-tax-calculator/wealth-tax-calculator.php"
+          
+          echo "Updating version to $VERSION in $PHP_FILE"
+          
+          # Update plugin header version (line ~6)
+          sed -i "s/^\(\s*\*\s*Version:\s*\).*/\1$VERSION/" "$PHP_FILE"
+          
+          # Update WTC_GitHub_Updater instantiation version (line ~182)
+          sed -i "s/new WTC_GitHub_Updater([^,]*, '[^']*'/new WTC_GitHub_Updater(__FILE__, '$VERSION'/" "$PHP_FILE"
+          
+          echo "✅ Version updated to $VERSION"
+          
+          # Show changes for verification
+          git diff "$PHP_FILE"
+      
+      - name: Build plugin zip
+        run: |
+          cd calculators/wealth-tax-calculator/wordpress
+          
+          # Remove old zip if it exists
+          rm -f wealth-tax-calculator.zip
+          
+          # Create new zip with plugin directory structure
+          zip -r wealth-tax-calculator.zip wealth-tax-calculator/ \
+            -x "*.zip" \
+            -x "*/.git/*" \
+            -x "*/.DS_Store" \
+            -x "*/node_modules/*"
+          
+          echo "✅ Plugin zip created successfully"
+          ls -lh wealth-tax-calculator.zip
+      
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Add the zip file
+          git add calculators/wealth-tax-calculator/wordpress/wealth-tax-calculator.zip
+          
+          # Add PHP file if version was updated
+          if [ "${{ steps.version.outputs.is_tagged }}" == "true" ]; then
+            git add calculators/wealth-tax-calculator/wordpress/wealth-tax-calculator/wealth-tax-calculator.php
+            COMMIT_MSG="🤖 Auto-build: Update to version ${{ steps.version.outputs.version }} and rebuild plugin zip [skip ci]"
+          else
+            COMMIT_MSG="🤖 Auto-build: Rebuild plugin zip (v${{ steps.version.outputs.version }}) [skip ci]"
+          fi
+          
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "ℹ️  No changes to commit"
+          else
+            git commit -m "$COMMIT_MSG"
+            git push
+            echo "✅ Changes committed and pushed"
+          fi
+      
+      - name: Create GitHub Release
+        if: steps.version.outputs.is_tagged == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          VERSION="${{ steps.version.outputs.version }}"
+          
+          # Create release with the zip as an asset
+          gh release create "$TAG" \
+            calculators/wealth-tax-calculator/wordpress/wealth-tax-calculator.zip \
+            --title "Wealth Tax Calculator v$VERSION" \
+            --notes "WordPress plugin version $VERSION
+
+          **Installation:**
+          1. Download \`wealth-tax-calculator.zip\`
+          2. Upload to WordPress Admin → Plugins → Add New → Upload Plugin
+          3. Or extract to \`wp-content/plugins/\` directory via SFTP
+          
+          **Auto-Update:**
+          Sites with the plugin installed will receive update notifications within 12 hours." \
+            || echo "⚠️  Release may already exist"
+          
+          echo "✅ GitHub Release created: $TAG"
