@@ -165,19 +165,21 @@
             }
         }
         
-        // Update slider step based on mode
+        // Update slider step and tick marks based on mode
         var slider = el('wtc-taxRate');
         if (!slider) return;
         
         if (mode === 'basic') {
-            // Basic mode: lock to round percentages
+            // Basic mode: lock to round percentages with tick marks
             slider.step = '1';
+            slider.setAttribute('list', 'wtc-tickmarks');
             // Round current value to nearest integer
             var currentValue = parseFloat(slider.value);
             slider.value = Math.round(currentValue);
         } else {
-            // Advanced mode: allow fine-grained control
+            // Advanced mode: allow fine-grained control without tick marks
             slider.step = '0.1';
+            slider.removeAttribute('list');
         }
         
         // Update display with new value
@@ -188,69 +190,6 @@
 
     function el(id) {
         return document.getElementById(id);
-    }
-
-    // Create slider tick marks
-    function createSliderTicks() {
-        var slider = el('wtc-taxRate');
-        if (!slider) return;
-
-        var sliderContainer = slider.parentElement;
-        
-        // Remove existing ticks if any
-        var existingTicks = sliderContainer.querySelector('.slider-ticks');
-        if (existingTicks) {
-            existingTicks.remove();
-        }
-        
-        // Create ticks container
-        var ticksContainer = document.createElement('div');
-        ticksContainer.className = 'slider-ticks';
-        
-        var min = parseFloat(slider.min);
-        var max = parseFloat(slider.max);
-        var range = max - min;
-        
-        // Create a tick for each integer percentage
-        for (var i = min; i <= max; i++) {
-            var tick = document.createElement('div');
-            tick.className = 'slider-tick';
-            tick.dataset.value = i;
-            
-            // Calculate position (percentage along the slider)
-            var position = ((i - min) / range) * 100;
-            tick.style.left = position + '%';
-            
-            ticksContainer.appendChild(tick);
-        }
-        
-        sliderContainer.appendChild(ticksContainer);
-        
-        // Update active tick based on current value
-        updateActiveTick();
-    }
-
-    // Update active tick mark
-    function updateActiveTick() {
-        var slider = el('wtc-taxRate');
-        if (!slider) return;
-
-        var taxRate = Math.round(parseFloat(slider.value));
-        var ticks = document.querySelectorAll('.slider-tick');
-        
-        for (var i = 0; i < ticks.length; i++) {
-            var tick = ticks[i];
-            var tickValue = parseInt(tick.dataset.value);
-            if (tickValue === taxRate) {
-                tick.classList.add('active');
-            } else {
-                tick.classList.remove('active');
-            }
-        }
-            // Create slider tick marks
-            createSliderTicks();
-            
-            
     }
 
     function updateDisplay() {
@@ -276,9 +215,6 @@
         link.textContent = comparison.sourceText;
         sourceEl.innerHTML = '';
         sourceEl.appendChild(link);
-
-        // Update active tick mark
-        updateActiveTick();
 
         // Update policy allocation
         updatePolicyAllocation();

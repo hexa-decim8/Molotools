@@ -275,8 +275,19 @@ class Billionaire_Wealth_Tax_Calculator {
                             value="2"
                             step="1"
                             class="slider"
+                            list="wtc-tickmarks"
                             aria-label="Tax rate percentage"
                         >
+                        <datalist id="wtc-tickmarks">
+                            <option value="1"></option>
+                            <option value="2"></option>
+                            <option value="3"></option>
+                            <option value="4"></option>
+                            <option value="5"></option>
+                            <option value="6"></option>
+                            <option value="7"></option>
+                            <option value="8"></option>
+                        </datalist>
                         <div class="policy-marker" data-value="5">
                             <div class="policy-marker-line"></div>
                             <div class="policy-marker-label">Bernie Sanders &<br>Ro Khanna</div>
