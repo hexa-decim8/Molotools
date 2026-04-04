@@ -269,6 +269,23 @@
             handle.setAttribute('aria-valuenow', taxRate.toFixed(1));
             handle.setAttribute('aria-valuetext', rateText);
         }
+
+        var isAbdulRate = taxRate === 5;
+        var dragdealer = el('wtc-pr-slider');
+        var planBadge = el('wtc-planBadge');
+
+        if (dragdealer) {
+            if (isAbdulRate) {
+                dragdealer.classList.add('is-rate-5');
+            } else {
+                dragdealer.classList.remove('is-rate-5');
+            }
+        }
+
+        if (planBadge) {
+            planBadge.style.display = isAbdulRate ? '' : 'none';
+            planBadge.setAttribute('aria-hidden', isAbdulRate ? 'false' : 'true');
+        }
     }
 
     function syncDragdealerPosition(taxRate) {
@@ -629,6 +646,16 @@
                 policySection.classList.remove('hidden');
             }
         }
+
+        // Toggle revenue box visibility (hidden in basic, visible in advanced)
+        var revenueBox = document.querySelector('.revenue-box');
+        if (revenueBox) {
+            if (mode === 'basic') {
+                revenueBox.classList.add('hidden');
+            } else {
+                revenueBox.classList.remove('hidden');
+            }
+        }
         
         var currentValue = getCurrentTaxRate();
 
@@ -656,7 +683,7 @@
 
         var revenue = calculateRevenue(taxRate);
 
-        el('wtc-rateDisplay').textContent = taxRate.toFixed(1) + '%';
+        el('wtc-rateDisplay') && (el('wtc-rateDisplay').textContent = taxRate.toFixed(1) + '%');
         syncSliderDecor(taxRate, revenue);
         updateAdvancedRevenueDisplay(taxRate, revenue, 0);
 

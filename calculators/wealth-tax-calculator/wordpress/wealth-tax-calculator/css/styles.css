@@ -316,17 +316,18 @@
     color: #383533;
 }
 
-/* In-flow 5% indicator */
-.calculator-container .plan-indicator-row {
-    position: relative;
-    height: 34px;
-    margin-top: 8px;
+/* Red slider box at 5% */
+.calculator-container .wtc-dragdealer.is-rate-5 {
+    border-color: #e74c3c;
+    box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.25), inset 0 1px 2px rgba(18, 28, 80, 0.1);
 }
 
+/* Abdul's plan badge — lives inside the slider box */
 .calculator-container .plan-indicator {
     position: absolute;
-    left: 57.14%; /* (5-1)/(8-1) = 4/7 ≈ 57.14% */
-    transform: translateX(-50%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     display: inline-flex;
     align-items: center;
     padding: 5px 10px;
@@ -338,6 +339,8 @@
     line-height: 1;
     white-space: nowrap;
     box-shadow: 0 2px 6px rgba(231, 76, 60, 0.3);
+    z-index: 5;
+    pointer-events: none;
 }
 
 /* ── Policy allocation section ────────────────────────────── */
@@ -350,6 +353,10 @@
 }
 
 .calculator-container .policy-allocation-section.hidden {
+    display: none;
+}
+
+.calculator-container .revenue-box.hidden {
     display: none;
 }
 
@@ -772,18 +779,6 @@
 
     .calculator-container .wtc-info-price {
         font-size: 1.12rem;
-    }
-
-    .calculator-container .plan-indicator-row {
-        height: auto;
-        margin-top: 10px;
-        text-align: center;
-    }
-
-    .calculator-container .plan-indicator {
-        position: static;
-        transform: none;
-        max-width: 100%;
     }
 
     .calculator-container .policy-categories {
