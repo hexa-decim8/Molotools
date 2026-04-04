@@ -62,7 +62,7 @@
 .calculator-container .calculator-content {
     padding: 40px 36px;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 42px;
     align-items: start;
 }
@@ -721,11 +721,6 @@
 
 /* ── Responsive ───────────────────────────────────────────── */
 @media (max-width: 768px) {
-    .calculator-container .calculator-content {
-        grid-template-columns: 1fr;
-        gap: 30px;
-    }
-
     .calculator-container .info-box {
         margin-top: 0;
     }
