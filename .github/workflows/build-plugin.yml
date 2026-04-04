@@ -1,26 +1,29 @@
-name: Build WordPress Plugin Release
+name: Build And Commit WordPress Plugin Zip
 
 on:
   push:
     branches:
       - main
-    tags:
-      - 'v*.*.*'
+    paths:
+      - .github/workflows/build-plugin.yml
+      - calculators/wealth-tax-calculator/wordpress/wealth-tax-calculator/**
   workflow_dispatch:
     inputs:
-      tag:
-        description: Version tag to build and publish, for example v1.2.0
+      version:
+        description: 'Optional version override in X.Y.Z format (example: 1.2.1)'
         required: false
+        type: string
 
 permissions:
   contents: write
 
 jobs:
-  release:
+  build-tag-and-release:
     runs-on: ubuntu-latest
 
     env:
       PLUGIN_DIR: calculators/wealth-tax-calculator/wordpress
+      PLUGIN_SRC_DIR: calculators/wealth-tax-calculator/wordpress/wealth-tax-calculator
       PHP_FILE: calculators/wealth-tax-calculator/wordpress/wealth-tax-calculator/wealth-tax-calculator.php
       CHANGELOG_FILE: calculators/wealth-tax-calculator/wordpress/wealth-tax-calculator/CHANGELOG.md
       ZIP_FILE: calculators/wealth-tax-calculator/wordpress/wealth-tax-calculator.zip
@@ -31,97 +34,43 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Create CI build tag for commit
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          SHORT_SHA="${GITHUB_SHA::7}"
-          CI_TAG="ci-build-${SHORT_SHA}"
-
-          git fetch --tags --force
-
-          if git rev-parse "$CI_TAG" >/dev/null 2>&1; then
-            echo "CI tag $CI_TAG already exists; continuing."
-            exit 0
-          fi
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          git tag "$CI_TAG"
-          git push origin "$CI_TAG"
-
-      - name: Resolve release version
+      - name: Resolve release version and tag
         id: version
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            TAG="${{ inputs.tag }}"
-            if [ -z "$TAG" ]; then
-              TAG=$(git tag --points-at "$GITHUB_SHA" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 || true)
-            fi
+          VERSION="${{ inputs.version }}"
 
-            if [ -z "$TAG" ]; then
-              VERSION=$(grep '^ \* Version:' "${{ env.PHP_FILE }}" | sed 's/^ \* Version:[[:space:]]*//')
-              TAG="v${VERSION}"
-            fi
-          elif [ "${GITHUB_REF#refs/tags/}" != "$GITHUB_REF" ]; then
-            TAG="${GITHUB_REF#refs/tags/}"
-          else
+          if [ -z "$VERSION" ]; then
             VERSION=$(grep '^ \* Version:' "${{ env.PHP_FILE }}" | sed 's/^ \* Version:[[:space:]]*//')
-            TAG="v${VERSION}"
           fi
 
-          if ! printf '%s' "$TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
-            echo "Invalid release tag: $TAG"
+          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Invalid version: $VERSION"
+            echo "Expected X.Y.Z semver format"
             exit 1
           fi
 
-          VERSION="${TAG#v}"
+          TAG="v$VERSION"
 
-          SHOULD_RELEASE="true"
-
-          if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            git fetch --tags --force
-
-            if git rev-parse "$TAG" >/dev/null 2>&1; then
-              TAG_COMMIT=$(git rev-list -n 1 "$TAG")
-
-              if [ "$TAG_COMMIT" != "$GITHUB_SHA" ]; then
-                echo "Tag $TAG already exists on commit $TAG_COMMIT."
-                echo "Skipping release creation for this commit and running build-only mode."
-                SHOULD_RELEASE="false"
-              fi
-            else
-              git config user.name "github-actions[bot]"
-              git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-              git tag -a "$TAG" -m "Release $TAG"
-              git push origin "$TAG"
-            fi
-          fi
-
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "should_release=$SHOULD_RELEASE" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
       - name: Validate version consistency
-        if: steps.version.outputs.should_release == 'true'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           HEADER_VERSION=$(grep '^ \* Version:' "${{ env.PHP_FILE }}" | sed 's/^ \* Version:[[:space:]]*//')
           CONSTANT_VERSION=$(grep "define( 'WTC_VERSION'" "${{ env.PHP_FILE }}" | sed -E "s/.*'WTC_VERSION',[[:space:]]*'([^']+)'.*/\1/")
 
           if [ "$HEADER_VERSION" != "$VERSION" ]; then
-            echo "Plugin header version $HEADER_VERSION does not match tag $VERSION"
+            echo "Plugin header version $HEADER_VERSION does not match target version $VERSION"
             exit 1
           fi
 
           if [ "$CONSTANT_VERSION" != "$VERSION" ]; then
-            echo "WTC_VERSION $CONSTANT_VERSION does not match tag $VERSION"
+            echo "WTC_VERSION $CONSTANT_VERSION does not match target version $VERSION"
             exit 1
           fi
 
       - name: Validate changelog entry
-        if: steps.version.outputs.should_release == 'true'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
 
@@ -134,10 +83,10 @@ jobs:
         run: |
           cd "${{ env.PLUGIN_DIR }}"
           rm -f wealth-tax-calculator.zip
-          zip -r wealth-tax-calculator.zip wealth-tax-calculator \
+          zip -X -r wealth-tax-calculator.zip wealth-tax-calculator \
             -x "*/.DS_Store" "*/Thumbs.db" "*/.git/*" "*/node_modules/*" "*/src/*" "*.log" "*.map"
 
-      - name: Verify release artifact
+      - name: Verify zip integrity
         run: |
           if [ ! -f "${{ env.ZIP_FILE }}" ]; then
             echo "Release zip was not created"
@@ -147,19 +96,57 @@ jobs:
           unzip -t "${{ env.ZIP_FILE }}" > /dev/null
 
           if ! unzip -Z1 "${{ env.ZIP_FILE }}" | grep -q '^wealth-tax-calculator/wealth-tax-calculator.php$'; then
-            echo "Release zip does not contain the expected plugin root"
+            echo "Release zip does not contain wealth-tax-calculator/wealth-tax-calculator.php"
             exit 1
           fi
 
-      - name: Upload zip as CI artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: wealth-tax-calculator-${{ github.sha }}
-          path: ${{ env.ZIP_FILE }}
-          if-no-files-found: error
+      - name: Commit refreshed plugin zip
+        id: commit_zip
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
 
-      - name: Extract release notes
-        if: steps.version.outputs.should_release == 'true'
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add "${{ env.ZIP_FILE }}"
+
+          if git diff --cached --quiet; then
+            echo "No zip changes to commit"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git commit -m "build(plugin): refresh wealth-tax-calculator.zip for v$VERSION"
+          git push
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Create semantic release tag
+        id: tag
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+
+          git fetch --tags --force
+
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            TAG_COMMIT=$(git rev-list -n 1 "$TAG")
+            HEAD_COMMIT=$(git rev-parse HEAD)
+
+            if [ "$TAG_COMMIT" != "$HEAD_COMMIT" ]; then
+              echo "Tag $TAG already exists on a different commit ($TAG_COMMIT)."
+              echo "Bump plugin version to create a new release tag."
+              exit 1
+            fi
+
+            echo "Tag $TAG already exists on HEAD."
+            echo "created=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
+          echo "created=true" >> "$GITHUB_OUTPUT"
+
+      - name: Extract release notes from changelog
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           NOTES_FILE="$RUNNER_TEMP/release-notes.md"
@@ -171,14 +158,13 @@ jobs:
           ' "${{ env.CHANGELOG_FILE }}" > "$NOTES_FILE"
 
           if [ ! -s "$NOTES_FILE" ]; then
-            echo "Failed to extract release notes for version $VERSION"
+            echo "Could not extract release notes for $VERSION from changelog"
             exit 1
           fi
 
           echo "RELEASE_NOTES_FILE=$NOTES_FILE" >> "$GITHUB_ENV"
 
-      - name: Create or update GitHub release
-        if: steps.version.outputs.should_release == 'true'
+      - name: Create or update GitHub release asset
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -196,8 +182,7 @@ jobs:
               --notes-file "$RELEASE_NOTES_FILE"
           fi
 
-      - name: Verify published asset
-        if: steps.version.outputs.should_release == 'true'
+      - name: Verify published release asset
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

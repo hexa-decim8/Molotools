@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-04-04
+
+### Changed
+- Rebuilt the GitHub Actions release workflow for deterministic WordPress packaging.
+- The workflow now rebuilds `wealth-tax-calculator.zip` from plugin source and commits it back to `main`.
+- Release tags now follow semantic format (`vX.Y.Z`) and are created automatically from the plugin version.
+
+### Fixed
+- Eliminated release drift where repository zip artifacts could become stale or missing.
+
 ### Added
 - **Admin Settings Page**: New settings page under Settings > Wealth Tax Updates
   - View current version and latest available version
@@ -104,6 +114,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 
 ## Upgrade Notice
+
+### 1.2.1
+Rebuilds release automation to always publish an up-to-date `wealth-tax-calculator.zip` in the repository and create standard semantic release tags.
 
 ### 1.2.0
 **Major performance and security update.** Updates billionaire wealth data to $15.3 trillion (2026 estimate). Eliminates external data loading for faster page loads. Adds build system for developers. Requires WordPress 5.0+ and PHP 7.4+.

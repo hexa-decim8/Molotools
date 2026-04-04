@@ -54,33 +54,32 @@ This project no longer uses a local npm build system.
 Builds are produced by GitHub Actions using the workflow in `.github/workflows/build-plugin.yml`.
 
 What the workflow does:
-- Resolves version from the release tag (or plugin header when needed)
+- Resolves version from the plugin header (or optional manual dispatch input)
 - Validates version consistency between plugin header `Version` and `WTC_VERSION`
 - Validates changelog entry for the release version
 - Builds `wealth-tax-calculator.zip` directly in CI
-- Uploads the zip as both a workflow artifact and GitHub Release asset
+- Commits the rebuilt zip into the repository, replacing the previous zip build
+- Creates a semantic release tag in `vX.Y.Z` format
+- Creates or updates the matching GitHub Release and uploads `wealth-tax-calculator.zip` as the release asset
 
 ## Releasing Updates
 
 1. Update plugin version values in `wealth-tax-calculator/wealth-tax-calculator.php`:
 
 ```php
-* Version: 1.2.0
-define( 'WTC_VERSION', '1.2.0' );
+* Version: 1.2.1
+define( 'WTC_VERSION', '1.2.1' );
 ```
 
 2. Update `wealth-tax-calculator/CHANGELOG.md` with a matching section header.
 
 3. Commit and push to `main`.
 
-4. Create and push a release tag:
+4. Let GitHub Actions rebuild and commit `wealth-tax-calculator.zip`.
 
-```bash
-git tag v1.2.0
-git push origin v1.2.0
-```
+5. The workflow automatically creates the semantic release tag (`v1.2.0`, `v1.2.1`, etc.) for the new version.
 
-5. Let GitHub Actions publish/update the release and upload `wealth-tax-calculator.zip`.
+6. The workflow then creates or updates the GitHub Release and uploads `wealth-tax-calculator.zip` for updater compatibility.
 
 ## File Structure
 
