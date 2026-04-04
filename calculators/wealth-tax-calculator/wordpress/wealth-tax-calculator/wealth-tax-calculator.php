@@ -739,125 +739,129 @@ class Billionaire_Wealth_Tax_Calculator {
             </header>
 
             <div class="calculator-content">
-                <div class="mode-toggle-section">
-                    <div class="mode-toggle">
-                        <button class="mode-button active" data-mode="basic">Basic</button>
-                        <button class="mode-button" data-mode="advanced">Advanced</button>
-                    </div>
-                </div>
-                
-                <div class="input-section">
-                    <label for="wtc-taxRate">
-                        <span class="label-text">Tax Rate on Billionaire Wealth:</span>
-                        <span class="rate-display" id="wtc-rateDisplay">2%</span>
-                    </label>
-                    <div class="slider-container">
-                        <input
-                            type="range"
-                            id="wtc-taxRate"
-                            min="1"
-                            max="8"
-                            value="2"
-                            step="1"
-                            class="slider"
-                            list="wtc-tickmarks"
-                            aria-label="Tax rate percentage"
-                        >
-                        <datalist id="wtc-tickmarks">
-                            <option value="1"></option>
-                            <option value="2"></option>
-                            <option value="3"></option>
-                            <option value="4"></option>
-                            <option value="5"></option>
-                            <option value="6"></option>
-                            <option value="7"></option>
-                            <option value="8"></option>
-                        </datalist>
-                    </div>
-                    <div class="range-labels">
-                        <span>1%</span>
-                        <span>8%</span>
-                    </div>
-                    <div class="plan-indicator-row" aria-hidden="true">
-                        <span class="plan-indicator">5% &bull; Abdul's plan</span>
-                    </div>
-                </div>
-                
-                <div class="policy-allocation-section hidden">
-                    <h3 class="policy-header">Allocate Revenue to Policy Categories</h3>
-                    <p class="policy-description">Select one or more categories to see how the tax revenue could be allocated:</p>
-                    
-                    <div class="policy-categories">
-                        <label class="policy-checkbox">
-                            <input type="checkbox" name="wtc-policy" value="healthcare" id="wtc-policyHealthcare">
-                            <span class="checkbox-label">Healthcare</span>
-                        </label>
-                        
-                        <label class="policy-checkbox">
-                            <input type="checkbox" name="wtc-policy" value="education" id="wtc-policyEducation">
-                            <span class="checkbox-label">Education</span>
-                        </label>
-                        
-                        <label class="policy-checkbox">
-                            <input type="checkbox" name="wtc-policy" value="business" id="wtc-policyBusiness">
-                            <span class="checkbox-label">Business</span>
-                        </label>
-                        
-                        <label class="policy-checkbox">
-                            <input type="checkbox" name="wtc-policy" value="directRelief" id="wtc-policyDirectRelief">
-                            <span class="checkbox-label">Direct Relief</span>
-                        </label>
-                        
-                        <label class="policy-checkbox">
-                            <input type="checkbox" name="wtc-policy" value="housing" id="wtc-policyHousing">
-                            <span class="checkbox-label">Housing</span>
-                        </label>
-                        
-                        <label class="policy-checkbox">
-                            <input type="checkbox" name="wtc-policy" value="childcare" id="wtc-policyChildcare">
-                            <span class="checkbox-label">Childcare &amp; Families</span>
-                        </label>
-                    </div>
-                    
-                    <div class="allocation-results" id="wtc-allocationResults">
-                        <p class="allocation-prompt">Select categories above to see allocation</p>
-                    </div>
-                </div>
-
-                <div class="results-section">
-                    <div class="revenue-box">
-                        <h2>Annual Tax Revenue</h2>
-                        <p class="tax-explanation" id="wtc-taxExplanation">2.0% of $15.3 trillion in billionaire wealth =</p>
-                        <p class="revenue-amount" id="wtc-revenueAmount">$306.0 Billion</p>
-                        <p class="revenue-subtext" id="wtc-revenueSubtext"></p>
+                <div class="calculator-inputs">
+                    <div class="mode-toggle-section">
+                        <div class="mode-toggle">
+                            <button class="mode-button active" data-mode="basic">Basic</button>
+                            <button class="mode-button" data-mode="advanced">Advanced</button>
+                        </div>
                     </div>
 
-                    <div class="context-box">
-                        <h3>What Could This Fund?</h3>
-                        <p class="comparison-text" id="wtc-comparisonText">Loading&hellip;</p>
+                    <div class="input-section">
+                        <label for="wtc-taxRate">
+                            <span class="label-text">Tax Rate on Billionaire Wealth:</span>
+                            <span class="rate-display" id="wtc-rateDisplay">2%</span>
+                        </label>
+                        <div class="slider-container">
+                            <input
+                                type="range"
+                                id="wtc-taxRate"
+                                min="1"
+                                max="8"
+                                value="2"
+                                step="1"
+                                class="slider"
+                                list="wtc-tickmarks"
+                                aria-label="Tax rate percentage"
+                            >
+                            <datalist id="wtc-tickmarks">
+                                <option value="1"></option>
+                                <option value="2"></option>
+                                <option value="3"></option>
+                                <option value="4"></option>
+                                <option value="5"></option>
+                                <option value="6"></option>
+                                <option value="7"></option>
+                                <option value="8"></option>
+                            </datalist>
+                        </div>
+                        <div class="range-labels">
+                            <span>1%</span>
+                            <span>8%</span>
+                        </div>
+                        <div class="plan-indicator-row" aria-hidden="true">
+                            <span class="plan-indicator">5% &bull; Abdul's plan</span>
+                        </div>
                     </div>
 
-                    <div class="sources-box">
-                        <h4>Sources</h4>
-                        <ol class="sources-list" id="wtc-sourcesList">
-                            <li id="wtc-comparisonSource">Loading&hellip;</li>
-                            <li>
-                                <a href="https://www.ips-dc.org/resource-richest-15-u-s-centi-billionaires-see-wealth-surge-33-percent-to-3-2-trillion/"
-                                   target="_blank" rel="noopener noreferrer">
-                                    Richest 15 U.S. Centi-Billionaires See Wealth Surge 33 Percent to $3.2 Trillion, Institute for Policy Studies (2026)
-                                </a>
-                                &mdash; Billionaire wealth estimate of $15.3 trillion
-                            </li>
-                        </ol>
+                    <div class="policy-allocation-section hidden">
+                        <h3 class="policy-header">Allocate Revenue to Policy Categories</h3>
+                        <p class="policy-description">Select one or more categories to see how the tax revenue could be allocated:</p>
+                        
+                        <div class="policy-categories">
+                            <label class="policy-checkbox">
+                                <input type="checkbox" name="wtc-policy" value="healthcare" id="wtc-policyHealthcare">
+                                <span class="checkbox-label">Healthcare</span>
+                            </label>
+                            
+                            <label class="policy-checkbox">
+                                <input type="checkbox" name="wtc-policy" value="education" id="wtc-policyEducation">
+                                <span class="checkbox-label">Education</span>
+                            </label>
+                            
+                            <label class="policy-checkbox">
+                                <input type="checkbox" name="wtc-policy" value="business" id="wtc-policyBusiness">
+                                <span class="checkbox-label">Business</span>
+                            </label>
+                            
+                            <label class="policy-checkbox">
+                                <input type="checkbox" name="wtc-policy" value="directRelief" id="wtc-policyDirectRelief">
+                                <span class="checkbox-label">Direct Relief</span>
+                            </label>
+                            
+                            <label class="policy-checkbox">
+                                <input type="checkbox" name="wtc-policy" value="housing" id="wtc-policyHousing">
+                                <span class="checkbox-label">Housing</span>
+                            </label>
+                            
+                            <label class="policy-checkbox">
+                                <input type="checkbox" name="wtc-policy" value="childcare" id="wtc-policyChildcare">
+                                <span class="checkbox-label">Childcare &amp; Families</span>
+                            </label>
+                        </div>
+                        
+                        <div class="allocation-results" id="wtc-allocationResults">
+                            <p class="allocation-prompt">Select categories above to see allocation</p>
+                        </div>
                     </div>
                 </div>
 
-                <div class="info-box">
-                    <p class="info-text">
-                        This calculator is based on the 2026 estimate of <strong>$15.3 trillion</strong>
-                        in billionaire wealth from Institute for Policy Studies data. Tax rates range from 1% to 8%
-                        to show potential annual revenue at different taxation levels.
-                    </p>
+                <div class="calculator-results">
+                    <div class="results-section">
+                        <div class="revenue-box">
+                            <h2>Annual Tax Revenue</h2>
+                            <p class="tax-explanation" id="wtc-taxExplanation">2.0% of $15.3 trillion in billionaire wealth =</p>
+                            <p class="revenue-amount" id="wtc-revenueAmount">$306.0 Billion</p>
+                            <p class="revenue-subtext" id="wtc-revenueSubtext"></p>
+                        </div>
+
+                        <div class="context-box">
+                            <h3>What Could This Fund?</h3>
+                            <p class="comparison-text" id="wtc-comparisonText">Loading&hellip;</p>
+                        </div>
+
+                        <div class="sources-box">
+                            <h4>Sources</h4>
+                            <ol class="sources-list" id="wtc-sourcesList">
+                                <li id="wtc-comparisonSource">Loading&hellip;</li>
+                                <li>
+                                    <a href="https://www.ips-dc.org/resource-richest-15-u-s-centi-billionaires-see-wealth-surge-33-percent-to-3-2-trillion/"
+                                       target="_blank" rel="noopener noreferrer">
+                                        Richest 15 U.S. Centi-Billionaires See Wealth Surge 33 Percent to $3.2 Trillion, Institute for Policy Studies (2026)
+                                    </a>
+                                    &mdash; Billionaire wealth estimate of $15.3 trillion
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <p class="info-text">
+                            This calculator is based on the 2026 estimate of <strong>$15.3 trillion</strong>
+                            in billionaire wealth from Institute for Policy Studies data. Tax rates range from 1% to 8%
+                            to show potential annual revenue at different taxation levels.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
