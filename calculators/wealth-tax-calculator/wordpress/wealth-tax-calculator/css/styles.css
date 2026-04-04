@@ -141,50 +141,171 @@
     padding: 10px 0;
 }
 
-.calculator-container .slider {
-    width: 100%;
-    height: 8px;
-    border-radius: 5px;
-    background: linear-gradient(to right, #E1B682 0%, #406BBF 100%);
-    outline: none;
-    -webkit-appearance: none;
-    appearance: none;
-    cursor: pointer;
+.calculator-container .wtc-slider-shell {
+    padding-top: 190px;
+}
+
+.calculator-container .wtc-dragdealer {
     position: relative;
+    height: 34px;
+    border-radius: 10px;
+    border: 1px solid #CBA16E;
+    background: #FBF0E4;
+    box-shadow: inset 0 1px 2px rgba(18, 28, 80, 0.1);
 }
 
-.calculator-container .slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 24px;
+.calculator-container .wtc-stripe {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    right: 4px;
     height: 24px;
-    border-radius: 50%;
-    background: #406BBF;
-    cursor: pointer;
-    box-shadow: 0 2px 6px rgba(18, 28, 80, 0.3);
-    transition: background 0.2s, transform 0.2s;
-    border: 3px solid white;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #F5E8D8 0%, #E8D7C3 100%);
+    overflow: visible;
 }
 
-.calculator-container .slider::-webkit-slider-thumb:hover {
-    background: #233071;
-    transform: scale(1.1);
-}
-
-.calculator-container .slider::-moz-range-thumb {
-    width: 24px;
+.calculator-container .wtc-highlight-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
     height: 24px;
-    border-radius: 50%;
-    background: #406BBF;
-    cursor: pointer;
-    border: 3px solid white;
-    box-shadow: 0 2px 6px rgba(18, 28, 80, 0.3);
-    transition: background 0.2s, transform 0.2s;
+    width: 14.29%;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #E1B682 0%, #406BBF 100%);
 }
 
-.calculator-container .slider::-moz-range-thumb:hover {
+.calculator-container .wtc-highlight-threshold {
+    position: absolute;
+    top: 0;
+    left: 57.14%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 24px;
+    border-radius: 8px;
+    background: #e74c3c;
+    box-shadow: 0 0 0 1px rgba(251, 240, 228, 0.7);
+    pointer-events: none;
+}
+
+.calculator-container .wtc-dragdealer .handle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 52px;
+    height: 42px;
+}
+
+.calculator-container .wtc-square {
+    position: absolute;
+    top: -8px;
+    left: 0;
+    width: 52px;
+    height: 42px;
+    border-radius: 10px;
     background: #233071;
-    transform: scale(1.1);
+    color: #FBF0E4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    cursor: grab;
+    box-shadow: 0 4px 12px rgba(18, 28, 80, 0.35);
+    border: 2px solid #FBF0E4;
+}
+
+.calculator-container .wtc-square:focus {
+    outline: 3px solid #406BBF;
+    outline-offset: 2px;
+}
+
+.calculator-container .wtc-square .value {
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.calculator-container .wtc-square .menu-line {
+    width: 22px;
+    height: 2px;
+    border-radius: 2px;
+    background: #FBF0E4;
+}
+
+.calculator-container .wtc-infobox {
+    position: absolute;
+    top: -182px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 240px;
+    border-radius: 10px;
+    border: 2px solid #406BBF;
+    background: #FBF0E4;
+    box-shadow: 0 10px 20px rgba(18, 28, 80, 0.18);
+}
+
+.calculator-container .wtc-infobox::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -14px;
+    transform: translateX(-50%);
+    border-left: 14px solid transparent;
+    border-right: 14px solid transparent;
+    border-top: 14px solid #FBF0E4;
+}
+
+.calculator-container .wtc-infobox::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -18px;
+    transform: translateX(-50%);
+    border-left: 16px solid transparent;
+    border-right: 16px solid transparent;
+    border-top: 16px solid #406BBF;
+}
+
+.calculator-container .wtc-titlebar {
+    border-radius: 8px 8px 0 0;
+    background: #406BBF;
+    color: #FBF0E4;
+    padding: 8px 10px;
+    font-size: 0.92rem;
+    line-height: 1.4;
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.calculator-container #wtc-plan-holder {
+    font-weight: 700;
+}
+
+.calculator-container .wtc-innerbox {
+    padding: 12px;
+}
+
+.calculator-container .wtc-info-price {
+    font-size: 1.3rem;
+    color: #233071;
+    font-weight: 700;
+    line-height: 1.4;
+    margin-bottom: 8px;
+}
+
+.calculator-container .wtc-annual-label {
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    color: #383533;
+}
+
+.calculator-container .wtc-annual-price {
+    font-size: 0.95rem;
+    color: #406BBF;
+    font-weight: 600;
 }
 
 .calculator-container .range-labels {
@@ -638,6 +759,23 @@
 
     .calculator-container .rate-display {
         align-self: flex-end;
+    }
+
+    .calculator-container .wtc-slider-shell {
+        padding-top: 206px;
+    }
+
+    .calculator-container .wtc-infobox {
+        width: 204px;
+        top: -198px;
+    }
+
+    .calculator-container .wtc-titlebar {
+        font-size: 0.84rem;
+    }
+
+    .calculator-container .wtc-info-price {
+        font-size: 1.12rem;
     }
 
     .calculator-container .plan-indicator-row {

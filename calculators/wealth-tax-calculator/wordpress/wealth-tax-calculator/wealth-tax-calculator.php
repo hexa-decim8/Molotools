@@ -693,9 +693,17 @@ class Billionaire_Wealth_Tax_Calculator {
         );
 
         wp_enqueue_script(
+            'wealth-tax-calculator-dragdealer',
+            $this->plugin_url . 'js/dragdealer.js',
+            array(),
+            WTC_VERSION,
+            true
+        );
+
+        wp_enqueue_script(
             'wealth-tax-calculator-script',
             $this->plugin_url . 'js/' . $js_file,
-            array(),
+            array( 'wealth-tax-calculator-dragdealer' ),
             WTC_VERSION,
             true // Load in footer.
         );
@@ -748,32 +756,50 @@ class Billionaire_Wealth_Tax_Calculator {
                     </div>
 
                     <div class="input-section">
-                        <label for="wtc-taxRate">
+                        <label for="wtc-sliderHandle">
                             <span class="label-text">Tax Rate on Billionaire Wealth:</span>
                             <span class="rate-display" id="wtc-rateDisplay">2%</span>
                         </label>
-                        <div class="slider-container">
-                            <input
-                                type="range"
-                                id="wtc-taxRate"
-                                min="1"
-                                max="8"
-                                value="2"
-                                step="1"
-                                class="slider"
-                                list="wtc-tickmarks"
-                                aria-label="Tax rate percentage"
-                            >
-                            <datalist id="wtc-tickmarks">
-                                <option value="1"></option>
-                                <option value="2"></option>
-                                <option value="3"></option>
-                                <option value="4"></option>
-                                <option value="5"></option>
-                                <option value="6"></option>
-                                <option value="7"></option>
-                                <option value="8"></option>
-                            </datalist>
+                        <div class="slider-container wtc-slider-shell">
+                            <input type="hidden" id="wtc-taxRate" value="2" aria-label="Tax rate percentage">
+
+                            <div id="wtc-pr-slider" class="wtc-dragdealer">
+                                <div class="wtc-stripe">
+                                    <div id="wtc-highlight-fill" class="wtc-highlight-fill"></div>
+                                    <div id="wtc-highlight-threshold" class="wtc-highlight-threshold" aria-hidden="true"></div>
+
+                                    <div class="handle">
+                                        <div class="wtc-infobox" id="wtc-sliderInfobox">
+                                            <div class="wtc-titlebar">
+                                                <span id="wtc-plan-holder">Tax Rate:</span>
+                                                <span id="wtc-device-holder">2.0%</span>
+                                            </div>
+                                            <div class="wtc-innerbox">
+                                                <div class="wtc-info-price" id="wtc-infoPrice">$306.0 Billion</div>
+                                                <div class="wtc-annual-label">ANNUAL REVENUE:</div>
+                                                <div class="wtc-annual-price" id="wtc-annualPrice">$306.0 Billion</div>
+                                            </div>
+                                        </div>
+
+                                        <div
+                                            class="wtc-square"
+                                            id="wtc-sliderHandle"
+                                            role="slider"
+                                            tabindex="0"
+                                            aria-valuemin="1"
+                                            aria-valuemax="8"
+                                            aria-valuenow="2"
+                                            aria-valuetext="2.0%"
+                                            aria-label="Tax rate percentage"
+                                        >
+                                            <span class="value" id="wtc-sliderValue">2.0%</span>
+                                            <span class="menu-line"></span>
+                                            <span class="menu-line"></span>
+                                            <span class="menu-line"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="range-labels">
                             <span>1%</span>

@@ -18,6 +18,12 @@
     var selectedPolicyOptions = [];
     var collapsedPolicyGroups = [];
     var currentMode = 'basic'; // 'basic' or 'advanced'
+    var TAX_RATE_MIN = 1;
+    var TAX_RATE_MAX = 8;
+    var sliderController = {
+        instance: null,
+        suppressCallback: false
+    };
 
     // Policy category labels
     var POLICY_LABELS = {
@@ -179,6 +185,175 @@
 
     function calculateRevenue(taxRate) {
         return BILLIONAIRE_WEALTH * (taxRate / 100);
+    }
+
+    function getTaxRateInput() {
+        return el('wtc-taxRate');
+    }
+
+    function clampTaxRate(value) {
+        return Math.max(TAX_RATE_MIN, Math.min(TAX_RATE_MAX, value));
+    }
+
+    function quantizeTaxRate(value) {
+        if (currentMode === 'basic') {
+            return Math.round(value);
+        }
+
+        return Math.round(value * 10) / 10;
+    }
+
+    function rateToRatio(taxRate) {
+        return (taxRate - TAX_RATE_MIN) / (TAX_RATE_MAX - TAX_RATE_MIN);
+    }
+
+    function clampRatio(value) {
+        return Math.max(0, Math.min(1, value));
+    }
+
+    function ratioToRate(ratio) {
+        return TAX_RATE_MIN + (clampRatio(ratio) * (TAX_RATE_MAX - TAX_RATE_MIN));
+    }
+
+    function getCurrentTaxRate() {
+        var input = getTaxRateInput();
+        if (!input) {
+            return TAX_RATE_MIN;
+        }
+
+        var parsed = parseFloat(input.value);
+        if (isNaN(parsed)) {
+            return TAX_RATE_MIN;
+        }
+
+        return clampTaxRate(parsed);
+    }
+
+    function syncSliderDecor(taxRate, revenue) {
+        var sliderValue = el('wtc-sliderValue');
+        var infoPrice = el('wtc-infoPrice');
+        var annualPrice = el('wtc-annualPrice');
+        var planHolder = el('wtc-plan-holder');
+        var deviceHolder = el('wtc-device-holder');
+        var highlightFill = el('wtc-highlight-fill');
+        var handle = el('wtc-sliderHandle');
+
+        var rateText = taxRate.toFixed(1) + '%';
+        var progress = rateToRatio(taxRate) * 100;
+
+        if (sliderValue) {
+            sliderValue.textContent = rateText;
+        }
+
+        if (planHolder) {
+            planHolder.textContent = 'Tax Rate:';
+        }
+
+        if (deviceHolder) {
+            deviceHolder.textContent = rateText;
+        }
+
+        if (infoPrice) {
+            infoPrice.textContent = formatCurrency(revenue);
+        }
+
+        if (annualPrice) {
+            annualPrice.textContent = formatCurrency(revenue);
+        }
+
+        if (highlightFill) {
+            highlightFill.style.width = progress.toFixed(2) + '%';
+        }
+
+        if (handle) {
+            handle.setAttribute('aria-valuenow', taxRate.toFixed(1));
+            handle.setAttribute('aria-valuetext', rateText);
+        }
+    }
+
+    function syncDragdealerPosition(taxRate) {
+        if (!sliderController.instance) {
+            return;
+        }
+
+        sliderController.suppressCallback = true;
+        sliderController.instance.setValue(rateToRatio(taxRate), 0, true);
+        sliderController.suppressCallback = false;
+    }
+
+    function setTaxRate(taxRate, syncHandlePosition) {
+        var input = getTaxRateInput();
+        if (!input) {
+            return;
+        }
+
+        var nextRate = quantizeTaxRate(clampTaxRate(taxRate));
+        input.value = currentMode === 'basic' ? String(Math.round(nextRate)) : nextRate.toFixed(1);
+
+        if (syncHandlePosition) {
+            syncDragdealerPosition(nextRate);
+        }
+
+        updateDisplay();
+    }
+
+    function handleSliderKeydown(event) {
+        var key = event.key;
+        var step = currentMode === 'basic' ? 1 : 0.1;
+        var currentValue = getCurrentTaxRate();
+        var nextValue = currentValue;
+
+        if (key === 'ArrowLeft' || key === 'ArrowDown') {
+            nextValue = currentValue - step;
+        } else if (key === 'ArrowRight' || key === 'ArrowUp') {
+            nextValue = currentValue + step;
+        } else if (key === 'PageDown') {
+            nextValue = currentValue - 1;
+        } else if (key === 'PageUp') {
+            nextValue = currentValue + 1;
+        } else if (key === 'Home') {
+            nextValue = TAX_RATE_MIN;
+        } else if (key === 'End') {
+            nextValue = TAX_RATE_MAX;
+        } else {
+            return;
+        }
+
+        event.preventDefault();
+        setTaxRate(nextValue, true);
+    }
+
+    function initTaxRateSlider() {
+        var sliderWrapper = el('wtc-pr-slider');
+        var sliderHandle = el('wtc-sliderHandle');
+        var taxRateInput = getTaxRateInput();
+
+        if (!sliderWrapper || !sliderHandle || !taxRateInput || typeof Dragdealer === 'undefined') {
+            return;
+        }
+
+        sliderController.instance = new Dragdealer('wtc-pr-slider', {
+            x: rateToRatio(getCurrentTaxRate()),
+            speed: 0.15,
+            animationCallback: function (x) {
+                if (sliderController.suppressCallback) {
+                    return;
+                }
+
+                var nextRate = quantizeTaxRate(ratioToRate(x));
+                var nextValue = currentMode === 'basic' ? String(Math.round(nextRate)) : nextRate.toFixed(1);
+
+                if (taxRateInput.value !== nextValue) {
+                    taxRateInput.value = nextValue;
+                    updateDisplay();
+                } else {
+                    syncSliderDecor(nextRate, calculateRevenue(nextRate));
+                }
+            }
+        });
+
+        sliderHandle.addEventListener('keydown', handleSliderKeydown);
+        syncDragdealerPosition(getCurrentTaxRate());
     }
 
     function findComparison(revenue) {
@@ -455,25 +630,13 @@
             }
         }
         
-        // Update slider step and tick marks based on mode
-        var slider = el('wtc-taxRate');
-        if (!slider) return;
-        
+        var currentValue = getCurrentTaxRate();
+
         if (mode === 'basic') {
-            // Basic mode: lock to round percentages with tick marks
-            slider.step = '1';
-            slider.setAttribute('list', 'wtc-tickmarks');
-            // Round current value to nearest integer
-            var currentValue = parseFloat(slider.value);
-            slider.value = Math.round(currentValue);
-        } else {
-            // Advanced mode: allow fine-grained control without tick marks
-            slider.step = '0.1';
-            slider.removeAttribute('list');
+            currentValue = Math.round(currentValue);
         }
-        
-        // Update display with new value
-        updateDisplay();
+
+        setTaxRate(currentValue, true);
     }
 
     // ── DOM ────────────────────────────────────────────────────────────────────
@@ -483,13 +646,18 @@
     }
 
     function updateDisplay() {
-        var slider      = el('wtc-taxRate');
+        var slider = getTaxRateInput();
         if (!slider) return;
 
         var taxRate = parseFloat(slider.value);
+        if (isNaN(taxRate)) {
+            taxRate = TAX_RATE_MIN;
+        }
+
         var revenue = calculateRevenue(taxRate);
 
         el('wtc-rateDisplay').textContent = taxRate.toFixed(1) + '%';
+        syncSliderDecor(taxRate, revenue);
         updateAdvancedRevenueDisplay(taxRate, revenue, 0);
 
         var comparison = findComparison(revenue);
@@ -511,10 +679,10 @@
     // ── Bootstrap ──────────────────────────────────────────────────────────────
 
     function init() {
-        var slider = el('wtc-taxRate');
+        var slider = getTaxRateInput();
         if (!slider) return; // Shortcode not present on this page.
-        
-        slider.addEventListener('input', updateDisplay);
+
+        initTaxRateSlider();
 
         // Set up event listeners for policy checkboxes
         var policyCheckboxes = document.querySelectorAll('input[name="wtc-policy"]');
