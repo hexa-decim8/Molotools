@@ -10,7 +10,7 @@
     "zip": "node build.js",
     "build": "npm run minify && npm run zip",
     "version:bump": "node -e \"const fs=require('fs');const v=process.argv[1];const pkg=JSON.parse(fs.readFileSync('package.json'));pkg.version=v;fs.writeFileSync('package.json',JSON.stringify(pkg,null,2));console.log('Updated package.json to',v);\" ",
-    "release": "echo 'Build and create release zip' && npm run build && echo '\n✓ Build complete! Next steps:\n  1. Commit changes\n  2. Create GitHub release with tag v1.2.0\n  3. Upload wealth-tax-calculator.zip as release asset'"
+    "release": "npm run build && node -e \"const version=require('./package.json').version; console.log('\\nBuild complete. Next steps:\\n  1. Commit the versioned changes\\n  2. Push them to main\\n  3. Create and push tag v' + version + '\\n  4. Verify the GitHub Actions release workflow and asset');\""
   },
   "devDependencies": {
     "archiver": "^7.0.1",

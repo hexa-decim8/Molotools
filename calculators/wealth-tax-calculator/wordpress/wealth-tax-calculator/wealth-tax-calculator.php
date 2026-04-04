@@ -26,16 +26,24 @@ if ( ! defined( 'ABSPATH' ) ) {
 define( 'WTC_VERSION', '1.2.0' );
 
 // Plugin constants
+define( 'WTC_PLUGIN_BASENAME', 'wealth-tax-calculator/wealth-tax-calculator.php' );
+define( 'WTC_GITHUB_REPO', 'hexa-decim8/Molotools' );
+define( 'WTC_RELEASE_ASSET', 'wealth-tax-calculator.zip' );
 define( 'WTC_BILLIONAIRE_WEALTH', 15.3e12 ); // $15.3 trillion
 define( 'WTC_TAX_RATE_MIN', 1 );
 define( 'WTC_TAX_RATE_MAX', 8 );
-define( 'WTC_CACHE_TTL', 12 * HOUR_IN_SECONDS ); // 12 hours
+define( 'WTC_CACHE_TTL', 5 * MINUTE_IN_SECONDS );
+define( 'WTC_UPDATE_ERROR_TTL', 5 * MINUTE_IN_SECONDS );
+define( 'WTC_UPDATE_CRON_HOOK', 'wtc_run_scheduled_update_check' );
+define( 'WTC_UPDATE_CRON_SCHEDULE', 'wtc_every_five_minutes' );
+define( 'WTC_AUTO_INSTALL_LOCK_TTL', 5 * MINUTE_IN_SECONDS );
 
 // ---------------------------------------------------------------------------
 // Self-contained GitHub update checker — no extra plugins required.
 // Hooks into WordPress's native update system.
 // Checks: https://api.github.com/repos/hexa-decim8/Molotools/releases/latest
 // Expects a release asset named "wealth-tax-calculator.zip" on each release.
+// Uses a best-effort 5-minute WP-Cron schedule for release checks and installs.
 // ---------------------------------------------------------------------------
 class WTC_GitHub_Updater {
 
@@ -54,13 +62,41 @@ class WTC_GitHub_Updater {
         add_filter( 'pre_set_site_transient_update_plugins', array( $this, 'check_for_update' ) );
         add_filter( 'plugins_api',                           array( $this, 'plugin_info' ), 10, 3 );
         add_filter( 'upgrader_source_selection',             array( $this, 'fix_folder_name' ), 10, 4 );
+        add_action( WTC_UPDATE_CRON_HOOK,                    array( $this, 'run_scheduled_update' ) );
+        add_action( 'init',                                  array( $this, 'ensure_schedule' ) );
+    }
+
+    private function log_error( $message ) {
+        update_option( 'wtc_updater_last_error', $message, false );
+        error_log( '[WTC Updater] ' . $message );
+    }
+
+    private function clear_last_error() {
+        delete_option( 'wtc_updater_last_error' );
+    }
+
+    private function record_successful_check() {
+        update_option( 'wtc_updater_last_check', time(), false );
+        $this->clear_last_error();
+    }
+
+    public function ensure_schedule() {
+        if ( ! wp_next_scheduled( WTC_UPDATE_CRON_HOOK ) ) {
+            if ( ! wp_schedule_event( time() + WTC_CACHE_TTL, WTC_UPDATE_CRON_SCHEDULE, WTC_UPDATE_CRON_HOOK ) ) {
+                $this->log_error( 'Unable to schedule the recurring 5-minute update check.' );
+            }
+        }
+    }
+
+    public function clear_cached_release() {
+        delete_transient( $this->cache_key );
     }
 
     /**
-     * Fetch the latest release from GitHub, cached for 12 hours.
+     * Fetch the latest release from GitHub, cached for 5 minutes.
      */
-    private function get_release() {
-        $cached = get_transient( $this->cache_key );
+    private function get_release( $force = false ) {
+        $cached = $force ? false : get_transient( $this->cache_key );
         if ( $cached !== false ) {
             return $cached;
         }
@@ -76,13 +112,39 @@ class WTC_GitHub_Updater {
 
         if ( is_wp_error( $response ) || wp_remote_retrieve_response_code( $response ) !== 200 ) {
             // Cache a short negative result to avoid hammering the API on errors.
-            set_transient( $this->cache_key, null, 300 );
+            $message = is_wp_error( $response )
+                ? $response->get_error_message()
+                : 'GitHub API returned HTTP ' . wp_remote_retrieve_response_code( $response );
+
+            $this->log_error( 'Release check failed: ' . $message );
+            set_transient( $this->cache_key, null, WTC_UPDATE_ERROR_TTL );
             return null;
         }
 
         $release = json_decode( wp_remote_retrieve_body( $response ) );
+        if ( ! is_object( $release ) || empty( $release->tag_name ) ) {
+            $this->log_error( 'GitHub release payload was invalid or missing tag_name.' );
+            set_transient( $this->cache_key, null, WTC_UPDATE_ERROR_TTL );
+            return null;
+        }
+
         set_transient( $this->cache_key, $release, $this->cache_ttl );
+        $this->record_successful_check();
         return $release;
+    }
+
+    private function build_plugin_update_item( $remote_version, $asset_url ) {
+        return (object) array(
+            'slug'        => dirname( $this->slug ),
+            'plugin'      => $this->slug,
+            'new_version' => $remote_version,
+            'url'         => 'https://github.com/' . $this->repo,
+            'package'     => $asset_url,
+            'tested'      => '',
+            'requires_php'=> '7.4',
+            'icons'       => array(),
+            'banners'     => array(),
+        );
     }
 
     /**
@@ -91,14 +153,91 @@ class WTC_GitHub_Updater {
      */
     private function get_asset_url( $release ) {
         if ( empty( $release->assets ) ) {
+            $this->log_error( 'Latest GitHub release is missing assets.' );
             return null;
         }
         foreach ( $release->assets as $asset ) {
-            if ( $asset->name === 'wealth-tax-calculator.zip' ) {
+            if ( $asset->name === WTC_RELEASE_ASSET ) {
                 return $asset->browser_download_url;
             }
         }
+
+        $this->log_error( 'Latest GitHub release is missing the required ' . WTC_RELEASE_ASSET . ' asset.' );
         return null;
+    }
+
+    public function refresh_update_data( $force = false ) {
+        require_once ABSPATH . 'wp-includes/update.php';
+
+        if ( $force ) {
+            $this->clear_cached_release();
+            delete_site_transient( 'update_plugins' );
+            if ( ! function_exists( 'wp_clean_plugins_cache' ) ) {
+                require_once ABSPATH . 'wp-admin/includes/plugin.php';
+            }
+            wp_clean_plugins_cache( true );
+        }
+
+        wp_update_plugins();
+
+        return get_site_transient( 'update_plugins' );
+    }
+
+    private function auto_updates_enabled() {
+        return get_option( 'wtc_auto_update_enabled', '0' ) === '1';
+    }
+
+    private function maybe_install_update( $transient ) {
+        if ( ! $this->auto_updates_enabled() ) {
+            return;
+        }
+
+        if ( ! isset( $transient->response[ $this->slug ] ) ) {
+            return;
+        }
+
+        $lock_key = 'wtc_updater_install_lock';
+        if ( get_transient( $lock_key ) ) {
+            return;
+        }
+
+        if ( ! function_exists( 'wp_clean_plugins_cache' ) ) {
+            require_once ABSPATH . 'wp-admin/includes/plugin.php';
+        }
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+        require_once ABSPATH . 'wp-admin/includes/misc.php';
+        require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+
+        set_transient( $lock_key, 1, WTC_AUTO_INSTALL_LOCK_TTL );
+
+        $upgrader = new Plugin_Upgrader( new Automatic_Upgrader_Skin() );
+        $result   = $upgrader->upgrade( $this->slug );
+
+        delete_transient( $lock_key );
+
+        if ( is_wp_error( $result ) ) {
+            $this->log_error( 'Automatic update failed: ' . $result->get_error_message() );
+            return;
+        }
+
+        if ( ! $result ) {
+            $this->log_error( 'Automatic update returned an empty result.' );
+            return;
+        }
+
+        $this->clear_cached_release();
+        delete_site_transient( 'update_plugins' );
+        wp_clean_plugins_cache( true );
+    }
+
+    public function run_scheduled_update() {
+        $transient = $this->refresh_update_data( true );
+        if ( ! is_object( $transient ) ) {
+            $this->log_error( 'Scheduled update check did not produce a valid plugin update transient.' );
+            return;
+        }
+
+        $this->maybe_install_update( $transient );
     }
 
     /**
@@ -117,18 +256,19 @@ class WTC_GitHub_Updater {
         $remote_version = ltrim( $release->tag_name, 'v' );
         $asset_url      = $this->get_asset_url( $release );
 
+        if ( ! isset( $transient->response ) || ! is_array( $transient->response ) ) {
+            $transient->response = array();
+        }
+        if ( ! isset( $transient->no_update ) || ! is_array( $transient->no_update ) ) {
+            $transient->no_update = array();
+        }
+
         if ( version_compare( $this->version, $remote_version, '<' ) && $asset_url ) {
-            $transient->response[ $this->slug ] = (object) array(
-                'slug'        => dirname( $this->slug ),
-                'plugin'      => $this->slug,
-                'new_version' => $remote_version,
-                'url'         => 'https://github.com/' . $this->repo,
-                'package'     => $asset_url,
-                'tested'      => '',
-                'requires_php'=> '7.4',
-                'icons'       => array(),
-                'banners'     => array(),
-            );
+            $transient->response[ $this->slug ] = $this->build_plugin_update_item( $remote_version, $asset_url );
+            unset( $transient->no_update[ $this->slug ] );
+        } elseif ( $asset_url ) {
+            $transient->no_update[ $this->slug ] = $this->build_plugin_update_item( $remote_version, $asset_url );
+            unset( $transient->response[ $this->slug ] );
         }
 
         return $transient;
@@ -190,8 +330,8 @@ class WTC_GitHub_Updater {
 
 // Register the updater.
 $wtc_updater = new WTC_GitHub_Updater(
-    'wealth-tax-calculator/wealth-tax-calculator.php',
-    'hexa-decim8/Molotools',
+    WTC_PLUGIN_BASENAME,
+    WTC_GITHUB_REPO,
     WTC_VERSION
 );
 
@@ -236,8 +376,7 @@ class WTC_Admin_Settings {
      */
     public function enable_auto_updates( $update, $item ) {
         if ( isset( $item->slug ) && $item->slug === 'wealth-tax-calculator' ) {
-            $auto_update_enabled = get_option( 'wtc_auto_update_enabled', '0' );
-            return $auto_update_enabled === '1';
+            return get_option( 'wtc_auto_update_enabled', '0' ) === '1';
         }
         return $update;
     }
@@ -252,13 +391,7 @@ class WTC_Admin_Settings {
 
         check_admin_referer( 'wtc_check_updates' );
 
-        // Clear the cache to force a fresh check
-        $cache_key = 'wtc_github_update_' . md5( 'wealth-tax-calculator/wealth-tax-calculator.php' );
-        delete_transient( $cache_key );
-
-        // Force WordPress to check for updates
-        delete_site_transient( 'update_plugins' );
-        wp_update_plugins();
+        $this->updater->refresh_update_data( true );
 
         // Redirect back with success message
         wp_redirect( add_query_arg(
@@ -294,6 +427,9 @@ class WTC_Admin_Settings {
 
         $auto_update_enabled = get_option( 'wtc_auto_update_enabled', '0' ) === '1';
         $update_check_done = isset( $_GET['update_check_done'] ) && $_GET['update_check_done'] === '1';
+        $next_scheduled_check = wp_next_scheduled( WTC_UPDATE_CRON_HOOK );
+        $last_successful_check = (int) get_option( 'wtc_updater_last_check', 0 );
+        $last_error = get_option( 'wtc_updater_last_error', '' );
 
         ?>
         <div class="wrap">
@@ -340,6 +476,26 @@ class WTC_Admin_Settings {
                             </a>
                         </td>
                     </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e( 'Last Successful Check:', 'wealth-tax-calculator' ); ?></th>
+                        <td>
+                            <?php
+                            echo $last_successful_check
+                                ? esc_html( date_i18n( 'Y-m-d H:i:s', $last_successful_check ) )
+                                : esc_html__( 'No successful checks yet', 'wealth-tax-calculator' );
+                            ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e( 'Next Scheduled Check:', 'wealth-tax-calculator' ); ?></th>
+                        <td>
+                            <?php
+                            echo $next_scheduled_check
+                                ? esc_html( date_i18n( 'Y-m-d H:i:s', $next_scheduled_check ) )
+                                : esc_html__( 'Not scheduled', 'wealth-tax-calculator' );
+                            ?>
+                        </td>
+                    </tr>
                 </table>
 
                 <?php if ( $update_available ) : ?>
@@ -369,7 +525,7 @@ class WTC_Admin_Settings {
                                     <?php esc_html_e( 'Enable automatic updates for this plugin', 'wealth-tax-calculator' ); ?>
                                 </label>
                                 <p class="description">
-                                    <?php esc_html_e( 'When enabled, the plugin will automatically update when new versions are released on GitHub.', 'wealth-tax-calculator' ); ?>
+                                    <?php esc_html_e( 'When enabled, the plugin will check GitHub roughly every 5 minutes and install a newer release during the next scheduled run.', 'wealth-tax-calculator' ); ?>
                                 </p>
                             </td>
                         </tr>
@@ -377,6 +533,13 @@ class WTC_Admin_Settings {
                     <?php submit_button( __( 'Save Settings', 'wealth-tax-calculator' ) ); ?>
                 </form>
             </div>
+
+            <?php if ( ! empty( $last_error ) ) : ?>
+                <div class="card" style="max-width: 800px; margin-top: 20px;">
+                    <h2><?php esc_html_e( 'Updater Status', 'wealth-tax-calculator' ); ?></h2>
+                    <p style="color: #d63638;"><strong><?php esc_html_e( 'Last updater error:', 'wealth-tax-calculator' ); ?></strong> <?php echo esc_html( $last_error ); ?></p>
+                </div>
+            <?php endif; ?>
 
             <div class="card" style="max-width: 800px; margin-top: 20px;">
                 <h2><?php esc_html_e( 'Manual Update Check', 'wealth-tax-calculator' ); ?></h2>
@@ -392,9 +555,10 @@ class WTC_Admin_Settings {
                 <h2><?php esc_html_e( 'How Updates Work', 'wealth-tax-calculator' ); ?></h2>
                 <ul style="list-style: disc; margin-left: 20px;">
                     <li><?php esc_html_e( 'Updates are fetched from GitHub releases', 'wealth-tax-calculator' ); ?></li>
-                    <li><?php esc_html_e( 'The plugin checks for updates every 12 hours automatically', 'wealth-tax-calculator' ); ?></li>
+                    <li><?php esc_html_e( 'The plugin schedules a best-effort update check every 5 minutes using WP-Cron', 'wealth-tax-calculator' ); ?></li>
+                    <li><?php esc_html_e( 'Exact 5-minute timing depends on site traffic unless a real server cron is configured', 'wealth-tax-calculator' ); ?></li>
                     <li><?php esc_html_e( 'You can manually check for updates using the button above', 'wealth-tax-calculator' ); ?></li>
-                    <li><?php esc_html_e( 'Enable automatic updates to install new versions without manual intervention', 'wealth-tax-calculator' ); ?></li>
+                    <li><?php esc_html_e( 'Enable automatic updates to let scheduled checks install new releases without opening the Plugins page', 'wealth-tax-calculator' ); ?></li>
                     <li><?php esc_html_e( 'Updates are shown in the WordPress Plugins page when available', 'wealth-tax-calculator' ); ?></li>
                 </ul>
             </div>
@@ -409,6 +573,28 @@ if ( is_admin() ) {
 }
 
 /**
+ * Register the plugin's 5-minute WP-Cron schedule.
+ */
+function wtc_register_cron_schedule( $schedules ) {
+    $schedules[ WTC_UPDATE_CRON_SCHEDULE ] = array(
+        'interval' => WTC_CACHE_TTL,
+        'display'  => __( 'Every 5 Minutes (Wealth Tax Calculator)', 'wealth-tax-calculator' ),
+    );
+
+    return $schedules;
+}
+add_filter( 'cron_schedules', 'wtc_register_cron_schedule' );
+
+/**
+ * Ensure the recurring updater hook exists.
+ */
+function wtc_schedule_update_checks() {
+    if ( ! wp_next_scheduled( WTC_UPDATE_CRON_HOOK ) ) {
+        wp_schedule_event( time() + WTC_CACHE_TTL, WTC_UPDATE_CRON_SCHEDULE, WTC_UPDATE_CRON_HOOK );
+    }
+}
+
+/**
  * Activation hook - runs when plugin is activated
  */
 function wtc_activate() {
@@ -419,11 +605,22 @@ function wtc_activate() {
         WHERE option_name LIKE '_transient_wtc_comparisons_data_%' 
         OR option_name LIKE '_transient_timeout_wtc_comparisons_data_%'"
     );
+
+    wtc_schedule_update_checks();
     
     // Initialize any default options here if needed in the future
     // add_option( 'wtc_plugin_settings', array() );
 }
 register_activation_hook( __FILE__, 'wtc_activate' );
+
+/**
+ * Deactivation hook - clear the recurring updater hook.
+ */
+function wtc_deactivate() {
+    wp_clear_scheduled_hook( WTC_UPDATE_CRON_HOOK );
+    delete_transient( 'wtc_updater_install_lock' );
+}
+register_deactivation_hook( __FILE__, 'wtc_deactivate' );
 
 class Billionaire_Wealth_Tax_Calculator {
 

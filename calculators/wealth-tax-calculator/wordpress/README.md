@@ -55,9 +55,9 @@ Go to **WordPress Admin → Settings → Wealth Tax Updates**
 
 #### Automatic Updates
 - **Enable/Disable Auto-Updates**: Toggle automatic updates on or off
-- When enabled, the plugin automatically installs new versions from GitHub releases
-- Integrates with WordPress's native auto-update system
-- Updates happen during WordPress's scheduled update checks
+- When enabled, the plugin checks GitHub roughly every 5 minutes and installs a newer release during the next scheduled run
+- Integrates with WordPress's native update APIs while using its own plugin-specific schedule
+- Exact timing depends on WP-Cron unless the host runs a real server cron
 
 #### Manual Update Check
 - **"Check for Updates Now"** button forces an immediate check
@@ -66,10 +66,11 @@ Go to **WordPress Admin → Settings → Wealth Tax Updates**
 - Shows success notification after check completes
 
 #### Update Process
-- Updates are fetched from GitHub releases every 12 hours
+- Updates are fetched from GitHub releases on a best-effort 5-minute schedule
 - Release must include `wealth-tax-calculator.zip` as an asset
 - One-click update from WordPress Plugins page when available
 - Direct link from settings page to Plugins page when update is ready
+- The settings page shows the last successful check, next scheduled check, and last updater error
 
 ### Configuring Auto-Updates
 
@@ -78,7 +79,7 @@ Go to **WordPress Admin → Settings → Wealth Tax Updates**
 3. Click **Save Settings**
 4. Plugin will now update automatically when new versions are released
 
-**Note**: If auto-updates are disabled (default), you'll still see update notifications in the Plugins page, but you'll need to click "Update Now" manually.
+**Note**: If auto-updates are disabled (default), scheduled checks still discover new releases, but you'll need to update from the Plugins page manually.
 
 ---
 
@@ -111,7 +112,7 @@ This installs the build dependencies:
 | `npm run minify:css` | Minify CSS only |
 | `npm run zip` | Create `wealth-tax-calculator.zip` |
 | `npm run build` | Minify + create zip (full build) |
-| `npm run release` | Build and show release instructions |
+| `npm run release` | Build and show the tag-driven release checklist |
 
 ### Development Workflow
 
@@ -134,17 +135,19 @@ This installs the build dependencies:
 
 ## Releasing Updates
 
-The plugin includes a self-contained GitHub update checker. When you publish a new GitHub Release, WordPress will automatically detect it and show an "Update Available" notice.
+The plugin includes a self-contained GitHub update checker. When you publish a tagged GitHub Release with a valid zip asset, installed sites will pick it up on the next scheduled check.
 
 ### Release Process
 
-1. **Update version number** in `wealth-tax-calculator/wealth-tax-calculator.php`:
+1. **Update all version sources** so they match the release you are about to tag:
    
    ```php
    * Version: 1.2.0  // Line 6 in plugin header
    
    define( 'WTC_VERSION', '1.2.0' ); // Line ~26
    ```
+
+   Also update `package.json` to the same version.
 
 2. **Update `CHANGELOG.md`** with new version details
 
@@ -155,30 +158,33 @@ The plugin includes a self-contained GitHub update checker. When you publish a n
    
    This creates `wealth-tax-calculator.zip` ready for upload
 
-4. **Commit and push** all changes to `main`:
+4. **Commit and push** all versioned changes to `main`:
    ```bash
    git add .
    git commit -m "Release v1.2.0"
    git push origin main
    ```
 
-5. **Create a GitHub Release**:
-   - Go to [github.com/hexa-decim8/Molotools/releases/new](https://github.com/hexa-decim8/Molotools/releases/new)
-   - **Tag**: `v1.2.0` (must match version in plugin file)
-   - **Title**: `Wealth Tax Calculator v1.2.0`
-   - **Description**: Copy relevant section from CHANGELOG.md
-   - **Attach**: Upload `wealth-tax-calculator.zip` as a release asset
-     - ⚠️ **Important**: File must be named **exactly** `wealth-tax-calculator.zip`
-   - Click **Publish release**
+5. **Create and push the release tag**:
+   ```bash
+   git tag v1.2.0
+   git push origin v1.2.0
+   ```
 
-6. **Verify auto-update**:
-   - WordPress sites with the plugin installed will see "Update Available" within 12 hours
-   - Or immediately after deactivating/reactivating the plugin
-   - Admin can click "Update Now" for one-click update
+6. **Let GitHub Actions publish the release**:
+   - The workflow in `.github/workflows/build-plugin.yml` runs on the pushed tag
+   - It validates `package.json`, the plugin header, `WTC_VERSION`, and `CHANGELOG.md`
+   - It runs `npm ci` and `npm run build`
+   - It creates or updates the GitHub Release and uploads `wealth-tax-calculator.zip`
+
+7. **Verify auto-update**:
+   - WordPress sites with the plugin installed should detect the release on the next scheduled check
+   - On regular hosting, this is best-effort and depends on WP-Cron traffic
+   - Admins can still use "Check for Updates Now" for an immediate refresh
 
 ### Version Management
 
-The plugin version is defined in **one place** using PHP constants:
+The release workflow expects these version sources to stay in sync:
 
 ```php
 define( 'WTC_VERSION', '1.2.0' );
@@ -189,7 +195,11 @@ This constant is referenced throughout the plugin for:
 - GitHub updater version checking
 - Transient cache keys
 
-**Manual sync required**: The plugin header comment (line 6) must still be updated manually to match `WTC_VERSION`.
+Keep these in sync before tagging a release:
+- `wealth-tax-calculator/wealth-tax-calculator.php` plugin header `Version`
+- `wealth-tax-calculator/wealth-tax-calculator.php` `WTC_VERSION`
+- `package.json` `version`
+- `wealth-tax-calculator/CHANGELOG.md` section heading
 
 ---
 
@@ -208,8 +218,8 @@ define( 'WTC_BILLIONAIRE_WEALTH', 15.3e12 ); // $15.3 trillion
 define( 'WTC_TAX_RATE_MIN', 1 );  // 1%
 define( 'WTC_TAX_RATE_MAX', 8 );  // 8%
 
-// Cache duration for comparison data
-define( 'WTC_CACHE_TTL', 12 * HOUR_IN_SECONDS ); // 12 hours
+// GitHub release metadata cache duration
+define( 'WTC_CACHE_TTL', 5 * MINUTE_IN_SECONDS );
 ```
 
 **Note**: After changing `WTC_BILLIONAIRE_WEALTH` or tax rates, update the HTML in `render_calculator()` to match.
@@ -251,7 +261,7 @@ wordpress/
 - Direct links to GitHub repository
 
 ### Auto-Updates via GitHub
-- Checks for new releases every 12 hours
+- Checks for new releases on a best-effort 5-minute schedule
 - One-click updates from WordPress admin
 - Optional automatic installation of updates
 - Integrates with WordPress native update system
@@ -283,11 +293,12 @@ wordpress/
 
 1. **Verify release tag** matches plugin version exactly (`v1.2.0`)
 2. **Check release asset** is named `wealth-tax-calculator.zip`
-3. **Wait 12 hours** or clear transient cache:
+3. **Wait for the next scheduled run** or clear transient cache:
    ```php
    delete_transient('wtc_github_update_...');
    ```
-4. **Deactivate and reactivate** plugin to force check
+4. **Check Settings → Wealth Tax Updates** for the last updater error and next scheduled check
+5. **Deactivate and reactivate** plugin to reschedule checks if needed
 
 ### Minified files not updating
 
