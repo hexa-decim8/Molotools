@@ -31,13 +31,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-          cache-dependency-path: calculators/wealth-tax-calculator/wordpress/package-lock.json
-
       - name: Create CI build tag for commit
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
@@ -67,13 +60,13 @@ jobs:
             fi
 
             if [ -z "$TAG" ]; then
-              VERSION=$(node -p "require('./${{ env.PLUGIN_DIR }}/package.json').version")
+              VERSION=$(grep '^ \* Version:' "${{ env.PHP_FILE }}" | sed 's/^ \* Version:[[:space:]]*//')
               TAG="v${VERSION}"
             fi
           elif [ "${GITHUB_REF#refs/tags/}" != "$GITHUB_REF" ]; then
             TAG="${GITHUB_REF#refs/tags/}"
           else
-            VERSION=$(node -p "require('./${{ env.PLUGIN_DIR }}/package.json').version")
+            VERSION=$(grep '^ \* Version:' "${{ env.PHP_FILE }}" | sed 's/^ \* Version:[[:space:]]*//')
             TAG="v${VERSION}"
           fi
 
@@ -110,22 +103,12 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "should_release=$SHOULD_RELEASE" >> "$GITHUB_OUTPUT"
 
-      - name: Install build dependencies
-        run: npm ci
-        working-directory: ${{ env.PLUGIN_DIR }}
-
       - name: Validate version consistency
         if: steps.version.outputs.should_release == 'true'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          PACKAGE_VERSION=$(node -p "require('./${{ env.PLUGIN_DIR }}/package.json').version")
           HEADER_VERSION=$(grep '^ \* Version:' "${{ env.PHP_FILE }}" | sed 's/^ \* Version:[[:space:]]*//')
           CONSTANT_VERSION=$(grep "define( 'WTC_VERSION'" "${{ env.PHP_FILE }}" | sed -E "s/.*'WTC_VERSION',[[:space:]]*'([^']+)'.*/\1/")
-
-          if [ "$PACKAGE_VERSION" != "$VERSION" ]; then
-            echo "package.json version $PACKAGE_VERSION does not match tag $VERSION"
-            exit 1
-          fi
 
           if [ "$HEADER_VERSION" != "$VERSION" ]; then
             echo "Plugin header version $HEADER_VERSION does not match tag $VERSION"
@@ -148,8 +131,11 @@ jobs:
           fi
 
       - name: Build plugin zip
-        run: npm run build
-        working-directory: ${{ env.PLUGIN_DIR }}
+        run: |
+          cd "${{ env.PLUGIN_DIR }}"
+          rm -f wealth-tax-calculator.zip
+          zip -r wealth-tax-calculator.zip wealth-tax-calculator \
+            -x "*/.DS_Store" "*/Thumbs.db" "*/.git/*" "*/node_modules/*" "*/src/*" "*.log" "*.map"
 
       - name: Verify release artifact
         run: |
