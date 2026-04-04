@@ -204,7 +204,7 @@
 
 .calculator-container .policy-marker-label {
     position: absolute;
-    top: 22px;
+    top: -32px;
     left: 50%;
     transform: translateX(-50%);
     background: #e74c3c;

@@ -5,6 +5,27 @@ All notable changes to the Billionaire Wealth Tax Calculator WordPress plugin wi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Admin Settings Page**: New settings page under Settings > Wealth Tax Updates
+  - View current version and latest available version
+  - Manual "Check for Updates Now" button
+  - Enable/disable automatic updates toggle
+  - Repository link and update status information
+  - Detailed explanation of how updates work
+- **Auto-Update Control**: Option to enable automatic updates from GitHub
+  - Integrates with WordPress's native auto-update system
+  - Updates install automatically when enabled
+  - Can be toggled on/off in the settings page
+- **Manual Update Check**: Force update check without waiting for scheduled check
+  - Clears update cache and forces fresh GitHub API call
+  - Shows success notification after check completes
+- **Admin Notifications**: Clear visual indicators for update availability
+  - Green checkmark when up to date
+  - Red warning when update is available
+  - Direct link to Plugins page for updating
+
 ## [1.2.0] - 2026-04-03
 
 ### Added

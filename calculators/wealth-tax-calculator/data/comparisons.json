@@ -2,14 +2,30 @@
   "comparisons": [
     {
       "minRevenue": 0,
-      "maxRevenue": 85000000000,
-      "description": "This could fund the entire annual budget of the Department of Education",
-      "amount": 83300000000,
-      "sourceText": "U.S. Department of Education Budget, Congress.gov",
-      "sourceUrl": "http://Congress.gov"
+      "maxRevenue": 30000000000,
+      "description": "This could fund a $60,000 minimum salary for every public school teacher in America",
+      "amount": 28000000000,
+      "sourceText": "NEA 2023-2024 Teacher Salary Benchmark Report",
+      "sourceUrl": "https://www.nea.org/resource-library/teacher-salary-benchmark-report"
     },
     {
-      "minRevenue": 85000000000,
+      "minRevenue": 30000000000,
+      "maxRevenue": 39000000000,
+      "description": "This could renew the ACA enhanced premium tax credits for one year, keeping health insurance affordable for millions of Americans",
+      "amount": 35000000000,
+      "sourceText": "Offsetting ACA Enhanced Subsidy Extensions, Committee for a Responsible Federal Budget",
+      "sourceUrl": "https://www.crfb.org/blogs/offsetting-aca-enhanced-subsidy-extensions"
+    },
+    {
+      "minRevenue": 39000000000,
+      "maxRevenue": 86000000000,
+      "description": "This could cap childcare costs at 7% of household income for every American family for one year",
+      "amount": 42000000000,
+      "sourceText": "Early Learning and Care in the Build Back Better Act, Congressional Budget Office",
+      "sourceUrl": "https://www.cbo.gov/topics/education-and-training"
+    },
+    {
+      "minRevenue": 86000000000,
       "maxRevenue": 100000000000,
       "description": "This could fund spending for the entire fiscal year 2024 Department of Homeland Security Budget",
       "amount": 89300000000,
@@ -27,10 +43,10 @@
     {
       "minRevenue": 200000000000,
       "maxRevenue": 260000000000,
-      "description": "This could fund spending for the entire fiscal year 2024 Department of Agriculture budget",
-      "amount": 203400000000,
-      "sourceText": "U.S. Department of Agriculture FY 2024 Budget, U.S. Department of the Treasury",
-      "sourceUrl": "https://home.treasury.gov/news/press-releases/jy2657"
+      "description": "This could eliminate federal income taxes entirely for every individual earning up to $46,000/year and every married couple earning up to $92,000/year",
+      "amount": 225000000000,
+      "sourceText": "IRS Statistics of Income — Individual Income Tax Returns (Publication 1304)",
+      "sourceUrl": "https://www.irs.gov/statistics/soi-tax-stats-individual-income-tax-returns-publication-1304-complete-report"
     },
     {
       "minRevenue": 260000000000,
@@ -59,7 +75,7 @@
     {
       "minRevenue": 600000000000,
       "maxRevenue": 640000000000,
-      "description": "This could fund spending for the entire fiscal year 2024 budget for the federal portion of Medicaid spending",
+      "description": "This covers spending for an entire year for the federal portion of Medicaid payments",
       "amount": 620000000000,
       "sourceText": "Federal Medicaid Spending FY 2024, MACPAC (Feb 2026)",
       "sourceUrl": "https://www.macpac.gov/wp-content/uploads/2026/02/MACSTATS_Feb2026_WEB_508.pdf"
@@ -67,18 +83,26 @@
     {
       "minRevenue": 640000000000,
       "maxRevenue": 700000000000,
-      "description": "This could fund spending for the entire fiscal year 2024 budget for the federal portion of Medicaid spending and the entire CHIP program",
+      "description": "This covers spending for an entire year of the federal portion of Medicaid spending and the entire CHIP program",
       "amount": 648000000000,
       "sourceText": "Federal Medicaid and CHIP Spending FY 2024, MACPAC (Feb 2026)",
       "sourceUrl": "https://www.macpac.gov/wp-content/uploads/2026/02/MACSTATS_Feb2026_WEB_508.pdf"
     },
     {
       "minRevenue": 700000000000,
+      "maxRevenue": 854000000000,
+      "description": "This could fully eliminate the employer-side payroll tax on wages for one year, cutting employment costs for every business and boosting take-home pay for every worker",
+      "amount": 850000000000,
+      "sourceText": "What Kinds of Revenue Does the Government Collect?, Bipartisan Policy Center",
+      "sourceUrl": "https://bipartisanpolicy.org/explainer/what-kinds-of-revenue-does-the-government-collect/"
+    },
+    {
+      "minRevenue": 854000000000,
       "maxRevenue": 1000000000000,
-      "description": "This could fund federal Medicaid and CHIP programs for an entire year",
-      "amount": 985600000000,
-      "sourceText": "Medicaid and CHIP Spending FY 2024, MACPAC (Feb 2026)",
-      "sourceUrl": "https://www.macpac.gov/wp-content/uploads/2026/02/MACSTATS_Feb2026_WEB_508.pdf"
+      "description": "This could fund a one-time $3,000 direct payment to every individual — $12,000 for a family of four — in households earning $150,000 or less",
+      "amount": 856000000000,
+      "sourceText": "The Make Billionaires Pay Their Fair Share Act, Sen. Sanders & Rep. Khanna (2026)",
+      "sourceUrl": "https://www.sanders.senate.gov/wp-content/uploads/MakeBillionairesPayTheirFairShareAct.pdf"
     },
     {
       "minRevenue": 1000000000000,

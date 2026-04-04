@@ -189,11 +189,224 @@ class WTC_GitHub_Updater {
 }
 
 // Register the updater.
-new WTC_GitHub_Updater(
+$wtc_updater = new WTC_GitHub_Updater(
     'wealth-tax-calculator/wealth-tax-calculator.php',
     'hexa-decim8/Molotools',
     WTC_VERSION
 );
+
+// ---------------------------------------------------------------------------
+// Admin Settings Page
+// ---------------------------------------------------------------------------
+class WTC_Admin_Settings {
+
+    private $updater;
+    
+    public function __construct( $updater ) {
+        $this->updater = $updater;
+        
+        add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
+        add_action( 'admin_init', array( $this, 'register_settings' ) );
+        add_action( 'admin_post_wtc_check_updates', array( $this, 'handle_manual_update_check' ) );
+        add_filter( 'auto_update_plugin', array( $this, 'enable_auto_updates' ), 10, 2 );
+    }
+
+    /**
+     * Add settings page under Settings menu
+     */
+    public function add_settings_page() {
+        add_options_page(
+            'Wealth Tax Calculator Updates',
+            'Wealth Tax Updates',
+            'manage_options',
+            'wealth-tax-calculator',
+            array( $this, 'render_settings_page' )
+        );
+    }
+
+    /**
+     * Register plugin settings
+     */
+    public function register_settings() {
+        register_setting( 'wtc_settings', 'wtc_auto_update_enabled' );
+    }
+
+    /**
+     * Enable auto-updates if setting is enabled
+     */
+    public function enable_auto_updates( $update, $item ) {
+        if ( isset( $item->slug ) && $item->slug === 'wealth-tax-calculator' ) {
+            $auto_update_enabled = get_option( 'wtc_auto_update_enabled', '0' );
+            return $auto_update_enabled === '1';
+        }
+        return $update;
+    }
+
+    /**
+     * Handle manual update check
+     */
+    public function handle_manual_update_check() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( 'Unauthorized access' );
+        }
+
+        check_admin_referer( 'wtc_check_updates' );
+
+        // Clear the cache to force a fresh check
+        $cache_key = 'wtc_github_update_' . md5( 'wealth-tax-calculator/wealth-tax-calculator.php' );
+        delete_transient( $cache_key );
+
+        // Force WordPress to check for updates
+        delete_site_transient( 'update_plugins' );
+        wp_update_plugins();
+
+        // Redirect back with success message
+        wp_redirect( add_query_arg(
+            array(
+                'page'              => 'wealth-tax-calculator',
+                'update_check_done' => '1',
+            ),
+            admin_url( 'options-general.php' )
+        ) );
+        exit;
+    }
+
+    /**
+     * Render the settings page
+     */
+    public function render_settings_page() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+
+        // Get current version and check for updates
+        $current_version = WTC_VERSION;
+        $update_available = false;
+        $latest_version = $current_version;
+        $release_info = null;
+
+        // Check if there's an update available
+        $update_plugins = get_site_transient( 'update_plugins' );
+        if ( isset( $update_plugins->response['wealth-tax-calculator/wealth-tax-calculator.php'] ) ) {
+            $update_available = true;
+            $latest_version = $update_plugins->response['wealth-tax-calculator/wealth-tax-calculator.php']->new_version;
+        }
+
+        $auto_update_enabled = get_option( 'wtc_auto_update_enabled', '0' ) === '1';
+        $update_check_done = isset( $_GET['update_check_done'] ) && $_GET['update_check_done'] === '1';
+
+        ?>
+        <div class="wrap">
+            <h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+
+            <?php if ( $update_check_done ) : ?>
+                <div class="notice notice-success is-dismissible">
+                    <p><?php esc_html_e( 'Update check completed!', 'wealth-tax-calculator' ); ?></p>
+                </div>
+            <?php endif; ?>
+
+            <div class="card" style="max-width: 800px;">
+                <h2><?php esc_html_e( 'Version Information', 'wealth-tax-calculator' ); ?></h2>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row"><?php esc_html_e( 'Current Version:', 'wealth-tax-calculator' ); ?></th>
+                        <td><strong><?php echo esc_html( $current_version ); ?></strong></td>
+                    </tr>
+                    <?php if ( $update_available ) : ?>
+                        <tr>
+                            <th scope="row"><?php esc_html_e( 'Latest Version:', 'wealth-tax-calculator' ); ?></th>
+                            <td>
+                                <strong style="color: #d63638;"><?php echo esc_html( $latest_version ); ?></strong>
+                                <span style="margin-left: 10px; color: #d63638;">
+                                    <?php esc_html_e( '⚠️ Update Available', 'wealth-tax-calculator' ); ?>
+                                </span>
+                            </td>
+                        </tr>
+                    <?php else : ?>
+                        <tr>
+                            <th scope="row"><?php esc_html_e( 'Status:', 'wealth-tax-calculator' ); ?></th>
+                            <td>
+                                <span style="color: #00a32a;">
+                                    <?php esc_html_e( '✓ Up to date', 'wealth-tax-calculator' ); ?>
+                                </span>
+                            </td>
+                        </tr>
+                    <?php endif; ?>
+                    <tr>
+                        <th scope="row"><?php esc_html_e( 'Repository:', 'wealth-tax-calculator' ); ?></th>
+                        <td>
+                            <a href="https://github.com/hexa-decim8/Molotools" target="_blank">
+                                hexa-decim8/Molotools ↗
+                            </a>
+                        </td>
+                    </tr>
+                </table>
+
+                <?php if ( $update_available ) : ?>
+                    <p>
+                        <a href="<?php echo esc_url( admin_url( 'plugins.php' ) ); ?>" class="button button-primary">
+                            <?php esc_html_e( 'Go to Plugins Page to Update', 'wealth-tax-calculator' ); ?>
+                        </a>
+                    </p>
+                <?php endif; ?>
+            </div>
+
+            <div class="card" style="max-width: 800px; margin-top: 20px;">
+                <h2><?php esc_html_e( 'Update Settings', 'wealth-tax-calculator' ); ?></h2>
+                <form method="post" action="options.php">
+                    <?php settings_fields( 'wtc_settings' ); ?>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row"><?php esc_html_e( 'Automatic Updates:', 'wealth-tax-calculator' ); ?></th>
+                            <td>
+                                <label>
+                                    <input
+                                        type="checkbox"
+                                        name="wtc_auto_update_enabled"
+                                        value="1"
+                                        <?php checked( $auto_update_enabled, true ); ?>
+                                    />
+                                    <?php esc_html_e( 'Enable automatic updates for this plugin', 'wealth-tax-calculator' ); ?>
+                                </label>
+                                <p class="description">
+                                    <?php esc_html_e( 'When enabled, the plugin will automatically update when new versions are released on GitHub.', 'wealth-tax-calculator' ); ?>
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                    <?php submit_button( __( 'Save Settings', 'wealth-tax-calculator' ) ); ?>
+                </form>
+            </div>
+
+            <div class="card" style="max-width: 800px; margin-top: 20px;">
+                <h2><?php esc_html_e( 'Manual Update Check', 'wealth-tax-calculator' ); ?></h2>
+                <p><?php esc_html_e( 'Click the button below to manually check for updates from GitHub.', 'wealth-tax-calculator' ); ?></p>
+                <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+                    <input type="hidden" name="action" value="wtc_check_updates" />
+                    <?php wp_nonce_field( 'wtc_check_updates' ); ?>
+                    <?php submit_button( __( 'Check for Updates Now', 'wealth-tax-calculator' ), 'secondary' ); ?>
+                </form>
+            </div>
+
+            <div class="card" style="max-width: 800px; margin-top: 20px;">
+                <h2><?php esc_html_e( 'How Updates Work', 'wealth-tax-calculator' ); ?></h2>
+                <ul style="list-style: disc; margin-left: 20px;">
+                    <li><?php esc_html_e( 'Updates are fetched from GitHub releases', 'wealth-tax-calculator' ); ?></li>
+                    <li><?php esc_html_e( 'The plugin checks for updates every 12 hours automatically', 'wealth-tax-calculator' ); ?></li>
+                    <li><?php esc_html_e( 'You can manually check for updates using the button above', 'wealth-tax-calculator' ); ?></li>
+                    <li><?php esc_html_e( 'Enable automatic updates to install new versions without manual intervention', 'wealth-tax-calculator' ); ?></li>
+                    <li><?php esc_html_e( 'Updates are shown in the WordPress Plugins page when available', 'wealth-tax-calculator' ); ?></li>
+                </ul>
+            </div>
+        </div>
+        <?php
+    }
+}
+
+// Initialize admin settings page
+if ( is_admin() ) {
+    new WTC_Admin_Settings( $wtc_updater );
+}
 
 /**
  * Activation hook - runs when plugin is activated
@@ -392,6 +605,21 @@ class Billionaire_Wealth_Tax_Calculator {
                         <label class="policy-checkbox">
                             <input type="checkbox" name="wtc-policy" value="business" id="wtc-policyBusiness">
                             <span class="checkbox-label">Business</span>
+                        </label>
+                        
+                        <label class="policy-checkbox">
+                            <input type="checkbox" name="wtc-policy" value="directRelief" id="wtc-policyDirectRelief">
+                            <span class="checkbox-label">Direct Relief</span>
+                        </label>
+                        
+                        <label class="policy-checkbox">
+                            <input type="checkbox" name="wtc-policy" value="housing" id="wtc-policyHousing">
+                            <span class="checkbox-label">Housing</span>
+                        </label>
+                        
+                        <label class="policy-checkbox">
+                            <input type="checkbox" name="wtc-policy" value="childcare" id="wtc-policyChildcare">
+                            <span class="checkbox-label">Childcare &amp; Families</span>
                         </label>
                     </div>
                     

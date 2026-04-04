@@ -12,22 +12,81 @@ let currentMode = 'basic'; // 'basic' or 'advanced'
 const POLICY_LABELS = {
     healthcare: 'Healthcare',
     education: 'Education',
-    business: 'Business'
+    business: 'Business',
+    directRelief: 'Direct Relief',
+    housing: 'Housing',
+    childcare: 'Childcare & Families'
 };
 
 // Policy-specific funding examples
 const POLICY_EXAMPLES = {
     healthcare: [
         {
+            minAmount: 25e9,
+            maxAmount: 44e9,
+            description: 'Expand Medicare to cover dental, vision, and hearing care for all seniors (~$29B/year)',
+            sourceText: 'The Make Billionaires Pay Their Fair Share Act, Sen. Sanders (2026)',
+            sourceUrl: 'https://www.sanders.senate.gov/wp-content/uploads/MakeBillionairesPayTheirFairShareAct.pdf'
+        },
+        {
+            minAmount: 25e9,
+            maxAmount: 44e9,
+            description: 'Ensure all seniors and people with disabilities can receive Medicaid home health care (~$30B/year)',
+            sourceText: 'The Make Billionaires Pay Their Fair Share Act, Sen. Sanders (2026)',
+            sourceUrl: 'https://www.sanders.senate.gov/wp-content/uploads/MakeBillionairesPayTheirFairShareAct.pdf'
+        },
+        {
             minAmount: 45e9,
             maxAmount: 52e9,
             description: 'National Institutes of Health fully funded',
             sourceText: 'NIH Appropriations',
             sourceUrl: 'https://www.nih.gov/about-nih/nih-almanac/appropriations-section-1'
+        },
+        {
+            minAmount: 100e9,
+            maxAmount: 175e9,
+            description: 'Reverse all Medicaid and ACA cuts from the One Big Beautiful Bill (~$110B/year)',
+            sourceText: 'The Make Billionaires Pay Their Fair Share Act, Sen. Sanders (2026)',
+            sourceUrl: 'https://www.sanders.senate.gov/wp-content/uploads/MakeBillionairesPayTheirFairShareAct.pdf'
         }
     ],
-    education: [],
-    business: []
+    education: [
+        {
+            minAmount: 13e9,
+            maxAmount: 20e9,
+            description: 'Guarantee a $60,000 minimum salary for all public school teachers nationwide (~$15B/year)',
+            sourceText: 'The Make Billionaires Pay Their Fair Share Act, Sen. Sanders (2026)',
+            sourceUrl: 'https://www.sanders.senate.gov/wp-content/uploads/MakeBillionairesPayTheirFairShareAct.pdf'
+        }
+    ],
+    business: [],
+    directRelief: [
+        {
+            minAmount: 900e9,
+            maxAmount: 2000e9,
+            description: 'Provide $3,000 direct payments to every person in households earning $150,000 or less',
+            sourceText: 'The Make Billionaires Pay Their Fair Share Act, Sen. Sanders (2026)',
+            sourceUrl: 'https://www.sanders.senate.gov/wp-content/uploads/MakeBillionairesPayTheirFairShareAct.pdf'
+        }
+    ],
+    housing: [
+        {
+            minAmount: 80e9,
+            maxAmount: 130e9,
+            description: 'Build, rehabilitate, and preserve 700,000+ affordable homes per year to eliminate the housing gap (~$86B/year)',
+            sourceText: 'The Make Billionaires Pay Their Fair Share Act, Sen. Sanders (2026)',
+            sourceUrl: 'https://www.sanders.senate.gov/wp-content/uploads/MakeBillionairesPayTheirFairShareAct.pdf'
+        }
+    ],
+    childcare: [
+        {
+            minAmount: 65e9,
+            maxAmount: 110e9,
+            description: 'Cap childcare costs at 7% of family income for all American families (~$70B/year)',
+            sourceText: 'The Make Billionaires Pay Their Fair Share Act, Sen. Sanders (2026)',
+            sourceUrl: 'https://www.sanders.senate.gov/wp-content/uploads/MakeBillionairesPayTheirFairShareAct.pdf'
+        }
+    ]
 };
 
 // Load comparison data

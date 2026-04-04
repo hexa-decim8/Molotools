@@ -35,6 +35,53 @@ Then activate via **WordPress Admin → Plugins**.
 
 ---
 
+## Admin Settings & Auto-Updates
+
+The plugin includes a dedicated settings page for managing updates.
+
+### Accessing Settings
+
+Go to **WordPress Admin → Settings → Wealth Tax Updates**
+
+### Features
+
+#### Version Information
+- View current installed version
+- See if updates are available
+- Check latest version from GitHub
+- Visual indicators:
+  - ✓ Green checkmark when up to date
+  - ⚠️ Red warning when update available
+
+#### Automatic Updates
+- **Enable/Disable Auto-Updates**: Toggle automatic updates on or off
+- When enabled, the plugin automatically installs new versions from GitHub releases
+- Integrates with WordPress's native auto-update system
+- Updates happen during WordPress's scheduled update checks
+
+#### Manual Update Check
+- **"Check for Updates Now"** button forces an immediate check
+- Clears cached update data and queries GitHub API
+- Useful when you know a new release is available but WordPress hasn't checked yet
+- Shows success notification after check completes
+
+#### Update Process
+- Updates are fetched from GitHub releases every 12 hours
+- Release must include `wealth-tax-calculator.zip` as an asset
+- One-click update from WordPress Plugins page when available
+- Direct link from settings page to Plugins page when update is ready
+
+### Configuring Auto-Updates
+
+1. Navigate to **Settings → Wealth Tax Updates**
+2. Check the box "Enable automatic updates for this plugin"
+3. Click **Save Settings**
+4. Plugin will now update automatically when new versions are released
+
+**Note**: If auto-updates are disabled (default), you'll still see update notifications in the Plugins page, but you'll need to click "Update Now" manually.
+
+---
+
 ## Development & Build System
 
 ### Prerequisites
@@ -195,9 +242,19 @@ wordpress/
 
 ## Features
 
+### Admin Settings Page
+- Dedicated settings page under **Settings → Wealth Tax Updates**
+- View current and latest available versions
+- Enable/disable automatic updates
+- Manual "Check for Updates Now" button
+- Visual update status indicators
+- Direct links to GitHub repository
+
 ### Auto-Updates via GitHub
 - Checks for new releases every 12 hours
 - One-click updates from WordPress admin
+- Optional automatic installation of updates
+- Integrates with WordPress native update system
 - No external plugins required
 
 ### Performance Optimizations
