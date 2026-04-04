@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.3] - 2026-04-04
+
 ### Changed
 - Reverted the calculator layout to a fully vertical single-column flow across all screen sizes.
 
@@ -125,6 +127,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 
 ## Upgrade Notice
+
+### 1.2.3
+Restores the calculator to a fully vertical single-column layout across all screen sizes.
 
 ### 1.2.2
 Widens the calculator on large screens and bumps the release version so GitHub Actions can publish a fresh semantic tag.

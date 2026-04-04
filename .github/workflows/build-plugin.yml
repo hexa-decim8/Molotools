@@ -49,10 +49,54 @@ jobs:
             exit 1
           fi
 
-          TAG="v$VERSION"
+          git fetch --tags --force
 
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          RESOLVED_VERSION="$VERSION"
+          HEAD_COMMIT=$(git rev-parse HEAD)
+
+          # Auto-increment patch version if the tag already exists on a different commit.
+          while true; do
+            TAG="v$RESOLVED_VERSION"
+
+            if ! git rev-parse "$TAG" >/dev/null 2>&1; then
+              break
+            fi
+
+            TAG_COMMIT=$(git rev-list -n 1 "$TAG")
+            if [ "$TAG_COMMIT" = "$HEAD_COMMIT" ]; then
+              break
+            fi
+
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$RESOLVED_VERSION"
+            PATCH=$((PATCH + 1))
+            RESOLVED_VERSION="$MAJOR.$MINOR.$PATCH"
+          done
+
+          if [ "$RESOLVED_VERSION" != "$VERSION" ]; then
+            echo "Tag v$VERSION exists on a different commit. Auto-incrementing to v$RESOLVED_VERSION."
+
+            sed -E -i "s/^ \* Version:[[:space:]]*.*/ * Version:     $RESOLVED_VERSION/" "${{ env.PHP_FILE }}"
+            sed -E -i "s/(define\( 'WTC_VERSION', ')[^']+(' \);)/\\1$RESOLVED_VERSION\\2/" "${{ env.PHP_FILE }}"
+
+            if ! grep -q "^## \[$RESOLVED_VERSION\]" "${{ env.CHANGELOG_FILE }}"; then
+              TODAY=$(date +%Y-%m-%d)
+              TMP_FILE=$(mktemp)
+
+              awk -v version="$RESOLVED_VERSION" -v today="$TODAY" '
+                { print }
+                $0 == "## [Unreleased]" {
+                  print ""
+                  print "## [" version "] - " today
+                  print ""
+                }
+              ' "${{ env.CHANGELOG_FILE }}" > "$TMP_FILE"
+
+              mv "$TMP_FILE" "${{ env.CHANGELOG_FILE }}"
+            fi
+          fi
+
+          echo "version=$RESOLVED_VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$RESOLVED_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Validate version consistency
         run: |
@@ -100,7 +144,7 @@ jobs:
             exit 1
           fi
 
-      - name: Commit refreshed plugin zip
+      - name: Commit refreshed plugin artifacts
         id: commit_zip
         run: |
           VERSION="${{ steps.version.outputs.version }}"
@@ -108,15 +152,15 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add "${{ env.ZIP_FILE }}"
+          git add "${{ env.ZIP_FILE }}" "${{ env.PHP_FILE }}" "${{ env.CHANGELOG_FILE }}"
 
           if git diff --cached --quiet; then
-            echo "No zip changes to commit"
+            echo "No plugin artifact changes to commit"
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          git commit -m "build(plugin): refresh wealth-tax-calculator.zip for v$VERSION"
+          git commit -m "build(plugin): refresh plugin artifacts for v$VERSION"
           git push
           echo "changed=true" >> "$GITHUB_OUTPUT"
 
