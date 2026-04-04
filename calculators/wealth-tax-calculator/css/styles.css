@@ -17,7 +17,7 @@ body {
 }
 
 .calculator-container {
-    max-width: 1100px;
+    max-width: 1400px;
     margin: 0 auto;
     background: white;
     border-radius: 12px;
@@ -46,10 +46,10 @@ header h1 {
 
 /* Calculator Content */
 .calculator-content {
-    padding: 40px 30px;
+    padding: 40px 40px;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 40px;
+    gap: 50px;
     align-items: start;
 }
 
