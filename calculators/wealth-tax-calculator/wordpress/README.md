@@ -67,8 +67,8 @@ What the workflow does:
 1. Update plugin version values in `wealth-tax-calculator/wealth-tax-calculator.php`:
 
 ```php
-* Version: 1.2.1
-define( 'WTC_VERSION', '1.2.1' );
+* Version: 1.2.2
+define( 'WTC_VERSION', '1.2.2' );
 ```
 
 2. Update `wealth-tax-calculator/CHANGELOG.md` with a matching section header.
@@ -77,7 +77,7 @@ define( 'WTC_VERSION', '1.2.1' );
 
 4. Let GitHub Actions rebuild and commit `wealth-tax-calculator.zip`.
 
-5. The workflow automatically creates the semantic release tag (`v1.2.0`, `v1.2.1`, etc.) for the new version.
+5. The workflow automatically creates the semantic release tag (`v1.2.0`, `v1.2.1`, `v1.2.2`, etc.) for the new version.
 
 6. The workflow then creates or updates the GitHub Release and uploads `wealth-tax-calculator.zip` for updater compatibility.
 

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-04-04
+
+### Changed
+- Widened the calculator layout on large screens so the plugin makes better use of available desktop space.
+
+### Fixed
+- Unblocked release automation after `v1.2.1` had already been created on a different commit by bumping the plugin version for a fresh semantic tag.
+
 ## [1.2.1] - 2026-04-04
 
 ### Changed
@@ -114,6 +122,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 
 ## Upgrade Notice
+
+### 1.2.2
+Widens the calculator on large screens and bumps the release version so GitHub Actions can publish a fresh semantic tag.
 
 ### 1.2.1
 Rebuilds release automation to always publish an up-to-date `wealth-tax-calculator.zip` in the repository and create standard semantic release tags.
