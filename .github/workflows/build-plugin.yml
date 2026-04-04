@@ -2,13 +2,15 @@ name: Build WordPress Plugin Release
 
 on:
   push:
+    branches:
+      - main
     tags:
       - 'v*.*.*'
   workflow_dispatch:
     inputs:
       tag:
         description: Version tag to build and publish, for example v1.2.0
-        required: true
+        required: false
 
 permissions:
   contents: write
@@ -36,13 +38,43 @@ jobs:
           cache: npm
           cache-dependency-path: calculators/wealth-tax-calculator/wordpress/package-lock.json
 
+      - name: Create CI build tag for commit
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          SHORT_SHA="${GITHUB_SHA::7}"
+          CI_TAG="ci-build-${SHORT_SHA}"
+
+          git fetch --tags --force
+
+          if git rev-parse "$CI_TAG" >/dev/null 2>&1; then
+            echo "CI tag $CI_TAG already exists; continuing."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git tag "$CI_TAG"
+          git push origin "$CI_TAG"
+
       - name: Resolve release version
         id: version
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             TAG="${{ inputs.tag }}"
-          else
+            if [ -z "$TAG" ]; then
+              TAG=$(git tag --points-at "$GITHUB_SHA" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 || true)
+            fi
+
+            if [ -z "$TAG" ]; then
+              VERSION=$(node -p "require('./${{ env.PLUGIN_DIR }}/package.json').version")
+              TAG="v${VERSION}"
+            fi
+          elif [ "${GITHUB_REF#refs/tags/}" != "$GITHUB_REF" ]; then
             TAG="${GITHUB_REF#refs/tags/}"
+          else
+            VERSION=$(node -p "require('./${{ env.PLUGIN_DIR }}/package.json').version")
+            TAG="v${VERSION}"
           fi
 
           if ! printf '%s' "$TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
@@ -52,14 +84,38 @@ jobs:
 
           VERSION="${TAG#v}"
 
+          SHOULD_RELEASE="true"
+
+          if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            git fetch --tags --force
+
+            if git rev-parse "$TAG" >/dev/null 2>&1; then
+              TAG_COMMIT=$(git rev-list -n 1 "$TAG")
+
+              if [ "$TAG_COMMIT" != "$GITHUB_SHA" ]; then
+                echo "Tag $TAG already exists on commit $TAG_COMMIT."
+                echo "Skipping release creation for this commit and running build-only mode."
+                SHOULD_RELEASE="false"
+              fi
+            else
+              git config user.name "github-actions[bot]"
+              git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+              git tag -a "$TAG" -m "Release $TAG"
+              git push origin "$TAG"
+            fi
+          fi
+
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "should_release=$SHOULD_RELEASE" >> "$GITHUB_OUTPUT"
 
       - name: Install build dependencies
         run: npm ci
         working-directory: ${{ env.PLUGIN_DIR }}
 
       - name: Validate version consistency
+        if: steps.version.outputs.should_release == 'true'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           PACKAGE_VERSION=$(node -p "require('./${{ env.PLUGIN_DIR }}/package.json').version")
@@ -82,6 +138,7 @@ jobs:
           fi
 
       - name: Validate changelog entry
+        if: steps.version.outputs.should_release == 'true'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
 
@@ -108,7 +165,15 @@ jobs:
             exit 1
           fi
 
+      - name: Upload zip as CI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wealth-tax-calculator-${{ github.sha }}
+          path: ${{ env.ZIP_FILE }}
+          if-no-files-found: error
+
       - name: Extract release notes
+        if: steps.version.outputs.should_release == 'true'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           NOTES_FILE="$RUNNER_TEMP/release-notes.md"
@@ -127,6 +192,7 @@ jobs:
           echo "RELEASE_NOTES_FILE=$NOTES_FILE" >> "$GITHUB_ENV"
 
       - name: Create or update GitHub release
+        if: steps.version.outputs.should_release == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -145,6 +211,7 @@ jobs:
           fi
 
       - name: Verify published asset
+        if: steps.version.outputs.should_release == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
