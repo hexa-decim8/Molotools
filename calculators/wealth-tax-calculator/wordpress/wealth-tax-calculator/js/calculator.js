@@ -15,6 +15,7 @@
         ? wealthTaxConfig.comparisons
         : [];
     var selectedPolicies = [];
+    var selectedPolicyOptions = [];
     var currentMode = 'basic'; // 'basic' or 'advanced'
 
     // Policy category labels
@@ -98,6 +99,38 @@
         ]
     };
 
+    function getPolicyOptionKey(policy, index) {
+        return policy + ':' + index;
+    }
+
+    function removePolicyOptionsForGroup(policyGroup) {
+        var prefix = policyGroup + ':';
+        selectedPolicyOptions = selectedPolicyOptions.filter(function (key) {
+            return key.indexOf(prefix) !== 0;
+        });
+    }
+
+    function updateAdvancedRevenueDisplay(taxRate, grossRevenue, selectedPolicyFunding) {
+        var revenueAmountEl = el('wtc-revenueAmount');
+        var taxExplanationEl = el('wtc-taxExplanation');
+        var revenueSubtextEl = el('wtc-revenueSubtext');
+
+        if (!revenueAmountEl || !taxExplanationEl || !revenueSubtextEl) return;
+
+        if (currentMode === 'advanced' && selectedPolicyFunding > 0) {
+            var remainingRevenue = Math.max(grossRevenue - selectedPolicyFunding, 0);
+            taxExplanationEl.textContent =
+                taxRate.toFixed(1) + '% of $15.3 trillion in billionaire wealth = ' + formatCurrency(grossRevenue) + ' total';
+            revenueAmountEl.textContent = formatCurrency(remainingRevenue);
+            revenueSubtextEl.textContent = formatCurrency(selectedPolicyFunding) + ' committed to selected policies';
+            return;
+        }
+
+        taxExplanationEl.textContent = taxRate.toFixed(1) + '% of $15.3 trillion in billionaire wealth =';
+        revenueAmountEl.textContent = formatCurrency(grossRevenue);
+        revenueSubtextEl.textContent = '';
+    }
+
     // ── Helpers ────────────────────────────────────────────────────────────────
 
     /**
@@ -167,14 +200,19 @@
         var slider = el('wtc-taxRate');
         if (!slider) return;
 
-        var revenue = calculateRevenue(parseFloat(slider.value));
+        var taxRate = parseFloat(slider.value);
+        var revenue = calculateRevenue(taxRate);
+        var visiblePolicyOptionKeys = {};
+        var selectedPolicyFunding = 0;
 
         if (selectedPolicies.length === 0) {
+            selectedPolicyOptions = [];
             var prompt = document.createElement('p');
             prompt.className = 'allocation-prompt';
             prompt.textContent = 'Select categories above to see allocation';
             allocationResults.innerHTML = '';
             allocationResults.appendChild(prompt);
+            updateAdvancedRevenueDisplay(taxRate, revenue, 0);
             return;
         }
 
@@ -200,37 +238,124 @@
             item.appendChild(amount);
             allocationResults.appendChild(item);
             
-            // Check for policy-specific examples
-            if (POLICY_EXAMPLES[policy]) {
-                for (var j = 0; j < POLICY_EXAMPLES[policy].length; j++) {
-                    var example = POLICY_EXAMPLES[policy][j];
-                    if (amountPerCategory >= example.minAmount && amountPerCategory <= example.maxAmount) {
-                        var exampleDiv = document.createElement('div');
-                        exampleDiv.className = 'allocation-example';
-                        
-                        var icon = document.createElement('span');
-                        icon.className = 'example-icon';
-                        icon.textContent = '→';
-                        
-                        var text = document.createElement('span');
-                        text.className = 'example-text';
-                        text.textContent = example.description;
-                        
-                        var link = document.createElement('a');
-                        link.href = sanitizeUrl(example.sourceUrl);
-                        link.target = '_blank';
-                        link.rel = 'noopener noreferrer';
-                        link.className = 'example-source';
-                        link.textContent = '(source)';
-                        
-                        exampleDiv.appendChild(icon);
-                        exampleDiv.appendChild(text);
-                        exampleDiv.appendChild(link);
-                        allocationResults.appendChild(exampleDiv);
-                    }
+            var policyExamples = POLICY_EXAMPLES[policy] || [];
+            var availableExamples = [];
+
+            for (var j = 0; j < policyExamples.length; j++) {
+                if (amountPerCategory >= policyExamples[j].minAmount) {
+                    availableExamples.push({
+                        example: policyExamples[j],
+                        index: j
+                    });
                 }
             }
+
+            if (availableExamples.length > 0) {
+                var examplesContainer = document.createElement('div');
+                examplesContainer.className = 'allocation-example-list';
+
+                for (var k = 0; k < availableExamples.length; k++) {
+                    var available = availableExamples[k];
+                    var exampleData = available.example;
+                    var policyOptionKey = getPolicyOptionKey(policy, available.index);
+                    var inputId = 'wtc-policyOption-' + policy + '-' + available.index;
+                    var isChecked = selectedPolicyOptions.indexOf(policyOptionKey) > -1;
+
+                    visiblePolicyOptionKeys[policyOptionKey] = true;
+                    if (isChecked) {
+                        selectedPolicyFunding += exampleData.minAmount;
+                    }
+
+                    var exampleRow = document.createElement('div');
+                    exampleRow.className = 'allocation-example-row';
+
+                    var optionLabel = document.createElement('label');
+                    optionLabel.className = 'policy-option-checkbox';
+                    optionLabel.setAttribute('for', inputId);
+
+                    var optionInput = document.createElement('input');
+                    optionInput.type = 'checkbox';
+                    optionInput.className = 'policy-option-input';
+                    optionInput.id = inputId;
+                    optionInput.setAttribute('data-policy', policy);
+                    optionInput.setAttribute('data-index', available.index);
+                    if (isChecked) {
+                        optionInput.checked = true;
+                    }
+
+                    var optionText = document.createElement('span');
+                    optionText.className = 'policy-option-text';
+                    optionText.textContent = exampleData.description;
+
+                    optionLabel.appendChild(optionInput);
+                    optionLabel.appendChild(optionText);
+
+                    var optionMeta = document.createElement('div');
+                    optionMeta.className = 'policy-option-meta';
+
+                    var optionCost = document.createElement('span');
+                    optionCost.className = 'policy-option-cost';
+                    optionCost.textContent = formatCurrency(exampleData.minAmount);
+
+                    var optionSource = document.createElement('a');
+                    optionSource.href = sanitizeUrl(exampleData.sourceUrl);
+                    optionSource.target = '_blank';
+                    optionSource.rel = 'noopener noreferrer';
+                    optionSource.className = 'example-source';
+                    optionSource.textContent = 'source';
+
+                    optionMeta.appendChild(optionCost);
+                    optionMeta.appendChild(optionSource);
+
+                    exampleRow.appendChild(optionLabel);
+                    exampleRow.appendChild(optionMeta);
+                    examplesContainer.appendChild(exampleRow);
+                }
+
+                allocationResults.appendChild(examplesContainer);
+            }
         }
+
+        selectedPolicyOptions = selectedPolicyOptions.filter(function (key) {
+            return !!visiblePolicyOptionKeys[key];
+        });
+
+        var remainingRevenue = Math.max(revenue - selectedPolicyFunding, 0);
+        var summary = document.createElement('div');
+        summary.className = 'allocation-summary';
+
+        var selectedLine = document.createElement('span');
+        selectedLine.textContent = 'Selected policy funding: ' + formatCurrency(selectedPolicyFunding);
+
+        var remainingLine = document.createElement('span');
+        remainingLine.textContent = 'Remaining revenue: ' + formatCurrency(remainingRevenue);
+
+        summary.appendChild(selectedLine);
+        summary.appendChild(remainingLine);
+        allocationResults.appendChild(summary);
+
+        var policyOptionCheckboxes = allocationResults.querySelectorAll('.policy-option-input');
+        for (var n = 0; n < policyOptionCheckboxes.length; n++) {
+            policyOptionCheckboxes[n].addEventListener('change', handlePolicyOptionChange);
+        }
+
+        updateAdvancedRevenueDisplay(taxRate, revenue, selectedPolicyFunding);
+    }
+
+    function handlePolicyOptionChange(event) {
+        var checkbox = event.target;
+        var policy = checkbox.getAttribute('data-policy');
+        var index = checkbox.getAttribute('data-index');
+        var policyOptionKey = getPolicyOptionKey(policy, index);
+        var existingIndex = selectedPolicyOptions.indexOf(policyOptionKey);
+
+        if (checkbox.checked && existingIndex === -1) {
+            selectedPolicyOptions.push(policyOptionKey);
+        } else if (!checkbox.checked && existingIndex > -1) {
+            selectedPolicyOptions.splice(existingIndex, 1);
+        }
+
+        updatePolicyAllocation();
     }
 
     function handlePolicyChange(event) {
@@ -242,6 +367,7 @@
             selectedPolicies.push(policyValue);
         } else if (!checkbox.checked && index > -1) {
             selectedPolicies.splice(index, 1);
+            removePolicyOptionsForGroup(policyValue);
         }
 
         updatePolicyAllocation();
@@ -311,9 +437,7 @@
         var revenue = calculateRevenue(taxRate);
 
         el('wtc-rateDisplay').textContent = taxRate.toFixed(1) + '%';
-        el('wtc-taxExplanation').textContent =
-            taxRate.toFixed(1) + '% of $15.3 trillion in billionaire wealth =';
-        el('wtc-revenueAmount').textContent = formatCurrency(revenue);
+        updateAdvancedRevenueDisplay(taxRate, revenue, 0);
 
         var comparison = findComparison(revenue);
         el('wtc-comparisonText').textContent = comparison.description;

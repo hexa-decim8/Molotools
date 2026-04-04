@@ -576,14 +576,13 @@ class Billionaire_Wealth_Tax_Calculator {
                             <option value="7"></option>
                             <option value="8"></option>
                         </datalist>
-                        <div class="policy-marker" data-value="5">
-                            <div class="policy-marker-line"></div>
-                            <div class="policy-marker-label">Abdul's plan</div>
-                        </div>
                     </div>
                     <div class="range-labels">
                         <span>1%</span>
                         <span>8%</span>
+                    </div>
+                    <div class="plan-indicator-row" aria-hidden="true">
+                        <span class="plan-indicator">5% &bull; Abdul's plan</span>
                     </div>
                 </div>
                 
@@ -633,6 +632,7 @@ class Billionaire_Wealth_Tax_Calculator {
                         <h2>Annual Tax Revenue</h2>
                         <p class="tax-explanation" id="wtc-taxExplanation">2.0% of $15.3 trillion in billionaire wealth =</p>
                         <p class="revenue-amount" id="wtc-revenueAmount">$306.0 Billion</p>
+                        <p class="revenue-subtext" id="wtc-revenueSubtext"></p>
                     </div>
 
                     <div class="context-box">

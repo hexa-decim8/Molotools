@@ -1,7 +1,5 @@
 # Billionaire Wealth Tax Calculator
 
-> **Note on CLI Tool**: The command-line version (`wealth-tax-cli.sh`) is deprecated and no longer maintained. Please use the WordPress plugin for the most up-to-date calculations and features.
-
 A calculator that shows potential tax revenue from billionaires at different tax rates (1%-8%), based on the 2026 estimate of **$15.3 trillion** in billionaire wealth from the Institute for Policy Studies.
 
 ## Overview
@@ -11,7 +9,7 @@ This tool is designed for political campaigns and educational websites to help c
 - **Interactive calculator** with tax rates from 1% to 8%
 - **Real-world comparisons** showing what the revenue could fund
 - **Sourced data** with footnotes to official government documents
-- **Multiple versions**: Web interface, WordPress plugin, and command-line tool
+- **WordPress plugin** with shortcode integration
 
 ## Features
 
@@ -26,10 +24,6 @@ This tool is designed for political campaigns and educational websites to help c
 
 ## Installation
 
-### WordPress Plugin (Recommended)
-
-**This is the primary, actively maintained version of the calculator.**
-
 See the [WordPress plugin README](wordpress/README.md) for complete installation, configuration, and build instructions.
 
 **Quick start:**
@@ -37,30 +31,7 @@ See the [WordPress plugin README](wordpress/README.md) for complete installation
 2. Upload via **WordPress Admin → Plugins → Add New → Upload Plugin**
 3. Activate and use shortcode: `[billionaire_wealth_tax]`
 
-**For developers:** The WordPress version includes an npm build system for minification and automated releases. See [wordpress/README.md](wordpress/README.md) for details.
-
-### Standalone Web Version
-
-The `index.html` file can be opened directly in a browser or embedded in any website:
-
-1. Open [index.html](index.html) in a web browser, or
-2. Embed via iframe:
-   ```html
-   <iframe src="/path/to/calculator/index.html" width="100%" height="800px" frameborder="0"></iframe>
-   ```
-
-> **Note**: The standalone version may be out of sync with the WordPress plugin. Use the WordPress version for the most up-to-date data.
-
-### Command-Line Tool (Deprecated)
-
-The bash CLI version (`wealth-tax-cli.sh`) is no longer maintained:
-
-```bash
-chmod +x wealth-tax-cli.sh
-./wealth-tax-cli.sh
-```
-
-**Deprecation reason**: The CLI uses outdated billionaire wealth data and hardcoded comparisons. All development focus is on the WordPress plugin.
+**For developers:** The plugin includes an npm build system for minification and automated releases. See [wordpress/README.md](wordpress/README.md) for details.
 
 ## How It Works
 
@@ -103,15 +74,7 @@ The calculator automatically selects relevant spending comparisons based on the 
 
 ```
 calculators/wealth-tax-calculator/
-├── index.html                          # Standalone web interface
-├── wealth-tax-cli.sh                  # Command-line version
 ├── README.md                           # This file
-├── css/
-│   └── styles.css                     # Stylesheet for standalone interface
-├── js/
-│   └── calculator.js                  # JS for standalone interface
-├── data/
-│   └── comparisons.json               # Spending comparison data
 └── wordpress/
     └── wealth-tax-calculator/         # ← upload this folder via SFTP
         ├── wealth-tax-calculator.php  # WordPress plugin entry point
@@ -125,60 +88,8 @@ calculators/wealth-tax-calculator/
 
 ## Customization
 
-### Updating Comparison Data
+See [wordpress/README.md](wordpress/README.md) for customization instructions including updating comparison data, changing the tax rate range, and styling.
 
-To add or modify spending comparisons, edit [data/comparisons.json](data/comparisons.json):
-
-```json
-{
-  "comparisons": [
-    {
-      "minRevenue": 0,
-      "maxRevenue": 200000000000,
-      "description": "Your comparison text here",
-      "amount": 79600000000,
-      "sourceText": "Source name",
-      "sourceUrl": "https://source-url.gov"
-    }
-  ]
-}
-```
-
-### Changing Tax Rate Range
-
-To adjust the available tax rate range:
-
-1. **Web version:** Edit the `min` and `max` attributes in [index.html](index.html):
-   ```html
-   <input type="range" id="taxRate" min="1" max="8" ... >
-   ```
-
-2. **CLI version:** Edit the validation logic in [wealth-tax-cli.sh](wealth-tax-cli.sh):
-   ```bash
-   if (( $(echo "$tax_rate < 1" | bc -l) )) || (( $(echo "$tax_rate > 8" | bc -l) )); then
-   ```
-
-### Styling
-
-The web interface uses a purple gradient theme. To customize colors, edit [css/styles.css](css/styles.css):
-
-```css
-/* Main gradient */
-background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-
-/* Primary color */
-color: #667eea;
-```
-
-## Browser Compatibility
-
-The web calculator works in all modern browsers:
-- Chrome/Edge 90+
-- Firefox 88+
-- Safari 14+
-- Opera 76+
-
-For older browsers, the calculator will still function but may have reduced visual styling.
 
 ## License
 
@@ -207,9 +118,7 @@ For issues or questions:
 
 - **1.0.0** (January 2026)
   - Initial release
-  - Web interface with interactive slider
   - WordPress plugin integration
-  - Command-line bash tool
   - Sourced comparison data
   - Mobile-responsive design
 
