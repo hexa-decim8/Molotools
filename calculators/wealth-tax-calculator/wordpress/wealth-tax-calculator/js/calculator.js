@@ -16,6 +16,7 @@
         : [];
     var selectedPolicies = [];
     var selectedPolicyOptions = [];
+    var collapsedPolicyGroups = [];
     var currentMode = 'basic'; // 'basic' or 'advanced'
 
     // Policy category labels
@@ -108,6 +109,13 @@
         selectedPolicyOptions = selectedPolicyOptions.filter(function (key) {
             return key.indexOf(prefix) !== 0;
         });
+    }
+
+    function removeCollapsedStateForGroup(policyGroup) {
+        var index = collapsedPolicyGroups.indexOf(policyGroup);
+        if (index > -1) {
+            collapsedPolicyGroups.splice(index, 1);
+        }
     }
 
     function updateAdvancedRevenueDisplay(taxRate, grossRevenue, selectedPolicyFunding) {
@@ -221,25 +229,9 @@
 
         for (var i = 0; i < selectedPolicies.length; i++) {
             var policy = selectedPolicies[i];
-            
-            // Create allocation item
-            var item = document.createElement('div');
-            item.className = 'allocation-item';
-            
-            var category = document.createElement('span');
-            category.className = 'allocation-category';
-            category.textContent = POLICY_LABELS[policy] || policy;
-            
-            var amount = document.createElement('span');
-            amount.className = 'allocation-amount';
-            amount.textContent = formatCurrency(amountPerCategory);
-            
-            item.appendChild(category);
-            item.appendChild(amount);
-            allocationResults.appendChild(item);
-            
             var policyExamples = POLICY_EXAMPLES[policy] || [];
             var availableExamples = [];
+            var isCollapsed = collapsedPolicyGroups.indexOf(policy) > -1;
 
             for (var j = 0; j < policyExamples.length; j++) {
                 if (amountPerCategory >= policyExamples[j].minAmount) {
@@ -249,6 +241,40 @@
                     });
                 }
             }
+
+            var group = document.createElement('div');
+            group.className = 'allocation-group';
+
+            var groupToggle = document.createElement('button');
+            groupToggle.type = 'button';
+            groupToggle.className = 'allocation-group-toggle' + (isCollapsed ? ' collapsed' : '');
+            groupToggle.setAttribute('data-policy', policy);
+            groupToggle.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+
+            var groupMain = document.createElement('span');
+            groupMain.className = 'allocation-group-main';
+
+            var category = document.createElement('span');
+            category.className = 'allocation-category';
+            category.textContent = POLICY_LABELS[policy] || policy;
+
+            var amount = document.createElement('span');
+            amount.className = 'allocation-amount';
+            amount.textContent = formatCurrency(amountPerCategory);
+
+            var chevron = document.createElement('span');
+            chevron.className = 'allocation-group-chevron';
+            chevron.setAttribute('aria-hidden', 'true');
+            chevron.textContent = 'v';
+
+            groupMain.appendChild(category);
+            groupMain.appendChild(amount);
+            groupToggle.appendChild(groupMain);
+            groupToggle.appendChild(chevron);
+            group.appendChild(groupToggle);
+
+            var groupContent = document.createElement('div');
+            groupContent.className = 'allocation-group-content' + (isCollapsed ? ' collapsed' : '');
 
             if (availableExamples.length > 0) {
                 var examplesContainer = document.createElement('div');
@@ -312,8 +338,16 @@
                     examplesContainer.appendChild(exampleRow);
                 }
 
-                allocationResults.appendChild(examplesContainer);
+                groupContent.appendChild(examplesContainer);
+            } else {
+                var emptyMessage = document.createElement('p');
+                emptyMessage.className = 'allocation-empty';
+                emptyMessage.textContent = 'No policy options currently available for this category.';
+                groupContent.appendChild(emptyMessage);
             }
+
+            group.appendChild(groupContent);
+            allocationResults.appendChild(group);
         }
 
         selectedPolicyOptions = selectedPolicyOptions.filter(function (key) {
@@ -339,7 +373,25 @@
             policyOptionCheckboxes[n].addEventListener('change', handlePolicyOptionChange);
         }
 
+        var policyGroupToggles = allocationResults.querySelectorAll('.allocation-group-toggle');
+        for (var p = 0; p < policyGroupToggles.length; p++) {
+            policyGroupToggles[p].addEventListener('click', handlePolicyGroupToggle);
+        }
+
         updateAdvancedRevenueDisplay(taxRate, revenue, selectedPolicyFunding);
+    }
+
+    function handlePolicyGroupToggle(event) {
+        var policy = event.currentTarget.getAttribute('data-policy');
+        var index = collapsedPolicyGroups.indexOf(policy);
+
+        if (index > -1) {
+            collapsedPolicyGroups.splice(index, 1);
+        } else {
+            collapsedPolicyGroups.push(policy);
+        }
+
+        updatePolicyAllocation();
     }
 
     function handlePolicyOptionChange(event) {
@@ -368,6 +420,7 @@
         } else if (!checkbox.checked && index > -1) {
             selectedPolicies.splice(index, 1);
             removePolicyOptionsForGroup(policyValue);
+            removeCollapsedStateForGroup(policyValue);
         }
 
         updatePolicyAllocation();

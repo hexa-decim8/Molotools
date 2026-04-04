@@ -7,6 +7,7 @@ const BILLIONAIRE_WEALTH = 8.1e12; // $8.1 trillion in dollars
 let comparisonsData = null;
 let selectedPolicies = new Set();
 let selectedPolicyOptions = new Set();
+let collapsedPolicyGroups = new Set();
 let currentMode = 'basic'; // 'basic' or 'advanced'
 
 // Policy category labels
@@ -103,6 +104,10 @@ function removePolicyOptionsForGroup(policyGroup) {
     });
 }
 
+function removeCollapsedStateForGroup(policyGroup) {
+    collapsedPolicyGroups.delete(policyGroup);
+}
+
 function updateAdvancedRevenueDisplay(taxRate, grossRevenue, selectedPolicyFunding) {
     const revenueAmountEl = document.getElementById('revenueAmount');
     const taxExplanationEl = document.getElementById('taxExplanation');
@@ -191,17 +196,29 @@ function updatePolicyAllocation() {
     let html = '';
     
     selectedPolicies.forEach(policy => {
-        html += `
-            <div class="allocation-item">
-                <span class="allocation-category">${POLICY_LABELS[policy]}</span>
-                <span class="allocation-amount">${formatCurrency(amountPerCategory)}</span>
-            </div>
-        `;
-        
         const policyExamples = POLICY_EXAMPLES[policy] || [];
         const availableExamples = policyExamples
             .map((example, index) => ({ example, index }))
             .filter(({ example }) => amountPerCategory >= example.minAmount);
+
+        const isCollapsed = collapsedPolicyGroups.has(policy);
+
+        html += `
+            <div class="allocation-group">
+                <button
+                    type="button"
+                    class="allocation-group-toggle${isCollapsed ? ' collapsed' : ''}"
+                    data-policy="${policy}"
+                    aria-expanded="${isCollapsed ? 'false' : 'true'}"
+                >
+                    <span class="allocation-group-main">
+                        <span class="allocation-category">${POLICY_LABELS[policy]}</span>
+                        <span class="allocation-amount">${formatCurrency(amountPerCategory)}</span>
+                    </span>
+                    <span class="allocation-group-chevron" aria-hidden="true">v</span>
+                </button>
+                <div class="allocation-group-content${isCollapsed ? ' collapsed' : ''}">
+        `;
 
         if (availableExamples.length > 0) {
             html += '<div class="allocation-example-list">';
@@ -236,7 +253,14 @@ function updatePolicyAllocation() {
                 `;
             });
             html += '</div>';
+        } else {
+            html += '<p class="allocation-empty">No policy options currently available for this category.</p>';
         }
+
+        html += `
+                </div>
+            </div>
+        `;
     });
 
     selectedPolicyOptions.forEach(key => {
@@ -259,7 +283,27 @@ function updatePolicyAllocation() {
         input.addEventListener('change', handlePolicyOptionChange);
     });
 
+    document.querySelectorAll('.allocation-group-toggle').forEach(button => {
+        button.addEventListener('click', handlePolicyGroupToggle);
+    });
+
     updateAdvancedRevenueDisplay(taxRate, revenue, selectedPolicyFunding);
+}
+
+function handlePolicyGroupToggle(event) {
+    const policy = event.currentTarget.dataset.policy;
+
+    if (!policy) {
+        return;
+    }
+
+    if (collapsedPolicyGroups.has(policy)) {
+        collapsedPolicyGroups.delete(policy);
+    } else {
+        collapsedPolicyGroups.add(policy);
+    }
+
+    updatePolicyAllocation();
 }
 
 function handlePolicyOptionChange(event) {
@@ -286,6 +330,7 @@ function handlePolicyChange(event) {
     } else {
         selectedPolicies.delete(policyValue);
         removePolicyOptionsForGroup(policyValue);
+        removeCollapsedStateForGroup(policyValue);
     }
     
     updatePolicyAllocation();
