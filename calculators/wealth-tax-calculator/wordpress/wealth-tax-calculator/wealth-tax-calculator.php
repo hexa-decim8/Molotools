@@ -770,7 +770,6 @@ class Billionaire_Wealth_Tax_Calculator {
                                                 <span id="wtc-device-holder">2.0%</span>
                                             </div>
                                             <div class="wtc-innerbox">
-                                                <div class="wtc-info-price" id="wtc-infoPrice">$306.0 Billion</div>
                                                 <div class="wtc-annual-label">ANNUAL REVENUE:</div>
                                                 <div class="wtc-annual-price" id="wtc-annualPrice">$306.0 Billion</div>
                                             </div>

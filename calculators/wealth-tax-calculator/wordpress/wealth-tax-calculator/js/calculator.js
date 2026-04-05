@@ -254,7 +254,6 @@
 
     function syncSliderDecor(taxRate, revenue) {
         var sliderValue = el('wtc-sliderValue');
-        var infoPrice = el('wtc-infoPrice');
         var annualPrice = el('wtc-annualPrice');
         var planHolder = el('wtc-plan-holder');
         var deviceHolder = el('wtc-device-holder');
@@ -274,10 +273,6 @@
 
         if (deviceHolder) {
             deviceHolder.textContent = rateText;
-        }
-
-        if (infoPrice) {
-            infoPrice.textContent = formatCurrency(revenue);
         }
 
         if (annualPrice) {
