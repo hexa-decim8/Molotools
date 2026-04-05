@@ -17,7 +17,7 @@
     var selectedPolicies = [];
     var selectedPolicyOptions = [];
     var collapsedPolicyGroups = [];
-    var currentMode = 'basic'; // 'basic' or 'advanced'
+    var currentMode = 'advanced'; // 'basic' or 'advanced'
     var TAX_RATE_MIN = 1;
     var TAX_RATE_MAX = 8;
     var sliderController = {
@@ -134,10 +134,6 @@
     }
 
     function enableAvailablePolicyOptionsForGroup(policyGroup) {
-        if (currentMode !== 'advanced' || selectedPolicies.length === 0) {
-            return;
-        }
-
         var policyExamples = POLICY_EXAMPLES[policyGroup] || [];
 
         for (var i = 0; i < policyExamples.length; i++) {
@@ -149,10 +145,6 @@
     }
 
     function selectAllPolicyOptionsForSelectedGroups() {
-        if (currentMode !== 'advanced') {
-            return;
-        }
-
         for (var i = 0; i < selectedPolicies.length; i++) {
             enableAvailablePolicyOptionsForGroup(selectedPolicies[i]);
         }
@@ -972,10 +964,23 @@
         ensureMoneyPile();
         initTaxRateSlider();
 
-        // Set up event listeners for policy checkboxes
+        // Set up event listeners for policy checkboxes and pre-populate selected state
         var policyCheckboxes = document.querySelectorAll('input[name="wtc-policy"]');
         for (var i = 0; i < policyCheckboxes.length; i++) {
             policyCheckboxes[i].addEventListener('change', handlePolicyChange);
+            if (policyCheckboxes[i].checked) {
+                var val = policyCheckboxes[i].value;
+                if (selectedPolicies.indexOf(val) === -1) {
+                    selectedPolicies.push(val);
+                }
+            }
+        }
+        selectAllPolicyOptionsForSelectedGroups();
+
+        // Apply advanced-mode class to container since we default to advanced
+        var calculatorContainer = document.querySelector('.calculator-container');
+        if (calculatorContainer) {
+            calculatorContainer.classList.add('mode-advanced');
         }
 
         // Set up event listeners for mode toggle buttons
