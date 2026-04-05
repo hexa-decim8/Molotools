@@ -1056,6 +1056,19 @@
     font-style: italic;
 }
 
+.calculator-container .allocation-example-row.unaffordable {
+    opacity: 0.45;
+    pointer-events: none;
+}
+
+.calculator-container .allocation-example-row.unaffordable .policy-option-text {
+    color: #7b6f66;
+}
+
+.calculator-container .allocation-example-row.unaffordable .policy-option-cost {
+    color: #a8937e;
+}
+
 /* ── Results section ──────────────────────────────────────── */
 .calculator-container .results-section {
     margin-bottom: 30px;

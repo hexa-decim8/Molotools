@@ -637,12 +637,11 @@
             var isCollapsed = collapsedPolicyGroups.indexOf(policy) > -1;
 
             for (var j = 0; j < policyExamples.length; j++) {
-                if (amountPerCategory >= policyExamples[j].minAmount) {
-                    availableExamples.push({
-                        example: policyExamples[j],
-                        index: j
-                    });
-                }
+                availableExamples.push({
+                    example: policyExamples[j],
+                    index: j,
+                    canAfford: amountPerCategory >= policyExamples[j].minAmount
+                });
             }
 
             var group = document.createElement('div');
@@ -690,13 +689,15 @@
                     var inputId = 'wtc-policyOption-' + policy + '-' + available.index;
                     var isChecked = selectedPolicyOptions.indexOf(policyOptionKey) > -1;
 
-                    visiblePolicyOptionKeys[policyOptionKey] = true;
-                    if (isChecked) {
-                        selectedPolicyFunding += exampleData.minAmount;
+                    if (available.canAfford) {
+                        visiblePolicyOptionKeys[policyOptionKey] = true;
+                        if (isChecked) {
+                            selectedPolicyFunding += exampleData.minAmount;
+                        }
                     }
 
                     var exampleRow = document.createElement('div');
-                    exampleRow.className = 'allocation-example-row';
+                    exampleRow.className = 'allocation-example-row' + (available.canAfford ? '' : ' unaffordable');
 
                     var optionWrapper = document.createElement('div');
                     optionWrapper.className = 'policy-option-checkbox';
@@ -713,8 +714,11 @@
                     optionInput.id = inputId;
                     optionInput.setAttribute('data-policy', policy);
                     optionInput.setAttribute('data-index', available.index);
-                    if (isChecked) {
+                    if (isChecked && available.canAfford) {
                         optionInput.checked = true;
+                    }
+                    if (!available.canAfford) {
+                        optionInput.disabled = true;
                     }
 
                     var switchLeft = document.createElement('span');
