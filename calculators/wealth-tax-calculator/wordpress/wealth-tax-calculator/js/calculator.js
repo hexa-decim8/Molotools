@@ -138,17 +138,23 @@
             return;
         }
 
-        var revenue = calculateRevenue(getCurrentTaxRate());
-        var amountPerCategory = revenue / selectedPolicies.length;
         var policyExamples = POLICY_EXAMPLES[policyGroup] || [];
 
         for (var i = 0; i < policyExamples.length; i++) {
-            if (amountPerCategory >= policyExamples[i].minAmount) {
-                var policyOptionKey = getPolicyOptionKey(policyGroup, i);
-                if (selectedPolicyOptions.indexOf(policyOptionKey) === -1) {
-                    selectedPolicyOptions.push(policyOptionKey);
-                }
+            var policyOptionKey = getPolicyOptionKey(policyGroup, i);
+            if (selectedPolicyOptions.indexOf(policyOptionKey) === -1) {
+                selectedPolicyOptions.push(policyOptionKey);
             }
+        }
+    }
+
+    function selectAllPolicyOptionsForSelectedGroups() {
+        if (currentMode !== 'advanced') {
+            return;
+        }
+
+        for (var i = 0; i < selectedPolicies.length; i++) {
+            enableAvailablePolicyOptionsForGroup(selectedPolicies[i]);
         }
     }
 
@@ -614,7 +620,6 @@
 
         var taxRate = parseFloat(slider.value);
         var revenue = calculateRevenue(taxRate);
-        var visiblePolicyOptionKeys = {};
         var selectedPolicyFunding = 0;
 
         if (selectedPolicies.length === 0) {
@@ -639,8 +644,7 @@
             for (var j = 0; j < policyExamples.length; j++) {
                 availableExamples.push({
                     example: policyExamples[j],
-                    index: j,
-                    canAfford: amountPerCategory >= policyExamples[j].minAmount
+                    index: j
                 });
             }
 
@@ -689,15 +693,12 @@
                     var inputId = 'wtc-policyOption-' + policy + '-' + available.index;
                     var isChecked = selectedPolicyOptions.indexOf(policyOptionKey) > -1;
 
-                    if (available.canAfford) {
-                        visiblePolicyOptionKeys[policyOptionKey] = true;
-                        if (isChecked) {
-                            selectedPolicyFunding += exampleData.minAmount;
-                        }
+                    if (isChecked) {
+                        selectedPolicyFunding += exampleData.minAmount;
                     }
 
                     var exampleRow = document.createElement('div');
-                    exampleRow.className = 'allocation-example-row' + (available.canAfford ? '' : ' unaffordable');
+                    exampleRow.className = 'allocation-example-row';
 
                     var optionWrapper = document.createElement('div');
                     optionWrapper.className = 'policy-option-checkbox';
@@ -714,11 +715,8 @@
                     optionInput.id = inputId;
                     optionInput.setAttribute('data-policy', policy);
                     optionInput.setAttribute('data-index', available.index);
-                    if (isChecked && available.canAfford) {
+                    if (isChecked) {
                         optionInput.checked = true;
-                    }
-                    if (!available.canAfford) {
-                        optionInput.disabled = true;
                     }
 
                     var switchLeft = document.createElement('span');
@@ -775,10 +773,6 @@
             group.appendChild(groupContent);
             allocationResults.appendChild(group);
         }
-
-        selectedPolicyOptions = selectedPolicyOptions.filter(function (key) {
-            return !!visiblePolicyOptionKeys[key];
-        });
 
         var overrunAmount = Math.max(selectedPolicyFunding - revenue, 0);
         var remainingRevenue = Math.max(revenue - selectedPolicyFunding, 0);
@@ -926,6 +920,8 @@
 
         if (mode === 'basic') {
             currentValue = Math.round(currentValue);
+        } else {
+            selectAllPolicyOptionsForSelectedGroups();
         }
 
         setTaxRate(currentValue, true);
