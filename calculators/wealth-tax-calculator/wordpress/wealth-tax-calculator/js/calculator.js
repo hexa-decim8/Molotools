@@ -572,8 +572,25 @@
         var star = document.createElement('span');
         star.className = 'allocation-pinata-star';
 
-        var eyes = document.createElement('span');
-        eyes.className = 'allocation-pinata-eyes';
+        var explosion = document.createElement('span');
+        explosion.className = 'allocation-pinata-explosion';
+        explosion.setAttribute('aria-hidden', 'true');
+
+        var explosionShape = document.createElement('span');
+        explosionShape.className = 'allocation-pinata-explosion-shape';
+
+        var explosionText = document.createElement('span');
+        explosionText.className = 'allocation-pinata-explosion-text';
+        explosionText.textContent = 'BOOM';
+
+        explosion.appendChild(explosionShape);
+        explosion.appendChild(explosionText);
+
+        var leftEye = document.createElement('span');
+        leftEye.className = 'allocation-pinata-eye left';
+
+        var rightEye = document.createElement('span');
+        rightEye.className = 'allocation-pinata-eye right';
 
         var smile = document.createElement('span');
         smile.className = 'allocation-pinata-smile';
@@ -582,8 +599,10 @@
         badge.className = 'allocation-pinata-badge';
         badge.textContent = isAtMaxRate ? 'MAX' : '+1%';
 
-        star.appendChild(eyes);
+        star.appendChild(leftEye);
+        star.appendChild(rightEye);
         star.appendChild(smile);
+        pinataButton.appendChild(explosion);
         pinataButton.appendChild(star);
         pinataButton.appendChild(badge);
         pinataDrop.appendChild(rope);
@@ -595,12 +614,24 @@
     function handleOverBudgetPinataClick(event) {
         event.preventDefault();
 
+        var pinataButton = event.currentTarget;
+        if (pinataButton.classList.contains('is-bursting')) {
+            return;
+        }
+
         var currentRate = getCurrentTaxRate();
         if (currentRate >= TAX_RATE_MAX) {
             return;
         }
 
-        setTaxRate(currentRate + 1, true);
+        pinataButton.classList.add('is-bursting');
+        window.setTimeout(function () {
+            pinataButton.classList.remove('is-bursting');
+        }, 560);
+
+        window.setTimeout(function () {
+            setTaxRate(currentRate + 1, true);
+        }, 220);
     }
 
     function updatePolicyAllocation() {

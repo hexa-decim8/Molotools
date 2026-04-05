@@ -739,7 +739,7 @@ class Billionaire_Wealth_Tax_Calculator {
 
         ob_start();
         ?>
-        <div class="calculator-container wealth-tax-widget">
+        <div class="calculator-container wealth-tax-widget mode-advanced">
             <header>
                 <h1><?php echo esc_html( $atts['title'] ); ?></h1>
                 <p class="subtitle"><?php echo esc_html( $atts['subtitle'] ); ?></p>

@@ -99,7 +99,14 @@
         background: none;
         cursor: pointer;
         touch-action: none;
-        padding: 0;
+        padding: 0.5rem;
+        border-radius: 50%;
+        -webkit-tap-highlight-color: transparent;
+        transition: transform 100ms ease;
+      }
+
+      .pinata:active {
+        transform: scale(0.98);
       }
 
       .star-wrap {
@@ -285,7 +292,64 @@
         100% { transform: rotate(0deg); }
       }
 
+      @media (prefers-reduced-motion: reduce) {
+        .fall,
+        .swing,
+        .pinata.bursting .star-wrap {
+          animation: none;
+        }
+      }
+
+      @media (max-width: 840px) {
+        .hint {
+          font-size: clamp(0.95rem, 2.2vw, 1.1rem);
+          top: 0.5rem;
+        }
+
+        .stage {
+          width: min(22rem, 90vw);
+          height: min(32rem, 75vh);
+        }
+      }
+
+      @media (max-width: 600px) {
+        .hint {
+          font-size: clamp(0.9rem, 2vw, 1rem);
+          padding: 0 1rem;
+        }
+
+        .stage {
+          width: min(20rem, 88vw);
+          height: min(30rem, 70vh);
+          padding: 1rem;
+        }
+
+        .rope {
+          height: 11rem;
+        }
+
+        .pinata {
+          width: 12rem;
+        }
+
+        .explosion {
+          width: 10.8rem;
+        }
+
+        .fall {
+          transform: translateX(-50%) translateY(-16rem);
+        }
+
+        .swing {
+          animation: gentleSwing 5.2s ease-in-out 1s infinite;
+        }
+      }
+
       @media (max-width: 480px) {
+        .hint {
+          font-size: 0.9rem;
+        }
+
         .rope {
           height: 10.6rem;
         }
@@ -297,12 +361,46 @@
         .explosion {
           width: 10.4rem;
         }
+
+        .stage {
+          width: min(18rem, 85vw);
+          height: min(28rem, 65vh);
+          padding: 0.75rem;
+        }
+
+        .fall {
+          transform: translateX(-50%) translateY(-14rem);
+        }
+      }
+
+      @media (max-width: 380px) {
+        .pinata {
+          width: 10.6rem;
+        }
+
+        .rope {
+          height: 9.5rem;
+        }
+
+        .explosion {
+          width: 9.2rem;
+        }
+
+        .hint {
+          font-size: 0.85rem;
+          font-weight: 600;
+        }
+
+        .stage {
+          width: min(16rem, 82vw);
+          height: min(24rem, 60vh);
+        }
       }
     </style>
   </head>
   <body>
     <main class="scene">
-      <p class="hint">Click and hold the star pinata to show the explosion.</p>
+      <p class="hint">Tap and hold the star pinata to show the explosion.</p>
 
       <section class="stage" aria-label="Pinata animation demo">
         <div class="fall">
