@@ -235,9 +235,11 @@
 }
 
 .calculator-container .wtc-infobox {
+    --wtc-infobox-offset: 0px;
+    --wtc-infobox-pointer-offset: 0px;
     position: absolute;
     top: -182px;
-    left: 50%;
+    left: calc(50% + var(--wtc-infobox-offset));
     transform: translateX(-50%);
     width: 240px;
     border-radius: 10px;
@@ -249,7 +251,7 @@
 .calculator-container .wtc-infobox::after {
     content: '';
     position: absolute;
-    left: 50%;
+    left: calc(50% + var(--wtc-infobox-pointer-offset));
     bottom: -14px;
     transform: translateX(-50%);
     border-left: 14px solid transparent;
@@ -260,7 +262,7 @@
 .calculator-container .wtc-infobox::before {
     content: '';
     position: absolute;
-    left: 50%;
+    left: calc(50% + var(--wtc-infobox-pointer-offset));
     bottom: -18px;
     transform: translateX(-50%);
     border-left: 16px solid transparent;
@@ -322,22 +324,36 @@
     box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.25), inset 0 1px 2px rgba(18, 28, 80, 0.1);
 }
 
+.calculator-container .wtc-dragdealer.is-rate-5 .wtc-highlight-fill {
+    background: linear-gradient(90deg, #e74c3c 0%, #c0392b 100%);
+}
+
+.calculator-container .wtc-square.is-rate-5 {
+    background: #e74c3c;
+    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
+}
+
 /* Abdul's plan badge — lives inside the slider box */
 .calculator-container .plan-indicator {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    top: 7px;
+    right: 8px;
+    left: auto;
+    transform: none;
     display: inline-flex;
     align-items: center;
-    padding: 5px 10px;
+    justify-content: center;
+    max-width: 112px;
+    padding: 4px 8px;
     border-radius: 999px;
     background: #e74c3c;
     color: #ffffff;
-    font-size: 0.78rem;
+    font-size: 0.68rem;
     font-weight: 700;
     line-height: 1;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     box-shadow: 0 2px 6px rgba(231, 76, 60, 0.3);
     z-index: 5;
     pointer-events: none;
@@ -727,19 +743,56 @@
 }
 
 /* ── Responsive ───────────────────────────────────────────── */
-@media (max-width: 768px) {
+.calculator-container {
+    -webkit-text-size-adjust: 100%;
+}
+
+.calculator-container .revenue-amount {
+    word-break: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.15;
+}
+
+@media (max-width: 900px) {
+    .calculator-container .calculator-content {
+        padding: 32px 26px;
+        gap: 30px;
+    }
+
+    .calculator-container .mode-toggle {
+        width: 100%;
+        max-width: 560px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+    }
+
+    .calculator-container .mode-button {
+        width: 100%;
+        padding: 11px 16px;
+    }
+
+    .calculator-container .policy-allocation-section,
+    .calculator-container .revenue-box,
+    .calculator-container .context-box,
+    .calculator-container .sources-box,
     .calculator-container .info-box {
-        margin-top: 0;
+        padding: 20px;
+    }
+
+    .calculator-container .tax-explanation,
+    .calculator-container .comparison-text {
+        font-size: 1rem;
     }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
     .calculator-container header {
-        padding: 30px 20px;
+        padding: 34px 24px;
     }
 
     .calculator-container header h1 {
-        font-size: 1.5rem;
+        font-size: 1.7rem;
     }
 
     .calculator-container .subtitle {
@@ -747,11 +800,66 @@
     }
 
     .calculator-container .calculator-content {
-        padding: 25px 20px;
+        padding: 26px 20px;
+        gap: 24px;
+    }
+
+    .calculator-container .policy-categories {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .calculator-container .policy-checkbox {
+        width: 100%;
+        padding: 10px 14px;
+    }
+
+    .calculator-container .allocation-group-main {
+        align-items: flex-start;
+    }
+
+    .calculator-container .policy-option-meta {
+        margin-left: 0;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .calculator-container .sources-list {
+        margin-left: 16px;
+    }
+
+    .calculator-container .info-box {
+        margin-top: 0;
+    }
+}
+
+@media (max-width: 600px) {
+    .calculator-container header {
+        padding: 28px 18px;
+    }
+
+    .calculator-container header h1 {
+        font-size: 1.45rem;
+    }
+
+    .calculator-container .calculator-content {
+        padding: 22px 14px;
+    }
+
+    .calculator-container .mode-toggle {
+        grid-template-columns: 1fr;
+    }
+
+    .calculator-container .mode-button {
+        font-size: 0.95rem;
+    }
+
+    .calculator-container .revenue-box h2 {
+        font-size: 1.1rem;
     }
 
     .calculator-container .revenue-amount {
-        font-size: 1.8rem;
+        font-size: 1.85rem;
     }
 
     .calculator-container .input-section label {
@@ -765,33 +873,78 @@
     }
 
     .calculator-container .wtc-slider-shell {
-        padding-top: 206px;
+        padding-top: 212px;
     }
 
     .calculator-container .wtc-infobox {
-        width: 204px;
-        top: -198px;
+        width: 196px;
+        top: -204px;
     }
 
     .calculator-container .wtc-titlebar {
-        font-size: 0.84rem;
+        font-size: 0.8rem;
     }
 
     .calculator-container .wtc-info-price {
-        font-size: 1.12rem;
+        font-size: 1.02rem;
     }
 
-    .calculator-container .policy-categories {
+    .calculator-container .range-labels {
+        font-size: 0.82rem;
+    }
+
+    .calculator-container .plan-indicator {
+        top: 8px;
+        right: 6px;
+        max-width: 96px;
+        font-size: 0.6rem;
+        padding: 3px 6px;
+    }
+
+    .calculator-container .allocation-group-main,
+    .calculator-container .allocation-item {
         flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+}
+
+@media (max-width: 430px) {
+    .calculator-container header h1 {
+        font-size: 1.28rem;
     }
 
-    .calculator-container .policy-checkbox {
-        width: 100%;
+    .calculator-container .calculator-content {
+        padding: 20px 12px;
+    }
+
+    .calculator-container .wtc-slider-shell {
+        padding-top: 224px;
+    }
+
+    .calculator-container .wtc-infobox {
+        width: 176px;
+        top: -216px;
+    }
+
+    .calculator-container .wtc-titlebar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+    }
+
+    .calculator-container .wtc-innerbox {
+        padding: 10px;
+    }
+
+    .calculator-container .plan-indicator {
+        max-width: 82px;
+        font-size: 0.56rem;
     }
 }
 
 @media (max-width: 400px) {
     .calculator-container .revenue-amount {
-        font-size: 1.4rem;
+        font-size: 1.5rem;
     }
 }

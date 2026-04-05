@@ -794,8 +794,8 @@ class Billionaire_Wealth_Tax_Calculator {
                                         </div>
                                     </div>
                                 </div>
+                                <span id="wtc-planBadge" class="plan-indicator" aria-hidden="true" style="display:none">5% &bull; Abdul's plan</span>
                             </div>
-                            <span id="wtc-planBadge" class="plan-indicator" aria-hidden="true" style="display:none">5% &bull; Abdul's plan</span>
                         </div>
                         <div class="range-labels">
                             <span>1%</span>

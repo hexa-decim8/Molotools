@@ -22,7 +22,8 @@
     var TAX_RATE_MAX = 8;
     var sliderController = {
         instance: null,
-        suppressCallback: false
+        suppressCallback: false,
+        resizeTicking: false
     };
 
     // Policy category labels
@@ -229,6 +230,49 @@
         return clampTaxRate(parsed);
     }
 
+    function clampNumber(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+    }
+
+    function keepSliderInfoboxVisible() {
+        var sliderWrapper = el('wtc-pr-slider');
+        var sliderInfoBox = el('wtc-sliderInfobox');
+
+        if (!sliderWrapper || !sliderInfoBox) {
+            return;
+        }
+
+        var handleWrapper = sliderInfoBox.parentElement;
+        if (!handleWrapper) {
+            return;
+        }
+
+        sliderInfoBox.style.setProperty('--wtc-infobox-offset', '0px');
+        sliderInfoBox.style.setProperty('--wtc-infobox-pointer-offset', '0px');
+
+        var sliderRect = sliderWrapper.getBoundingClientRect();
+        var handleRect = handleWrapper.getBoundingClientRect();
+        var infoBoxWidth = sliderInfoBox.offsetWidth;
+
+        if (!infoBoxWidth || sliderRect.width <= 0) {
+            return;
+        }
+
+        var gutter = 8;
+        var handleCenter = handleRect.left + (handleRect.width / 2);
+        var desiredLeft = handleCenter - (infoBoxWidth / 2);
+        var minLeft = sliderRect.left + gutter;
+        var maxLeft = sliderRect.right - gutter - infoBoxWidth;
+        var boundedLeft = clampNumber(desiredLeft, minLeft, maxLeft);
+        var offset = boundedLeft - desiredLeft;
+
+        var pointerLimit = (infoBoxWidth / 2) - 20;
+        var pointerOffset = clampNumber(-offset, -pointerLimit, pointerLimit);
+
+        sliderInfoBox.style.setProperty('--wtc-infobox-offset', offset.toFixed(2) + 'px');
+        sliderInfoBox.style.setProperty('--wtc-infobox-pointer-offset', pointerOffset.toFixed(2) + 'px');
+    }
+
     function syncSliderDecor(taxRate, revenue) {
         var sliderValue = el('wtc-sliderValue');
         var infoPrice = el('wtc-infoPrice');
@@ -273,6 +317,7 @@
         var isAbdulRate = taxRate === 5;
         var dragdealer = el('wtc-pr-slider');
         var planBadge = el('wtc-planBadge');
+        var handleSquare = el('wtc-sliderHandle');
 
         if (dragdealer) {
             if (isAbdulRate) {
@@ -282,10 +327,20 @@
             }
         }
 
+        if (handleSquare) {
+            if (isAbdulRate) {
+                handleSquare.classList.add('is-rate-5');
+            } else {
+                handleSquare.classList.remove('is-rate-5');
+            }
+        }
+
         if (planBadge) {
             planBadge.style.display = isAbdulRate ? '' : 'none';
             planBadge.setAttribute('aria-hidden', isAbdulRate ? 'false' : 'true');
         }
+
+        keepSliderInfoboxVisible();
     }
 
     function syncDragdealerPosition(taxRate) {
@@ -371,6 +426,21 @@
 
         sliderHandle.addEventListener('keydown', handleSliderKeydown);
         syncDragdealerPosition(getCurrentTaxRate());
+
+        function handleViewportChange() {
+            if (sliderController.resizeTicking) {
+                return;
+            }
+
+            sliderController.resizeTicking = true;
+            window.requestAnimationFrame(function () {
+                sliderController.resizeTicking = false;
+                keepSliderInfoboxVisible();
+            });
+        }
+
+        window.addEventListener('resize', handleViewportChange);
+        window.addEventListener('orientationchange', handleViewportChange);
     }
 
     function findComparison(revenue) {
