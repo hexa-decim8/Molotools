@@ -11,9 +11,9 @@
     {
       "minRevenue": 30000000000,
       "maxRevenue": 39000000000,
-      "description": "This could renew the ACA enhanced premium tax credits for one year, keeping health insurance affordable for millions of Americans",
+      "description": "This could cover the cost of renewing all ACA enhanced premium tax credits cut by the One Big Beautiful Bill Act (OBBA)",
       "amount": 35000000000,
-      "sourceText": "Offsetting ACA Enhanced Subsidy Extensions, Committee for a Responsible Federal Budget",
+      "sourceText": "Offsetting ACA Enhanced Subsidy Extensions | Committee for a Responsible Federal Budget",
       "sourceUrl": "https://www.crfb.org/blogs/offsetting-aca-enhanced-subsidy-extensions"
     },
     {
@@ -42,7 +42,7 @@
     },
     {
       "minRevenue": 200000000000,
-      "maxRevenue": 260000000000,
+      "maxRevenue": 250000000000,
       "description": "This could eliminate federal income taxes entirely for every individual earning up to $46,000/year and every married couple earning up to $92,000/year",
       "amount": 225000000000,
       "sourceText": "IRS Statistics of Income — Individual Income Tax Returns (Publication 1304)",
@@ -77,7 +77,7 @@
       "maxRevenue": 640000000000,
       "description": "This covers spending for an entire year for the federal portion of Medicaid payments",
       "amount": 620000000000,
-      "sourceText": "Federal Medicaid Spending FY 2024, MACPAC (Feb 2026)",
+      "sourceText": "MACStats: Medicaid and CHIP Data Book February 2026",
       "sourceUrl": "https://www.macpac.gov/wp-content/uploads/2026/02/MACSTATS_Feb2026_WEB_508.pdf"
     },
     {
@@ -85,7 +85,7 @@
       "maxRevenue": 700000000000,
       "description": "This covers spending for an entire year of the federal portion of Medicaid spending and the entire CHIP program",
       "amount": 648000000000,
-      "sourceText": "Federal Medicaid and CHIP Spending FY 2024, MACPAC (Feb 2026)",
+      "sourceText": "MACStats: Medicaid and CHIP Data Book February 2026",
       "sourceUrl": "https://www.macpac.gov/wp-content/uploads/2026/02/MACSTATS_Feb2026_WEB_508.pdf"
     },
     {
@@ -101,8 +101,8 @@
       "maxRevenue": 1000000000000,
       "description": "This could fund a one-time $3,000 direct payment to every individual — $12,000 for a family of four — in households earning $150,000 or less",
       "amount": 856000000000,
-      "sourceText": "The Make Billionaires Pay Their Fair Share Act, Sen. Sanders & Rep. Khanna (2026)",
-      "sourceUrl": "https://www.sanders.senate.gov/wp-content/uploads/MakeBillionairesPayTheirFairShareAct.pdf"
+      "sourceText": "NEWS: Sanders and Khanna Introduce Legislation to Tax Billionaire Wealth and Invest in Working Families",
+      "sourceUrl": "https://www.sanders.senate.gov/press-releases/news-sanders-and-khanna-introduce-legislation-to-tax-billionaire-wealth-and-invest-in-working-families/"
     },
     {
       "minRevenue": 1000000000000,
