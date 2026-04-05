@@ -125,27 +125,6 @@
         }
     }
 
-    function updateAdvancedRevenueDisplay(taxRate, grossRevenue, selectedPolicyFunding) {
-        var revenueAmountEl = el('wtc-revenueAmount');
-        var taxExplanationEl = el('wtc-taxExplanation');
-        var revenueSubtextEl = el('wtc-revenueSubtext');
-
-        if (!revenueAmountEl || !taxExplanationEl || !revenueSubtextEl) return;
-
-        if (currentMode === 'advanced' && selectedPolicyFunding > 0) {
-            var remainingRevenue = Math.max(grossRevenue - selectedPolicyFunding, 0);
-            taxExplanationEl.textContent =
-                taxRate.toFixed(1) + '% of $15.3 trillion in billionaire wealth = ' + formatCurrency(grossRevenue) + ' total';
-            revenueAmountEl.textContent = formatCurrency(remainingRevenue);
-            revenueSubtextEl.textContent = formatCurrency(selectedPolicyFunding) + ' committed to selected policies';
-            return;
-        }
-
-        taxExplanationEl.textContent = taxRate.toFixed(1) + '% of $15.3 trillion in billionaire wealth =';
-        revenueAmountEl.textContent = formatCurrency(grossRevenue);
-        revenueSubtextEl.textContent = '';
-    }
-
     // ── Helpers ────────────────────────────────────────────────────────────────
 
     /**
@@ -482,7 +461,6 @@
             prompt.textContent = 'Select categories above to see allocation';
             allocationResults.innerHTML = '';
             allocationResults.appendChild(prompt);
-            updateAdvancedRevenueDisplay(taxRate, revenue, 0);
             return;
         }
 
@@ -640,7 +618,6 @@
             policyGroupToggles[p].addEventListener('click', handlePolicyGroupToggle);
         }
 
-        updateAdvancedRevenueDisplay(taxRate, revenue, selectedPolicyFunding);
     }
 
     function handlePolicyGroupToggle(event) {
@@ -717,13 +694,13 @@
             }
         }
 
-        // Toggle revenue box visibility (hidden in basic, visible in advanced)
-        var revenueBox = document.querySelector('.revenue-box');
-        if (revenueBox) {
+        // Toggle results section visibility (visible in basic, hidden in advanced)
+        var resultsSection = document.querySelector('.calculator-results');
+        if (resultsSection) {
             if (mode === 'basic') {
-                revenueBox.classList.add('hidden');
+                resultsSection.classList.remove('hidden');
             } else {
-                revenueBox.classList.remove('hidden');
+                resultsSection.classList.add('hidden');
             }
         }
         
@@ -755,7 +732,6 @@
 
         el('wtc-rateDisplay') && (el('wtc-rateDisplay').textContent = taxRate.toFixed(1) + '%');
         syncSliderDecor(taxRate, revenue);
-        updateAdvancedRevenueDisplay(taxRate, revenue, 0);
 
         var comparison = findComparison(revenue);
         el('wtc-comparisonText').textContent = comparison.description;

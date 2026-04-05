@@ -847,13 +847,6 @@ class Billionaire_Wealth_Tax_Calculator {
 
                 <div class="calculator-results">
                     <div class="results-section">
-                        <div class="revenue-box hidden">
-                            <h2>Annual Tax Revenue</h2>
-                            <p class="tax-explanation" id="wtc-taxExplanation">2.0% of $15.3 trillion in billionaire wealth =</p>
-                            <p class="revenue-amount" id="wtc-revenueAmount">$306.0 Billion</p>
-                            <p class="revenue-subtext" id="wtc-revenueSubtext"></p>
-                        </div>
-
                         <div class="context-box">
                             <h3>What Could This Fund?</h3>
                             <p class="comparison-text" id="wtc-comparisonText">Loading&hellip;</p>
