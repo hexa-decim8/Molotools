@@ -2,8 +2,8 @@
    All rules are scoped to .calculator-container to avoid conflicts with the active theme.
 
    Typefaces:
-     Primary   — Kensington (headings)   — commercial font, load via your theme or Adobe Fonts
-     Secondary — Halyard Text (body)     — commercial font, load via your theme or Adobe Fonts
+         Primary   — Kensington (headings)   — commercial font, load via your theme or another font provider
+         Secondary — Halyard Text (body)     — commercial font, load via your theme or another font provider
    Fallback stacks are provided for both so the layout holds if the fonts are not yet loaded. */
 
 /* ── Font stacks ──────────────────────────────────────────── */

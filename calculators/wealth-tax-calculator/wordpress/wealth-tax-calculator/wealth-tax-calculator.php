@@ -415,7 +415,6 @@ class WTC_Admin_Settings {
         $current_version = WTC_VERSION;
         $update_available = false;
         $latest_version = $current_version;
-        $release_info = null;
 
         // Check if there's an update available
         $update_plugins = get_site_transient( 'update_plugins' );
@@ -713,8 +712,6 @@ class Billionaire_Wealth_Tax_Calculator {
             'wealthTaxConfig',
             array(
                 'billionaireWealth' => WTC_BILLIONAIRE_WEALTH,
-                'taxRateMin'        => WTC_TAX_RATE_MIN,
-                'taxRateMax'        => WTC_TAX_RATE_MAX,
                 'comparisons'       => $this->get_comparisons_data(),
                 'version'           => WTC_VERSION,
             )
