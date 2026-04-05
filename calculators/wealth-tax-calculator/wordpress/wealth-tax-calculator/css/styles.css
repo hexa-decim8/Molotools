@@ -376,6 +376,12 @@
     display: none;
 }
 
+.calculator-container.mode-advanced .context-box,
+.calculator-container.mode-advanced .sources-box,
+.calculator-container.mode-advanced .info-box {
+    display: none;
+}
+
 .calculator-container .policy-header {
     font-size: 1.2rem;
     margin: 0 0 10px;
@@ -740,6 +746,25 @@
     font-size: 0.94rem;
     color: #383533;
     font-weight: 600;
+}
+
+.calculator-container .allocation-summary.is-over-budget {
+    color: #A62C22;
+}
+
+.calculator-container .allocation-budget-warning {
+    color: #A62C22;
+    font-weight: 700;
+}
+
+.calculator-container .allocation-budget-hint {
+    font-size: 0.88rem;
+    font-weight: 500;
+}
+
+.calculator-container .allocation-overrun-message {
+    color: #A62C22;
+    font-weight: 700;
 }
 
 .calculator-container .allocation-empty {

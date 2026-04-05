@@ -613,18 +613,39 @@
             return !!visiblePolicyOptionKeys[key];
         });
 
+        var overrunAmount = Math.max(selectedPolicyFunding - revenue, 0);
         var remainingRevenue = Math.max(revenue - selectedPolicyFunding, 0);
+        var isOverBudget = overrunAmount > 0;
         var summary = document.createElement('div');
-        summary.className = 'allocation-summary';
+        summary.className = 'allocation-summary' + (isOverBudget ? ' is-over-budget' : '');
+
+        var availableLine = document.createElement('span');
+        availableLine.textContent = 'Tax revenue available: ' + formatCurrency(revenue);
 
         var selectedLine = document.createElement('span');
         selectedLine.textContent = 'Selected policy funding: ' + formatCurrency(selectedPolicyFunding);
 
-        var remainingLine = document.createElement('span');
-        remainingLine.textContent = 'Remaining revenue: ' + formatCurrency(remainingRevenue);
+        var budgetLine = document.createElement('span');
+        if (isOverBudget) {
+            budgetLine.className = 'allocation-budget-warning';
+            budgetLine.textContent = 'Over budget by: ' + formatCurrency(overrunAmount);
+        } else {
+            budgetLine.textContent = 'Remaining revenue: ' + formatCurrency(remainingRevenue);
+        }
 
+        var budgetHint = document.createElement('span');
+        budgetHint.className = 'allocation-budget-hint';
+        if (isOverBudget) {
+            budgetHint.className += ' allocation-overrun-message';
+            budgetHint.textContent = 'Smash the piñata! You need to tax billionaires more!';
+        } else {
+            budgetHint.textContent = 'Selected policy costs are within available revenue.';
+        }
+
+        summary.appendChild(availableLine);
         summary.appendChild(selectedLine);
-        summary.appendChild(remainingLine);
+        summary.appendChild(budgetLine);
+        summary.appendChild(budgetHint);
         allocationResults.appendChild(summary);
 
         var policyOptionCheckboxes = allocationResults.querySelectorAll('.policy-option-input');
@@ -713,13 +734,13 @@
             }
         }
 
-        // Toggle results section visibility (visible in basic, hidden in advanced)
-        var resultsSection = document.querySelector('.calculator-results');
-        if (resultsSection) {
+        // Toggle advanced-mode class so only advanced-only hidden UI is scoped in CSS.
+        var calculatorContainer = document.querySelector('.calculator-container');
+        if (calculatorContainer) {
             if (mode === 'basic') {
-                resultsSection.classList.remove('hidden');
+                calculatorContainer.classList.remove('mode-advanced');
             } else {
-                resultsSection.classList.add('hidden');
+                calculatorContainer.classList.add('mode-advanced');
             }
         }
         
