@@ -143,7 +143,148 @@
 }
 
 .calculator-container .wtc-slider-shell {
-    padding-top: 190px;
+    --wtc-money-progress: 0.25;
+    --wtc-slider-stage-top: 28px;
+    --wtc-slider-stage-height: 156px;
+    position: relative;
+    padding-top: 202px;
+    isolation: isolate;
+}
+
+.calculator-container .wtc-money-stage {
+    position: absolute;
+    top: var(--wtc-slider-stage-top);
+    left: 0;
+    right: 0;
+    height: var(--wtc-slider-stage-height);
+    border-radius: 22px 22px 16px 16px;
+    overflow: hidden;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 50% 8%, rgba(64, 107, 191, calc(0.12 + (var(--wtc-money-progress) * 0.18))), transparent 50%),
+        linear-gradient(180deg, rgba(225, 182, 130, 0.08) 0%, rgba(251, 240, 228, 0.55) 40%, rgba(225, 182, 130, 0.16) 100%);
+    border: 1px solid rgba(203, 161, 110, 0.5);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.42),
+        inset 0 0 0 1px rgba(251, 240, 228, 0.38),
+        inset 0 -18px 24px rgba(18, 28, 80, 0.08);
+    z-index: 0;
+}
+
+.calculator-container .wtc-money-stage::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+    linear-gradient(180deg, rgba(203, 161, 110, 0.3) 0, rgba(203, 161, 110, 0.08) 14px, transparent 24px),
+        radial-gradient(circle at 14% 24%, rgba(64, 107, 191, 0.1), transparent 28%),
+        radial-gradient(circle at 82% 18%, rgba(225, 182, 130, 0.16), transparent 30%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 38%);
+}
+
+.calculator-container .wtc-money-stage::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 24px;
+    background:
+        radial-gradient(circle at 18% 100%, rgba(18, 28, 80, 0.12), transparent 38%),
+        radial-gradient(circle at 82% 100%, rgba(18, 28, 80, 0.12), transparent 38%),
+        linear-gradient(180deg, rgba(203, 161, 110, 0.18), rgba(203, 161, 110, 0.42));
+    border-top: 1px solid rgba(203, 161, 110, 0.22);
+}
+
+.calculator-container .wtc-money-stage-glow {
+    position: absolute;
+    left: 50%;
+    bottom: 20px;
+    width: clamp(180px, 42%, 300px);
+    height: 42px;
+    transform: translateX(-50%) scaleX(calc(0.82 + (var(--wtc-money-progress) * 0.28)));
+    border-radius: 999px;
+    background: radial-gradient(circle at center, rgba(64, 107, 191, calc(0.12 + (var(--wtc-money-progress) * 0.18))) 0%, rgba(64, 107, 191, 0.04) 54%, transparent 78%);
+    filter: blur(10px);
+}
+
+.calculator-container .wtc-money-field {
+    position: absolute;
+    left: clamp(8px, 4%, 18px);
+    right: clamp(8px, 4%, 18px);
+    top: 22px;
+    bottom: 20px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: clamp(4px, 1vw, 9px);
+}
+
+.calculator-container .wtc-stack-column {
+    position: relative;
+    flex: 1 1 0;
+    max-width: 72px;
+    min-width: 26px;
+    height: 100%;
+}
+
+.calculator-container .wtc-stack-shadow {
+    position: absolute;
+    left: 12%;
+    right: 12%;
+    bottom: -4px;
+    height: 12px;
+    border-radius: 999px;
+    background: radial-gradient(circle at center, rgba(18, 28, 80, 0.28), transparent 72%);
+    opacity: calc(0.22 + (var(--wtc-money-progress) * 0.5));
+}
+
+.calculator-container .wtc-money-bundle {
+    position: absolute;
+    left: 50%;
+    bottom: calc(var(--wtc-bundle-index) * 9px);
+    width: calc(100% - var(--wtc-bundle-width-trim, 0px));
+    height: 12px;
+    border-radius: 3px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background:
+        linear-gradient(180deg, rgba(248, 255, 241, 0.95), rgba(197, 233, 177, 0.92) 26%, rgba(118, 172, 96, 0.98));
+    box-shadow:
+        0 4px 7px rgba(18, 28, 80, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.34);
+    opacity: 0;
+    transform: translateX(-50%) translateY(9px) scale(0.92) rotate(var(--wtc-bundle-tilt));
+    transition: opacity 220ms ease, transform 260ms cubic-bezier(0.22, 1, 0.36, 1), filter 220ms ease;
+    transition-delay: var(--wtc-bundle-delay);
+    filter: saturate(0.86);
+}
+
+.calculator-container .wtc-money-bundle::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -3px;
+    height: 3px;
+    border-radius: 3px 3px 0 0;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.52), rgba(220, 243, 204, 0.2));
+}
+
+.calculator-container .wtc-money-bundle::after {
+    content: '';
+    position: absolute;
+    left: 35%;
+    top: 1px;
+    width: 30%;
+    height: 8px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, rgba(34, 76, 46, 0.2), rgba(34, 76, 46, 0.42));
+}
+
+.calculator-container .wtc-money-bundle.is-active {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1) rotate(var(--wtc-bundle-tilt));
+    filter: saturate(calc(0.82 + (var(--wtc-money-progress) * 0.3)));
 }
 
 .calculator-container .wtc-dragdealer {
@@ -153,6 +294,7 @@
     border: 1px solid #CBA16E;
     background: #FBF0E4;
     box-shadow: inset 0 1px 2px rgba(18, 28, 80, 0.1);
+    z-index: 2;
 }
 
 .calculator-container .wtc-stripe {
@@ -1034,7 +1176,26 @@
     }
 
     .calculator-container .wtc-slider-shell {
-        padding-top: 212px;
+        --wtc-slider-stage-top: 36px;
+        --wtc-slider-stage-height: 162px;
+        padding-top: 214px;
+    }
+
+    .calculator-container .wtc-money-field {
+        left: 8px;
+        right: 8px;
+        top: 18px;
+        bottom: 18px;
+        gap: 4px;
+    }
+
+    .calculator-container .wtc-stack-column {
+        min-width: 18px;
+    }
+
+    .calculator-container .wtc-money-bundle {
+        height: 11px;
+        bottom: calc(var(--wtc-bundle-index) * 8px);
     }
 
     .calculator-container .wtc-infobox {
@@ -1080,7 +1241,13 @@
     }
 
     .calculator-container .wtc-slider-shell {
-        padding-top: 224px;
+        --wtc-slider-stage-top: 40px;
+        --wtc-slider-stage-height: 164px;
+        padding-top: 228px;
+    }
+
+    .calculator-container .wtc-money-stage {
+        border-radius: 18px 18px 14px 14px;
     }
 
     .calculator-container .wtc-infobox {

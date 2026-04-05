@@ -758,6 +758,11 @@ class Billionaire_Wealth_Tax_Calculator {
                         <div class="slider-container wtc-slider-shell">
                             <input type="hidden" id="wtc-taxRate" value="2" aria-label="Tax rate percentage">
 
+                            <div class="wtc-money-stage" aria-hidden="true">
+                                <div class="wtc-money-stage-glow"></div>
+                                <div class="wtc-money-field" id="wtc-moneyField"></div>
+                            </div>
+
                             <div id="wtc-pr-slider" class="wtc-dragdealer">
                                 <div class="wtc-stripe">
                                     <div id="wtc-highlight-fill" class="wtc-highlight-fill"></div>

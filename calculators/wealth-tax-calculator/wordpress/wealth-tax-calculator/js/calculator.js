@@ -25,6 +25,14 @@
         suppressCallback: false,
         resizeTicking: false
     };
+    var moneyPileController = {
+        shell: null,
+        field: null,
+        columns: [],
+        initialized: false
+    };
+    var MONEY_PILE_PROFILES = [0.26, 0.4, 0.58, 0.82, 1, 0.92, 0.72, 0.5, 0.34];
+    var MONEY_PILE_MAX_BUNDLES = 14;
 
     // Policy category labels
     var POLICY_LABELS = {
@@ -252,6 +260,88 @@
         sliderInfoBox.style.setProperty('--wtc-infobox-pointer-offset', pointerOffset.toFixed(2) + 'px');
     }
 
+    function ensureMoneyPile() {
+        if (moneyPileController.initialized) {
+            return true;
+        }
+
+        var shell = document.querySelector('.wtc-slider-shell');
+        var field = el('wtc-moneyField');
+
+        if (!shell || !field) {
+            return false;
+        }
+
+        moneyPileController.shell = shell;
+        moneyPileController.field = field;
+        moneyPileController.columns = [];
+        field.innerHTML = '';
+
+        for (var columnIndex = 0; columnIndex < MONEY_PILE_PROFILES.length; columnIndex++) {
+            var column = document.createElement('div');
+            column.className = 'wtc-stack-column';
+
+            var shadow = document.createElement('div');
+            shadow.className = 'wtc-stack-shadow';
+            column.appendChild(shadow);
+
+            var bundles = [];
+
+            for (var bundleIndex = 0; bundleIndex < MONEY_PILE_MAX_BUNDLES; bundleIndex++) {
+                var bundle = document.createElement('span');
+                var offsetPattern = ((bundleIndex + (columnIndex * 2)) % 5) - 2;
+                var tiltPattern = ((columnIndex * 3) + bundleIndex) % 7;
+                var widthTrim = (bundleIndex + columnIndex) % 3;
+
+                bundle.className = 'wtc-money-bundle';
+                bundle.style.setProperty('--wtc-bundle-index', String(bundleIndex));
+                bundle.style.setProperty('--wtc-bundle-delay', (bundleIndex * 16) + 'ms');
+                bundle.style.setProperty('--wtc-bundle-tilt', (((tiltPattern - 3) * 0.45)).toFixed(2) + 'deg');
+                bundle.style.setProperty('--wtc-bundle-width-trim', widthTrim + 'px');
+                bundle.style.marginLeft = (offsetPattern * 2.2).toFixed(1) + 'px';
+                column.appendChild(bundle);
+                bundles.push(bundle);
+            }
+
+            field.appendChild(column);
+            moneyPileController.columns.push({
+                profile: MONEY_PILE_PROFILES[columnIndex],
+                bundles: bundles
+            });
+        }
+
+        moneyPileController.initialized = true;
+        return true;
+    }
+
+    function syncMoneyPile(taxRate) {
+        if (!ensureMoneyPile()) {
+            return;
+        }
+
+        var progress = rateToRatio(taxRate);
+        var visibleRatio = 0.08 + (Math.pow(progress, 0.72) * 0.92);
+
+        moneyPileController.shell.style.setProperty('--wtc-money-progress', visibleRatio.toFixed(3));
+
+        for (var columnIndex = 0; columnIndex < moneyPileController.columns.length; columnIndex++) {
+            var column = moneyPileController.columns[columnIndex];
+            var bundleTarget = Math.round(column.profile * visibleRatio * MONEY_PILE_MAX_BUNDLES);
+
+            if (visibleRatio > 0.02) {
+                bundleTarget = Math.max(1, bundleTarget);
+            }
+
+            for (var bundleIndex = 0; bundleIndex < column.bundles.length; bundleIndex++) {
+                if (bundleIndex < bundleTarget) {
+                    column.bundles[bundleIndex].classList.add('is-active');
+                } else {
+                    column.bundles[bundleIndex].classList.remove('is-active');
+                }
+            }
+        }
+    }
+
     function syncSliderDecor(taxRate, revenue) {
         var sliderValue = el('wtc-sliderValue');
         var annualPrice = el('wtc-annualPrice');
@@ -314,6 +404,7 @@
             planBadge.setAttribute('aria-hidden', isAbdulRate ? 'false' : 'true');
         }
 
+        syncMoneyPile(taxRate);
         keepSliderInfoboxVisible();
     }
 
@@ -790,6 +881,7 @@
         var slider = getTaxRateInput();
         if (!slider) return; // Shortcode not present on this page.
 
+        ensureMoneyPile();
         initTaxRateSlider();
 
         // Set up event listeners for policy checkboxes
