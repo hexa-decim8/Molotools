@@ -1,0 +1,51 @@
+name: Browser Validation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/browser-validation.yml
+      - .github/workflows/build-plugin.yml
+      - .github/tests/browser/**
+      - calculators/wealth-tax-calculator/wordpress/wealth-tax-calculator/**
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/browser-validation.yml
+      - .github/workflows/build-plugin.yml
+      - .github/tests/browser/**
+      - calculators/wealth-tax-calculator/wordpress/wealth-tax-calculator/**
+  workflow_dispatch:
+
+jobs:
+  browser-smoke-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          - desktop-chromium
+          - desktop-firefox
+          - desktop-webkit
+          - mobile-chromium
+          - mobile-webkit
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Playwright test runner
+        run: npm install --no-save @playwright/test@1.54.2
+
+      - name: Install browser engines
+        run: npx playwright install --with-deps chromium firefox webkit
+
+      - name: Run browser smoke tests
+        run: npx playwright test --config=.github/tests/browser/playwright.config.js --project="${{ matrix.project }}"

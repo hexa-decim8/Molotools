@@ -151,6 +151,10 @@
     isolation: isolate;
 }
 
+.calculator-container.no-cssvars .wtc-slider-shell {
+    isolation: auto;
+}
+
 .calculator-container .wtc-money-stage {
     position: absolute;
     top: var(--wtc-slider-stage-top);
@@ -169,6 +173,12 @@
         inset 0 0 0 1px rgba(251, 240, 228, 0.38),
         inset 0 -18px 24px rgba(18, 28, 80, 0.08);
     z-index: 0;
+}
+
+.calculator-container.no-cssvars .wtc-money-stage {
+    top: 22px;
+    height: 194px;
+    background: linear-gradient(180deg, rgba(225, 182, 130, 0.12) 0%, rgba(251, 240, 228, 0.6) 42%, rgba(225, 182, 130, 0.2) 100%);
 }
 
 .calculator-container .wtc-money-stage::before {
@@ -208,6 +218,11 @@
     filter: blur(10px);
 }
 
+.calculator-container.no-cssvars .wtc-money-stage-glow {
+    transform: translateX(-50%) scaleX(0.9);
+    background: radial-gradient(circle at center, rgba(64, 107, 191, 0.18) 0%, rgba(64, 107, 191, 0.05) 54%, transparent 78%);
+}
+
 .calculator-container .wtc-money-field {
     position: absolute;
     left: clamp(8px, 4%, 18px);
@@ -239,6 +254,10 @@
     opacity: calc(0.22 + (var(--wtc-money-progress) * 0.5));
 }
 
+.calculator-container.no-cssvars .wtc-stack-shadow {
+    opacity: 0.45;
+}
+
 .calculator-container .wtc-money-bundle {
     position: absolute;
     left: 50%;
@@ -257,6 +276,13 @@
     transition: opacity 220ms ease, transform 260ms cubic-bezier(0.22, 1, 0.36, 1), filter 220ms ease;
     transition-delay: var(--wtc-bundle-delay);
     filter: saturate(0.86);
+}
+
+.calculator-container.no-cssvars .wtc-money-bundle {
+    bottom: 0;
+    width: calc(100% - 0px);
+    transform: translateX(-50%) translateY(9px) scale(0.92) rotate(0deg);
+    transition-delay: 0ms;
 }
 
 .calculator-container .wtc-money-bundle::before {
@@ -285,6 +311,10 @@
     opacity: 1;
     transform: translateX(-50%) translateY(0) scale(var(--wtc-bundle-scale, 1)) rotate(var(--wtc-bundle-tilt));
     filter: saturate(calc(0.82 + (var(--wtc-money-progress) * 0.3)));
+}
+
+.calculator-container.no-cssvars .wtc-money-bundle.is-active {
+    filter: saturate(1);
 }
 
 .calculator-container .wtc-dragdealer {
@@ -390,6 +420,11 @@
     box-shadow: 0 10px 20px rgba(18, 28, 80, 0.18);
 }
 
+.calculator-container.no-cssvars .wtc-infobox {
+    left: 50%;
+    margin-left: 0;
+}
+
 .calculator-container .wtc-infobox::after {
     content: '';
     position: absolute;
@@ -401,6 +436,10 @@
     border-top: 14px solid #FBF0E4;
 }
 
+.calculator-container.no-cssvars .wtc-infobox::after {
+    left: 50%;
+}
+
 .calculator-container .wtc-infobox::before {
     content: '';
     position: absolute;
@@ -410,6 +449,10 @@
     border-left: 16px solid transparent;
     border-right: 16px solid transparent;
     border-top: 16px solid #406BBF;
+}
+
+.calculator-container.no-cssvars .wtc-infobox::before {
+    left: 50%;
 }
 
 .calculator-container .wtc-titlebar {
@@ -966,7 +1009,20 @@
     position: relative;
     z-index: 2;
     width: 72px;
+    height: 72px;
     aspect-ratio: 1;
+    -webkit-clip-path: polygon(
+        50% 0%,
+        61% 34%,
+        98% 35%,
+        68% 56%,
+        79% 92%,
+        50% 71%,
+        21% 92%,
+        32% 56%,
+        2% 35%,
+        39% 34%
+    );
     clip-path: polygon(
         50% 0%,
         61% 34%,
@@ -979,6 +1035,7 @@
         2% 35%,
         39% 34%
     );
+    border-radius: 18px;
     border: 2px solid rgba(101, 63, 36, 0.3);
     background:
         linear-gradient(145deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0) 45%),
@@ -1047,6 +1104,30 @@
 .calculator-container .allocation-pinata-explosion-shape {
     position: absolute;
     inset: 0;
+    -webkit-clip-path: polygon(
+        50% 0%,
+        60% 19%,
+        82% 6%,
+        77% 29%,
+        100% 24%,
+        83% 42%,
+        99% 56%,
+        75% 61%,
+        86% 84%,
+        63% 76%,
+        61% 100%,
+        47% 79%,
+        30% 98%,
+        30% 75%,
+        8% 84%,
+        18% 62%,
+        0% 54%,
+        19% 43%,
+        4% 24%,
+        25% 28%,
+        18% 6%,
+        40% 19%
+    );
     clip-path: polygon(
         50% 0%,
         60% 19%,
@@ -1071,6 +1152,7 @@
         18% 6%,
         40% 19%
     );
+    border-radius: 50%;
     background: radial-gradient(circle at 50% 48%, #fff7ca 0 28%, #ffd35d 30% 52%, #ff873f 54% 75%, #f24929 76% 100%);
 }
 

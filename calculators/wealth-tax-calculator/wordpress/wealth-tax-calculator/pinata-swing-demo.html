@@ -30,7 +30,9 @@
 
       body {
         font-family: "Baloo 2", "Trebuchet MS", "Comic Sans MS", cursive;
+        color: #503121;
         color: var(--text);
+        background: linear-gradient(180deg, #b7effc, #fef6d8 58%, #ffdcb8);
         background:
           radial-gradient(60rem 22rem at 20% -10%, rgba(255, 255, 255, 0.7), transparent 65%),
           radial-gradient(45rem 20rem at 110% 20%, rgba(255, 255, 255, 0.55), transparent 70%),
@@ -41,6 +43,9 @@
       .scene {
         position: relative;
         min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         display: grid;
         place-items: center;
         padding: 2rem;
@@ -60,6 +65,7 @@
         position: relative;
         width: min(24rem, 92vw);
         height: min(35rem, 82vh);
+        box-shadow: 0 1.2rem 1.2rem rgba(74, 42, 18, 0.24);
         filter: drop-shadow(0 1.2rem 1.2rem var(--shadow));
       }
 
@@ -98,6 +104,7 @@
         border: 0;
         background: none;
         cursor: pointer;
+        -ms-touch-action: none;
         touch-action: none;
         padding: 0.5rem;
         border-radius: 50%;
@@ -113,6 +120,9 @@
         position: relative;
         width: 100%;
         height: 13.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         display: grid;
         place-items: center;
       }
@@ -120,7 +130,20 @@
       .star {
         position: relative;
         width: 11.2rem;
+        height: 11.2rem;
         aspect-ratio: 1;
+        -webkit-clip-path: polygon(
+          50% 0%,
+          61% 34%,
+          98% 35%,
+          68% 56%,
+          79% 92%,
+          50% 71%,
+          21% 92%,
+          32% 56%,
+          2% 35%,
+          39% 34%
+        );
         clip-path: polygon(
           50% 0%,
           61% 34%,
@@ -133,7 +156,20 @@
           2% 35%,
           39% 34%
         );
+        border-radius: 1.3rem;
         border: 0.24rem solid rgba(112, 58, 28, 0.16);
+        background:
+          linear-gradient(145deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0) 45%),
+          repeating-linear-gradient(
+            180deg,
+            #ff7a6e 0 1rem,
+            #ffbc3a 1rem 2rem,
+            #69d2ff 2rem 3rem,
+            #7de57e 3rem 4rem,
+            #f28fff 4rem 5rem,
+            #ff7a6e 5rem 6rem,
+            #69d2ff 6rem 7rem
+          );
         background:
           linear-gradient(145deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0) 45%),
           repeating-linear-gradient(
@@ -198,6 +234,8 @@
         bottom: 0.8rem;
         left: 50%;
         transform: translateX(-50%);
+        display: flex;
+        justify-content: space-between;
         display: grid;
         grid-template-columns: repeat(9, 1fr);
         gap: 0.08rem;
@@ -215,6 +253,12 @@
       .fringe span:nth-child(5n + 4) { background: var(--paper-d); }
       .fringe span:nth-child(5n + 5) { background: var(--paper-e); }
 
+      .fringe span:nth-child(5n + 1) { background: #ff7a6e; }
+      .fringe span:nth-child(5n + 2) { background: #ffbc3a; }
+      .fringe span:nth-child(5n + 3) { background: #69d2ff; }
+      .fringe span:nth-child(5n + 4) { background: #7de57e; }
+      .fringe span:nth-child(5n + 5) { background: #f28fff; }
+
       .pinata:active .star-wrap {
         transform: scale(0.985);
       }
@@ -228,6 +272,7 @@
         left: 50%;
         top: 56%;
         width: 11.6rem;
+        height: 11.6rem;
         aspect-ratio: 1;
         transform: translate(-50%, -50%);
         display: none;
@@ -236,12 +281,19 @@
       .explosion-shape {
         position: absolute;
         inset: 0;
+        -webkit-clip-path: polygon(
+          50% 0%, 60% 19%, 82% 6%, 77% 29%, 100% 24%, 83% 42%,
+          99% 56%, 75% 61%, 86% 84%, 63% 76%, 61% 100%, 47% 79%,
+          30% 98%, 30% 75%, 8% 84%, 18% 62%, 0% 54%, 19% 43%,
+          4% 24%, 25% 28%, 18% 6%, 40% 19%
+        );
         clip-path: polygon(
           50% 0%, 60% 19%, 82% 6%, 77% 29%, 100% 24%, 83% 42%,
           99% 56%, 75% 61%, 86% 84%, 63% 76%, 61% 100%, 47% 79%,
           30% 98%, 30% 75%, 8% 84%, 18% 62%, 0% 54%, 19% 43%,
           4% 24%, 25% 28%, 18% 6%, 40% 19%
         );
+        border-radius: 50%;
         background:
           radial-gradient(circle at 50% 48%, #fff7ca 0 28%, #ffd35d 30% 52%, #ff873f 54% 75%, #f24929 76% 100%);
       }
@@ -432,16 +484,22 @@
     </main>
 
     <script>
-      const pinata = document.getElementById("pinata");
-      let holding = false;
+      var pinata = document.getElementById("pinata");
+      var holding = false;
+      var supportsPointerEvents = !!window.PointerEvent;
 
       function startBursting(pointerId) {
         if (holding) {
           return;
         }
+
         holding = true;
         pinata.classList.add("bursting");
-        if (typeof pointerId === "number") {
+
+        if (
+          typeof pointerId === "number" &&
+          typeof pinata.setPointerCapture === "function"
+        ) {
           pinata.setPointerCapture(pointerId);
         }
       }
@@ -450,38 +508,89 @@
         if (!holding) {
           return;
         }
+
         holding = false;
         pinata.classList.remove("bursting");
-        if (typeof pointerId === "number" && pinata.hasPointerCapture(pointerId)) {
+
+        if (
+          typeof pointerId === "number" &&
+          typeof pinata.hasPointerCapture === "function" &&
+          pinata.hasPointerCapture(pointerId) &&
+          typeof pinata.releasePointerCapture === "function"
+        ) {
           pinata.releasePointerCapture(pointerId);
         }
       }
 
-      pinata.addEventListener("pointerdown", (event) => {
-        if (event.button !== 0) {
+      function handlePointerDown(event) {
+        if (typeof event.button === "number" && event.button !== 0) {
           return;
         }
+
         event.preventDefault();
         startBursting(event.pointerId);
-      });
+      }
 
-      ["pointerup", "pointercancel", "lostpointercapture"].forEach((name) => {
-        pinata.addEventListener(name, (event) => stopBursting(event.pointerId));
-      });
+      function handleKeyDown(event) {
+        var key = event.key || event.code;
+        var keyCode = event.keyCode;
 
-      pinata.addEventListener("keydown", (event) => {
-        if (event.code === "Space" || event.code === "Enter") {
+        if (key === " " || key === "Spacebar" || key === "Space" || key === "Enter" || keyCode === 32 || keyCode === 13) {
           event.preventDefault();
           startBursting();
         }
-      });
+      }
 
-      pinata.addEventListener("keyup", (event) => {
-        if (event.code === "Space" || event.code === "Enter") {
+      function handleKeyUp(event) {
+        var key = event.key || event.code;
+        var keyCode = event.keyCode;
+
+        if (key === " " || key === "Spacebar" || key === "Space" || key === "Enter" || keyCode === 32 || keyCode === 13) {
           event.preventDefault();
           stopBursting();
         }
-      });
+      }
+
+      if (supportsPointerEvents) {
+        pinata.addEventListener("pointerdown", handlePointerDown);
+        pinata.addEventListener("pointerup", function (event) {
+          stopBursting(event.pointerId);
+        });
+        pinata.addEventListener("pointercancel", function (event) {
+          stopBursting(event.pointerId);
+        });
+        pinata.addEventListener("lostpointercapture", function (event) {
+          stopBursting(event.pointerId);
+        });
+        document.addEventListener("pointerup", function (event) {
+          stopBursting(event.pointerId);
+        });
+      } else {
+        pinata.addEventListener("mousedown", function (event) {
+          if (event.button !== 0) {
+            return;
+          }
+
+          event.preventDefault();
+          startBursting();
+        });
+        document.addEventListener("mouseup", function () {
+          stopBursting();
+        });
+        pinata.addEventListener("touchstart", function (event) {
+          event.preventDefault();
+          startBursting();
+        });
+        document.addEventListener("touchend", function () {
+          stopBursting();
+        });
+        document.addEventListener("touchcancel", function () {
+          stopBursting();
+        });
+      }
+
+      pinata.addEventListener("keydown", handleKeyDown);
+      pinata.addEventListener("keyup", handleKeyUp);
     </script>
   </body>
 </html>

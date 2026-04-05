@@ -31,7 +31,9 @@
 
       body {
         font-family: "Avenir Next", "Segoe UI", sans-serif;
+        color: #f4fff0;
         color: var(--text-main);
+        background: linear-gradient(180deg, #0f2b21, #1f4d3a 45%, #537a57);
         background:
           radial-gradient(1100px 420px at 90% -5%, rgba(173, 255, 208, 0.24), transparent 60%),
           radial-gradient(900px 380px at -10% 12%, rgba(76, 255, 167, 0.22), transparent 55%),
@@ -62,6 +64,9 @@
       }
 
       .layout {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: stretch;
         display: grid;
         grid-template-columns: 1fr minmax(250px, 300px);
         gap: 18px;
@@ -197,12 +202,14 @@
       .panel {
         border: 1px solid var(--card-border);
         border-radius: 18px;
+        background: rgba(8, 24, 17, 0.74);
         background: var(--card-bg);
         box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22);
         padding: 16px;
         display: flex;
         flex-direction: column;
         gap: 12px;
+        -webkit-backdrop-filter: blur(4px);
         backdrop-filter: blur(4px);
       }
 
@@ -289,6 +296,14 @@
         line-height: 1.4;
       }
 
+      .no-cssvars .bundle {
+        left: 0;
+      }
+
+      .no-cssvars .glint {
+        animation-name: sparkleLegacy;
+      }
+
       @keyframes bundleRise {
         0% {
           opacity: 0;
@@ -315,6 +330,20 @@
         100% {
           opacity: 0;
           transform: translateY(-18px) rotate(var(--a)) scaleY(1.15);
+        }
+      }
+
+      @keyframes sparkleLegacy {
+        0% {
+          opacity: 0;
+          transform: translateY(0) scaleY(0.4);
+        }
+        20% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+          transform: translateY(-18px) scaleY(1.15);
         }
       }
 
@@ -691,33 +720,39 @@
     </main>
 
     <script>
-      const stackField = document.getElementById("stackField");
-      const amountLabel = document.getElementById("amountLabel");
-      const piecesLabel = document.getElementById("piecesLabel");
-      const growBtn = document.getElementById("grow");
-      const resetBtn = document.getElementById("reset");
-      const speedControl = document.getElementById("speed");
-      const burstControl = document.getElementById("burst");
+      var stackField = document.getElementById("stackField");
+      var amountLabel = document.getElementById("amountLabel");
+      var piecesLabel = document.getElementById("piecesLabel");
+      var growBtn = document.getElementById("grow");
+      var resetBtn = document.getElementById("reset");
+      var speedControl = document.getElementById("speed");
+      var burstControl = document.getElementById("burst");
+      var supportsPointerEvents = !!window.PointerEvent;
+      var supportsCssVariables = !!(window.CSS && window.CSS.supports && window.CSS.supports("--demo-test", "0"));
 
-      let amount = 0;
-      let bundles = 0;
-      let growTimer = null;
+      var amount = 0;
+      var bundles = 0;
+      var growTimer = null;
 
-      const STACK_COUNT = 8;
-      const MAX_UNITS_PER_STACK = 25;
-      const BUNDLE_VALUE = 10_000_000_000;
-      const stacks = [];
+      var STACK_COUNT = 8;
+      var MAX_UNITS_PER_STACK = 25;
+      var BUNDLE_VALUE = 10000000000;
+      var stacks = [];
+
+      if (!supportsCssVariables && document.body.className.indexOf("no-cssvars") === -1) {
+        document.body.className += (document.body.className ? " " : "") + "no-cssvars";
+      }
 
       function formatMacroCurrency(value) {
-        if (value >= 1_000_000_000_000) {
-          return `$${(value / 1_000_000_000_000).toFixed(2)} trillion`;
+        if (value >= 1000000000000) {
+          return "$" + (value / 1000000000000).toFixed(2) + " trillion";
         }
-        return `$${(value / 1_000_000_000).toFixed(1)} billion`;
+        return "$" + (value / 1000000000).toFixed(1) + " billion";
       }
 
       function updateLabels() {
         amountLabel.textContent = formatMacroCurrency(amount);
-        piecesLabel.textContent = `${bundles} bundles / ${STACK_COUNT} stacks`;
+        piecesLabel.textContent = bundles + " bundles / " + STACK_COUNT + " stacks";
       }
 
       function randomBetween(min, max) {
@@ -728,34 +763,34 @@
         stackField.textContent = "";
         stacks.length = 0;
 
-        for (let i = 0; i < STACK_COUNT; i += 1) {
-          const column = document.createElement("div");
+        for (var i = 0; i < STACK_COUNT; i += 1) {
+          var column = document.createElement("div");
           column.className = "stack-column";
 
-          const base = document.createElement("div");
+          var base = document.createElement("div");
           base.className = "stack-base";
           column.appendChild(base);
 
           stackField.appendChild(column);
 
           stacks.push({
-            column,
-            units: 0,
+            column: column,
+            units: 0
           });
         }
       }
 
       function pickStackIndex() {
-        let bestIndex = 0;
-        let bestScore = Number.POSITIVE_INFINITY;
+        var bestIndex = 0;
+        var bestScore = Number.POSITIVE_INFINITY;
 
-        for (let i = 0; i < stacks.length; i += 1) {
-          const candidate = stacks[i];
+        for (var i = 0; i < stacks.length; i += 1) {
+          var candidate = stacks[i];
           if (candidate.units >= MAX_UNITS_PER_STACK) {
             continue;
           }
 
-          const score = candidate.units + Math.random() * 0.95;
+          var score = candidate.units + Math.random() * 0.95;
           if (score < bestScore) {
             bestScore = score;
             bestIndex = i;
@@ -766,17 +801,24 @@
       }
 
       function addGlint(delay) {
-        const glint = document.createElement("div");
-        glint.className = "glint";
+        var glint = document.createElement("div");
+        var angle = randomBetween(-36, 36).toFixed(1);
 
-        glint.style.setProperty("--x", `${randomBetween(6, 96).toFixed(1)}%`);
-        glint.style.setProperty("--y", `${randomBetween(20, 300).toFixed(1)}px`);
-        glint.style.setProperty("--a", `${randomBetween(-36, 36).toFixed(1)}deg`);
-        glint.style.setProperty("--delay", `${delay}ms`);
+        glint.className = "glint";
+        glint.style.left = randomBetween(6, 96).toFixed(1) + "%";
+        glint.style.bottom = randomBetween(20, 300).toFixed(1) + "px";
+        glint.style.animationDelay = delay + "ms";
+
+        if (supportsCssVariables) {
+          glint.style.setProperty("--x", glint.style.left);
+          glint.style.setProperty("--y", glint.style.bottom);
+          glint.style.setProperty("--a", angle + "deg");
+          glint.style.setProperty("--delay", delay + "ms");
+        }
 
         stackField.appendChild(glint);
 
-        window.setTimeout(() => {
+        window.setTimeout(function () {
           if (glint.parentNode) {
             glint.parentNode.removeChild(glint);
           }
@@ -784,18 +826,24 @@
       }
 
       function addBundleToStack(stackIndex, delay) {
-        const stack = stacks[stackIndex];
+        var stack = stacks[stackIndex];
         if (!stack || stack.units >= MAX_UNITS_PER_STACK) {
           return;
         }
 
-        const bundle = document.createElement("div");
-        bundle.className = "bundle";
+        var bundle = document.createElement("div");
+        var bottom = 2 + stack.units * 13;
+        var jitter = randomBetween(-1.8, 1.8).toFixed(1) + "px";
 
-        const bottom = 2 + stack.units * 13;
-        bundle.style.bottom = `${bottom}px`;
-        bundle.style.setProperty("--jitter", `${randomBetween(-1.8, 1.8).toFixed(1)}px`);
-        bundle.style.setProperty("--delay", `${delay}ms`);
+        bundle.className = "bundle";
+        bundle.style.bottom = bottom + "px";
+        bundle.style.left = jitter;
+        bundle.style.animationDelay = delay + "ms";
+
+        if (supportsCssVariables) {
+          bundle.style.setProperty("--jitter", jitter);
+          bundle.style.setProperty("--delay", delay + "ms");
+        }
 
         stack.column.appendChild(bundle);
 
@@ -804,13 +852,13 @@
         amount += BUNDLE_VALUE;
       }
 
-      function addBurst(multiplier = 1) {
-        const burstSize = Number.parseInt(burstControl.value, 10) * multiplier;
-        const speedFactor = Number.parseInt(speedControl.value, 10);
-        const delayStep = Math.max(24, 170 - speedFactor * 10);
+      function addBurst(multiplier) {
+        var burstSize = parseInt(burstControl.value, 10) * (typeof multiplier === "number" ? multiplier : 1);
+        var speedFactor = parseInt(speedControl.value, 10);
+        var delayStep = Math.max(24, 170 - speedFactor * 10);
 
-        for (let i = 0; i < burstSize; i += 1) {
-          const delay = i * delayStep;
+        for (var i = 0; i < burstSize; i += 1) {
+          var delay = i * delayStep;
           addBundleToStack(pickStackIndex(), delay);
 
           if (Math.random() > 0.7) {
@@ -821,15 +869,19 @@
         updateLabels();
       }
 
-      function startGrowing() {
+      function startGrowing(event) {
+        if (event && typeof event.preventDefault === "function") {
+          event.preventDefault();
+        }
+
         if (growTimer !== null) {
           return;
         }
 
         addBurst(1);
 
-        const interval = Math.max(160, 820 - Number.parseInt(speedControl.value, 10) * 45);
-        growTimer = window.setInterval(() => {
+        var interval = Math.max(160, 820 - parseInt(speedControl.value, 10) * 45);
+        growTimer = window.setInterval(function () {
           addBurst(1);
         }, interval);
       }
@@ -838,6 +890,7 @@
         if (growTimer === null) {
           return;
         }
+
         window.clearInterval(growTimer);
         growTimer = null;
       }
@@ -850,14 +903,27 @@
         updateLabels();
       }
 
-      growBtn.addEventListener("pointerdown", startGrowing);
-      growBtn.addEventListener("pointerup", stopGrowing);
-      growBtn.addEventListener("pointerleave", stopGrowing);
-      growBtn.addEventListener("click", () => addBurst(1));
+      if (supportsPointerEvents) {
+        growBtn.addEventListener("pointerdown", startGrowing);
+        growBtn.addEventListener("pointerup", stopGrowing);
+        growBtn.addEventListener("pointerleave", stopGrowing);
+        growBtn.addEventListener("pointercancel", stopGrowing);
+      } else {
+        growBtn.addEventListener("mousedown", startGrowing);
+        document.addEventListener("mouseup", stopGrowing);
+        growBtn.addEventListener("mouseleave", stopGrowing);
+        growBtn.addEventListener("touchstart", startGrowing);
+        document.addEventListener("touchend", stopGrowing);
+        document.addEventListener("touchcancel", stopGrowing);
+      }
+
+      growBtn.addEventListener("click", function () {
+        addBurst(1);
+      });
 
       resetBtn.addEventListener("click", resetPile);
 
-      speedControl.addEventListener("change", () => {
+      speedControl.addEventListener("change", function () {
         if (growTimer !== null) {
           stopGrowing();
           startGrowing();

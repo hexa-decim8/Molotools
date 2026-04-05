@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculator Browser Smoke Test</title>
+  <link rel="stylesheet" href="../../../../calculators/wealth-tax-calculator/wordpress/wealth-tax-calculator/css/styles.css">
+</head>
+<body>
+  <div class="calculator-container wealth-tax-widget mode-advanced">
+    <header>
+      <h1>Billionaire Wealth Tax Calculator</h1>
+      <p class="subtitle">Calculate potential revenue from taxing billionaire wealth</p>
+    </header>
+
+    <div class="calculator-content">
+      <div class="calculator-inputs">
+        <div class="mode-toggle-section">
+          <div class="mode-toggle">
+            <button class="mode-button" data-mode="basic">Basic</button>
+            <button class="mode-button active" data-mode="advanced">Advanced</button>
+          </div>
+        </div>
+
+        <div class="input-section">
+          <div class="slider-container wtc-slider-shell">
+            <input type="hidden" id="wtc-taxRate" value="2" aria-label="Tax rate percentage">
+
+            <div class="wtc-money-stage" aria-hidden="true">
+              <div class="wtc-money-stage-glow"></div>
+              <div class="wtc-money-field" id="wtc-moneyField"></div>
+            </div>
+
+            <div id="wtc-pr-slider" class="wtc-dragdealer">
+              <div class="wtc-stripe">
+                <div id="wtc-highlight-fill" class="wtc-highlight-fill"></div>
+                <div id="wtc-highlight-threshold" class="wtc-highlight-threshold" aria-hidden="true"></div>
+
+                <div class="handle">
+                  <div class="wtc-infobox" id="wtc-sliderInfobox">
+                    <div class="wtc-titlebar">
+                      <span id="wtc-plan-holder">Tax Rate:</span>
+                      <span id="wtc-device-holder">2.0%</span>
+                    </div>
+                    <div class="wtc-innerbox">
+                      <div class="wtc-annual-label">ANNUAL REVENUE:</div>
+                      <div class="wtc-annual-price" id="wtc-annualPrice">$306.0 Billion</div>
+                    </div>
+                  </div>
+
+                  <div
+                    class="wtc-square"
+                    id="wtc-sliderHandle"
+                    role="slider"
+                    tabindex="0"
+                    aria-valuemin="1"
+                    aria-valuemax="8"
+                    aria-valuenow="2"
+                    aria-valuetext="2.0%"
+                    aria-label="Tax rate percentage"
+                  >
+                    <span class="value" id="wtc-sliderValue">2.0%</span>
+                    <span class="menu-line"></span>
+                    <span class="menu-line"></span>
+                    <span class="menu-line"></span>
+                  </div>
+                </div>
+              </div>
+              <span id="wtc-planBadge" class="plan-indicator" aria-hidden="true" style="display:none">5% • Abdul's plan</span>
+            </div>
+          </div>
+          <div class="range-labels">
+            <span>1%</span>
+            <span>8%</span>
+          </div>
+        </div>
+
+        <div class="policy-allocation-section">
+          <h3 class="policy-header">Allocate Revenue to Policy Categories</h3>
+          <p class="policy-description">Select one or more categories to see how the tax revenue could be allocated:</p>
+
+          <div class="policy-categories">
+            <label class="policy-checkbox">
+              <input type="checkbox" name="wtc-policy" value="healthcare" id="wtc-policyHealthcare" checked>
+              <span class="checkbox-label">Healthcare</span>
+            </label>
+
+            <label class="policy-checkbox">
+              <input type="checkbox" name="wtc-policy" value="education" id="wtc-policyEducation" checked>
+              <span class="checkbox-label">Education</span>
+            </label>
+
+            <label class="policy-checkbox">
+              <input type="checkbox" name="wtc-policy" value="business" id="wtc-policyBusiness" checked>
+              <span class="checkbox-label">Business</span>
+            </label>
+
+            <label class="policy-checkbox">
+              <input type="checkbox" name="wtc-policy" value="directRelief" id="wtc-policyDirectRelief" checked>
+              <span class="checkbox-label">Direct Relief</span>
+            </label>
+
+            <label class="policy-checkbox">
+              <input type="checkbox" name="wtc-policy" value="housing" id="wtc-policyHousing" checked>
+              <span class="checkbox-label">Housing</span>
+            </label>
+
+            <label class="policy-checkbox">
+              <input type="checkbox" name="wtc-policy" value="childcare" id="wtc-policyChildcare" checked>
+              <span class="checkbox-label">Childcare &amp; Families</span>
+            </label>
+          </div>
+
+          <div class="allocation-results" id="wtc-allocationResults">
+            <p class="allocation-prompt">Select categories above to see allocation</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="calculator-results">
+        <div class="results-section">
+          <div class="context-box">
+            <h3>What Could This Fund?</h3>
+            <p class="comparison-text" id="wtc-comparisonText">Loading…</p>
+          </div>
+
+          <div class="sources-box">
+            <h4>Sources</h4>
+            <ol class="sources-list" id="wtc-sourcesList">
+              <li id="wtc-comparisonSource">Loading…</li>
+              <li>
+                <a href="https://www.ips-dc.org/resource-richest-15-u-s-centi-billionaires-see-wealth-surge-33-percent-to-3-2-trillion/"
+                  target="_blank" rel="noopener noreferrer">
+                  Richest 15 U.S. Centi-Billionaires See Wealth Surge 33 Percent to $3.2 Trillion
+                </a>
+              </li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.wealthTaxConfig = {
+      billionaireWealth: 15.3e12,
+      comparisons: [
+        {
+          minRevenue: 0,
+          maxRevenue: 4e11,
+          description: 'Sample baseline comparison',
+          sourceText: 'Sample Source A',
+          sourceUrl: 'https://example.com/source-a'
+        },
+        {
+          minRevenue: 4e11,
+          maxRevenue: 1e12,
+          description: 'Sample mid-range comparison',
+          sourceText: 'Sample Source B',
+          sourceUrl: 'https://example.com/source-b'
+        },
+        {
+          minRevenue: 1e12,
+          maxRevenue: 2e12,
+          description: 'Sample high-range comparison',
+          sourceText: 'Sample Source C',
+          sourceUrl: 'https://example.com/source-c'
+        }
+      ]
+    };
+  </script>
+  <script src="../../../../calculators/wealth-tax-calculator/wordpress/wealth-tax-calculator/js/dragdealer.js"></script>
+  <script src="../../../../calculators/wealth-tax-calculator/wordpress/wealth-tax-calculator/js/calculator.js"></script>
+</body>
+</html>

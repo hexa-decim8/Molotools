@@ -62,6 +62,15 @@ What the workflow does:
 - Creates a semantic release tag in `vX.Y.Z` format
 - Creates or updates the matching GitHub Release and uploads `wealth-tax-calculator.zip` as the release asset
 
+Browser validation is handled by `.github/workflows/browser-validation.yml` and runs smoke tests against the approved matrix:
+- Desktop Chromium
+- Desktop Firefox
+- Desktop WebKit (Safari engine)
+- Mobile Chromium (Pixel 7 emulation)
+- Mobile WebKit (iPhone 13 emulation)
+
+The browser workflow validates calculator load, slider keyboard interaction, mode toggling behavior, and narrow-screen responsive layout before changes are merged.
+
 ## Releasing Updates
 
 1. Update plugin version values in `wealth-tax-calculator/wealth-tax-calculator.php`:

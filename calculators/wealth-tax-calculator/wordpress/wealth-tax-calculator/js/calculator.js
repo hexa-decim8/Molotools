@@ -31,6 +31,15 @@
         columns: [],
         initialized: false
     };
+    var supportsRequestAnimationFrame = typeof window.requestAnimationFrame === 'function';
+    var requestFrame = supportsRequestAnimationFrame
+        ? function (callback) {
+            return window.requestAnimationFrame(callback);
+        }
+        : function (callback) {
+            return window.setTimeout(callback, 16);
+        };
+    var supportsCssVariables = !!(window.CSS && window.CSS.supports && window.CSS.supports('--wtc-test', '0'));
     var MONEY_PILE_PROFILES = [0.26, 0.4, 0.58, 0.82, 1, 0.92, 0.72, 0.5, 0.34];
     var MONEY_PILE_MAX_BUNDLES = 14;
 
@@ -166,6 +175,11 @@
         return '#';
     }
 
+    function formatWholeNumber(amount) {
+        var rounded = Math.round(amount);
+        return String(rounded).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+
     function formatCurrency(amount) {
         if (amount >= 1e12) {
             return '$' + (amount / 1e12).toFixed(2) + ' Trillion';
@@ -173,10 +187,25 @@
         if (amount >= 1e9) {
             return '$' + (amount / 1e9).toFixed(1) + ' Billion';
         }
-        return '$' + amount.toLocaleString('en-US', {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-        });
+        return '$' + formatWholeNumber(amount);
+    }
+
+    function buildMoneyBundleTransform(bundleScale, bundleTilt, isActive) {
+        var translateY = isActive ? 0 : 9;
+        var scale = isActive ? bundleScale : (0.92 * bundleScale);
+
+        return 'translateX(-50%) translateY(' + translateY + 'px) scale(' + scale.toFixed(3) + ') rotate(' + bundleTilt.toFixed(2) + 'deg)';
+    }
+
+    function applyCompatibilityClasses() {
+        var calculatorContainer = document.querySelector('.calculator-container');
+        if (!calculatorContainer) {
+            return;
+        }
+
+        if (!supportsCssVariables) {
+            calculatorContainer.classList.add('no-cssvars');
+        }
     }
 
     function calculateRevenue(taxRate) {
@@ -242,8 +271,12 @@
             return;
         }
 
-        sliderInfoBox.style.setProperty('--wtc-infobox-offset', '0px');
-        sliderInfoBox.style.setProperty('--wtc-infobox-pointer-offset', '0px');
+        if (supportsCssVariables) {
+            sliderInfoBox.style.setProperty('--wtc-infobox-offset', '0px');
+            sliderInfoBox.style.setProperty('--wtc-infobox-pointer-offset', '0px');
+        } else {
+            sliderInfoBox.style.marginLeft = '0px';
+        }
 
         var sliderRect = sliderWrapper.getBoundingClientRect();
         var handleRect = handleWrapper.getBoundingClientRect();
@@ -264,8 +297,13 @@
         var pointerLimit = (infoBoxWidth / 2) - 20;
         var pointerOffset = clampNumber(-offset, -pointerLimit, pointerLimit);
 
-        sliderInfoBox.style.setProperty('--wtc-infobox-offset', offset.toFixed(2) + 'px');
-        sliderInfoBox.style.setProperty('--wtc-infobox-pointer-offset', pointerOffset.toFixed(2) + 'px');
+        if (supportsCssVariables) {
+            sliderInfoBox.style.setProperty('--wtc-infobox-offset', offset.toFixed(2) + 'px');
+            sliderInfoBox.style.setProperty('--wtc-infobox-pointer-offset', pointerOffset.toFixed(2) + 'px');
+        } else {
+            sliderInfoBox.style.left = '50%';
+            sliderInfoBox.style.marginLeft = offset.toFixed(2) + 'px';
+        }
     }
 
     function ensureMoneyPile() {
@@ -299,6 +337,7 @@
                 var bundle = document.createElement('span');
                 var offsetPattern = ((bundleIndex + (columnIndex * 2)) % 5) - 2;
                 var tiltPattern = ((columnIndex * 3) + bundleIndex) % 7;
+                var bundleTilt = (tiltPattern - 3) * 0.45;
                 var widthTrim = (bundleIndex + columnIndex) % 3;
                 var verticalRatio = (MONEY_PILE_MAX_BUNDLES <= 1)
                     ? 0
@@ -307,12 +346,23 @@
                 var bundleScale = 0.94 + (edgeBoost * 0.2);
 
                 bundle.className = 'wtc-money-bundle';
-                bundle.style.setProperty('--wtc-bundle-index', String(bundleIndex));
-                bundle.style.setProperty('--wtc-bundle-delay', (bundleIndex * 16) + 'ms');
-                bundle.style.setProperty('--wtc-bundle-tilt', (((tiltPattern - 3) * 0.45)).toFixed(2) + 'deg');
-                bundle.style.setProperty('--wtc-bundle-width-trim', widthTrim + 'px');
-                bundle.style.setProperty('--wtc-bundle-scale', bundleScale.toFixed(3));
                 bundle.style.marginLeft = (offsetPattern * 2.2).toFixed(1) + 'px';
+
+                if (supportsCssVariables) {
+                    bundle.style.setProperty('--wtc-bundle-index', String(bundleIndex));
+                    bundle.style.setProperty('--wtc-bundle-delay', (bundleIndex * 16) + 'ms');
+                    bundle.style.setProperty('--wtc-bundle-tilt', bundleTilt.toFixed(2) + 'deg');
+                    bundle.style.setProperty('--wtc-bundle-width-trim', widthTrim + 'px');
+                    bundle.style.setProperty('--wtc-bundle-scale', bundleScale.toFixed(3));
+                } else {
+                    bundle.setAttribute('data-bundle-scale', bundleScale.toFixed(3));
+                    bundle.setAttribute('data-bundle-tilt', bundleTilt.toFixed(2));
+                    bundle.style.bottom = (bundleIndex * 9) + 'px';
+                    bundle.style.width = 'calc(100% - ' + widthTrim + 'px)';
+                    bundle.style.transitionDelay = (bundleIndex * 16) + 'ms';
+                    bundle.style.transform = buildMoneyBundleTransform(bundleScale, bundleTilt, false);
+                }
+
                 column.appendChild(bundle);
                 bundles.push(bundle);
             }
@@ -336,7 +386,9 @@
         var progress = rateToRatio(taxRate);
         var visibleRatio = 0.08 + (Math.pow(progress, 0.72) * 0.92);
 
-        moneyPileController.shell.style.setProperty('--wtc-money-progress', visibleRatio.toFixed(3));
+        if (supportsCssVariables) {
+            moneyPileController.shell.style.setProperty('--wtc-money-progress', visibleRatio.toFixed(3));
+        }
 
         for (var columnIndex = 0; columnIndex < moneyPileController.columns.length; columnIndex++) {
             var column = moneyPileController.columns[columnIndex];
@@ -349,8 +401,26 @@
             for (var bundleIndex = 0; bundleIndex < column.bundles.length; bundleIndex++) {
                 if (bundleIndex < bundleTarget) {
                     column.bundles[bundleIndex].classList.add('is-active');
+                    if (!supportsCssVariables) {
+                        column.bundles[bundleIndex].style.opacity = '1';
+                        column.bundles[bundleIndex].style.transform = buildMoneyBundleTransform(
+                            parseFloat(column.bundles[bundleIndex].getAttribute('data-bundle-scale')),
+                            parseFloat(column.bundles[bundleIndex].getAttribute('data-bundle-tilt')),
+                            true
+                        );
+                        column.bundles[bundleIndex].style.filter = 'saturate(1)';
+                    }
                 } else {
                     column.bundles[bundleIndex].classList.remove('is-active');
+                    if (!supportsCssVariables) {
+                        column.bundles[bundleIndex].style.opacity = '0';
+                        column.bundles[bundleIndex].style.transform = buildMoneyBundleTransform(
+                            parseFloat(column.bundles[bundleIndex].getAttribute('data-bundle-scale')),
+                            parseFloat(column.bundles[bundleIndex].getAttribute('data-bundle-tilt')),
+                            false
+                        );
+                        column.bundles[bundleIndex].style.filter = 'saturate(0.86)';
+                    }
                 }
             }
         }
@@ -511,7 +581,7 @@
             }
 
             sliderController.resizeTicking = true;
-            window.requestAnimationFrame(function () {
+            requestFrame(function () {
                 sliderController.resizeTicking = false;
                 keepSliderInfoboxVisible();
             });
@@ -982,6 +1052,7 @@
         var slider = getTaxRateInput();
         if (!slider) return; // Shortcode not present on this page.
 
+        applyCompatibilityClasses();
         ensureMoneyPile();
         initTaxRateSlider();
 
