@@ -133,6 +133,25 @@
         }
     }
 
+    function enableAvailablePolicyOptionsForGroup(policyGroup) {
+        if (currentMode !== 'advanced' || selectedPolicies.length === 0) {
+            return;
+        }
+
+        var revenue = calculateRevenue(getCurrentTaxRate());
+        var amountPerCategory = revenue / selectedPolicies.length;
+        var policyExamples = POLICY_EXAMPLES[policyGroup] || [];
+
+        for (var i = 0; i < policyExamples.length; i++) {
+            if (amountPerCategory >= policyExamples[i].minAmount) {
+                var policyOptionKey = getPolicyOptionKey(policyGroup, i);
+                if (selectedPolicyOptions.indexOf(policyOptionKey) === -1) {
+                    selectedPolicyOptions.push(policyOptionKey);
+                }
+            }
+        }
+    }
+
     // ── Helpers ────────────────────────────────────────────────────────────────
 
     /**
@@ -292,12 +311,18 @@
                 var offsetPattern = ((bundleIndex + (columnIndex * 2)) % 5) - 2;
                 var tiltPattern = ((columnIndex * 3) + bundleIndex) % 7;
                 var widthTrim = (bundleIndex + columnIndex) % 3;
+                var verticalRatio = (MONEY_PILE_MAX_BUNDLES <= 1)
+                    ? 0
+                    : (bundleIndex / (MONEY_PILE_MAX_BUNDLES - 1));
+                var edgeBoost = Math.abs((verticalRatio * 2) - 1);
+                var bundleScale = 0.94 + (edgeBoost * 0.2);
 
                 bundle.className = 'wtc-money-bundle';
                 bundle.style.setProperty('--wtc-bundle-index', String(bundleIndex));
                 bundle.style.setProperty('--wtc-bundle-delay', (bundleIndex * 16) + 'ms');
                 bundle.style.setProperty('--wtc-bundle-tilt', (((tiltPattern - 3) * 0.45)).toFixed(2) + 'deg');
                 bundle.style.setProperty('--wtc-bundle-width-trim', widthTrim + 'px');
+                bundle.style.setProperty('--wtc-bundle-scale', bundleScale.toFixed(3));
                 bundle.style.marginLeft = (offsetPattern * 2.2).toFixed(1) + 'px';
                 column.appendChild(bundle);
                 bundles.push(bundle);
@@ -528,6 +553,58 @@
         return comparisonsData[comparisonsData.length - 1];
     }
 
+    function createOverBudgetPinata(isAtMaxRate) {
+        var pinataDrop = document.createElement('div');
+        pinataDrop.className = 'allocation-pinata-drop';
+
+        var rope = document.createElement('span');
+        rope.className = 'allocation-pinata-rope';
+
+        var pinataButton = document.createElement('button');
+        pinataButton.type = 'button';
+        pinataButton.className = 'allocation-pinata-button';
+        pinataButton.setAttribute('aria-label', 'Increase tax rate by 1 percent');
+
+        if (isAtMaxRate) {
+            pinataButton.disabled = true;
+            pinataButton.setAttribute('aria-label', 'Maximum tax rate reached');
+            pinataButton.classList.add('is-maxed');
+        }
+
+        var star = document.createElement('span');
+        star.className = 'allocation-pinata-star';
+
+        var eyes = document.createElement('span');
+        eyes.className = 'allocation-pinata-eyes';
+
+        var smile = document.createElement('span');
+        smile.className = 'allocation-pinata-smile';
+
+        var badge = document.createElement('span');
+        badge.className = 'allocation-pinata-badge';
+        badge.textContent = isAtMaxRate ? 'MAX' : '+1%';
+
+        star.appendChild(eyes);
+        star.appendChild(smile);
+        pinataButton.appendChild(star);
+        pinataButton.appendChild(badge);
+        pinataDrop.appendChild(rope);
+        pinataDrop.appendChild(pinataButton);
+
+        return pinataDrop;
+    }
+
+    function handleOverBudgetPinataClick(event) {
+        event.preventDefault();
+
+        var currentRate = getCurrentTaxRate();
+        if (currentRate >= TAX_RATE_MAX) {
+            return;
+        }
+
+        setTaxRate(currentRate + 1, true);
+    }
+
     function updatePolicyAllocation() {
         var allocationResults = el('wtc-allocationResults');
         if (!allocationResults) return;
@@ -731,6 +808,11 @@
         summary.appendChild(availableLine);
         summary.appendChild(selectedLine);
         summary.appendChild(budgetLine);
+
+        if (isOverBudget) {
+            summary.appendChild(createOverBudgetPinata(getCurrentTaxRate() >= TAX_RATE_MAX));
+        }
+
         summary.appendChild(budgetHint);
         allocationResults.appendChild(summary);
 
@@ -742,6 +824,11 @@
         var policyGroupToggles = allocationResults.querySelectorAll('.allocation-group-toggle');
         for (var p = 0; p < policyGroupToggles.length; p++) {
             policyGroupToggles[p].addEventListener('click', handlePolicyGroupToggle);
+        }
+
+        var budgetPinata = allocationResults.querySelector('.allocation-pinata-button');
+        if (budgetPinata) {
+            budgetPinata.addEventListener('click', handleOverBudgetPinataClick);
         }
 
     }
@@ -782,6 +869,7 @@
 
         if (checkbox.checked && index === -1) {
             selectedPolicies.push(policyValue);
+            enableAvailablePolicyOptionsForGroup(policyValue);
         } else if (!checkbox.checked && index > -1) {
             selectedPolicies.splice(index, 1);
             removePolicyOptionsForGroup(policyValue);
