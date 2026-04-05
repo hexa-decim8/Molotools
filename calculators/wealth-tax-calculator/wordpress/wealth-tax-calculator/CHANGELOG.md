@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.5] - 2026-04-05
+
+
 ### Changed
 - Improved mobile responsiveness across the calculator interface with refined breakpoints for typography, spacing, slider panel sizing, toggle controls, and advanced policy rows.
 - Added equivalent responsive overrides to the production minified stylesheet so mobile behavior matches development builds.
