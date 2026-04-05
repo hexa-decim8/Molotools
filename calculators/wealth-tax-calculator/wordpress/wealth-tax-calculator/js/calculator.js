@@ -535,13 +535,15 @@
                     var exampleRow = document.createElement('div');
                     exampleRow.className = 'allocation-example-row';
 
-                    var optionLabel = document.createElement('label');
-                    optionLabel.className = 'policy-option-checkbox';
-                    optionLabel.setAttribute('for', inputId);
+                    var optionWrapper = document.createElement('div');
+                    optionWrapper.className = 'policy-option-checkbox';
+
+                    var checkboxWrapper = document.createElement('div');
+                    checkboxWrapper.className = 'checkbox-wrapper-10';
 
                     var optionInput = document.createElement('input');
                     optionInput.type = 'checkbox';
-                    optionInput.className = 'policy-option-input';
+                    optionInput.className = 'tgl tgl-flip policy-option-input';
                     optionInput.id = inputId;
                     optionInput.setAttribute('data-policy', policy);
                     optionInput.setAttribute('data-index', available.index);
@@ -549,12 +551,21 @@
                         optionInput.checked = true;
                     }
 
+                    var toggleLabel = document.createElement('label');
+                    toggleLabel.className = 'tgl-btn';
+                    toggleLabel.setAttribute('for', inputId);
+                    toggleLabel.setAttribute('data-tg-off', 'Nope');
+                    toggleLabel.setAttribute('data-tg-on', 'Yeah!');
+
+                    checkboxWrapper.appendChild(optionInput);
+                    checkboxWrapper.appendChild(toggleLabel);
+
                     var optionText = document.createElement('span');
                     optionText.className = 'policy-option-text';
                     optionText.textContent = exampleData.description;
 
-                    optionLabel.appendChild(optionInput);
-                    optionLabel.appendChild(optionText);
+                    optionWrapper.appendChild(checkboxWrapper);
+                    optionWrapper.appendChild(optionText);
 
                     var optionMeta = document.createElement('div');
                     optionMeta.className = 'policy-option-meta';
@@ -573,7 +584,7 @@
                     optionMeta.appendChild(optionCost);
                     optionMeta.appendChild(optionSource);
 
-                    exampleRow.appendChild(optionLabel);
+                    exampleRow.appendChild(optionWrapper);
                     exampleRow.appendChild(optionMeta);
                     examplesContainer.appendChild(exampleRow);
                 }
