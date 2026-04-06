@@ -743,19 +743,101 @@
 }
 
 .calculator-container .allocation-example-row {
-    padding: 10px 0;
+    position: relative;
+    overflow: hidden;
+    padding: 10px 0 2rem;
     border-bottom: 1px dashed #E8D7C3;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.15s ease;
 }
 
 .calculator-container .allocation-example-row:last-child {
     border-bottom: none;
 }
 
+.calculator-container .allocation-row-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 0%;
+    background: var(--fill-color, #888);
+    opacity: 0.2;
+    pointer-events: none;
+    transition: width 0.08s ease-out, opacity 0.15s ease;
+}
+
+.calculator-container .allocation-example-row.is-enabled .allocation-row-fill {
+    opacity: 0.35;
+}
+
+.calculator-container .allocation-row-content {
+    position: relative;
+    z-index: 1;
+}
+
+.calculator-container .policy-range-input {
+    display: none;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 1.25rem;
+    z-index: 2;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: grab;
+    outline: none;
+    border: none;
+    padding: 0;
+}
+
+.calculator-container .allocation-example-row.is-enabled .policy-range-input {
+    display: block;
+}
+
+.calculator-container .policy-range-input::-webkit-slider-runnable-track {
+    height: 3px;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 999px;
+}
+
+.calculator-container .policy-range-input::-moz-range-track {
+    height: 3px;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 999px;
+}
+
+.calculator-container .policy-range-input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--fill-color, #888);
+    cursor: grab;
+    opacity: 0.85;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    margin-top: -5.5px;
+}
+
+.calculator-container .policy-range-input::-moz-range-thumb {
+    border: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--fill-color, #888);
+    cursor: grab;
+    opacity: 0.85;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
 .calculator-container .policy-option-checkbox {
     display: flex;
     align-items: flex-start;
     gap: 10px;
-    cursor: pointer;
 }
 
 .calculator-container .policy-option-input {
@@ -909,7 +991,6 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-left: 74px;
     margin-top: 6px;
 }
 

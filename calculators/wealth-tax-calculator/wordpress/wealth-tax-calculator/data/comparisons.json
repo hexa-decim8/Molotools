@@ -1,116 +1,180 @@
 {
   "comparisons": [
     {
-      "minRevenue": 0,
-      "maxRevenue": 30000000000,
-      "description": "This could fund a $60,000 minimum salary for every public school teacher in America",
-      "amount": 28000000000,
-      "sourceText": "NEA 2023-2024 Teacher Salary Benchmark Report",
-      "sourceUrl": "https://www.nea.org/resource-library/teacher-salary-benchmark-report"
+      "policy": "Freeze property tax rates for seniors owning just one home",
+      "description": "Freeze property tax rates for seniors who own just one home.",
+      "minCost": 50000000000,
+      "maxCost": 90000000000,
+      "costLabel": "$50-$90 billion over 10 years",
+      "sources": [
+        {
+          "text": "Homeownership by Selected Demographic and Housing Characteristics"
+        },
+        {
+          "text": "Property tax burdens vary widely as states debate senior relief"
+        }
+      ]
     },
     {
-      "minRevenue": 30000000000,
-      "maxRevenue": 39000000000,
-      "description": "This could cover the cost of renewing all ACA enhanced premium tax credits cut by the One Big Beautiful Bill Act (OBBA)",
-      "amount": 35000000000,
-      "sourceText": "Offsetting ACA Enhanced Subsidy Extensions | Committee for a Responsible Federal Budget",
-      "sourceUrl": "https://www.crfb.org/blogs/offsetting-aca-enhanced-subsidy-extensions"
+      "policy": "$60,000 minimum public-school teacher salary",
+      "description": "Guarantee a $60,000 minimum salary for public-school teachers nationwide.",
+      "minCost": 152000000000,
+      "maxCost": 152000000000,
+      "costLabel": "$152 billion over 10 years",
+      "sources": [
+        {
+          "text": "The Make Billionaires Pay Their Fair Share Act",
+          "url": "https://www.sanders.senate.gov/wp-content/uploads/MakeBillionairesPayTheirFairShareAct.pdf"
+        },
+        {
+          "text": "Saez-Zucman wealth tax revenue memo",
+          "url": "https://www.sanders.senate.gov/wp-content/uploads/saez-zucman-sanders2026wealthtax.pdf"
+        }
+      ]
     },
     {
-      "minRevenue": 39000000000,
-      "maxRevenue": 86000000000,
-      "description": "This could cap childcare costs at 7% of household income for every American family for one year",
-      "amount": 42000000000,
-      "sourceText": "Early Learning and Care in the Build Back Better Act, Congressional Budget Office",
-      "sourceUrl": "https://www.cbo.gov/topics/education-and-training"
+      "policy": "Expand Medicare to cover dental, vision, and hearing",
+      "description": "Expand Medicare to cover dental, vision, and hearing care.",
+      "minCost": 290000000000,
+      "maxCost": 290000000000,
+      "costLabel": "$290 billion over 10 years",
+      "sources": [
+        {
+          "text": "The Make Billionaires Pay Their Fair Share Act",
+          "url": "https://www.sanders.senate.gov/wp-content/uploads/MakeBillionairesPayTheirFairShareAct.pdf"
+        },
+        {
+          "text": "Saez-Zucman wealth tax revenue memo",
+          "url": "https://www.sanders.senate.gov/wp-content/uploads/saez-zucman-sanders2026wealthtax.pdf"
+        }
+      ]
     },
     {
-      "minRevenue": 86000000000,
-      "maxRevenue": 100000000000,
-      "description": "This could fund spending for the entire fiscal year 2024 Department of Homeland Security Budget",
-      "amount": 89300000000,
-      "sourceText": "U.S. Department of Homeland Security FY 2024 Budget, U.S. Department of the Treasury",
-      "sourceUrl": "https://home.treasury.gov/news/press-releases/jy2657"
+      "policy": "Medicaid home health care for seniors and people with disabilities",
+      "description": "Ensure that seniors and people with disabilities are able to receive the home health care they need through Medicaid.",
+      "minCost": 300000000000,
+      "maxCost": 300000000000,
+      "costLabel": "$300 billion over 10 years",
+      "sources": [
+        {
+          "text": "The Make Billionaires Pay Their Fair Share Act",
+          "url": "https://www.sanders.senate.gov/wp-content/uploads/MakeBillionairesPayTheirFairShareAct.pdf"
+        },
+        {
+          "text": "Saez-Zucman wealth tax revenue memo",
+          "url": "https://www.sanders.senate.gov/wp-content/uploads/saez-zucman-sanders2026wealthtax.pdf"
+        }
+      ]
     },
     {
-      "minRevenue": 100000000000,
-      "maxRevenue": 200000000000,
-      "description": "This could fund spending for the entire fiscal year 2024 Supplemental Nutrition Assistance Program (SNAP) and the Women, Infants, and Children (WIC) program",
-      "amount": 107000000000,
-      "sourceText": "SNAP and WIC FY 2024 Spending, USDA Economic Research Service",
-      "sourceUrl": "https://ers.usda.gov/sites/default/files/_laserfiche/publications/112884/EIB-291.pdf?utm_source=chatgpt.com"
+      "policy": "End the child care crisis",
+      "description": "End the child care crisis in America by making sure that no family in America pays over 7 percent of their income on child care.",
+      "minCost": 700000000000,
+      "maxCost": 700000000000,
+      "costLabel": "$700 billion over 10 years",
+      "sources": [
+        {
+          "text": "The Make Billionaires Pay Their Fair Share Act",
+          "url": "https://www.sanders.senate.gov/wp-content/uploads/MakeBillionairesPayTheirFairShareAct.pdf"
+        },
+        {
+          "text": "Saez-Zucman wealth tax revenue memo",
+          "url": "https://www.sanders.senate.gov/wp-content/uploads/saez-zucman-sanders2026wealthtax.pdf"
+        }
+      ]
     },
     {
-      "minRevenue": 200000000000,
-      "maxRevenue": 250000000000,
-      "description": "This could eliminate federal income taxes entirely for every individual earning up to $46,000/year and every married couple earning up to $92,000/year",
-      "amount": 225000000000,
-      "sourceText": "IRS Statistics of Income — Individual Income Tax Returns (Publication 1304)",
-      "sourceUrl": "https://www.irs.gov/statistics/soi-tax-stats-individual-income-tax-returns-publication-1304-complete-report"
+      "policy": "Eliminate the affordable housing gap",
+      "description": "Eliminate the affordable housing gap and abolish homelessness in America by building, rehabilitating, and preserving over 7 million affordable homes and apartments.",
+      "minCost": 856000000000,
+      "maxCost": 856000000000,
+      "costLabel": "$856 billion over 10 years",
+      "sources": [
+        {
+          "text": "The Make Billionaires Pay Their Fair Share Act",
+          "url": "https://www.sanders.senate.gov/wp-content/uploads/MakeBillionairesPayTheirFairShareAct.pdf"
+        },
+        {
+          "text": "Saez-Zucman wealth tax revenue memo",
+          "url": "https://www.sanders.senate.gov/wp-content/uploads/saez-zucman-sanders2026wealthtax.pdf"
+        }
+      ]
     },
     {
-      "minRevenue": 260000000000,
-      "maxRevenue": 300000000000,
-      "description": "This could fund spending for the entire fiscal year 2024 Department of Education budget",
-      "amount": 268400000000,
-      "sourceText": "U.S. Department of Education FY 2024 Budget, U.S. Department of the Treasury",
-      "sourceUrl": "https://home.treasury.gov/news/press-releases/jy2657"
+      "policy": "$3,000 direct payment",
+      "description": "A $3,000 direct payment to every man, woman and child living in a household making $150,000 or less. Approximately 85% of the U.S. population would be eligible for this policy, totaling around 285.3 million people.",
+      "minCost": 959000000000,
+      "maxCost": 959000000000,
+      "costLabel": "$959 billion over 10 years",
+      "sources": [
+        {
+          "text": "The Make Billionaires Pay Their Fair Share Act",
+          "url": "https://www.sanders.senate.gov/wp-content/uploads/MakeBillionairesPayTheirFairShareAct.pdf"
+        },
+        {
+          "text": "Saez-Zucman wealth tax revenue memo",
+          "url": "https://www.sanders.senate.gov/wp-content/uploads/saez-zucman-sanders2026wealthtax.pdf"
+        }
+      ]
     },
     {
-      "minRevenue": 300000000000,
-      "maxRevenue": 400000000000,
-      "description": "This could fund spending for the entire fiscal year 2024 Department of Veterans Affairs",
-      "amount": 325000000000,
-      "sourceText": "U.S. Department of Veterans Affairs FY 2024 Budget, U.S. Department of the Treasury",
-      "sourceUrl": "https://home.treasury.gov/news/press-releases/jy2657"
+      "policy": "Reverse Medicaid and ACA cuts in OBBB",
+      "description": "Reverse Medicaid and ACA cuts in the One Big Beautiful Bill.",
+      "minCost": 1100000000000,
+      "maxCost": 1100000000000,
+      "costLabel": "$1.1 trillion over 10 years",
+      "sources": [
+        {
+          "text": "The Make Billionaires Pay Their Fair Share Act",
+          "url": "https://www.sanders.senate.gov/wp-content/uploads/MakeBillionairesPayTheirFairShareAct.pdf"
+        },
+        {
+          "text": "Saez-Zucman wealth tax revenue memo",
+          "url": "https://www.sanders.senate.gov/wp-content/uploads/saez-zucman-sanders2026wealthtax.pdf"
+        }
+      ]
     },
     {
-      "minRevenue": 400000000000,
-      "maxRevenue": 600000000000,
-      "description": "This could fund a significant portion of federal Medicare spending",
-      "amount": 1052000000000,
-      "sourceText": "CBO Medicare Spending FY 2024, Congressional Budget Office",
-      "sourceUrl": "https://www.cbo.gov/system/files/2024-06/51302-2024-06-medicare.pdf"
+      "policy": "Eliminate federal income taxes for lower earners",
+      "description": "Eliminate federal income taxes entirely for individuals earning up to $46,000 per year and married couples earning up to $92,000 per year.",
+      "minCost": 2000000000000,
+      "maxCost": 2500000000000,
+      "costLabel": "$2.0-$2.5 trillion over 10 years",
+      "sources": [
+        {
+          "text": "The Budget and Economic Outlook: 2024 to 2034",
+          "url": "https://www.cbo.gov/publication/59710"
+        },
+        {
+          "text": "SOI Tax Stats - Historical data tables | Internal Revenue Service",
+          "url": "https://www.irs.gov/statistics/soi-tax-stats-individual-income-tax-returns-publication-1304-complete-report"
+        }
+      ]
     },
     {
-      "minRevenue": 600000000000,
-      "maxRevenue": 640000000000,
-      "description": "This covers spending for an entire year for the federal portion of Medicaid payments",
-      "amount": 620000000000,
-      "sourceText": "MACStats: Medicaid and CHIP Data Book February 2026",
-      "sourceUrl": "https://www.macpac.gov/wp-content/uploads/2026/02/MACSTATS_Feb2026_WEB_508.pdf"
-    },
-    {
-      "minRevenue": 640000000000,
-      "maxRevenue": 700000000000,
-      "description": "This covers spending for an entire year of the federal portion of Medicaid spending and the entire CHIP program",
-      "amount": 648000000000,
-      "sourceText": "MACStats: Medicaid and CHIP Data Book February 2026",
-      "sourceUrl": "https://www.macpac.gov/wp-content/uploads/2026/02/MACSTATS_Feb2026_WEB_508.pdf"
-    },
-    {
-      "minRevenue": 700000000000,
-      "maxRevenue": 854000000000,
-      "description": "This could fully eliminate the employer-side payroll tax on wages for one year, cutting employment costs for every business and boosting take-home pay for every worker",
-      "amount": 850000000000,
-      "sourceText": "What Kinds of Revenue Does the Government Collect?, Bipartisan Policy Center",
-      "sourceUrl": "https://bipartisanpolicy.org/explainer/what-kinds-of-revenue-does-the-government-collect/"
-    },
-    {
-      "minRevenue": 854000000000,
-      "maxRevenue": 1000000000000,
-      "description": "This could fund a one-time $3,000 direct payment to every individual — $12,000 for a family of four — in households earning $150,000 or less",
-      "amount": 856000000000,
-      "sourceText": "NEWS: Sanders and Khanna Introduce Legislation to Tax Billionaire Wealth and Invest in Working Families",
-      "sourceUrl": "https://www.sanders.senate.gov/press-releases/news-sanders-and-khanna-introduce-legislation-to-tax-billionaire-wealth-and-invest-in-working-families/"
-    },
-    {
-      "minRevenue": 1000000000000,
-      "maxRevenue": 999999999999999,
-      "description": "This approaches the total annual cost of running the U.S. federal government",
-      "amount": 6752000000000,
-      "sourceText": "U.S. Department of the Treasury FY 2024 Federal Spending",
-      "sourceUrl": "https://home.treasury.gov/news/press-releases/jy2657"
+      "policy": "Reduce or eliminate the employer-side payroll tax",
+      "description": "Reduce or eliminate the employer-side payroll tax on wages.",
+      "minCost": 8500000000000,
+      "maxCost": 8500000000000,
+      "costLabel": "$8.5 trillion over 10 years",
+      "sources": [
+        {
+          "text": "Monthly Budget Review: August 2024",
+          "url": "https://www.cbo.gov/publication/60553"
+        },
+        {
+          "text": "Trustees Report Summary",
+          "url": "https://www.ssa.gov/OACT/TRSUM/"
+        },
+        {
+          "text": "What Kinds of Revenue Does the Government Collect? | Bipartisan Policy Center",
+          "url": "https://bipartisanpolicy.org/explainer/what-kinds-of-revenue-does-the-government-collect/"
+        },
+        {
+          "text": "Overview of the Federal Tax System | EveryCRSReport.com",
+          "url": "https://www.everycrsreport.com/reports/R45145.html"
+        }
+      ]
     }
   ]
 }

@@ -6,16 +6,17 @@
 
     // ── Constants ──────────────────────────────────────────────────────────────
     // Data is injected from WordPress via wp_localize_script
-    var BILLIONAIRE_WEALTH = (typeof wealthTaxConfig !== 'undefined' && wealthTaxConfig.billionaireWealth) 
-        ? wealthTaxConfig.billionaireWealth 
-        : 15.3e12; // Fallback to $15.3 trillion
+    var BILLIONAIRE_WEALTH = (typeof wealthTaxConfig !== 'undefined' && wealthTaxConfig.billionaireWealth)
+        ? wealthTaxConfig.billionaireWealth
+        : 8.2e12; // Fallback to $8.2 trillion (Forbes 2026 estimate)
+    var FIVE_PERCENT_BASELINE_REVENUE = 4.4e12;
 
     // ── State ──────────────────────────────────────────────────────────────────
     var comparisonsData = (typeof wealthTaxConfig !== 'undefined' && wealthTaxConfig.comparisons)
         ? wealthTaxConfig.comparisons
         : [];
     var selectedPolicies = [];
-    var selectedPolicyOptions = [];
+    var selectedPolicyOptions = {};
     var collapsedPolicyGroups = [];
     var currentMode = 'advanced'; // 'basic' or 'advanced'
     var TAX_RATE_MIN = 1;
@@ -47,79 +48,147 @@
     var POLICY_LABELS = {
         healthcare: 'Healthcare',
         education: 'Education',
-        business: 'Business',
+        business: 'Tax Relief',
         directRelief: 'Direct Relief',
         housing: 'Housing',
         childcare: 'Childcare & Families'
     };
+
+    var POLICY_FILL_COLORS = {
+        healthcare:   '#e05a5a',
+        education:    '#4a90d9',
+        business:     '#9b59b6',
+        directRelief: '#27ae60',
+        housing:      '#e67e22',
+        childcare:    '#1abc9c'
+    };
+
+    var SANDERS_POLICY_SOURCES = [
+        {
+            text: 'The Make Billionaires Pay Their Fair Share Act',
+            url: 'https://www.sanders.senate.gov/wp-content/uploads/MakeBillionairesPayTheirFairShareAct.pdf'
+        },
+        {
+            text: 'Saez-Zucman wealth tax revenue memo',
+            url: 'https://www.sanders.senate.gov/wp-content/uploads/saez-zucman-sanders2026wealthtax.pdf'
+        }
+    ];
     
     // Policy-specific funding examples
     var POLICY_EXAMPLES = {
         healthcare: [
             {
-                minAmount: 29e9,
-                maxAmount: 44e9,
-                description: 'Expand Medicare to cover dental, vision, and hearing care for all seniors (~$29B/year)',
-                sourceText: 'The Make Billionaires Pay Their Fair Share Act, Sen. Sanders (2026)',
-                sourceUrl: 'https://www.sanders.senate.gov/wp-content/uploads/MakeBillionairesPayTheirFairShareAct.pdf'
+                minAmount: 290e9,
+                maxAmount: 290e9,
+                costLabel: '$290 billion over 10 years',
+                description: 'Expand Medicare to cover dental, vision, and hearing care for all seniors.',
+                sources: SANDERS_POLICY_SOURCES
             },
             {
-                minAmount: 30e9,
-                maxAmount: 44e9,
-                description: 'Ensure all seniors and people with disabilities can receive Medicaid home health care (~$30B/year)',
-                sourceText: 'The Make Billionaires Pay Their Fair Share Act, Sen. Sanders (2026)',
-                sourceUrl: 'https://www.sanders.senate.gov/wp-content/uploads/MakeBillionairesPayTheirFairShareAct.pdf'
+                minAmount: 300e9,
+                maxAmount: 300e9,
+                costLabel: '$300 billion over 10 years',
+                description: 'Ensure that seniors and people with disabilities are able to receive the home health care they need through Medicaid.',
+                sources: SANDERS_POLICY_SOURCES
             },
             {
-                minAmount: 45e9,
-                maxAmount: 52e9,
-                description: 'National Institutes of Health fully funded',
-                sourceText: 'NIH Appropriations',
-                sourceUrl: 'https://www.nih.gov/about-nih/nih-almanac/appropriations-section-1'
-            },
-            {
-                minAmount: 110e9,
-                maxAmount: 175e9,
-                description: 'Reverse all Medicaid and ACA cuts from the One Big Beautiful Bill (~$110B/year)',
-                sourceText: 'The Make Billionaires Pay Their Fair Share Act, Sen. Sanders (2026)',
-                sourceUrl: 'https://www.sanders.senate.gov/wp-content/uploads/MakeBillionairesPayTheirFairShareAct.pdf'
+                minAmount: 1.1e12,
+                maxAmount: 1.1e12,
+                costLabel: '$1.1 trillion over 10 years',
+                description: 'Reverse Medicaid and ACA cuts in the One Big Beautiful Bill.',
+                sources: SANDERS_POLICY_SOURCES
             }
         ],
         education: [
             {
-                minAmount: 15.2e9,
-                maxAmount: 20e9,
-                description: 'Guarantee a $60,000 minimum salary for all public school teachers nationwide (~$15B/year)',
-                sourceText: 'The Make Billionaires Pay Their Fair Share Act, Sen. Sanders (2026)',
-                sourceUrl: 'https://www.sanders.senate.gov/wp-content/uploads/MakeBillionairesPayTheirFairShareAct.pdf'
+                minAmount: 152e9,
+                maxAmount: 152e9,
+                costLabel: '$152 billion over 10 years',
+                description: 'Guarantee a $60,000 minimum public-school teacher salary nationwide.',
+                sources: SANDERS_POLICY_SOURCES
             }
         ],
-        business: [],
+        business: [
+            {
+                minAmount: 2e12,
+                maxAmount: 2.5e12,
+                costLabel: '$2.0-$2.5 trillion over 10 years',
+                description: 'Eliminate federal income taxes entirely for individuals earning up to $46,000 per year and married couples earning up to $92,000 per year.',
+                sources: [
+                    {
+                        text: 'The Budget and Economic Outlook: 2024 to 2034',
+                        url: 'https://www.cbo.gov/publication/59710'
+                    },
+                    {
+                        text: 'SOI Tax Stats - Historical data tables | Internal Revenue Service',
+                        url: 'https://www.irs.gov/statistics/soi-tax-stats-individual-income-tax-returns-publication-1304-complete-report'
+                    }
+                ]
+            },
+            {
+                minAmount: 50e9,
+                maxAmount: 90e9,
+                costLabel: '$50-$90 billion over 10 years',
+                description: 'Freeze property tax rates for seniors owning just one home.',
+                sources: [
+                    {
+                        text: 'Homeownership by Selected Demographic and Housing Characteristics'
+                    },
+                    {
+                        text: 'Property tax burdens vary widely as states debate senior relief'
+                    }
+                ]
+            },
+            {
+                minAmount: 8.5e12,
+                maxAmount: 8.5e12,
+                costLabel: '$8.5 trillion over 10 years',
+                description: 'Reduce or eliminate the employer-side payroll tax on wages.',
+                sources: [
+                    {
+                        text: 'Monthly Budget Review: August 2024',
+                        url: 'https://www.cbo.gov/publication/60553'
+                    },
+                    {
+                        text: 'Trustees Report Summary',
+                        url: 'https://www.ssa.gov/OACT/TRSUM/'
+                    },
+                    {
+                        text: 'What Kinds of Revenue Does the Government Collect? | Bipartisan Policy Center',
+                        url: 'https://bipartisanpolicy.org/explainer/what-kinds-of-revenue-does-the-government-collect/'
+                    },
+                    {
+                        text: 'Overview of the Federal Tax System | EveryCRSReport.com',
+                        url: 'https://www.everycrsreport.com/reports/R45145.html'
+                    }
+                ]
+            }
+        ],
         directRelief: [
             {
                 minAmount: 959e9,
-                maxAmount: 2000e9,
-                description: 'Provide $3,000 direct payments to every person in households earning $150,000 or less',
-                sourceText: 'The Make Billionaires Pay Their Fair Share Act, Sen. Sanders (2026)',
-                sourceUrl: 'https://www.sanders.senate.gov/wp-content/uploads/MakeBillionairesPayTheirFairShareAct.pdf'
+                maxAmount: 959e9,
+                costLabel: '$959 billion over 10 years',
+                description: 'Provide $3,000 direct payments to every man, woman, and child living in a household making $150,000 or less. Approximately 85% of the U.S. population would be eligible, totaling around 285.3 million people.',
+                sources: SANDERS_POLICY_SOURCES
             }
         ],
         housing: [
             {
-                minAmount: 85.6e9,
-                maxAmount: 130e9,
-                description: 'Build, rehabilitate, and preserve 700,000+ affordable homes per year to eliminate the housing gap (~$86B/year)',
-                sourceText: 'The Make Billionaires Pay Their Fair Share Act, Sen. Sanders (2026)',
-                sourceUrl: 'https://www.sanders.senate.gov/wp-content/uploads/MakeBillionairesPayTheirFairShareAct.pdf'
+                minAmount: 856e9,
+                maxAmount: 856e9,
+                costLabel: '$856 billion over 10 years',
+                description: 'Eliminate the affordable housing gap and abolish homelessness in America by building, rehabilitating, and preserving over 7 million affordable homes and apartments.',
+                sources: SANDERS_POLICY_SOURCES
             }
         ],
         childcare: [
             {
-                minAmount: 70e9,
-                maxAmount: 110e9,
-                description: 'Cap childcare costs at 7% of family income for all American families (~$70B/year)',
-                sourceText: 'The Make Billionaires Pay Their Fair Share Act, Sen. Sanders (2026)',
-                sourceUrl: 'https://www.sanders.senate.gov/wp-content/uploads/MakeBillionairesPayTheirFairShareAct.pdf'
+                minAmount: 700e9,
+                maxAmount: 700e9,
+                costLabel: '$700 billion over 10 years',
+                description: 'End the child care crisis in America by making sure that no family in America pays over 7 percent of their income on child care.',
+                sources: SANDERS_POLICY_SOURCES
             }
         ]
     };
@@ -128,11 +197,39 @@
         return policy + ':' + index;
     }
 
+    function isOptionEnabled(policy, index) {
+        return Object.prototype.hasOwnProperty.call(selectedPolicyOptions, getPolicyOptionKey(policy, index));
+    }
+
+    function enableOption(policy, index, item) {
+        var key = getPolicyOptionKey(policy, index);
+        var maxAmount = (typeof item.maxAmount === 'number') ? item.maxAmount : getFundingAmount(item);
+        var minAmount = (typeof item.minAmount === 'number') ? item.minAmount : maxAmount;
+        var startPercent = maxAmount > 0 ? Math.round((minAmount / maxAmount) * 100) : 0;
+        selectedPolicyOptions[key] = {
+            percent: startPercent,
+            amount: (startPercent / 100) * maxAmount
+        };
+    }
+
+    function disableOption(policy, index) {
+        delete selectedPolicyOptions[getPolicyOptionKey(policy, index)];
+    }
+
+    function getOptionAmount(key) {
+        return Object.prototype.hasOwnProperty.call(selectedPolicyOptions, key)
+            ? selectedPolicyOptions[key].amount
+            : 0;
+    }
+
     function removePolicyOptionsForGroup(policyGroup) {
         var prefix = policyGroup + ':';
-        selectedPolicyOptions = selectedPolicyOptions.filter(function (key) {
-            return key.indexOf(prefix) !== 0;
-        });
+        var keys = Object.keys(selectedPolicyOptions);
+        for (var i = 0; i < keys.length; i++) {
+            if (keys[i].indexOf(prefix) === 0) {
+                delete selectedPolicyOptions[keys[i]];
+            }
+        }
     }
 
     function removeCollapsedStateForGroup(policyGroup) {
@@ -144,11 +241,9 @@
 
     function enableAvailablePolicyOptionsForGroup(policyGroup) {
         var policyExamples = POLICY_EXAMPLES[policyGroup] || [];
-
         for (var i = 0; i < policyExamples.length; i++) {
-            var policyOptionKey = getPolicyOptionKey(policyGroup, i);
-            if (selectedPolicyOptions.indexOf(policyOptionKey) === -1) {
-                selectedPolicyOptions.push(policyOptionKey);
+            if (!isOptionEnabled(policyGroup, i)) {
+                enableOption(policyGroup, i, policyExamples[i]);
             }
         }
     }
@@ -190,6 +285,90 @@
         return '$' + formatWholeNumber(amount);
     }
 
+    function getFundingAmount(item) {
+        if (!item) {
+            return 0;
+        }
+
+        if (typeof item.maxAmount === 'number') {
+            return item.maxAmount;
+        }
+        if (typeof item.minAmount === 'number') {
+            return item.minAmount;
+        }
+        if (typeof item.maxCost === 'number') {
+            return item.maxCost;
+        }
+        if (typeof item.minCost === 'number') {
+            return item.minCost;
+        }
+        if (typeof item.amount === 'number') {
+            return item.amount;
+        }
+
+        return 0;
+    }
+
+    function formatCostLabel(item) {
+        if (item && item.costLabel) {
+            return item.costLabel;
+        }
+
+        if (item && typeof item.minAmount === 'number' && typeof item.maxAmount === 'number' && item.maxAmount > item.minAmount) {
+            return formatCurrency(item.minAmount) + ' - ' + formatCurrency(item.maxAmount);
+        }
+
+        if (item && typeof item.minCost === 'number' && typeof item.maxCost === 'number' && item.maxCost > item.minCost) {
+            return formatCurrency(item.minCost) + ' - ' + formatCurrency(item.maxCost);
+        }
+
+        return formatCurrency(getFundingAmount(item));
+    }
+
+    function getItemSources(item) {
+        if (item && item.sources && item.sources.length) {
+            return item.sources;
+        }
+
+        if (item && item.sourceText && item.sourceUrl) {
+            return [
+                {
+                    text: item.sourceText,
+                    url: item.sourceUrl
+                }
+            ];
+        }
+
+        return [];
+    }
+
+    function appendSourceSet(container, sources, linkClass) {
+        for (var i = 0; i < sources.length; i++) {
+            if (i > 0) {
+                container.appendChild(document.createTextNode(', '));
+            }
+
+            var source = sources[i];
+            var node;
+
+            if (source.url) {
+                node = document.createElement('a');
+                node.href = sanitizeUrl(source.url);
+                node.target = '_blank';
+                node.rel = 'noopener noreferrer';
+            } else {
+                node = document.createElement('span');
+            }
+
+            if (linkClass) {
+                node.className = linkClass;
+            }
+
+            node.textContent = source.text;
+            container.appendChild(node);
+        }
+    }
+
     function buildMoneyBundleTransform(bundleScale, bundleTilt, isActive) {
         var translateY = isActive ? 0 : 9;
         var scale = isActive ? bundleScale : (0.92 * bundleScale);
@@ -209,7 +388,7 @@
     }
 
     function calculateRevenue(taxRate) {
-        return BILLIONAIRE_WEALTH * (taxRate / 100);
+        return FIVE_PERCENT_BASELINE_REVENUE * (taxRate / 5);
     }
 
     function getTaxRateInput() {
@@ -591,24 +770,22 @@
         window.addEventListener('orientationchange', handleViewportChange);
     }
 
-    function findComparison(revenue) {
+    function getFundableComparisons(revenue) {
         if (!comparisonsData || comparisonsData.length === 0) {
-            return {
-                description: 'Comparison data loading…',
-                sourceText: 'Loading…',
-                sourceUrl: '#'
-            };
+            return [];
         }
+
+        var matchingComparisons = [];
 
         for (var i = 0; i < comparisonsData.length; i++) {
             var c = comparisonsData[i];
-            if (revenue >= c.minRevenue && revenue <= c.maxRevenue) {
-                return c;
+            var threshold = typeof c.minCost === 'number' ? c.minCost : getFundingAmount(c);
+            if (revenue >= threshold) {
+                matchingComparisons.push(c);
             }
         }
 
-        // Revenue exceeds every defined range — use the last entry.
-        return comparisonsData[comparisonsData.length - 1];
+        return matchingComparisons;
     }
 
     function createOverBudgetPinata(isAtMaxRate) {
@@ -703,10 +880,9 @@
 
         var taxRate = parseFloat(slider.value);
         var revenue = calculateRevenue(taxRate);
-        var selectedPolicyFunding = 0;
 
         if (selectedPolicies.length === 0) {
-            selectedPolicyOptions = [];
+            selectedPolicyOptions = {};
             var prompt = document.createElement('p');
             prompt.className = 'allocation-prompt';
             prompt.textContent = 'Select categories above to see allocation';
@@ -773,54 +949,33 @@
                     var available = availableExamples[k];
                     var exampleData = available.example;
                     var policyOptionKey = getPolicyOptionKey(policy, available.index);
-                    var inputId = 'wtc-policyOption-' + policy + '-' + available.index;
-                    var isChecked = selectedPolicyOptions.indexOf(policyOptionKey) > -1;
-
-                    if (isChecked) {
-                        selectedPolicyFunding += exampleData.minAmount;
-                    }
+                    var isEnabled = isOptionEnabled(policy, available.index);
+                    var fillColor = POLICY_FILL_COLORS[policy] || '#888';
+                    var enabledData = isEnabled ? selectedPolicyOptions[policyOptionKey] : null;
+                    var itemMaxAmount = (typeof exampleData.maxAmount === 'number') ? exampleData.maxAmount : getFundingAmount(exampleData);
+                    var itemMinAmount = (typeof exampleData.minAmount === 'number') ? exampleData.minAmount : itemMaxAmount;
+                    var defaultPercent = itemMaxAmount > 0 ? Math.round((itemMinAmount / itemMaxAmount) * 100) : 0;
 
                     var exampleRow = document.createElement('div');
-                    exampleRow.className = 'allocation-example-row';
+                    exampleRow.className = 'allocation-example-row' + (isEnabled ? ' is-enabled' : '');
+                    exampleRow.setAttribute('data-policy', policy);
+                    exampleRow.setAttribute('data-index', String(available.index));
+                    exampleRow.style.setProperty('--fill-color', fillColor);
+
+                    var rowFill = document.createElement('div');
+                    rowFill.className = 'allocation-row-fill';
+                    rowFill.style.width = isEnabled ? (enabledData.percent + '%') : '0%';
+
+                    var rowContent = document.createElement('div');
+                    rowContent.className = 'allocation-row-content';
 
                     var optionWrapper = document.createElement('div');
                     optionWrapper.className = 'policy-option-checkbox';
-
-                    var checkboxWrapper = document.createElement('div');
-                    checkboxWrapper.className = 'checkbox-wrapper-55';
-
-                    var rockerLabel = document.createElement('label');
-                    rockerLabel.className = 'rocker rocker-small';
-
-                    var optionInput = document.createElement('input');
-                    optionInput.type = 'checkbox';
-                    optionInput.className = 'policy-option-input';
-                    optionInput.id = inputId;
-                    optionInput.setAttribute('data-policy', policy);
-                    optionInput.setAttribute('data-index', available.index);
-                    if (isChecked) {
-                        optionInput.checked = true;
-                    }
-
-                    var switchLeft = document.createElement('span');
-                    switchLeft.className = 'switch-left';
-                    switchLeft.textContent = 'Yes';
-
-                    var switchRight = document.createElement('span');
-                    switchRight.className = 'switch-right';
-                    switchRight.textContent = 'No';
-
-                    rockerLabel.appendChild(optionInput);
-                    rockerLabel.appendChild(switchLeft);
-                    rockerLabel.appendChild(switchRight);
-
-                    checkboxWrapper.appendChild(rockerLabel);
 
                     var optionText = document.createElement('span');
                     optionText.className = 'policy-option-text';
                     optionText.textContent = exampleData.description;
 
-                    optionWrapper.appendChild(checkboxWrapper);
                     optionWrapper.appendChild(optionText);
 
                     var optionMeta = document.createElement('div');
@@ -828,20 +983,28 @@
 
                     var optionCost = document.createElement('span');
                     optionCost.className = 'policy-option-cost';
-                    optionCost.textContent = formatCurrency(exampleData.minAmount);
+                    optionCost.textContent = formatCostLabel(exampleData);
 
-                    var optionSource = document.createElement('a');
-                    optionSource.href = sanitizeUrl(exampleData.sourceUrl);
-                    optionSource.target = '_blank';
-                    optionSource.rel = 'noopener noreferrer';
+                    var optionSource = document.createElement('span');
                     optionSource.className = 'example-source';
-                    optionSource.textContent = 'source';
+                    appendSourceSet(optionSource, getItemSources(exampleData), 'example-source');
 
                     optionMeta.appendChild(optionCost);
                     optionMeta.appendChild(optionSource);
 
-                    exampleRow.appendChild(optionWrapper);
-                    exampleRow.appendChild(optionMeta);
+                    rowContent.appendChild(optionWrapper);
+                    rowContent.appendChild(optionMeta);
+
+                    var rangeInput = document.createElement('input');
+                    rangeInput.type = 'range';
+                    rangeInput.className = 'policy-range-input';
+                    rangeInput.min = '0';
+                    rangeInput.max = '100';
+                    rangeInput.value = isEnabled ? String(enabledData.percent) : String(defaultPercent);
+
+                    exampleRow.appendChild(rowFill);
+                    exampleRow.appendChild(rowContent);
+                    exampleRow.appendChild(rangeInput);
                     examplesContainer.appendChild(exampleRow);
                 }
 
@@ -857,14 +1020,70 @@
             allocationResults.appendChild(group);
         }
 
+        var policyGroupToggles = allocationResults.querySelectorAll('.allocation-group-toggle');
+        for (var p = 0; p < policyGroupToggles.length; p++) {
+            policyGroupToggles[p].addEventListener('click', handlePolicyGroupToggle);
+        }
+
+        var exampleRows = allocationResults.querySelectorAll('.allocation-example-row');
+        for (var r = 0; r < exampleRows.length; r++) {
+            exampleRows[r].addEventListener('click', handlePolicyRowClick);
+        }
+
+        var rangeInputs = allocationResults.querySelectorAll('.policy-range-input');
+        for (var s = 0; s < rangeInputs.length; s++) {
+            rangeInputs[s].addEventListener('input', handlePolicyRangeInput);
+            rangeInputs[s].addEventListener('click', function (e) { e.stopPropagation(); });
+            rangeInputs[s].addEventListener('mousedown', function (e) { e.stopPropagation(); });
+        }
+
+        updateAllocationSummary();
+    }
+
+    function handlePolicyGroupToggle(event) {
+        var policy = event.currentTarget.getAttribute('data-policy');
+        var index = collapsedPolicyGroups.indexOf(policy);
+
+        if (index > -1) {
+            collapsedPolicyGroups.splice(index, 1);
+        } else {
+            collapsedPolicyGroups.push(policy);
+        }
+
+        updatePolicyAllocation();
+    }
+
+    function calculateSelectedPolicyFunding() {
+        var total = 0;
+        var keys = Object.keys(selectedPolicyOptions);
+        for (var i = 0; i < keys.length; i++) {
+            total += selectedPolicyOptions[keys[i]].amount;
+        }
+        return total;
+    }
+
+    function updateAllocationSummary() {
+        var allocationResults = el('wtc-allocationResults');
+        if (!allocationResults) return;
+
+        var taxRate = parseFloat(el('wtc-taxRate').value);
+        var revenue = calculateRevenue(taxRate);
+        var selectedPolicyFunding = calculateSelectedPolicyFunding();
+
         var overrunAmount = Math.max(selectedPolicyFunding - revenue, 0);
         var remainingRevenue = Math.max(revenue - selectedPolicyFunding, 0);
         var isOverBudget = overrunAmount > 0;
+
+        var existingSummary = allocationResults.querySelector('.allocation-summary');
+        if (existingSummary) {
+            existingSummary.parentNode.removeChild(existingSummary);
+        }
+
         var summary = document.createElement('div');
         summary.className = 'allocation-summary' + (isOverBudget ? ' is-over-budget' : '');
 
         var availableLine = document.createElement('span');
-        availableLine.textContent = 'Tax revenue available: ' + formatCurrency(revenue);
+        availableLine.textContent = '10-year tax revenue available: ' + formatCurrency(revenue);
 
         var selectedLine = document.createElement('span');
         selectedLine.textContent = 'Selected policy funding: ' + formatCurrency(selectedPolicyFunding);
@@ -891,56 +1110,79 @@
         summary.appendChild(budgetLine);
 
         if (isOverBudget) {
-            summary.appendChild(createOverBudgetPinata(getCurrentTaxRate() >= TAX_RATE_MAX));
+            var pinataEl = createOverBudgetPinata(getCurrentTaxRate() >= TAX_RATE_MAX);
+            var pinataBtn = pinataEl.querySelector('.allocation-pinata-button');
+            if (pinataBtn) {
+                pinataBtn.addEventListener('click', handleOverBudgetPinataClick);
+            }
+            summary.appendChild(pinataEl);
         }
 
         summary.appendChild(budgetHint);
         allocationResults.appendChild(summary);
-
-        var policyOptionCheckboxes = allocationResults.querySelectorAll('.policy-option-input');
-        for (var n = 0; n < policyOptionCheckboxes.length; n++) {
-            policyOptionCheckboxes[n].addEventListener('change', handlePolicyOptionChange);
-        }
-
-        var policyGroupToggles = allocationResults.querySelectorAll('.allocation-group-toggle');
-        for (var p = 0; p < policyGroupToggles.length; p++) {
-            policyGroupToggles[p].addEventListener('click', handlePolicyGroupToggle);
-        }
-
-        var budgetPinata = allocationResults.querySelector('.allocation-pinata-button');
-        if (budgetPinata) {
-            budgetPinata.addEventListener('click', handleOverBudgetPinataClick);
-        }
-
     }
 
-    function handlePolicyGroupToggle(event) {
-        var policy = event.currentTarget.getAttribute('data-policy');
-        var index = collapsedPolicyGroups.indexOf(policy);
-
-        if (index > -1) {
-            collapsedPolicyGroups.splice(index, 1);
-        } else {
-            collapsedPolicyGroups.push(policy);
+    function handlePolicyRowClick(event) {
+        var target = event.target;
+        if (target.tagName === 'INPUT' && target.type === 'range') {
+            return;
+        }
+        var node = target;
+        while (node && node !== event.currentTarget) {
+            if (node.tagName === 'A') {
+                return;
+            }
+            node = node.parentElement;
         }
 
-        updatePolicyAllocation();
-    }
-
-    function handlePolicyOptionChange(event) {
-        var checkbox = event.target;
-        var policy = checkbox.getAttribute('data-policy');
-        var index = checkbox.getAttribute('data-index');
+        var row = event.currentTarget;
+        var policy = row.getAttribute('data-policy');
+        var index = row.getAttribute('data-index');
         var policyOptionKey = getPolicyOptionKey(policy, index);
-        var existingIndex = selectedPolicyOptions.indexOf(policyOptionKey);
+        var policyExamples = POLICY_EXAMPLES[policy] || [];
+        var item = policyExamples[parseInt(index, 10)];
+        if (!item) return;
 
-        if (checkbox.checked && existingIndex === -1) {
-            selectedPolicyOptions.push(policyOptionKey);
-        } else if (!checkbox.checked && existingIndex > -1) {
-            selectedPolicyOptions.splice(existingIndex, 1);
+        var rowFill = row.querySelector('.allocation-row-fill');
+        var rangeInputEl = row.querySelector('.policy-range-input');
+
+        if (isOptionEnabled(policy, index)) {
+            disableOption(policy, index);
+            row.classList.remove('is-enabled');
+            if (rowFill) rowFill.style.width = '0%';
+        } else {
+            enableOption(policy, index, item);
+            row.classList.add('is-enabled');
+            if (rowFill && rangeInputEl) {
+                var percent = selectedPolicyOptions[policyOptionKey].percent;
+                rowFill.style.width = percent + '%';
+                rangeInputEl.value = String(percent);
+            }
         }
 
-        updatePolicyAllocation();
+        updateAllocationSummary();
+    }
+
+    function handlePolicyRangeInput(event) {
+        event.stopPropagation();
+        var rangeEl = event.currentTarget;
+        var row = rangeEl.parentElement;
+        var policy = row.getAttribute('data-policy');
+        var index = row.getAttribute('data-index');
+        var policyOptionKey = getPolicyOptionKey(policy, index);
+        var policyExamples = POLICY_EXAMPLES[policy] || [];
+        var item = policyExamples[parseInt(index, 10)];
+        if (!item || !isOptionEnabled(policy, index)) return;
+
+        var percent = parseInt(rangeEl.value, 10);
+        var maxAmount = (typeof item.maxAmount === 'number') ? item.maxAmount : getFundingAmount(item);
+        selectedPolicyOptions[policyOptionKey].percent = percent;
+        selectedPolicyOptions[policyOptionKey].amount = (percent / 100) * maxAmount;
+
+        var rowFill = row.querySelector('.allocation-row-fill');
+        if (rowFill) rowFill.style.width = percent + '%';
+
+        updateAllocationSummary();
     }
 
     function handlePolicyChange(event) {
@@ -1030,17 +1272,56 @@
         el('wtc-rateDisplay') && (el('wtc-rateDisplay').textContent = taxRate.toFixed(1) + '%');
         syncSliderDecor(taxRate, revenue);
 
-        var comparison = findComparison(revenue);
-        el('wtc-comparisonText').textContent = comparison.description;
+        var fundableComparisons = getFundableComparisons(revenue);
+        var comparisonEl = el('wtc-comparisonText');
+        var sourcesList = el('wtc-sourcesList');
 
-        var sourceEl = el('wtc-comparisonSource');
-        var link = document.createElement('a');
-        link.href = sanitizeUrl(comparison.sourceUrl);
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        link.textContent = comparison.sourceText;
-        sourceEl.innerHTML = '';
-        sourceEl.appendChild(link);
+        if (comparisonEl) {
+            comparisonEl.innerHTML = '';
+
+            if (fundableComparisons.length === 0) {
+                comparisonEl.textContent = 'No listed policies are fully funded at this revenue level yet.';
+            } else {
+                var intro = document.createElement('p');
+                intro.textContent = 'At this rate, the revenue could fund:';
+
+                var comparisonList = document.createElement('ul');
+
+                for (var i = 0; i < fundableComparisons.length; i++) {
+                    var item = fundableComparisons[i];
+                    var listItem = document.createElement('li');
+                    listItem.textContent = item.description + ' (' + formatCostLabel(item) + ')';
+                    comparisonList.appendChild(listItem);
+                }
+
+                comparisonEl.appendChild(intro);
+                comparisonEl.appendChild(comparisonList);
+            }
+        }
+
+        if (sourcesList) {
+            sourcesList.innerHTML = '';
+
+            for (var j = 0; j < fundableComparisons.length; j++) {
+                var comparison = fundableComparisons[j];
+                var sourceItem = document.createElement('li');
+                var title = document.createElement('strong');
+                title.textContent = comparison.policy + ': ';
+                sourceItem.appendChild(title);
+                appendSourceSet(sourceItem, getItemSources(comparison));
+                sourcesList.appendChild(sourceItem);
+            }
+
+            var wealthItem = document.createElement('li');
+            var wealthLink = document.createElement('a');
+            wealthLink.href = 'https://www.forbes.com/billionaires/';
+            wealthLink.target = '_blank';
+            wealthLink.rel = 'noopener noreferrer';
+            wealthLink.textContent = 'Forbes World\'s Billionaires List (2026)';
+            wealthItem.appendChild(wealthLink);
+            wealthItem.appendChild(document.createTextNode(' — Billionaire wealth estimate of $8.2 trillion'));
+            sourcesList.appendChild(wealthItem);
+        }
 
         // Update policy allocation
         updatePolicyAllocation();

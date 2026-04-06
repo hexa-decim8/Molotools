@@ -2,8 +2,8 @@
 /**
  * Plugin Name: Billionaire Wealth Tax Calculator
  * Plugin URI:  https://github.com/hexa-decim8/Molotools
- * Description: Interactive calculator showing potential annual tax revenue from billionaire wealth at rates of 1%–8%, based on the 2026 Institute for Policy Studies estimate of $15.3 trillion. Embed with [billionaire_wealth_tax].
- * Version:     1.2.18
+ * Description: Interactive calculator showing estimated 10-year tax revenue from billionaire wealth at rates of 1%–8%, based on the 2026 Forbes estimate of $8.2 trillion. Embed with [billionaire_wealth_tax].
+ * Version:     1.2.19
  * Author:      Molotools
  * License:     GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -22,13 +22,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin version constant - update this when releasing new versions
-define( 'WTC_VERSION', '1.2.18' );
+define( 'WTC_VERSION', '1.2.19' );
 
 // Plugin constants
 define( 'WTC_PLUGIN_BASENAME', 'wealth-tax-calculator/wealth-tax-calculator.php' );
 define( 'WTC_GITHUB_REPO', 'hexa-decim8/Molotools' );
 define( 'WTC_RELEASE_ASSET', 'wealth-tax-calculator.zip' );
-define( 'WTC_BILLIONAIRE_WEALTH', 15.3e12 ); // $15.3 trillion
+define( 'WTC_BILLIONAIRE_WEALTH', 8.2e12 ); // $8.2 trillion (Forbes 2026 estimate)
 define( 'WTC_TAX_RATE_MIN', 1 );
 define( 'WTC_TAX_RATE_MAX', 8 );
 define( 'WTC_CACHE_TTL', 5 * MINUTE_IN_SECONDS );
@@ -772,8 +772,8 @@ class Billionaire_Wealth_Tax_Calculator {
                                                 <span id="wtc-device-holder">2.0%</span>
                                             </div>
                                             <div class="wtc-innerbox">
-                                                <div class="wtc-annual-label">ANNUAL REVENUE:</div>
-                                                <div class="wtc-annual-price" id="wtc-annualPrice">$306.0 Billion</div>
+                                                <div class="wtc-annual-label">10-YEAR REVENUE:</div>
+                                                <div class="wtc-annual-price" id="wtc-annualPrice">$880.0 Billion</div>
                                             </div>
                                         </div>
 
@@ -821,7 +821,7 @@ class Billionaire_Wealth_Tax_Calculator {
                             
                             <label class="policy-checkbox">
                                 <input type="checkbox" name="wtc-policy" value="business" id="wtc-policyBusiness" checked>
-                                <span class="checkbox-label">Business</span>
+                                <span class="checkbox-label">Tax Relief</span>
                             </label>
                             
                             <label class="policy-checkbox">
@@ -850,29 +850,25 @@ class Billionaire_Wealth_Tax_Calculator {
                     <div class="results-section">
                         <div class="context-box">
                             <h3>What Could This Fund?</h3>
-                            <p class="comparison-text" id="wtc-comparisonText">Loading&hellip;</p>
+                            <div class="comparison-text" id="wtc-comparisonText">Loading&hellip;</div>
                         </div>
 
                         <div class="sources-box">
                             <h4>Sources</h4>
                             <ol class="sources-list" id="wtc-sourcesList">
-                                <li id="wtc-comparisonSource">Loading&hellip;</li>
-                                <li>
-                                    <a href="https://www.ips-dc.org/resource-richest-15-u-s-centi-billionaires-see-wealth-surge-33-percent-to-3-2-trillion/"
-                                       target="_blank" rel="noopener noreferrer">
-                                        Richest 15 U.S. Centi-Billionaires See Wealth Surge 33 Percent to $3.2 Trillion, Institute for Policy Studies (2026)
-                                    </a>
-                                    &mdash; Billionaire wealth estimate of $15.3 trillion
-                                </li>
+                                <li>Loading&hellip;</li>
                             </ol>
                         </div>
                     </div>
 
                     <div class="info-box">
                         <p class="info-text">
-                            This calculator is based on the 2026 estimate of <strong>$15.3 trillion</strong>
-                            in billionaire wealth from Institute for Policy Studies data. Tax rates range from 1% to 8%
-                            to show potential annual revenue at different taxation levels.
+                            This calculator is based on the Forbes 2026 estimate of <strong>$8.2 trillion</strong>
+                            in wealth of America's 938 billionaires. Using calculations from economists Emmanuel Saez and
+                            Gabriel Zucman, imposing a tax of 5% on this wealth and factoring a 10% tax evasion/avoidance
+                            rate would generate $368.5 billion annually and around $4.4 trillion over the ten-year budget
+                            window 2026-2037. Tax rates range from 1-8% to show potential revenue at different taxation
+                            levels.
                         </p>
                     </div>
                 </div>
