@@ -891,7 +891,6 @@
             return;
         }
 
-        var amountPerCategory = revenue / selectedPolicies.length;
         allocationResults.innerHTML = ''; // Clear existing content
 
         for (var i = 0; i < selectedPolicies.length; i++) {
@@ -899,6 +898,14 @@
             var policyExamples = POLICY_EXAMPLES[policy] || [];
             var availableExamples = [];
             var isCollapsed = collapsedPolicyGroups.indexOf(policy) > -1;
+
+            var categoryFunding = 0;
+            var optionKeys = Object.keys(selectedPolicyOptions);
+            for (var ck = 0; ck < optionKeys.length; ck++) {
+                if (optionKeys[ck].indexOf(policy + ':') === 0) {
+                    categoryFunding += selectedPolicyOptions[optionKeys[ck]].amount;
+                }
+            }
 
             for (var j = 0; j < policyExamples.length; j++) {
                 availableExamples.push({
@@ -925,7 +932,7 @@
 
             var amount = document.createElement('span');
             amount.className = 'allocation-amount';
-            amount.textContent = formatCurrency(amountPerCategory);
+            amount.textContent = formatCurrency(categoryFunding);
 
             var chevron = document.createElement('span');
             chevron.className = 'allocation-group-chevron';
@@ -1037,20 +1044,19 @@
             rangeInputs[s].addEventListener('mousedown', function (e) { e.stopPropagation(); });
         }
 
+            var stampRows = allocationResults.querySelectorAll('.allocation-example-row');
+            for (var sr = 0; sr < stampRows.length; sr++) {
+                var srPolicy = stampRows[sr].getAttribute('data-policy');
+                var srIndex = stampRows[sr].getAttribute('data-index');
+                var srKey = getPolicyOptionKey(srPolicy, srIndex);
+                if (isOptionEnabled(srPolicy, srIndex) &&
+                        selectedPolicyOptions[srKey] &&
+                        selectedPolicyOptions[srKey].percent === 100) {
+                    showFundedStamp(stampRows[sr]);
+                }
+            }
+
         updateAllocationSummary();
-    }
-
-    function handlePolicyGroupToggle(event) {
-        var policy = event.currentTarget.getAttribute('data-policy');
-        var index = collapsedPolicyGroups.indexOf(policy);
-
-        if (index > -1) {
-            collapsedPolicyGroups.splice(index, 1);
-        } else {
-            collapsedPolicyGroups.push(policy);
-        }
-
-        updatePolicyAllocation();
     }
 
     function calculateSelectedPolicyFunding() {
@@ -1150,6 +1156,7 @@
             disableOption(policy, index);
             row.classList.remove('is-enabled');
             if (rowFill) rowFill.style.width = '0%';
+            removeFundedStamp(row);
         } else {
             enableOption(policy, index, item);
             row.classList.add('is-enabled');
@@ -1161,6 +1168,30 @@
         }
 
         updateAllocationSummary();
+    }
+
+    function showFundedStamp(row) {
+        removeFundedStamp(row);
+        var wrap = document.createElement('div');
+        wrap.className = 'wtc-funded-stamp-wrap';
+        var stamp = document.createElement('div');
+        stamp.className = 'wtc-funded-stamp';
+        stamp.textContent = 'Fully Funded!';
+        var splat = document.createElement('div');
+        splat.className = 'wtc-funded-splat';
+        for (var i = 0; i < 10; i++) {
+            splat.appendChild(document.createElement('span'));
+        }
+        wrap.appendChild(stamp);
+        wrap.appendChild(splat);
+        row.appendChild(wrap);
+    }
+
+    function removeFundedStamp(row) {
+        var existing = row.querySelector('.wtc-funded-stamp-wrap');
+        if (existing) {
+            existing.parentNode.removeChild(existing);
+        }
     }
 
     function handlePolicyRangeInput(event) {
@@ -1181,6 +1212,12 @@
 
         var rowFill = row.querySelector('.allocation-row-fill');
         if (rowFill) rowFill.style.width = percent + '%';
+
+        if (percent === 100) {
+            showFundedStamp(row);
+        } else {
+            removeFundedStamp(row);
+        }
 
         updateAllocationSummary();
     }
@@ -1205,23 +1242,20 @@
     function handleModeToggle(event) {
         var button = event.target;
         var mode = button.getAttribute('data-mode');
-        
+
         if (mode === currentMode) return;
-        
+
         currentMode = mode;
-        
-        // Update button states
+
         var modeButtons = document.querySelectorAll('.mode-button');
         for (var i = 0; i < modeButtons.length; i++) {
-            var btn = modeButtons[i];
-            if (btn.getAttribute('data-mode') === mode) {
-                btn.classList.add('active');
+            if (modeButtons[i].getAttribute('data-mode') === mode) {
+                modeButtons[i].classList.add('active');
             } else {
-                btn.classList.remove('active');
+                modeButtons[i].classList.remove('active');
             }
         }
-        
-        // Toggle policy allocation section visibility
+
         var policySection = document.querySelector('.policy-allocation-section');
         if (policySection) {
             if (mode === 'basic') {

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fully Funded Stamp</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Stardos+Stencil:wght@700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background: #f5f0e8;
+      font-family: 'Stardos Stencil', 'Arial Black', Arial, sans-serif;
+    }
+
+    .stamp-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .stamp {
+      display: inline-block;
+      border: 6px solid #1a7a2e;
+      border-radius: 6px;
+      padding: 18px 36px;
+      color: #1a7a2e;
+      font-size: 2.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      text-align: center;
+      position: relative;
+      background: #f5f0e8;
+      box-shadow:
+        inset 0 0 0 3px #1a7a2e,
+        inset 0 0 0 7px transparent,
+        inset 0 0 0 10px #1a7a2e;
+      opacity: 0;
+      transform: scale(3) rotate(-12deg);
+      transform-origin: center center;
+      animation: stamp 0.55s cubic-bezier(0.22, 0.61, 0.36, 1) 0.4s forwards;
+    }
+
+    /* Serrated edge via radial-gradient mask */
+    .stamp::before {
+      content: '';
+      position: absolute;
+      z-index: -1;
+      inset: -14px;
+      background: radial-gradient(circle, #f5f0e8 5px, transparent 5px) -8px -8px / 16px 16px,
+                  radial-gradient(circle, #f5f0e8 5px, transparent 5px)  0px  0px / 16px 16px;
+      pointer-events: none;
+    }
+
+    @keyframes stamp {
+      0%   { opacity: 0; transform: scale(3) rotate(-12deg); }
+      60%  { opacity: 1; transform: scale(0.92) rotate(-12deg); }
+      75%  { transform: scale(1.04) rotate(-12deg); }
+      90%  { transform: scale(0.97) rotate(-12deg); }
+      100% { opacity: 1; transform: scale(1) rotate(-12deg); }
+    }
+
+    /* ink splat on impact */
+    .splat {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0; left: 0;
+      pointer-events: none;
+      opacity: 0;
+      animation: splat 0.3s ease-out 0.78s forwards;
+    }
+
+    .splat span {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #1a7a2e;
+      transform-origin: center center;
+    }
+
+    /* sprinkle a few dots around the stamp edges */
+    .splat span:nth-child(1)  { top: 10%;  left: -6%;  animation: fly1 0.4s ease-out 0.78s both; }
+    .splat span:nth-child(2)  { top: -6%;  left: 30%;  animation: fly2 0.4s ease-out 0.78s both; }
+    .splat span:nth-child(3)  { top: -6%;  left: 65%;  animation: fly3 0.4s ease-out 0.78s both; }
+    .splat span:nth-child(4)  { top: 10%;  left: 104%; animation: fly4 0.4s ease-out 0.78s both; }
+    .splat span:nth-child(5)  { top: 50%;  left: 104%; animation: fly5 0.4s ease-out 0.78s both; }
+    .splat span:nth-child(6)  { top: 88%;  left: 104%; animation: fly6 0.4s ease-out 0.78s both; }
+    .splat span:nth-child(7)  { top: 106%; left: 65%;  animation: fly7 0.4s ease-out 0.78s both; }
+    .splat span:nth-child(8)  { top: 106%; left: 30%;  animation: fly8 0.4s ease-out 0.78s both; }
+    .splat span:nth-child(9)  { top: 88%;  left: -6%;  animation: fly9 0.4s ease-out 0.78s both; }
+    .splat span:nth-child(10) { top: 50%;  left: -6%;  animation: fly10 0.4s ease-out 0.78s both; }
+
+    @keyframes fly1  { from { opacity:1; transform:translate(0,0) scale(1); } to { opacity:0; transform:translate(-18px,-16px) scale(0.4); } }
+    @keyframes fly2  { from { opacity:1; transform:translate(0,0) scale(1); } to { opacity:0; transform:translate(-8px,-22px)  scale(0.4); } }
+    @keyframes fly3  { from { opacity:1; transform:translate(0,0) scale(1); } to { opacity:0; transform:translate(10px,-22px)  scale(0.4); } }
+    @keyframes fly4  { from { opacity:1; transform:translate(0,0) scale(1); } to { opacity:0; transform:translate(20px,-14px)  scale(0.4); } }
+    @keyframes fly5  { from { opacity:1; transform:translate(0,0) scale(1); } to { opacity:0; transform:translate(24px,  0px)  scale(0.4); } }
+    @keyframes fly6  { from { opacity:1; transform:translate(0,0) scale(1); } to { opacity:0; transform:translate(20px, 14px)  scale(0.4); } }
+    @keyframes fly7  { from { opacity:1; transform:translate(0,0) scale(1); } to { opacity:0; transform:translate(10px, 22px)  scale(0.4); } }
+    @keyframes fly8  { from { opacity:1; transform:translate(0,0) scale(1); } to { opacity:0; transform:translate(-8px, 22px)  scale(0.4); } }
+    @keyframes fly9  { from { opacity:1; transform:translate(0,0) scale(1); } to { opacity:0; transform:translate(-18px,16px)  scale(0.4); } }
+    @keyframes fly10 { from { opacity:1; transform:translate(0,0) scale(1); } to { opacity:0; transform:translate(-24px, 0px)  scale(0.4); } }
+
+    /* slider control */
+    .slider-wrap {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      width: 360px;
+    }
+    .slider-wrap label {
+      font-family: Arial, sans-serif;
+      color: #555;
+      font-size: 0.9rem;
+    }
+    .slider-wrap input[type="range"] {
+      width: 100%;
+      cursor: pointer;
+      accent-color: #1a7a2e;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="stamp-container"></div>
+
+  <div class="slider-wrap">
+    <label for="funding-slider">Funding: <span id="funding-pct">80</span>%</label>
+    <input type="range" id="funding-slider" min="0" max="100" value="80">
+  </div>
+
+  <script>
+    (function () {
+      var slider = document.getElementById('funding-slider');
+      var pctLabel = document.getElementById('funding-pct');
+      var container = document.getElementById('stamp-container');
+      var wasAt100 = false;
+
+      function createStamp() {
+        var wrap = document.createElement('div');
+        wrap.className = 'stamp-wrap';
+        var stamp = document.createElement('div');
+        stamp.className = 'stamp';
+        stamp.textContent = 'Fully Funded!';
+        var splat = document.createElement('div');
+        splat.className = 'splat';
+        for (var i = 0; i < 10; i++) {
+          splat.appendChild(document.createElement('span'));
+        }
+        wrap.appendChild(stamp);
+        wrap.appendChild(splat);
+        return wrap;
+      }
+
+      function showStamp() {
+        container.innerHTML = '';
+        container.appendChild(createStamp());
+      }
+
+      function hideStamp() {
+        container.innerHTML = '';
+      }
+
+      slider.addEventListener('input', function () {
+        var val = parseInt(this.value, 10);
+        pctLabel.textContent = val;
+        if (val === 100) {
+          if (!wasAt100) {
+            showStamp();
+            wasAt100 = true;
+          }
+        } else {
+          if (wasAt100) {
+            hideStamp();
+          }
+          wasAt100 = false;
+        }
+      });
+    }());
+  </script>
+
+</body>
+</html>

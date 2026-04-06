@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Stardos+Stencil:wght@700&display=swap');
+
 /* Billionaire Wealth Tax Calculator — WordPress plugin styles
    All rules are scoped to .calculator-container to avoid conflicts with the active theme.
 
@@ -744,7 +746,7 @@
 
 .calculator-container .allocation-example-row {
     position: relative;
-    overflow: hidden;
+    overflow: visible;
     padding: 10px 0 2rem;
     border-bottom: 1px dashed #E8D7C3;
     cursor: pointer;
@@ -1660,3 +1662,96 @@
         font-size: 1.5rem;
     }
 }
+
+/* ── Fully Funded Stamp ───────────────────────────────────── */
+.calculator-container .wtc-funded-stamp-wrap {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.calculator-container .wtc-funded-stamp {
+    display: inline-block;
+    border: 5px solid #1a7a2e;
+    border-radius: 5px;
+    padding: 6px 18px;
+    color: #1a7a2e;
+    font-family: 'Stardos Stencil', 'Arial Black', Arial, sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    background: #FBF0E4;
+    position: relative;
+    box-shadow: inset 0 0 0 2px #1a7a2e, inset 0 0 0 5px transparent, inset 0 0 0 8px #1a7a2e;
+    opacity: 0;
+    transform: scale(3) rotate(-12deg);
+    transform-origin: center center;
+    animation: wtc-stamp-in 0.55s cubic-bezier(0.22, 0.61, 0.36, 1) 0.1s forwards;
+}
+
+.calculator-container .wtc-funded-stamp::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset: -12px;
+    background:
+        radial-gradient(circle, #FBF0E4 4px, transparent 4px) -6px -6px / 12px 12px,
+        radial-gradient(circle, #FBF0E4 4px, transparent 4px)  0px  0px / 12px 12px;
+    pointer-events: none;
+}
+
+@keyframes wtc-stamp-in {
+    0%   { opacity: 0; transform: scale(3) rotate(-12deg); }
+    60%  { opacity: 1; transform: scale(0.92) rotate(-12deg); }
+    75%  { transform: scale(1.04) rotate(-12deg); }
+    90%  { transform: scale(0.97) rotate(-12deg); }
+    100% { opacity: 1; transform: scale(1) rotate(-12deg); }
+}
+
+.calculator-container .wtc-funded-splat {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+.calculator-container .wtc-funded-splat span {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #1a7a2e;
+    transform-origin: center center;
+}
+
+.calculator-container .wtc-funded-splat span:nth-child(1)  { animation: wtc-stamp-fly1  0.4s ease-out 0.5s both; }
+.calculator-container .wtc-funded-splat span:nth-child(2)  { animation: wtc-stamp-fly2  0.4s ease-out 0.5s both; }
+.calculator-container .wtc-funded-splat span:nth-child(3)  { animation: wtc-stamp-fly3  0.4s ease-out 0.5s both; }
+.calculator-container .wtc-funded-splat span:nth-child(4)  { animation: wtc-stamp-fly4  0.4s ease-out 0.5s both; }
+.calculator-container .wtc-funded-splat span:nth-child(5)  { animation: wtc-stamp-fly5  0.4s ease-out 0.5s both; }
+.calculator-container .wtc-funded-splat span:nth-child(6)  { animation: wtc-stamp-fly6  0.4s ease-out 0.5s both; }
+.calculator-container .wtc-funded-splat span:nth-child(7)  { animation: wtc-stamp-fly7  0.4s ease-out 0.5s both; }
+.calculator-container .wtc-funded-splat span:nth-child(8)  { animation: wtc-stamp-fly8  0.4s ease-out 0.5s both; }
+.calculator-container .wtc-funded-splat span:nth-child(9)  { animation: wtc-stamp-fly9  0.4s ease-out 0.5s both; }
+.calculator-container .wtc-funded-splat span:nth-child(10) { animation: wtc-stamp-fly10 0.4s ease-out 0.5s both; }
+
+@keyframes wtc-stamp-fly1  { from { opacity:1; transform:translate(-80px,-35px) scale(1); } to { opacity:0; transform:translate(-100px,-50px) scale(0.3); } }
+@keyframes wtc-stamp-fly2  { from { opacity:1; transform:translate(-40px,-55px) scale(1); } to { opacity:0; transform:translate(-50px,-75px) scale(0.3); } }
+@keyframes wtc-stamp-fly3  { from { opacity:1; transform:translate(  0px,-60px) scale(1); } to { opacity:0; transform:translate(   0px,-80px) scale(0.3); } }
+@keyframes wtc-stamp-fly4  { from { opacity:1; transform:translate( 40px,-55px) scale(1); } to { opacity:0; transform:translate(  50px,-75px) scale(0.3); } }
+@keyframes wtc-stamp-fly5  { from { opacity:1; transform:translate( 80px,-35px) scale(1); } to { opacity:0; transform:translate( 100px,-50px) scale(0.3); } }
+@keyframes wtc-stamp-fly6  { from { opacity:1; transform:translate( 90px,  0px) scale(1); } to { opacity:0; transform:translate( 115px,   0px) scale(0.3); } }
+@keyframes wtc-stamp-fly7  { from { opacity:1; transform:translate( 80px, 35px) scale(1); } to { opacity:0; transform:translate( 100px,  50px) scale(0.3); } }
+@keyframes wtc-stamp-fly8  { from { opacity:1; transform:translate( 40px, 55px) scale(1); } to { opacity:0; transform:translate(  50px,  75px) scale(0.3); } }
+@keyframes wtc-stamp-fly9  { from { opacity:1; transform:translate(-40px, 55px) scale(1); } to { opacity:0; transform:translate( -50px,  75px) scale(0.3); } }
+@keyframes wtc-stamp-fly10 { from { opacity:1; transform:translate(-80px, 35px) scale(1); } to { opacity:0; transform:translate(-100px,  50px) scale(0.3); } }
