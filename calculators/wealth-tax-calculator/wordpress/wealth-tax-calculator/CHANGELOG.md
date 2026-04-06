@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.19] - 2026-04-05
+
+### Changed
+- Advanced mode sub-policy rows: replaced rocker toggle with click-to-enable interaction. Single click (or tap) anywhere in a row enables it; clicking again disables it.
+- Each enabled sub-policy row now displays a range input along the bottom edge. Dragging the range adjusts funding from $0 to the policy's full cost; initial value is set to the policy's minimum amount.
+- Enabled rows fill left-to-right with a per-category accent color as the range increases, using the fill animation approach from the reference design.
+- Budget summary updates live as the range is dragged without requiring a full re-render.
+- Removed `margin-left` offset on `.policy-option-meta` that previously compensated for the rocker switch width.
+
 ## [1.2.18] - 2026-04-05
 
 
