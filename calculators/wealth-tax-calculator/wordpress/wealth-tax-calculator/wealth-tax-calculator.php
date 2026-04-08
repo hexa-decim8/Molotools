@@ -789,43 +789,11 @@ class Billionaire_Wealth_Tax_Calculator {
                     </div>
 
                     <div class="policy-allocation-section">
-                        <h3 class="policy-header">Allocate Revenue to Policy Categories</h3>
-                        <p class="policy-description">Select one or more categories to see how the tax revenue could be allocated:</p>
-                        
-                        <div class="policy-categories">
-                            <label class="policy-checkbox">
-                                <input type="checkbox" name="wtc-policy" value="healthcare" id="wtc-policyHealthcare" checked>
-                                <span class="checkbox-label">Healthcare</span>
-                            </label>
-                            
-                            <label class="policy-checkbox">
-                                <input type="checkbox" name="wtc-policy" value="education" id="wtc-policyEducation" checked>
-                                <span class="checkbox-label">Education</span>
-                            </label>
-                            
-                            <label class="policy-checkbox">
-                                <input type="checkbox" name="wtc-policy" value="business" id="wtc-policyBusiness" checked>
-                                <span class="checkbox-label">Tax Relief</span>
-                            </label>
-                            
-                            <label class="policy-checkbox">
-                                <input type="checkbox" name="wtc-policy" value="directRelief" id="wtc-policyDirectRelief" checked>
-                                <span class="checkbox-label">Direct Relief</span>
-                            </label>
-                            
-                            <label class="policy-checkbox">
-                                <input type="checkbox" name="wtc-policy" value="housing" id="wtc-policyHousing" checked>
-                                <span class="checkbox-label">Housing</span>
-                            </label>
-                            
-                            <label class="policy-checkbox">
-                                <input type="checkbox" name="wtc-policy" value="childcare" id="wtc-policyChildcare" checked>
-                                <span class="checkbox-label">Childcare &amp; Families</span>
-                            </label>
-                        </div>
+                        <h3 class="policy-header">Allocate Revenue to Policies</h3>
+                        <p class="policy-description">Use the checkboxes below to include or exclude individual policy options.</p>
                         
                         <div class="allocation-results" id="wtc-allocationResults">
-                            <p class="allocation-prompt">Select categories above to see allocation</p>
+                            <p class="allocation-prompt">Loading policy options...</p>
                         </div>
                     </div>
                 </div>

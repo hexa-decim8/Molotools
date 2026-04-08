@@ -15,7 +15,8 @@
     var comparisonsData = (typeof wealthTaxConfig !== 'undefined' && wealthTaxConfig.comparisons)
         ? wealthTaxConfig.comparisons
         : [];
-    var selectedPolicies = [];
+    var POLICY_GROUP_KEYS = ['healthcare', 'education', 'business', 'directRelief', 'housing', 'childcare'];
+    var selectedPolicies = POLICY_GROUP_KEYS.slice();
     var selectedPolicyOptions = {};
     var collapsedPolicyGroups = [];
     var currentMode = 'advanced'; // 'basic' or 'advanced'
@@ -911,7 +912,7 @@
         var pinataButton = document.createElement('button');
         pinataButton.type = 'button';
         pinataButton.className = 'allocation-pinata-button button-78';
-        pinataButton.textContent = 'Button 78';
+        pinataButton.textContent = '+1% tax rate';
         pinataButton.setAttribute('aria-label', 'Increase tax rate by 1 percent');
 
         if (isAtMaxRate) {
@@ -951,7 +952,7 @@
             selectedPolicyOptions = {};
             var prompt = document.createElement('p');
             prompt.className = 'allocation-prompt';
-            prompt.textContent = 'Select categories above to see allocation';
+            prompt.textContent = 'No policy categories are currently available.';
             allocationResults.innerHTML = '';
             allocationResults.appendChild(prompt);
             return;
@@ -1216,23 +1217,6 @@
         updateAllocationSummary();
     }
 
-    function handlePolicyChange(event) {
-        var checkbox = event.target;
-        var policyValue = checkbox.value;
-        var index = selectedPolicies.indexOf(policyValue);
-
-        if (checkbox.checked && index === -1) {
-            selectedPolicies.push(policyValue);
-            enableAvailablePolicyOptionsForGroup(policyValue);
-        } else if (!checkbox.checked && index > -1) {
-            selectedPolicies.splice(index, 1);
-            removePolicyOptionsForGroup(policyValue);
-            removeCollapsedStateForGroup(policyValue);
-        }
-
-        updatePolicyAllocation();
-    }
-
     function handleModeToggle(event) {
         var button = event.target;
         var mode = button.getAttribute('data-mode');
@@ -1492,17 +1476,6 @@
         ensureMoneyPile();
         initTaxRateSlider();
 
-        // Set up event listeners for policy checkboxes and pre-populate selected state
-        var policyCheckboxes = document.querySelectorAll('input[name="wtc-policy"]');
-        for (var i = 0; i < policyCheckboxes.length; i++) {
-            policyCheckboxes[i].addEventListener('change', handlePolicyChange);
-            if (policyCheckboxes[i].checked) {
-                var val = policyCheckboxes[i].value;
-                if (selectedPolicies.indexOf(val) === -1) {
-                    selectedPolicies.push(val);
-                }
-            }
-        }
         selectAllPolicyOptionsForSelectedGroups();
 
         // Apply advanced-mode class to container since we default to advanced
@@ -1513,8 +1486,8 @@
 
         // Set up event listeners for mode toggle buttons
         var modeButtons = document.querySelectorAll('.mode-button');
-        for (var j = 0; j < modeButtons.length; j++) {
-            modeButtons[j].addEventListener('click', handleModeToggle);
+        for (var i = 0; i < modeButtons.length; i++) {
+            modeButtons[i].addEventListener('click', handleModeToggle);
         }
 
         initShareActions();
