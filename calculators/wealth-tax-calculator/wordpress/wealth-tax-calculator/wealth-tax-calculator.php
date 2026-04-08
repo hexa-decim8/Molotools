@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Billionaire Wealth Tax Calculator
  * Plugin URI:  https://github.com/hexa-decim8/Molotools
- * Description: Interactive calculator showing estimated 10-year tax revenue from billionaire wealth at rates of 1%–8%, based on the 2026 Forbes estimate of $8.2 trillion. Embed with [billionaire_wealth_tax].
+ * Description: Interactive calculator showing estimated 10-year tax revenue from billionaire wealth at rates of 1%–10%, based on the 2026 Forbes estimate of $8.2 trillion. Embed with [billionaire_wealth_tax].
  * Version:     1.2.20
  * Author:      Molotools
  * License:     GPL v2 or later
@@ -30,7 +30,7 @@ define( 'WTC_GITHUB_REPO', 'hexa-decim8/Molotools' );
 define( 'WTC_RELEASE_ASSET', 'wealth-tax-calculator.zip' );
 define( 'WTC_BILLIONAIRE_WEALTH', 8.2e12 ); // $8.2 trillion (Forbes 2026 estimate)
 define( 'WTC_TAX_RATE_MIN', 1 );
-define( 'WTC_TAX_RATE_MAX', 8 );
+define( 'WTC_TAX_RATE_MAX', 10 );
 define( 'WTC_CACHE_TTL', 5 * MINUTE_IN_SECONDS );
 define( 'WTC_UPDATE_ERROR_TTL', 5 * MINUTE_IN_SECONDS );
 define( 'WTC_UPDATE_CRON_HOOK', 'wtc_run_scheduled_update_check' );
@@ -722,26 +722,11 @@ class Billionaire_Wealth_Tax_Calculator {
      * Render the calculator HTML for the shortcode.
      *
      * Usage: [billionaire_wealth_tax]
-     * Optional attrs: title="..." subtitle="..."
      */
     public function render_calculator( $atts ) {
-        $atts = shortcode_atts(
-            array(
-                'title'    => 'Billionaire Wealth Tax Calculator',
-                'subtitle' => 'Calculate potential revenue from taxing billionaire wealth',
-            ),
-            $atts,
-            'billionaire_wealth_tax'
-        );
-
         ob_start();
         ?>
         <div class="calculator-container wealth-tax-widget mode-advanced">
-            <header>
-                <h1><?php echo esc_html( $atts['title'] ); ?></h1>
-                <p class="subtitle"><?php echo esc_html( $atts['subtitle'] ); ?></p>
-            </header>
-
             <div class="calculator-content">
                 <div class="calculator-inputs">
                     <div class="mode-toggle-section">
@@ -783,7 +768,7 @@ class Billionaire_Wealth_Tax_Calculator {
                                             role="slider"
                                             tabindex="0"
                                             aria-valuemin="1"
-                                            aria-valuemax="8"
+                                            aria-valuemax="10"
                                             aria-valuenow="2"
                                             aria-valuetext="2.0%"
                                             aria-label="Tax rate percentage"
@@ -795,12 +780,11 @@ class Billionaire_Wealth_Tax_Calculator {
                                         </div>
                                     </div>
                                 </div>
-                                <span id="wtc-planBadge" class="plan-indicator" aria-hidden="true" style="display:none">5% &bull; Abdul's plan</span>
                             </div>
                         </div>
                         <div class="range-labels">
                             <span>1%</span>
-                            <span>8%</span>
+                            <span>10%</span>
                         </div>
                     </div>
 
@@ -867,11 +851,24 @@ class Billionaire_Wealth_Tax_Calculator {
                             in wealth of America's 938 billionaires. Using calculations from economists Emmanuel Saez and
                             Gabriel Zucman, imposing a tax of 5% on this wealth and factoring a 10% tax evasion/avoidance
                             rate would generate $368.5 billion annually and around $4.4 trillion over the ten-year budget
-                            window 2026-2037. Tax rates range from 1-8% to show potential revenue at different taxation
+                            window 2026-2037. Tax rates range from 1-10% to show potential revenue at different taxation
                             levels.
                         </p>
                     </div>
                 </div>
+            </div>
+
+            <div class="wtc-share-block wtc-share-block-bottom">
+                <div class="wtc-share-actions" aria-label="Share this calculator">
+                    <span class="wtc-share-label">Share:</span>
+                    <button type="button" class="wtc-share-button" data-share-action="copy">Copy Link</button>
+                    <a href="#" class="wtc-share-button" data-share-action="email" target="_blank" rel="noopener noreferrer">Email</a>
+                    <a href="#" class="wtc-share-button" data-share-action="linkedin" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+                    <a href="#" class="wtc-share-button" data-share-action="x" target="_blank" rel="noopener noreferrer">X</a>
+                    <a href="#" class="wtc-share-button" data-share-action="facebook" target="_blank" rel="noopener noreferrer">Facebook</a>
+                    <a href="#" class="wtc-share-button" data-share-action="bluesky" target="_blank" rel="noopener noreferrer">Bluesky</a>
+                </div>
+                <p class="wtc-share-status" aria-live="polite"></p>
             </div>
         </div>
         <?php

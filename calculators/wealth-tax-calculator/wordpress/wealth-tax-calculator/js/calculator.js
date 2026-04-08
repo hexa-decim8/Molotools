@@ -20,7 +20,7 @@
     var collapsedPolicyGroups = [];
     var currentMode = 'advanced'; // 'basic' or 'advanced'
     var TAX_RATE_MIN = 1;
-    var TAX_RATE_MAX = 8;
+    var TAX_RATE_MAX = 10;
     var sliderController = {
         instance: null,
         suppressCallback: false,
@@ -140,10 +140,10 @@
                 ]
             },
             {
-                minAmount: 8.5e12,
-                maxAmount: 8.5e12,
-                costLabel: '$8.5 trillion over 10 years',
-                description: 'Reduce or eliminate the employer-side payroll tax on wages.',
+                minAmount: 2.125e12,
+                maxAmount: 2.125e12,
+                costLabel: '$2.125 trillion over 10 years',
+                description: 'Reduce employer-side payroll tax on wages to 25%.',
                 sources: [
                     {
                         text: 'Monthly Budget Review: August 2024',
@@ -204,11 +204,8 @@
     function enableOption(policy, index, item) {
         var key = getPolicyOptionKey(policy, index);
         var maxAmount = (typeof item.maxAmount === 'number') ? item.maxAmount : getFundingAmount(item);
-        var minAmount = (typeof item.minAmount === 'number') ? item.minAmount : maxAmount;
-        var startPercent = maxAmount > 0 ? Math.round((minAmount / maxAmount) * 100) : 0;
         selectedPolicyOptions[key] = {
-            percent: startPercent,
-            amount: (startPercent / 100) * maxAmount
+            amount: maxAmount
         };
     }
 
@@ -366,6 +363,51 @@
 
             node.textContent = source.text;
             container.appendChild(node);
+        }
+    }
+
+    function getPolicySourceAnchorId(policy, index) {
+        return 'wtc-source-' + policy + '-' + index;
+    }
+
+    function renderAdvancedModeSources(sourcesList) {
+        var hasSourceEntries = false;
+        sourcesList.innerHTML = '';
+
+        for (var i = 0; i < selectedPolicies.length; i++) {
+            var policy = selectedPolicies[i];
+            var policyExamples = POLICY_EXAMPLES[policy] || [];
+
+            for (var j = 0; j < policyExamples.length; j++) {
+                var example = policyExamples[j];
+                var exampleSources = getItemSources(example);
+
+                if (!exampleSources.length) {
+                    continue;
+                }
+
+                hasSourceEntries = true;
+
+                var sourceItem = document.createElement('li');
+                sourceItem.id = getPolicySourceAnchorId(policy, j);
+
+                var title = document.createElement('strong');
+                title.textContent = (POLICY_LABELS[policy] || policy) + ': ';
+                sourceItem.appendChild(title);
+
+                var descriptionText = document.createElement('span');
+                descriptionText.textContent = example.description + ' (' + formatCostLabel(example) + ') — ';
+                sourceItem.appendChild(descriptionText);
+
+                appendSourceSet(sourceItem, exampleSources);
+                sourcesList.appendChild(sourceItem);
+            }
+        }
+
+        if (!hasSourceEntries) {
+            var emptyItem = document.createElement('li');
+            emptyItem.textContent = 'Select policy categories to view sources.';
+            sourcesList.appendChild(emptyItem);
         }
     }
 
@@ -641,31 +683,6 @@
             handle.setAttribute('aria-valuetext', rateText);
         }
 
-        var isAbdulRate = taxRate === 5;
-        var sliderWrapper = el('wtc-pr-slider');
-        var planBadge = el('wtc-planBadge');
-
-        if (sliderWrapper) {
-            if (isAbdulRate) {
-                sliderWrapper.classList.add('is-rate-5');
-            } else {
-                sliderWrapper.classList.remove('is-rate-5');
-            }
-        }
-
-        if (handle) {
-            if (isAbdulRate) {
-                handle.classList.add('is-rate-5');
-            } else {
-                handle.classList.remove('is-rate-5');
-            }
-        }
-
-        if (planBadge) {
-            planBadge.style.display = isAbdulRate ? '' : 'none';
-            planBadge.setAttribute('aria-hidden', isAbdulRate ? 'false' : 'true');
-        }
-
         syncMoneyPile(taxRate);
         keepSliderInfoboxVisible();
     }
@@ -770,34 +787,131 @@
         window.addEventListener('orientationchange', handleViewportChange);
     }
 
-    function getFundableComparisons(revenue) {
-        if (!comparisonsData || comparisonsData.length === 0) {
-            return [];
+    function getComparisonMatchCost(item) {
+        if (!item) {
+            return 0;
         }
 
-        var matchingComparisons = [];
+        if (typeof item.minCost === 'number') {
+            return item.minCost;
+        }
 
-        for (var i = 0; i < comparisonsData.length; i++) {
-            var c = comparisonsData[i];
-            var threshold = typeof c.minCost === 'number' ? c.minCost : getFundingAmount(c);
-            if (revenue >= threshold) {
-                matchingComparisons.push(c);
+        return getFundingAmount(item);
+    }
+
+    function getBestFitFundedComparisons(revenue) {
+        if (!comparisonsData || comparisonsData.length === 0) {
+            return {
+                comparisons: [],
+                totalCost: 0,
+                remaining: Math.max(0, Math.round(revenue))
+            };
+        }
+
+        var normalizedRevenue = Math.max(0, Math.round(revenue));
+        var eligible = [];
+        var i;
+
+        for (i = 0; i < comparisonsData.length; i++) {
+            var item = comparisonsData[i];
+            var cost = getComparisonMatchCost(item);
+
+            if (typeof cost === 'number' && cost > 0 && cost <= normalizedRevenue) {
+                eligible.push({
+                    item: item,
+                    cost: cost,
+                    index: i
+                });
             }
         }
 
-        return matchingComparisons;
+        if (eligible.length === 0) {
+            return {
+                comparisons: [],
+                totalCost: 0,
+                remaining: normalizedRevenue
+            };
+        }
+
+        var bestTotal = 0;
+        var bestIndexes = [];
+
+        function isLexicographicallyEarlier(a, b) {
+            var minLength = Math.min(a.length, b.length);
+            for (var k = 0; k < minLength; k++) {
+                if (a[k] !== b[k]) {
+                    return a[k] < b[k];
+                }
+            }
+            return a.length < b.length;
+        }
+
+        function isBetterSelection(total, indexes) {
+            if (total > bestTotal) {
+                return true;
+            }
+
+            if (total < bestTotal) {
+                return false;
+            }
+
+            if (bestIndexes.length === 0) {
+                return indexes.length > 0;
+            }
+
+            if (indexes.length < bestIndexes.length) {
+                return true;
+            }
+
+            if (indexes.length > bestIndexes.length) {
+                return false;
+            }
+
+            return isLexicographicallyEarlier(indexes, bestIndexes);
+        }
+
+        function search(position, total, indexes) {
+            if (total > normalizedRevenue) {
+                return;
+            }
+
+            if (position >= eligible.length) {
+                if (isBetterSelection(total, indexes)) {
+                    bestTotal = total;
+                    bestIndexes = indexes.slice();
+                }
+                return;
+            }
+
+            search(position + 1, total, indexes);
+
+            indexes.push(position);
+            search(position + 1, total + eligible[position].cost, indexes);
+            indexes.pop();
+        }
+
+        search(0, 0, []);
+
+        var selected = [];
+        for (i = 0; i < bestIndexes.length; i++) {
+            selected.push(eligible[bestIndexes[i]].item);
+        }
+
+        return {
+            comparisons: selected,
+            totalCost: bestTotal,
+            remaining: Math.max(0, normalizedRevenue - bestTotal)
+        };
     }
 
     function createOverBudgetPinata(isAtMaxRate) {
         var pinataDrop = document.createElement('div');
         pinataDrop.className = 'allocation-pinata-drop';
 
-        var rope = document.createElement('span');
-        rope.className = 'allocation-pinata-rope';
-
         var pinataButton = document.createElement('button');
         pinataButton.type = 'button';
-        pinataButton.className = 'allocation-pinata-button';
+        pinataButton.className = 'allocation-pinata-button button-78';
+        pinataButton.textContent = 'Button 78';
         pinataButton.setAttribute('aria-label', 'Increase tax rate by 1 percent');
 
         if (isAtMaxRate) {
@@ -805,44 +919,6 @@
             pinataButton.setAttribute('aria-label', 'Maximum tax rate reached');
             pinataButton.classList.add('is-maxed');
         }
-
-        var star = document.createElement('span');
-        star.className = 'allocation-pinata-star';
-
-        var explosion = document.createElement('span');
-        explosion.className = 'allocation-pinata-explosion';
-        explosion.setAttribute('aria-hidden', 'true');
-
-        var explosionShape = document.createElement('span');
-        explosionShape.className = 'allocation-pinata-explosion-shape';
-
-        var explosionText = document.createElement('span');
-        explosionText.className = 'allocation-pinata-explosion-text';
-        explosionText.textContent = 'BOOM';
-
-        explosion.appendChild(explosionShape);
-        explosion.appendChild(explosionText);
-
-        var leftEye = document.createElement('span');
-        leftEye.className = 'allocation-pinata-eye left';
-
-        var rightEye = document.createElement('span');
-        rightEye.className = 'allocation-pinata-eye right';
-
-        var smile = document.createElement('span');
-        smile.className = 'allocation-pinata-smile';
-
-        var badge = document.createElement('span');
-        badge.className = 'allocation-pinata-badge';
-        badge.textContent = isAtMaxRate ? 'MAX' : '+1%';
-
-        star.appendChild(leftEye);
-        star.appendChild(rightEye);
-        star.appendChild(smile);
-        pinataButton.appendChild(explosion);
-        pinataButton.appendChild(star);
-        pinataButton.appendChild(badge);
-        pinataDrop.appendChild(rope);
         pinataDrop.appendChild(pinataButton);
 
         return pinataDrop;
@@ -852,23 +928,13 @@
         event.preventDefault();
 
         var pinataButton = event.currentTarget;
-        if (pinataButton.classList.contains('is-bursting')) {
-            return;
-        }
-
         var currentRate = getCurrentTaxRate();
         if (currentRate >= TAX_RATE_MAX) {
             return;
         }
 
-        pinataButton.classList.add('is-bursting');
-        window.setTimeout(function () {
-            pinataButton.classList.remove('is-bursting');
-        }, 560);
-
-        window.setTimeout(function () {
-            setTaxRate(currentRate + 1, true);
-        }, 220);
+        pinataButton.blur();
+        setTaxRate(currentRate + 1, true);
     }
 
     function updatePolicyAllocation() {
@@ -899,14 +965,6 @@
             var availableExamples = [];
             var isCollapsed = collapsedPolicyGroups.indexOf(policy) > -1;
 
-            var categoryFunding = 0;
-            var optionKeys = Object.keys(selectedPolicyOptions);
-            for (var ck = 0; ck < optionKeys.length; ck++) {
-                if (optionKeys[ck].indexOf(policy + ':') === 0) {
-                    categoryFunding += selectedPolicyOptions[optionKeys[ck]].amount;
-                }
-            }
-
             for (var j = 0; j < policyExamples.length; j++) {
                 availableExamples.push({
                     example: policyExamples[j],
@@ -917,36 +975,8 @@
             var group = document.createElement('div');
             group.className = 'allocation-group';
 
-            var groupToggle = document.createElement('button');
-            groupToggle.type = 'button';
-            groupToggle.className = 'allocation-group-toggle' + (isCollapsed ? ' collapsed' : '');
-            groupToggle.setAttribute('data-policy', policy);
-            groupToggle.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
-
-            var groupMain = document.createElement('span');
-            groupMain.className = 'allocation-group-main';
-
-            var category = document.createElement('span');
-            category.className = 'allocation-category';
-            category.textContent = POLICY_LABELS[policy] || policy;
-
-            var amount = document.createElement('span');
-            amount.className = 'allocation-amount';
-            amount.textContent = formatCurrency(categoryFunding);
-
-            var chevron = document.createElement('span');
-            chevron.className = 'allocation-group-chevron';
-            chevron.setAttribute('aria-hidden', 'true');
-            chevron.textContent = 'v';
-
-            groupMain.appendChild(category);
-            groupMain.appendChild(amount);
-            groupToggle.appendChild(groupMain);
-            groupToggle.appendChild(chevron);
-            group.appendChild(groupToggle);
-
             var groupContent = document.createElement('div');
-            groupContent.className = 'allocation-group-content' + (isCollapsed ? ' collapsed' : '');
+            groupContent.className = 'allocation-group-content';
 
             if (availableExamples.length > 0) {
                 var examplesContainer = document.createElement('div');
@@ -960,8 +990,6 @@
                     var fillColor = POLICY_FILL_COLORS[policy] || '#888';
                     var enabledData = isEnabled ? selectedPolicyOptions[policyOptionKey] : null;
                     var itemMaxAmount = (typeof exampleData.maxAmount === 'number') ? exampleData.maxAmount : getFundingAmount(exampleData);
-                    var itemMinAmount = (typeof exampleData.minAmount === 'number') ? exampleData.minAmount : itemMaxAmount;
-                    var defaultPercent = itemMaxAmount > 0 ? Math.round((itemMinAmount / itemMaxAmount) * 100) : 0;
 
                     var exampleRow = document.createElement('div');
                     exampleRow.className = 'allocation-example-row' + (isEnabled ? ' is-enabled' : '');
@@ -971,7 +999,7 @@
 
                     var rowFill = document.createElement('div');
                     rowFill.className = 'allocation-row-fill';
-                    rowFill.style.width = isEnabled ? (enabledData.percent + '%') : '0%';
+                    rowFill.style.width = isEnabled ? '100%' : '0%';
 
                     var rowContent = document.createElement('div');
                     rowContent.className = 'allocation-row-content';
@@ -979,10 +1007,22 @@
                     var optionWrapper = document.createElement('div');
                     optionWrapper.className = 'policy-option-checkbox';
 
+                    var checkboxWrapper = document.createElement('div');
+                    checkboxWrapper.className = 'checkbox-wrapper-50';
+
+                    var optionInput = document.createElement('input');
+                    optionInput.type = 'checkbox';
+                    optionInput.className = 'plus-minus policy-option-input';
+                    optionInput.checked = isEnabled;
+                    optionInput.setAttribute('aria-label', 'Toggle policy option');
+
+                    checkboxWrapper.appendChild(optionInput);
+
                     var optionText = document.createElement('span');
                     optionText.className = 'policy-option-text';
                     optionText.textContent = exampleData.description;
 
+                    optionWrapper.appendChild(checkboxWrapper);
                     optionWrapper.appendChild(optionText);
 
                     var optionMeta = document.createElement('div');
@@ -992,9 +1032,10 @@
                     optionCost.className = 'policy-option-cost';
                     optionCost.textContent = formatCostLabel(exampleData);
 
-                    var optionSource = document.createElement('span');
+                    var optionSource = document.createElement('a');
                     optionSource.className = 'example-source';
-                    appendSourceSet(optionSource, getItemSources(exampleData), 'example-source');
+                    optionSource.href = '#' + getPolicySourceAnchorId(policy, available.index);
+                    optionSource.textContent = 'source';
 
                     optionMeta.appendChild(optionCost);
                     optionMeta.appendChild(optionSource);
@@ -1002,16 +1043,8 @@
                     rowContent.appendChild(optionWrapper);
                     rowContent.appendChild(optionMeta);
 
-                    var rangeInput = document.createElement('input');
-                    rangeInput.type = 'range';
-                    rangeInput.className = 'policy-range-input';
-                    rangeInput.min = '0';
-                    rangeInput.max = '100';
-                    rangeInput.value = isEnabled ? String(enabledData.percent) : String(defaultPercent);
-
                     exampleRow.appendChild(rowFill);
                     exampleRow.appendChild(rowContent);
-                    exampleRow.appendChild(rangeInput);
                     examplesContainer.appendChild(exampleRow);
                 }
 
@@ -1029,7 +1062,7 @@
 
         var policyGroupToggles = allocationResults.querySelectorAll('.allocation-group-toggle');
         for (var p = 0; p < policyGroupToggles.length; p++) {
-            policyGroupToggles[p].addEventListener('click', handlePolicyGroupToggle);
+            // Event listener removed: policy groups are now always visible
         }
 
         var exampleRows = allocationResults.querySelectorAll('.allocation-example-row');
@@ -1037,24 +1070,11 @@
             exampleRows[r].addEventListener('click', handlePolicyRowClick);
         }
 
-        var rangeInputs = allocationResults.querySelectorAll('.policy-range-input');
-        for (var s = 0; s < rangeInputs.length; s++) {
-            rangeInputs[s].addEventListener('input', handlePolicyRangeInput);
-            rangeInputs[s].addEventListener('click', function (e) { e.stopPropagation(); });
-            rangeInputs[s].addEventListener('mousedown', function (e) { e.stopPropagation(); });
+        var optionInputs = allocationResults.querySelectorAll('.policy-option-input');
+        for (var s = 0; s < optionInputs.length; s++) {
+            optionInputs[s].addEventListener('change', handlePolicyToggleInput);
+            optionInputs[s].addEventListener('click', function (e) { e.stopPropagation(); });
         }
-
-            var stampRows = allocationResults.querySelectorAll('.allocation-example-row');
-            for (var sr = 0; sr < stampRows.length; sr++) {
-                var srPolicy = stampRows[sr].getAttribute('data-policy');
-                var srIndex = stampRows[sr].getAttribute('data-index');
-                var srKey = getPolicyOptionKey(srPolicy, srIndex);
-                if (isOptionEnabled(srPolicy, srIndex) &&
-                        selectedPolicyOptions[srKey] &&
-                        selectedPolicyOptions[srKey].percent === 100) {
-                    showFundedStamp(stampRows[sr]);
-                }
-            }
 
         updateAllocationSummary();
     }
@@ -1106,7 +1126,7 @@
         budgetHint.className = 'allocation-budget-hint';
         if (isOverBudget) {
             budgetHint.className += ' allocation-overrun-message';
-            budgetHint.textContent = 'Smash the piñata! You need to tax billionaires more!';
+            budgetHint.textContent = 'You need to tax billionaires more. Use the button to raise the rate by 1%.';
         } else {
             budgetHint.textContent = 'Selected policy costs are within available revenue.';
         }
@@ -1130,7 +1150,7 @@
 
     function handlePolicyRowClick(event) {
         var target = event.target;
-        if (target.tagName === 'INPUT' && target.type === 'range') {
+        if (target.tagName === 'INPUT' && target.type === 'checkbox') {
             return;
         }
         var node = target;
@@ -1150,74 +1170,48 @@
         if (!item) return;
 
         var rowFill = row.querySelector('.allocation-row-fill');
-        var rangeInputEl = row.querySelector('.policy-range-input');
+        var optionInputEl = row.querySelector('.policy-option-input');
 
         if (isOptionEnabled(policy, index)) {
             disableOption(policy, index);
             row.classList.remove('is-enabled');
             if (rowFill) rowFill.style.width = '0%';
-            removeFundedStamp(row);
+            if (optionInputEl) optionInputEl.checked = false;
         } else {
             enableOption(policy, index, item);
             row.classList.add('is-enabled');
-            if (rowFill && rangeInputEl) {
-                var percent = selectedPolicyOptions[policyOptionKey].percent;
-                rowFill.style.width = percent + '%';
-                rangeInputEl.value = String(percent);
-            }
+            if (rowFill) rowFill.style.width = '100%';
+            if (optionInputEl) optionInputEl.checked = true;
         }
 
         updateAllocationSummary();
     }
 
-    function showFundedStamp(row) {
-        removeFundedStamp(row);
-        var wrap = document.createElement('div');
-        wrap.className = 'wtc-funded-stamp-wrap';
-        var stamp = document.createElement('div');
-        stamp.className = 'wtc-funded-stamp';
-        stamp.textContent = 'Fully Funded!';
-        var splat = document.createElement('div');
-        splat.className = 'wtc-funded-splat';
-        for (var i = 0; i < 10; i++) {
-            splat.appendChild(document.createElement('span'));
-        }
-        wrap.appendChild(stamp);
-        wrap.appendChild(splat);
-        row.appendChild(wrap);
-    }
-
-    function removeFundedStamp(row) {
-        var existing = row.querySelector('.wtc-funded-stamp-wrap');
-        if (existing) {
-            existing.parentNode.removeChild(existing);
-        }
-    }
-
-    function handlePolicyRangeInput(event) {
+    function handlePolicyToggleInput(event) {
         event.stopPropagation();
-        var rangeEl = event.currentTarget;
-        var row = rangeEl.parentElement;
+        var inputEl = event.currentTarget;
+        var row = inputEl;
+        while (row && !row.classList.contains('allocation-example-row')) {
+            row = row.parentElement;
+        }
+        if (!row) return;
+
         var policy = row.getAttribute('data-policy');
         var index = row.getAttribute('data-index');
-        var policyOptionKey = getPolicyOptionKey(policy, index);
         var policyExamples = POLICY_EXAMPLES[policy] || [];
         var item = policyExamples[parseInt(index, 10)];
-        if (!item || !isOptionEnabled(policy, index)) return;
+        if (!item) return;
 
-        var percent = parseInt(rangeEl.value, 10);
-        var maxAmount = (typeof item.maxAmount === 'number') ? item.maxAmount : getFundingAmount(item);
-        selectedPolicyOptions[policyOptionKey].percent = percent;
-        selectedPolicyOptions[policyOptionKey].amount = (percent / 100) * maxAmount;
+        if (inputEl.checked) {
+            enableOption(policy, index, item);
+            row.classList.add('is-enabled');
+        } else {
+            disableOption(policy, index);
+            row.classList.remove('is-enabled');
+        }
 
         var rowFill = row.querySelector('.allocation-row-fill');
-        if (rowFill) rowFill.style.width = percent + '%';
-
-        if (percent === 100) {
-            showFundedStamp(row);
-        } else {
-            removeFundedStamp(row);
-        }
+        if (rowFill) rowFill.style.width = inputEl.checked ? '100%' : '0%';
 
         updateAllocationSummary();
     }
@@ -1306,7 +1300,8 @@
         el('wtc-rateDisplay') && (el('wtc-rateDisplay').textContent = taxRate.toFixed(1) + '%');
         syncSliderDecor(taxRate, revenue);
 
-        var fundableComparisons = getFundableComparisons(revenue);
+        var comparisonSelection = getBestFitFundedComparisons(revenue);
+        var fundableComparisons = comparisonSelection.comparisons;
         var comparisonEl = el('wtc-comparisonText');
         var sourcesList = el('wtc-sourcesList');
 
@@ -1321,44 +1316,170 @@
 
                 var comparisonList = document.createElement('ul');
 
+                // In basic mode, add items to the top; in advanced mode, add to the bottom
                 for (var i = 0; i < fundableComparisons.length; i++) {
                     var item = fundableComparisons[i];
                     var listItem = document.createElement('li');
                     listItem.textContent = item.description + ' (' + formatCostLabel(item) + ')';
-                    comparisonList.appendChild(listItem);
+                    
+                    if (currentMode === 'basic') {
+                        // In basic mode, prepend to the list (add to top)
+                        if (comparisonList.firstChild) {
+                            comparisonList.insertBefore(listItem, comparisonList.firstChild);
+                        } else {
+                            comparisonList.appendChild(listItem);
+                        }
+                    } else {
+                        // In advanced mode, append to the list (add to bottom)
+                        comparisonList.appendChild(listItem);
+                    }
                 }
 
                 comparisonEl.appendChild(intro);
                 comparisonEl.appendChild(comparisonList);
+
+                if (comparisonSelection.remaining > 0) {
+                    var remainderNote = document.createElement('p');
+                    remainderNote.textContent = 'Unallocated remainder: ' + formatCurrency(comparisonSelection.remaining) + '.';
+                    comparisonEl.appendChild(remainderNote);
+                }
             }
         }
 
         if (sourcesList) {
-            sourcesList.innerHTML = '';
+            if (currentMode === 'advanced') {
+                renderAdvancedModeSources(sourcesList);
+            } else {
+                sourcesList.innerHTML = '';
 
-            for (var j = 0; j < fundableComparisons.length; j++) {
-                var comparison = fundableComparisons[j];
-                var sourceItem = document.createElement('li');
-                var title = document.createElement('strong');
-                title.textContent = comparison.policy + ': ';
-                sourceItem.appendChild(title);
-                appendSourceSet(sourceItem, getItemSources(comparison));
-                sourcesList.appendChild(sourceItem);
+                for (var j = 0; j < fundableComparisons.length; j++) {
+                    var comparison = fundableComparisons[j];
+                    var sourceItem = document.createElement('li');
+                    var title = document.createElement('strong');
+                    title.textContent = comparison.policy + ': ';
+                    sourceItem.appendChild(title);
+                    appendSourceSet(sourceItem, getItemSources(comparison));
+                    sourcesList.appendChild(sourceItem);
+                }
+
+                var wealthItem = document.createElement('li');
+                var wealthLink = document.createElement('a');
+                wealthLink.href = 'https://www.forbes.com/billionaires/';
+                wealthLink.target = '_blank';
+                wealthLink.rel = 'noopener noreferrer';
+                wealthLink.textContent = 'Forbes World\'s Billionaires List (2026)';
+                wealthItem.appendChild(wealthLink);
+                wealthItem.appendChild(document.createTextNode(' — Billionaire wealth estimate of $8.2 trillion'));
+                sourcesList.appendChild(wealthItem);
             }
-
-            var wealthItem = document.createElement('li');
-            var wealthLink = document.createElement('a');
-            wealthLink.href = 'https://www.forbes.com/billionaires/';
-            wealthLink.target = '_blank';
-            wealthLink.rel = 'noopener noreferrer';
-            wealthLink.textContent = 'Forbes World\'s Billionaires List (2026)';
-            wealthItem.appendChild(wealthLink);
-            wealthItem.appendChild(document.createTextNode(' — Billionaire wealth estimate of $8.2 trillion'));
-            sourcesList.appendChild(wealthItem);
         }
 
         // Update policy allocation
         updatePolicyAllocation();
+    }
+
+    function setShareStatus(statusEl, message) {
+        if (!statusEl) return;
+        statusEl.textContent = message;
+    }
+
+    function getShareHref(action, pageUrl, shareText) {
+        var encodedUrl = encodeURIComponent(pageUrl);
+        var encodedText = encodeURIComponent(shareText);
+        var encodedTextWithUrl = encodeURIComponent(shareText + ' ' + pageUrl);
+
+        if (action === 'email') {
+            return 'mailto:?subject=' + encodeURIComponent('Billionaire Wealth Tax Calculator') + '&body=' + encodedTextWithUrl;
+        }
+
+        if (action === 'linkedin') {
+            return 'https://www.linkedin.com/sharing/share-offsite/?url=' + encodedUrl;
+        }
+
+        if (action === 'x') {
+            return 'https://twitter.com/intent/tweet?url=' + encodedUrl + '&text=' + encodedText;
+        }
+
+        if (action === 'facebook') {
+            return 'https://www.facebook.com/sharer/sharer.php?u=' + encodedUrl;
+        }
+
+        if (action === 'bluesky') {
+            return 'https://bsky.app/intent/compose?text=' + encodedTextWithUrl;
+        }
+
+        return '#';
+    }
+
+    function copyTextToClipboard(text) {
+        if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function' && window.isSecureContext) {
+            return navigator.clipboard.writeText(text);
+        }
+
+        return new Promise(function (resolve, reject) {
+            var fallbackInput = document.createElement('textarea');
+            fallbackInput.value = text;
+            fallbackInput.setAttribute('readonly', 'readonly');
+            fallbackInput.style.position = 'fixed';
+            fallbackInput.style.opacity = '0';
+            fallbackInput.style.pointerEvents = 'none';
+            document.body.appendChild(fallbackInput);
+            fallbackInput.focus();
+            fallbackInput.select();
+
+            try {
+                var successful = document.execCommand('copy');
+                document.body.removeChild(fallbackInput);
+                if (successful) {
+                    resolve();
+                } else {
+                    reject(new Error('copy-failed'));
+                }
+            } catch (error) {
+                document.body.removeChild(fallbackInput);
+                reject(error);
+            }
+        });
+    }
+
+    function initShareActions() {
+        var shareBlocks = document.querySelectorAll('.wtc-share-block');
+        if (!shareBlocks.length) return;
+
+        var pageUrl = window.location.href;
+        var shareText = 'Try the Billionaire Wealth Tax Calculator:';
+
+        for (var b = 0; b < shareBlocks.length; b++) {
+            var shareBlock = shareBlocks[b];
+            var shareButtons = shareBlock.querySelectorAll('[data-share-action]');
+            var statusEl = shareBlock.querySelector('.wtc-share-status');
+
+            for (var i = 0; i < shareButtons.length; i++) {
+                var button = shareButtons[i];
+                var action = button.getAttribute('data-share-action');
+
+                if (action !== 'copy') {
+                    button.setAttribute('href', getShareHref(action, pageUrl, shareText));
+                }
+
+                button.addEventListener('click', (function (localStatusEl) {
+                    return function (event) {
+                        var clickedAction = event.currentTarget.getAttribute('data-share-action');
+                        if (clickedAction !== 'copy') {
+                            setShareStatus(localStatusEl, '');
+                            return;
+                        }
+
+                        event.preventDefault();
+                        copyTextToClipboard(pageUrl).then(function () {
+                            setShareStatus(localStatusEl, 'Link copied.');
+                        }).catch(function () {
+                            setShareStatus(localStatusEl, 'Could not copy automatically. Copy this URL: ' + pageUrl);
+                        });
+                    };
+                }(statusEl)));
+            }
+        }
     }
 
     // ── Bootstrap ──────────────────────────────────────────────────────────────
@@ -1396,6 +1517,7 @@
             modeButtons[j].addEventListener('click', handleModeToggle);
         }
 
+        initShareActions();
         updateDisplay();
     }
 

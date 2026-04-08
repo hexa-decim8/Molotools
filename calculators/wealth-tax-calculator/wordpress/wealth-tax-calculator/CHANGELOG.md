@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Updated the "What could this fund?" list to show a single best-fit bundle of policies whose combined cost is as close as possible to the selected tax revenue without exceeding it.
+- Policy bundle matching now uses each policy's minimum cost (for ranged items) and shows an explicit unallocated remainder when exact matching is not possible.
+- Sources in this section are now scoped to only the policies included in the displayed bundle.
+- Advanced mode no longer displays per-policy-group total assigned revenue values on the same line as each policy group/dropdown.
+- Advanced mode sub-policy controls now use animated plus/minus checkbox buttons and no longer show bottom-edge range sliders.
+- Added share actions at both the top and bottom of the calculator for Copy Link, Email, LinkedIn, X, Facebook, and Bluesky using the live shortcode page URL.
+
 ## [1.2.20] - 2026-04-06
 
 
