@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.21] - 2026-04-08
+
+
 ### Changed
 - Updated the "What could this fund?" list to show a single best-fit bundle of policies whose combined cost is as close as possible to the selected tax revenue without exceeding it.
 - Policy bundle matching now uses each policy's minimum cost (for ranged items) and shows an explicit unallocated remainder when exact matching is not possible.
