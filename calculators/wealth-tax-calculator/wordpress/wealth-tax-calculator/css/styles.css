@@ -832,10 +832,10 @@
     display: block;
     width: 100%;
     padding: 12px 16px;
-    background: rgba(35, 48, 113, 0.08);
+    background: #233071;
     border: none;
-    border-bottom: 1px solid rgba(35, 48, 113, 0.15);
-    color: #131110;
+    border-bottom: 1px solid rgba(18, 28, 80, 0.4);
+    color: #FBF0E4;
     font-size: 1.05rem;
     font-weight: 600;
     text-align: left;
@@ -849,7 +849,7 @@
 }
 
 .calculator-container .allocation-group-toggle:hover {
-    background-color: rgba(35, 48, 113, 0.15);
+    background-color: #121C50;
 }
 
 .calculator-container .allocation-group-main {
@@ -876,7 +876,7 @@
     left: 50%;
     transform: translate(-50%, -50%);
     font-size: 0.8rem;
-    color: #233071;
+    color: #FBF0E4;
 }
 
 .calculator-container .allocation-group.is-collapsed .allocation-group-chevron {

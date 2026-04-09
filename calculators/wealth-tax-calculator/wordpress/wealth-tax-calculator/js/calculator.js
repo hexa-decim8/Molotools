@@ -1152,6 +1152,7 @@
                 groupToggles[t].addEventListener('click', handleGroupToggleClick);
             }
 
+            var exampleRows = allocationResults.querySelectorAll('.allocation-example-row');
             for (var r = 0; r < exampleRows.length; r++) {
                 exampleRows[r].addEventListener('click', handlePolicyRowClick);
             }
