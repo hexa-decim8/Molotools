@@ -6,9 +6,6 @@
 
     // ── Constants ──────────────────────────────────────────────────────────────
     // Data is injected from WordPress via wp_localize_script
-    var BILLIONAIRE_WEALTH = (typeof wealthTaxConfig !== 'undefined' && wealthTaxConfig.billionaireWealth)
-        ? wealthTaxConfig.billionaireWealth
-        : 8.2e12; // Fallback to $8.2 trillion (Forbes 2026 estimate)
     var FIVE_PERCENT_BASELINE_REVENUE = 4.4e12;
 
     // ── State ──────────────────────────────────────────────────────────────────
@@ -33,14 +30,9 @@
         columns: [],
         initialized: false
     };
-    var supportsRequestAnimationFrame = typeof window.requestAnimationFrame === 'function';
-    var requestFrame = supportsRequestAnimationFrame
-        ? function (callback) {
-            return window.requestAnimationFrame(callback);
-        }
-        : function (callback) {
-            return window.setTimeout(callback, 16);
-        };
+    var requestFrame = typeof window.requestAnimationFrame === 'function'
+        ? function (callback) { return window.requestAnimationFrame(callback); }
+        : function (callback) { return window.setTimeout(callback, 16); };
     var supportsCssVariables = !!(window.CSS && window.CSS.supports && window.CSS.supports('--wtc-test', '0'));
     var MONEY_PILE_PROFILES = [0.26, 0.4, 0.58, 0.82, 1, 0.92, 0.72, 0.5, 0.34];
     var MONEY_PILE_MAX_BUNDLES = 14;
@@ -220,22 +212,6 @@
             : 0;
     }
 
-    function removePolicyOptionsForGroup(policyGroup) {
-        var prefix = policyGroup + ':';
-        var keys = Object.keys(selectedPolicyOptions);
-        for (var i = 0; i < keys.length; i++) {
-            if (keys[i].indexOf(prefix) === 0) {
-                delete selectedPolicyOptions[keys[i]];
-            }
-        }
-    }
-
-    function removeCollapsedStateForGroup(policyGroup) {
-        var index = collapsedPolicyGroups.indexOf(policyGroup);
-        if (index > -1) {
-            collapsedPolicyGroups.splice(index, 1);
-        }
-    }
 
     function toggleGroupCollapse(policyGroup) {
         var index = collapsedPolicyGroups.indexOf(policyGroup);
@@ -320,26 +296,11 @@
     }
 
     function getFundingAmount(item) {
-        if (!item) {
-            return 0;
+        if (!item) return 0;
+        var props = ['maxAmount', 'minAmount', 'maxCost', 'minCost', 'amount'];
+        for (var i = 0; i < props.length; i++) {
+            if (typeof item[props[i]] === 'number') return item[props[i]];
         }
-
-        if (typeof item.maxAmount === 'number') {
-            return item.maxAmount;
-        }
-        if (typeof item.minAmount === 'number') {
-            return item.minAmount;
-        }
-        if (typeof item.maxCost === 'number') {
-            return item.maxCost;
-        }
-        if (typeof item.minCost === 'number') {
-            return item.minCost;
-        }
-        if (typeof item.amount === 'number') {
-            return item.amount;
-        }
-
         return 0;
     }
 
@@ -1028,24 +989,17 @@
             for (var i = 0; i < selectedPolicies.length; i++) {
                 var policy = selectedPolicies[i];
                 var policyExamples = POLICY_EXAMPLES[policy] || [];
-                var availableExamples = [];
-
-                for (var j = 0; j < policyExamples.length; j++) {
-                    availableExamples.push({
-                        example: policyExamples[j],
-                        index: j
-                    });
-                }
+                var isCollapsed = collapsedPolicyGroups.indexOf(policy) > -1;
 
                 var group = document.createElement('div');
-                group.className = 'allocation-group' + (collapsedPolicyGroups.indexOf(policy) > -1 ? ' is-collapsed' : '');
+                group.className = 'allocation-group' + (isCollapsed ? ' is-collapsed' : '');
 
                 // Create the toggle button
                 var groupToggle = document.createElement('button');
                 groupToggle.type = 'button';
                 groupToggle.className = 'allocation-group-toggle';
                 groupToggle.setAttribute('data-policy-group', policy);
-                groupToggle.setAttribute('aria-expanded', collapsedPolicyGroups.indexOf(policy) === -1 ? 'true' : 'false');
+                groupToggle.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
 
                 var groupMain = document.createElement('div');
                 groupMain.className = 'allocation-group-main';
@@ -1063,23 +1017,21 @@
                 groupToggle.appendChild(groupMain);
 
                 var groupContent = document.createElement('div');
-                groupContent.className = 'allocation-group-content' + (collapsedPolicyGroups.indexOf(policy) > -1 ? ' collapsed' : '');
+                groupContent.className = 'allocation-group-content' + (isCollapsed ? ' collapsed' : '');
 
-
-                if (availableExamples.length > 0) {
+                if (policyExamples.length > 0) {
                     var examplesContainer = document.createElement('div');
                     examplesContainer.className = 'allocation-example-list';
 
-                    for (var k = 0; k < availableExamples.length; k++) {
-                        var available = availableExamples[k];
-                        var exampleData = available.example;
-                        var isEnabled = isOptionEnabled(policy, available.index);
+                    for (var k = 0; k < policyExamples.length; k++) {
+                        var exampleData = policyExamples[k];
+                        var isEnabled = isOptionEnabled(policy, k);
                         var fillColor = POLICY_FILL_COLORS[policy] || '#888';
 
                         var exampleRow = document.createElement('div');
                         exampleRow.className = 'allocation-example-row' + (isEnabled ? ' is-enabled' : '');
                         exampleRow.setAttribute('data-policy', policy);
-                        exampleRow.setAttribute('data-index', String(available.index));
+                        exampleRow.setAttribute('data-index', String(k));
                         exampleRow.style.setProperty('--fill-color', fillColor);
 
                         var rowFill = document.createElement('div');
@@ -1119,7 +1071,7 @@
 
                         var optionSource = document.createElement('a');
                         optionSource.className = 'example-source';
-                        optionSource.href = '#' + getPolicySourceAnchorId(policy, available.index);
+                        optionSource.href = '#' + getPolicySourceAnchorId(policy, k);
                         optionSource.textContent = 'source';
 
                         optionMeta.appendChild(optionCost);
@@ -1198,6 +1150,16 @@
         }
     }
 
+    function getOrCreateChild(parent, selector, tag, cls) {
+        var child = parent.querySelector(selector);
+        if (!child) {
+            child = document.createElement(tag);
+            child.className = cls;
+            parent.appendChild(child);
+        }
+        return child;
+    }
+
     function updateAllocationSummary() {
         ensureAllocationTotalsBetweenSliderAndPolicy();
 
@@ -1212,61 +1174,26 @@
         var remainingRevenue = Math.max(revenue - selectedPolicyFunding, 0);
         var isOverBudget = overrunAmount > 0;
 
-        var existingSummary = totalsBox.querySelector('.allocation-summary');
-        var summary = existingSummary;
-        if (!summary) {
-            summary = document.createElement('div');
-            summary.className = 'allocation-summary';
-            totalsBox.appendChild(summary);
-        }
+        var summary = getOrCreateChild(totalsBox, '.allocation-summary', 'div', 'allocation-summary');
+        summary.classList.toggle('is-over-budget', isOverBudget);
 
-        if (isOverBudget) {
-            summary.classList.add('is-over-budget');
-        } else {
-            summary.classList.remove('is-over-budget');
-        }
-
-        var availableLine = summary.querySelector('.allocation-available-line');
-        if (!availableLine) {
-            availableLine = document.createElement('span');
-            availableLine.className = 'allocation-available-line';
-            summary.appendChild(availableLine);
-        }
+        var availableLine = getOrCreateChild(summary, '.allocation-available-line', 'span', 'allocation-available-line');
         availableLine.textContent = '10-year tax revenue available: ' + formatCurrency(revenue);
 
-        var selectedLine = summary.querySelector('.allocation-selected-line');
-        if (!selectedLine) {
-            selectedLine = document.createElement('span');
-            selectedLine.className = 'allocation-selected-line';
-            summary.appendChild(selectedLine);
-        }
+        var selectedLine = getOrCreateChild(summary, '.allocation-selected-line', 'span', 'allocation-selected-line');
         selectedLine.textContent = 'Selected policy funding: ' + formatCurrency(selectedPolicyFunding);
 
-        var budgetLine = summary.querySelector('.allocation-budget-line');
-        if (!budgetLine) {
-            budgetLine = document.createElement('span');
-            budgetLine.className = 'allocation-budget-line';
-            summary.appendChild(budgetLine);
-        }
-
-        budgetLine.classList.remove('allocation-budget-warning');
+        var budgetLine = getOrCreateChild(summary, '.allocation-budget-line', 'span', 'allocation-budget-line');
+        budgetLine.classList.toggle('allocation-budget-warning', isOverBudget);
         if (isOverBudget) {
-            budgetLine.classList.add('allocation-budget-warning');
             budgetLine.textContent = 'Over budget by: ' + formatCurrency(overrunAmount);
         } else {
             budgetLine.textContent = 'Remaining revenue: ' + formatCurrency(remainingRevenue);
         }
 
-        var budgetHint = summary.querySelector('.allocation-budget-hint');
-        if (!budgetHint) {
-            budgetHint = document.createElement('span');
-            budgetHint.className = 'allocation-budget-hint';
-            summary.appendChild(budgetHint);
-        }
-
-        budgetHint.classList.remove('allocation-overrun-message');
+        var budgetHint = getOrCreateChild(summary, '.allocation-budget-hint', 'span', 'allocation-budget-hint');
+        budgetHint.classList.toggle('allocation-overrun-message', isOverBudget);
         if (isOverBudget) {
-            budgetHint.classList.add('allocation-overrun-message');
             budgetHint.textContent = 'You need to tax billionaires more! Use the button to raise the rate by 1%.';
         } else {
             budgetHint.textContent = 'Selected policy costs are within available revenue.';
@@ -1317,7 +1244,6 @@
         var row = event.currentTarget;
         var policy = row.getAttribute('data-policy');
         var index = row.getAttribute('data-index');
-        var policyOptionKey = getPolicyOptionKey(policy, index);
         var policyExamples = POLICY_EXAMPLES[policy] || [];
         var item = policyExamples[parseInt(index, 10)];
         if (!item) return;
@@ -1379,11 +1305,7 @@
 
         var modeButtons = document.querySelectorAll('.mode-button');
         for (var i = 0; i < modeButtons.length; i++) {
-            if (modeButtons[i].getAttribute('data-mode') === mode) {
-                modeButtons[i].classList.add('active');
-            } else {
-                modeButtons[i].classList.remove('active');
-            }
+            modeButtons[i].classList.toggle('active', modeButtons[i].getAttribute('data-mode') === mode);
         }
 
         var policySection = document.querySelector('.policy-allocation-section');
@@ -1439,7 +1361,8 @@
 
         var revenue = calculateRevenue(taxRate);
 
-        el('wtc-rateDisplay') && (el('wtc-rateDisplay').textContent = taxRate.toFixed(1) + '%');
+        var rateDisplay = el('wtc-rateDisplay');
+        if (rateDisplay) { rateDisplay.textContent = taxRate.toFixed(1) + '%'; }
         syncSliderDecor(taxRate, revenue);
 
         var comparisonSelection = getBestFitFundedComparisons(revenue);
@@ -1552,10 +1475,6 @@
 
         if (action === 'whatsapp') {
             return 'https://api.whatsapp.com/send?text=' + encodedTextWithUrl;
-        }
-
-        if (action === 'bluesky') {
-            return 'https://bsky.app/intent/compose?text=' + encodedTextWithUrl;
         }
 
         return '#';

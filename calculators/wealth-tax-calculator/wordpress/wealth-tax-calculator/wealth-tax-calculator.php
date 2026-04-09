@@ -795,9 +795,6 @@ class Billionaire_Wealth_Tax_Calculator {
                     <div class="share">
                         <div class="trigger share-btn"><a href="#" data-share-action="copy" aria-label="Copy share link"><i class="fas fa-plus" aria-hidden="true"></i> Share</a></div>
                     </div>
-                    <div class="like">
-                        <div class="trigger like-btn"><a href="#" aria-label="Share"><i class="fas fa-heart" aria-hidden="true"></i> Share</a></div>
-                    </div>
                     <div class="copy-link">
                         <div class="trigger copy-link-btn"><a href="#" data-share-action="copy" aria-label="Copy link"><i class="fas fa-link" aria-hidden="true"></i> Copy link</a></div>
                     </div>
@@ -919,9 +916,6 @@ class Billionaire_Wealth_Tax_Calculator {
                     </div>
                     <div class="share">
                         <div class="trigger share-btn"><a href="#" data-share-action="copy" aria-label="Copy share link"><i class="fas fa-plus" aria-hidden="true"></i> Share</a></div>
-                    </div>
-                    <div class="like">
-                        <div class="trigger like-btn"><a href="#" aria-label="Share"><i class="fas fa-heart" aria-hidden="true"></i> Share</a></div>
                     </div>
                     <div class="copy-link">
                         <div class="trigger copy-link-btn"><a href="#" data-share-action="copy" aria-label="Copy link"><i class="fas fa-link" aria-hidden="true"></i> Copy link</a></div>
