@@ -1109,8 +1109,8 @@
     }
 
     function updateAllocationSummary() {
-        var allocationResults = el('wtc-allocationResults');
-        if (!allocationResults) return;
+        var totalsBox = el('wtc-allocationTotalsBox');
+        if (!totalsBox) return;
 
         var taxRate = parseFloat(el('wtc-taxRate').value);
         var revenue = calculateRevenue(taxRate);
@@ -1120,7 +1120,7 @@
         var remainingRevenue = Math.max(revenue - selectedPolicyFunding, 0);
         var isOverBudget = overrunAmount > 0;
 
-        var existingSummary = allocationResults.querySelector('.allocation-summary');
+        var existingSummary = totalsBox.querySelector('.allocation-summary');
         if (existingSummary) {
             existingSummary.parentNode.removeChild(existingSummary);
         }
@@ -1165,7 +1165,7 @@
         }
 
         summary.appendChild(budgetHint);
-        allocationResults.appendChild(summary);
+        totalsBox.appendChild(summary);
     }
 
     function handlePolicyRowClick(event) {
