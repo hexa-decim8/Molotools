@@ -736,11 +736,10 @@ class Billionaire_Wealth_Tax_Calculator {
         <div class="calculator-container wealth-tax-widget mode-advanced">
             <div class="wtc-share-block wtc-share-block-top">
                 <div class="container" aria-label="Share this calculator">
-                    <div class="tip">Share</div>
                     <div class="share-window">
                         <div class="share-bar">
                             <div class="trigger"><a href="#" data-share-action="facebook" target="_blank" rel="noopener noreferrer" aria-label="Share on Facebook"><i class="fab fa-facebook-f" aria-hidden="true"></i><span class="wtc-sr-only">Facebook</span></a></div>
-                            <div class="trigger"><a href="#" data-share-action="twitter" target="_blank" rel="noopener noreferrer" aria-label="Share on Twitter"><i class="fab fa-twitter" aria-hidden="true"></i><span class="wtc-sr-only">Twitter</span></a></div>
+                            <div class="trigger"><a href="#" data-share-action="twitter" target="_blank" rel="noopener noreferrer" aria-label="Share on X"><i class="fab fa-x-twitter" aria-hidden="true"></i><span class="wtc-sr-only">X</span></a></div>
                             <div class="trigger"><a href="#" data-share-action="pinterest" target="_blank" rel="noopener noreferrer" aria-label="Share on Pinterest"><i class="fab fa-pinterest-p" aria-hidden="true"></i><span class="wtc-sr-only">Pinterest</span></a></div>
                             <div class="trigger"><a href="#" data-share-action="linkedin" target="_blank" rel="noopener noreferrer" aria-label="Share on LinkedIn"><i class="fab fa-linkedin-in" aria-hidden="true"></i><span class="wtc-sr-only">LinkedIn</span></a></div>
                             <div class="trigger"><a href="#" data-share-action="whatsapp" target="_blank" rel="noopener noreferrer" aria-label="Share on WhatsApp"><i class="fab fa-whatsapp" aria-hidden="true"></i><span class="wtc-sr-only">WhatsApp</span></a></div>
@@ -751,7 +750,10 @@ class Billionaire_Wealth_Tax_Calculator {
                         <div class="trigger share-btn"><a href="#" data-share-action="copy" aria-label="Copy share link"><i class="fas fa-plus" aria-hidden="true"></i> Share</a></div>
                     </div>
                     <div class="like">
-                        <div class="trigger like-btn"><a href="#" aria-label="Like"><i class="fas fa-heart" aria-hidden="true"></i> Like</a></div>
+                        <div class="trigger like-btn"><a href="#" aria-label="Share"><i class="fas fa-heart" aria-hidden="true"></i> Share</a></div>
+                    </div>
+                    <div class="copy-link">
+                        <div class="trigger copy-link-btn"><a href="#" data-share-action="copy" aria-label="Copy link"><i class="fas fa-link" aria-hidden="true"></i> Copy link</a></div>
                     </div>
                 </div>
                 <p class="wtc-share-status" aria-live="polite"></p>
@@ -857,11 +859,10 @@ class Billionaire_Wealth_Tax_Calculator {
 
             <div class="wtc-share-block wtc-share-block-bottom">
                 <div class="container" aria-label="Share this calculator">
-                    <div class="tip">Share</div>
                     <div class="share-window">
                         <div class="share-bar">
                             <div class="trigger"><a href="#" data-share-action="facebook" target="_blank" rel="noopener noreferrer" aria-label="Share on Facebook"><i class="fab fa-facebook-f" aria-hidden="true"></i><span class="wtc-sr-only">Facebook</span></a></div>
-                            <div class="trigger"><a href="#" data-share-action="twitter" target="_blank" rel="noopener noreferrer" aria-label="Share on Twitter"><i class="fab fa-twitter" aria-hidden="true"></i><span class="wtc-sr-only">Twitter</span></a></div>
+                            <div class="trigger"><a href="#" data-share-action="twitter" target="_blank" rel="noopener noreferrer" aria-label="Share on X"><i class="fab fa-x-twitter" aria-hidden="true"></i><span class="wtc-sr-only">X</span></a></div>
                             <div class="trigger"><a href="#" data-share-action="pinterest" target="_blank" rel="noopener noreferrer" aria-label="Share on Pinterest"><i class="fab fa-pinterest-p" aria-hidden="true"></i><span class="wtc-sr-only">Pinterest</span></a></div>
                             <div class="trigger"><a href="#" data-share-action="linkedin" target="_blank" rel="noopener noreferrer" aria-label="Share on LinkedIn"><i class="fab fa-linkedin-in" aria-hidden="true"></i><span class="wtc-sr-only">LinkedIn</span></a></div>
                             <div class="trigger"><a href="#" data-share-action="whatsapp" target="_blank" rel="noopener noreferrer" aria-label="Share on WhatsApp"><i class="fab fa-whatsapp" aria-hidden="true"></i><span class="wtc-sr-only">WhatsApp</span></a></div>
@@ -872,7 +873,10 @@ class Billionaire_Wealth_Tax_Calculator {
                         <div class="trigger share-btn"><a href="#" data-share-action="copy" aria-label="Copy share link"><i class="fas fa-plus" aria-hidden="true"></i> Share</a></div>
                     </div>
                     <div class="like">
-                        <div class="trigger like-btn"><a href="#" aria-label="Like"><i class="fas fa-heart" aria-hidden="true"></i> Like</a></div>
+                        <div class="trigger like-btn"><a href="#" aria-label="Share"><i class="fas fa-heart" aria-hidden="true"></i> Share</a></div>
+                    </div>
+                    <div class="copy-link">
+                        <div class="trigger copy-link-btn"><a href="#" data-share-action="copy" aria-label="Copy link"><i class="fas fa-link" aria-hidden="true"></i> Copy link</a></div>
                     </div>
                 </div>
                 <p class="wtc-share-status" aria-live="polite"></p>

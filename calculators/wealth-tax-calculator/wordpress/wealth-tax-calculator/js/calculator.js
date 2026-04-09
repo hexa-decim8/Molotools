@@ -938,15 +938,35 @@
         setTaxRate(currentRate + 1, true);
     }
 
+    function syncPolicyAllocationRows(allocationResults) {
+        var exampleRows = allocationResults.querySelectorAll('.allocation-example-row');
+        for (var r = 0; r < exampleRows.length; r++) {
+            var row = exampleRows[r];
+            var policy = row.getAttribute('data-policy');
+            var index = row.getAttribute('data-index');
+            var isEnabled = isOptionEnabled(policy, index);
+
+            if (isEnabled) {
+                row.classList.add('is-enabled');
+            } else {
+                row.classList.remove('is-enabled');
+            }
+
+            var rowFill = row.querySelector('.allocation-row-fill');
+            if (rowFill) {
+                rowFill.style.width = isEnabled ? '100%' : '0%';
+            }
+
+            var optionInput = row.querySelector('.policy-option-input');
+            if (optionInput) {
+                optionInput.checked = isEnabled;
+            }
+        }
+    }
+
     function updatePolicyAllocation() {
         var allocationResults = el('wtc-allocationResults');
         if (!allocationResults) return;
-
-        var slider = el('wtc-taxRate');
-        if (!slider) return;
-
-        var taxRate = parseFloat(slider.value);
-        var revenue = calculateRevenue(taxRate);
 
         if (selectedPolicies.length === 0) {
             selectedPolicyOptions = {};
@@ -955,128 +975,127 @@
             prompt.textContent = 'No policy categories are currently available.';
             allocationResults.innerHTML = '';
             allocationResults.appendChild(prompt);
+            allocationResults.setAttribute('data-rendered', 'false');
             return;
         }
 
-        allocationResults.innerHTML = ''; // Clear existing content
+        var shouldRender = allocationResults.getAttribute('data-rendered') !== 'true';
 
-        for (var i = 0; i < selectedPolicies.length; i++) {
-            var policy = selectedPolicies[i];
-            var policyExamples = POLICY_EXAMPLES[policy] || [];
-            var availableExamples = [];
-            var isCollapsed = collapsedPolicyGroups.indexOf(policy) > -1;
+        if (shouldRender) {
+            allocationResults.innerHTML = '';
 
-            for (var j = 0; j < policyExamples.length; j++) {
-                availableExamples.push({
-                    example: policyExamples[j],
-                    index: j
-                });
-            }
+            for (var i = 0; i < selectedPolicies.length; i++) {
+                var policy = selectedPolicies[i];
+                var policyExamples = POLICY_EXAMPLES[policy] || [];
+                var availableExamples = [];
 
-            var group = document.createElement('div');
-            group.className = 'allocation-group';
-
-            var groupContent = document.createElement('div');
-            groupContent.className = 'allocation-group-content';
-
-            if (availableExamples.length > 0) {
-                var examplesContainer = document.createElement('div');
-                examplesContainer.className = 'allocation-example-list';
-
-                for (var k = 0; k < availableExamples.length; k++) {
-                    var available = availableExamples[k];
-                    var exampleData = available.example;
-                    var policyOptionKey = getPolicyOptionKey(policy, available.index);
-                    var isEnabled = isOptionEnabled(policy, available.index);
-                    var fillColor = POLICY_FILL_COLORS[policy] || '#888';
-                    var enabledData = isEnabled ? selectedPolicyOptions[policyOptionKey] : null;
-                    var itemMaxAmount = (typeof exampleData.maxAmount === 'number') ? exampleData.maxAmount : getFundingAmount(exampleData);
-
-                    var exampleRow = document.createElement('div');
-                    exampleRow.className = 'allocation-example-row' + (isEnabled ? ' is-enabled' : '');
-                    exampleRow.setAttribute('data-policy', policy);
-                    exampleRow.setAttribute('data-index', String(available.index));
-                    exampleRow.style.setProperty('--fill-color', fillColor);
-
-                    var rowFill = document.createElement('div');
-                    rowFill.className = 'allocation-row-fill';
-                    rowFill.style.width = isEnabled ? '100%' : '0%';
-
-                    var rowContent = document.createElement('div');
-                    rowContent.className = 'allocation-row-content';
-
-                    var optionWrapper = document.createElement('div');
-                    optionWrapper.className = 'policy-option-checkbox';
-
-                    var checkboxWrapper = document.createElement('div');
-                    checkboxWrapper.className = 'checkbox-wrapper-50';
-
-                    var optionInput = document.createElement('input');
-                    optionInput.type = 'checkbox';
-                    optionInput.className = 'plus-minus policy-option-input';
-                    optionInput.checked = isEnabled;
-                    optionInput.setAttribute('aria-label', 'Toggle policy option');
-
-                    checkboxWrapper.appendChild(optionInput);
-
-                    var optionText = document.createElement('span');
-                    optionText.className = 'policy-option-text';
-                    optionText.textContent = exampleData.description;
-
-                    optionWrapper.appendChild(checkboxWrapper);
-                    optionWrapper.appendChild(optionText);
-
-                    var optionMeta = document.createElement('div');
-                    optionMeta.className = 'policy-option-meta';
-
-                    var optionCost = document.createElement('span');
-                    optionCost.className = 'policy-option-cost';
-                    optionCost.textContent = formatCostLabel(exampleData);
-
-                    var optionSource = document.createElement('a');
-                    optionSource.className = 'example-source';
-                    optionSource.href = '#' + getPolicySourceAnchorId(policy, available.index);
-                    optionSource.textContent = 'source';
-
-                    optionMeta.appendChild(optionCost);
-                    optionMeta.appendChild(optionSource);
-
-                    rowContent.appendChild(optionWrapper);
-                    rowContent.appendChild(optionMeta);
-
-                    exampleRow.appendChild(rowFill);
-                    exampleRow.appendChild(rowContent);
-                    examplesContainer.appendChild(exampleRow);
+                for (var j = 0; j < policyExamples.length; j++) {
+                    availableExamples.push({
+                        example: policyExamples[j],
+                        index: j
+                    });
                 }
 
-                groupContent.appendChild(examplesContainer);
-            } else {
-                var emptyMessage = document.createElement('p');
-                emptyMessage.className = 'allocation-empty';
-                emptyMessage.textContent = 'No policy options currently available for this category.';
-                groupContent.appendChild(emptyMessage);
+                var group = document.createElement('div');
+                group.className = 'allocation-group';
+
+                var groupContent = document.createElement('div');
+                groupContent.className = 'allocation-group-content';
+
+                if (availableExamples.length > 0) {
+                    var examplesContainer = document.createElement('div');
+                    examplesContainer.className = 'allocation-example-list';
+
+                    for (var k = 0; k < availableExamples.length; k++) {
+                        var available = availableExamples[k];
+                        var exampleData = available.example;
+                        var isEnabled = isOptionEnabled(policy, available.index);
+                        var fillColor = POLICY_FILL_COLORS[policy] || '#888';
+
+                        var exampleRow = document.createElement('div');
+                        exampleRow.className = 'allocation-example-row' + (isEnabled ? ' is-enabled' : '');
+                        exampleRow.setAttribute('data-policy', policy);
+                        exampleRow.setAttribute('data-index', String(available.index));
+                        exampleRow.style.setProperty('--fill-color', fillColor);
+
+                        var rowFill = document.createElement('div');
+                        rowFill.className = 'allocation-row-fill';
+                        rowFill.style.width = isEnabled ? '100%' : '0%';
+
+                        var rowContent = document.createElement('div');
+                        rowContent.className = 'allocation-row-content';
+
+                        var optionWrapper = document.createElement('div');
+                        optionWrapper.className = 'policy-option-checkbox';
+
+                        var checkboxWrapper = document.createElement('div');
+                        checkboxWrapper.className = 'checkbox-wrapper-50';
+
+                        var optionInput = document.createElement('input');
+                        optionInput.type = 'checkbox';
+                        optionInput.className = 'plus-minus policy-option-input';
+                        optionInput.checked = isEnabled;
+                        optionInput.setAttribute('aria-label', 'Toggle policy option');
+
+                        checkboxWrapper.appendChild(optionInput);
+
+                        var optionText = document.createElement('span');
+                        optionText.className = 'policy-option-text';
+                        optionText.textContent = exampleData.description;
+
+                        optionWrapper.appendChild(checkboxWrapper);
+                        optionWrapper.appendChild(optionText);
+
+                        var optionMeta = document.createElement('div');
+                        optionMeta.className = 'policy-option-meta';
+
+                        var optionCost = document.createElement('span');
+                        optionCost.className = 'policy-option-cost';
+                        optionCost.textContent = formatCostLabel(exampleData);
+
+                        var optionSource = document.createElement('a');
+                        optionSource.className = 'example-source';
+                        optionSource.href = '#' + getPolicySourceAnchorId(policy, available.index);
+                        optionSource.textContent = 'source';
+
+                        optionMeta.appendChild(optionCost);
+                        optionMeta.appendChild(optionSource);
+
+                        rowContent.appendChild(optionWrapper);
+                        rowContent.appendChild(optionMeta);
+
+                        exampleRow.appendChild(rowFill);
+                        exampleRow.appendChild(rowContent);
+                        examplesContainer.appendChild(exampleRow);
+                    }
+
+                    groupContent.appendChild(examplesContainer);
+                } else {
+                    var emptyMessage = document.createElement('p');
+                    emptyMessage.className = 'allocation-empty';
+                    emptyMessage.textContent = 'No policy options currently available for this category.';
+                    groupContent.appendChild(emptyMessage);
+                }
+
+                group.appendChild(groupContent);
+                allocationResults.appendChild(group);
             }
 
-            group.appendChild(groupContent);
-            allocationResults.appendChild(group);
+            var exampleRows = allocationResults.querySelectorAll('.allocation-example-row');
+            for (var r = 0; r < exampleRows.length; r++) {
+                exampleRows[r].addEventListener('click', handlePolicyRowClick);
+            }
+
+            var optionInputs = allocationResults.querySelectorAll('.policy-option-input');
+            for (var s = 0; s < optionInputs.length; s++) {
+                optionInputs[s].addEventListener('change', handlePolicyToggleInput);
+                optionInputs[s].addEventListener('click', function (e) { e.stopPropagation(); });
+            }
+
+            allocationResults.setAttribute('data-rendered', 'true');
         }
 
-        var policyGroupToggles = allocationResults.querySelectorAll('.allocation-group-toggle');
-        for (var p = 0; p < policyGroupToggles.length; p++) {
-            // Event listener removed: policy groups are now always visible
-        }
-
-        var exampleRows = allocationResults.querySelectorAll('.allocation-example-row');
-        for (var r = 0; r < exampleRows.length; r++) {
-            exampleRows[r].addEventListener('click', handlePolicyRowClick);
-        }
-
-        var optionInputs = allocationResults.querySelectorAll('.policy-option-input');
-        for (var s = 0; s < optionInputs.length; s++) {
-            optionInputs[s].addEventListener('change', handlePolicyToggleInput);
-            optionInputs[s].addEventListener('click', function (e) { e.stopPropagation(); });
-        }
-
+        syncPolicyAllocationRows(allocationResults);
         updateAllocationSummary();
     }
 
@@ -1127,7 +1146,7 @@
         budgetHint.className = 'allocation-budget-hint';
         if (isOverBudget) {
             budgetHint.className += ' allocation-overrun-message';
-            budgetHint.textContent = 'You need to tax billionaires more. Use the button to raise the rate by 1%.';
+            budgetHint.textContent = 'You need to tax billionaires more! Use the button to raise the rate by 1%.';
         } else {
             budgetHint.textContent = 'Selected policy costs are within available revenue.';
         }

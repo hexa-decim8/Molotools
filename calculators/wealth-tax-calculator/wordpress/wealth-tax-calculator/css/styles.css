@@ -149,18 +149,21 @@
 }
 
 .calculator-container .wtc-share-block .trigger.share-btn i,
-.calculator-container .wtc-share-block .trigger.like-btn i {
+.calculator-container .wtc-share-block .trigger.like-btn i,
+.calculator-container .wtc-share-block .trigger.copy-link-btn i {
     margin-right: 5px;
 }
 
 .calculator-container .wtc-share-block .like,
-.calculator-container .wtc-share-block .share {
+.calculator-container .wtc-share-block .share,
+.calculator-container .wtc-share-block .copy-link {
     transform: skew(-10deg);
     margin-left: 10px;
 }
 
 .calculator-container .wtc-share-block .like .trigger,
-.calculator-container .wtc-share-block .share .trigger {
+.calculator-container .wtc-share-block .share .trigger,
+.calculator-container .wtc-share-block .copy-link .trigger {
     width: 82px;
     border: 1px solid rgba(35, 48, 113, 0.35);
 }
@@ -1141,8 +1144,8 @@
 
 .calculator-container .allocation-pinata-drop {
     margin: 8px clamp(6px, 4%, 24px) 4px 0;
-    align-self: flex-end;
-    display: inline-flex;
+    display: flex;
+    width: 100%;
     animation: wtcPinataDrop 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -1156,9 +1159,10 @@
     box-sizing: border-box;
     color: #fff;
     cursor: pointer;
-    display: inline-flex;
+    display: flex;
     flex-direction: row;
     flex-shrink: 0;
+    flex: 1;
     font-family: Eina01, sans-serif;
     font-size: 16px;
     font-weight: 800;
@@ -1178,7 +1182,6 @@
     -webkit-user-select: none;
     touch-action: manipulation;
     vertical-align: middle;
-    width: auto;
     word-break: keep-all;
     z-index: 0;
 }
