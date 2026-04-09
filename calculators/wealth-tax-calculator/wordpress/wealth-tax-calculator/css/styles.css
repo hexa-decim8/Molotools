@@ -71,6 +71,11 @@
 }
 
 .calculator-container .wtc-share-block {
+    --wtc-share-icon-width: 41px;
+    --wtc-share-visible-icons: 2;
+    --wtc-share-total-icons: 7;
+    --wtc-share-collapsed-width: calc(var(--wtc-share-icon-width) * var(--wtc-share-visible-icons));
+    --wtc-share-expanded-width: calc(var(--wtc-share-icon-width) * var(--wtc-share-total-icons));
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -88,6 +93,7 @@
 
 .calculator-container .wtc-share-block .container {
     display: flex;
+    flex-wrap: nowrap;
     justify-content: flex-end;
     position: relative;
     margin: 0;
@@ -159,6 +165,11 @@
     margin-left: 10px;
 }
 
+.calculator-container .wtc-share-block .share-window,
+.calculator-container .wtc-share-block .copy-link {
+    flex: 0 0 auto;
+}
+
 .calculator-container .wtc-share-block .copy-link {
     margin-left: 14px;
 }
@@ -171,7 +182,12 @@
 
 .calculator-container .wtc-share-block .copy-link .trigger {
     width: auto;
+    min-width: 122px;
     padding: 0 14px;
+}
+
+.calculator-container .wtc-share-block .copy-link .trigger a {
+    white-space: nowrap;
 }
 
 .calculator-container .wtc-share-block .share {
@@ -181,11 +197,14 @@
 .calculator-container .wtc-share-block .share-window {
     transform: skew(-10deg);
     overflow: hidden;
+    width: var(--wtc-share-expanded-width);
+    display: flex;
+    justify-content: flex-end;
 }
 
 .calculator-container .wtc-share-block .share-bar {
     position: relative;
-    width: 82px;
+    width: var(--wtc-share-collapsed-width);
     height: 40px;
     transition: width 0.4s ease 0.2s;
 }
@@ -203,18 +222,18 @@
 }
 
 .calculator-container .wtc-share-block .share-bar:hover {
-    width: 247px;
+    width: var(--wtc-share-expanded-width);
     transition: width 0.4s ease;
 }
 
 .calculator-container .wtc-share-block .share-bar .trigger {
     position: absolute;
     top: 0;
-    width: 42px;
+    width: var(--wtc-share-icon-width);
     border-width: 1px;
     border-style: solid;
     border-color: transparent transparent transparent rgba(35, 48, 113, 0.35);
-    transition: left 0s ease 0.45s, color 0.2s, border 0.2s;
+    transition: color 0.2s, border 0.2s;
 }
 
 .calculator-container .wtc-share-block .share-bar .trigger:nth-child(1) {
@@ -226,39 +245,23 @@
 }
 
 .calculator-container .wtc-share-block .share-bar .trigger:nth-child(3) {
-    left: 102px;
+    left: 82px;
 }
 
 .calculator-container .wtc-share-block .share-bar .trigger:nth-child(4) {
-    left: 143px;
+    left: 123px;
 }
 
 .calculator-container .wtc-share-block .share-bar .trigger:nth-child(5) {
-    left: 184px;
+    left: 164px;
 }
 
 .calculator-container .wtc-share-block .share-bar .trigger:nth-child(6) {
-    left: 225px;
-}
-
-.calculator-container .wtc-share-block .share-bar:hover .trigger:nth-child(3) {
-    left: 82px;
-    transition: left 0.45s ease 0.06s, color 0.2s, border 0.2s;
-}
-
-.calculator-container .wtc-share-block .share-bar:hover .trigger:nth-child(4) {
-    left: 123px;
-    transition: left 0.45s ease 0.12s, color 0.2s, border 0.2s;
-}
-
-.calculator-container .wtc-share-block .share-bar:hover .trigger:nth-child(5) {
-    left: 164px;
-    transition: left 0.45s ease 0.18s, color 0.2s, border 0.2s;
-}
-
-.calculator-container .wtc-share-block .share-bar:hover .trigger:nth-child(6) {
     left: 205px;
-    transition: left 0.45s ease 0.24s, color 0.2s, border 0.2s;
+}
+
+.calculator-container .wtc-share-block .share-bar .trigger:nth-child(7) {
+    left: 246px;
 }
 
 .calculator-container .wtc-share-block-top {
