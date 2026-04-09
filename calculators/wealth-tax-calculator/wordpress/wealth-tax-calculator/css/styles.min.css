@@ -159,6 +159,10 @@
     margin-left: 10px;
 }
 
+.calculator-container .wtc-share-block .copy-link {
+    margin-left: 14px;
+}
+
 .calculator-container .wtc-share-block .like .trigger,
 .calculator-container .wtc-share-block .share .trigger {
     width: 82px;
