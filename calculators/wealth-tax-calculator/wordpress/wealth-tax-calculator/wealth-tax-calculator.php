@@ -819,12 +819,12 @@ class Billionaire_Wealth_Tax_Calculator {
                         </div>
                     </div>
 
+                    <div id="wtc-allocationTotalsBox" class="allocation-totals-box"></div>
+
                     <div class="policy-allocation-section">
                         <h3 class="policy-header">Allocate Revenue to Policies</h3>
                         <p class="policy-description">Use the checkboxes below to include or exclude individual policy options.</p>
-                        
-                        <div id="wtc-allocationTotalsBox" class="allocation-totals-box"></div>
-                        
+
                         <div class="allocation-results" id="wtc-allocationResults">
                             <p class="allocation-prompt">Loading policy options...</p>
                         </div>

@@ -239,6 +239,7 @@
 
     function toggleGroupCollapse(policyGroup) {
         var index = collapsedPolicyGroups.indexOf(policyGroup);
+        var isNowCollapsed = index === -1;
         if (index > -1) {
             // Currently collapsed, expand it
             collapsedPolicyGroups.splice(index, 1);
@@ -246,13 +247,21 @@
             // Currently expanded, collapse it
             collapsedPolicyGroups.push(policyGroup);
         }
-        
-        // Update the UI to reflect the new state
-        var allocationResults = document.getElementById('wtc-allocation-results');
-        if (allocationResults && allocationResults.previousElementSibling) {
-            allocationResults.previousElementSibling.classList.remove('is-collapsed');
+
+        // Directly update the DOM — avoid a full re-render which would lose event listeners
+        var toggle = document.querySelector('.allocation-group-toggle[data-policy-group="' + policyGroup + '"]');
+        if (!toggle) return;
+        var group = toggle.parentElement;
+        var content = group.querySelector('.allocation-group-content');
+        if (isNowCollapsed) {
+            group.classList.add('is-collapsed');
+            if (content) content.classList.add('collapsed');
+            toggle.setAttribute('aria-expanded', 'false');
+        } else {
+            group.classList.remove('is-collapsed');
+            if (content) content.classList.remove('collapsed');
+            toggle.setAttribute('aria-expanded', 'true');
         }
-        renderPolicyAllocationResults();
     }
 
     function handleGroupToggleClick(event) {
@@ -994,7 +1003,7 @@
     function updatePolicyAllocation() {
         var allocationResults = el('wtc-allocationResults');
         if (!allocationResults) return;
-        ensureAllocationTotalsAtTop();
+        ensureAllocationTotalsBetweenSliderAndPolicy();
 
         if (selectedPolicies.length === 0) {
             selectedPolicyOptions = {};
@@ -1004,6 +1013,7 @@
             allocationResults.innerHTML = '';
             allocationResults.appendChild(prompt);
             allocationResults.setAttribute('data-rendered', 'false');
+            updateAllocationSummary();
             return;
         }
 
@@ -1165,22 +1175,27 @@
         return total;
     }
 
-    function ensureAllocationTotalsAtTop() {
-        var policySection = document.querySelector('.policy-allocation-section');
+    function ensureAllocationTotalsBetweenSliderAndPolicy() {
+        var calculatorInputs = document.querySelector('.calculator-inputs');
+        var inputSection = calculatorInputs ? calculatorInputs.querySelector('.input-section') : null;
+        var policySection = calculatorInputs ? calculatorInputs.querySelector('.policy-allocation-section') : null;
         var totalsBox = el('wtc-allocationTotalsBox');
-        var allocationResults = el('wtc-allocationResults');
 
-        if (!policySection || !totalsBox || !allocationResults) {
+        if (!calculatorInputs || !inputSection || !policySection || !totalsBox) {
             return;
         }
 
-        if (totalsBox.parentNode !== policySection || totalsBox.nextElementSibling !== allocationResults) {
-            policySection.insertBefore(totalsBox, allocationResults);
+        var isInExpectedSpot = totalsBox.parentNode === calculatorInputs
+            && totalsBox.previousElementSibling === inputSection
+            && totalsBox.nextElementSibling === policySection;
+
+        if (!isInExpectedSpot) {
+            calculatorInputs.insertBefore(totalsBox, policySection);
         }
     }
 
     function updateAllocationSummary() {
-        ensureAllocationTotalsAtTop();
+        ensureAllocationTotalsBetweenSliderAndPolicy();
 
         var totalsBox = el('wtc-allocationTotalsBox');
         if (!totalsBox) return;
@@ -1368,11 +1383,20 @@
         }
 
         var policySection = document.querySelector('.policy-allocation-section');
+        var totalsBox = el('wtc-allocationTotalsBox');
         if (policySection) {
             if (mode === 'basic') {
                 policySection.classList.add('hidden');
             } else {
                 policySection.classList.remove('hidden');
+            }
+        }
+
+        if (totalsBox) {
+            if (mode === 'basic') {
+                totalsBox.classList.add('hidden');
+            } else {
+                totalsBox.classList.remove('hidden');
             }
         }
 

@@ -718,6 +718,10 @@
     display: none;
 }
 
+.calculator-container .allocation-totals-box.hidden {
+    display: none;
+}
+
 .calculator-container .revenue-box.hidden {
     display: none;
 }
@@ -813,30 +817,39 @@
 }
 
 .calculator-container .allocation-group {
-    border-bottom: 1px solid #E8D7C3;
+    background: #fff;
+    border: 1px solid #E1B682;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    overflow: hidden;
 }
 
 .calculator-container .allocation-group:last-of-type {
-    border-bottom: none;
+    margin-bottom: 0;
 }
 
 .calculator-container .allocation-group-toggle {
     display: block;
     width: 100%;
     padding: 12px 16px;
-    background: transparent;
+    background: rgba(225, 182, 130, 0.18);
     border: none;
+    border-bottom: 1px solid #E8D7C3;
     color: #131110;
-    font-size: 1.1rem;
-    font-weight: 500;
+    font-size: 1.05rem;
+    font-weight: 600;
     text-align: left;
     cursor: pointer;
     transition: background-color 0.2s ease;
     font-family: var(--wtc-font-secondary);
 }
 
+.calculator-container .allocation-group.is-collapsed .allocation-group-toggle {
+    border-bottom: none;
+}
+
 .calculator-container .allocation-group-toggle:hover {
-    background-color: rgba(35, 48, 113, 0.05);
+    background-color: rgba(225, 182, 130, 0.35);
 }
 
 .calculator-container .allocation-group-main {
@@ -872,6 +885,7 @@
 
 .calculator-container .allocation-group-content {
     display: block;
+    padding: 0 4px 8px;
 }
 
 .calculator-container .allocation-group-content.collapsed {
