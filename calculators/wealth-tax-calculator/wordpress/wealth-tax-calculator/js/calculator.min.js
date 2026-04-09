@@ -1396,11 +1396,8 @@
         }
 
         if (totalsBox) {
-            if (mode === 'basic') {
-                totalsBox.classList.add('hidden');
-            } else {
-                totalsBox.classList.remove('hidden');
-            }
+            // Keep totals visible in both modes so over-budget controls stay available.
+            totalsBox.classList.remove('hidden');
         }
 
         // Toggle advanced-mode class so only advanced-only hidden UI is scoped in CSS.
