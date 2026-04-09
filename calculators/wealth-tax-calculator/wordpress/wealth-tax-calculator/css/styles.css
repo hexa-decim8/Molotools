@@ -836,7 +836,7 @@
     background: #233071;
     border: none;
     border-bottom: 1px solid rgba(18, 28, 80, 0.4);
-    color: #FBF0E4;
+    color: #FBF0E4 !important;
     font-size: 1.05rem;
     font-weight: 600;
     text-align: left;
@@ -859,7 +859,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    color: #FBF0E4;
+    color: #FBF0E4 !important;
 }
 
 .calculator-container .allocation-group-chevron {
@@ -896,7 +896,7 @@
 
 .calculator-container .allocation-category {
     font-size: 1.1rem;
-    color: #FBF0E4;
+    color: #FBF0E4 !important;
     font-weight: 500;
 }
 
