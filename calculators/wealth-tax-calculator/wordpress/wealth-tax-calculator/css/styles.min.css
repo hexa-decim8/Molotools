@@ -172,6 +172,11 @@
     border: 1px solid rgba(35, 48, 113, 0.35);
 }
 
+.calculator-container .wtc-share-block .copy-link .trigger {
+    width: auto;
+    padding: 0 14px;
+}
+
 .calculator-container .wtc-share-block .share {
     display: none;
 }
@@ -816,7 +821,7 @@
 }
 
 .calculator-container .allocation-group-toggle {
-    display: none;
+    display: block;
 }
 
 .calculator-container .allocation-group-main {
@@ -828,7 +833,7 @@
 }
 
 .calculator-container .allocation-group-chevron {
-    display: none;
+    display: block;
 }
 
 .calculator-container .allocation-group-content {
@@ -836,7 +841,7 @@
 }
 
 .calculator-container .allocation-group-content.collapsed {
-    display: block;
+    display: none;
 }
 
 .calculator-container .allocation-category {

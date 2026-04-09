@@ -237,6 +237,33 @@
         }
     }
 
+    function toggleGroupCollapse(policyGroup) {
+        var index = collapsedPolicyGroups.indexOf(policyGroup);
+        if (index > -1) {
+            // Currently collapsed, expand it
+            collapsedPolicyGroups.splice(index, 1);
+        } else {
+            // Currently expanded, collapse it
+            collapsedPolicyGroups.push(policyGroup);
+        }
+        
+        // Update the UI to reflect the new state
+        var allocationResults = document.getElementById('wtc-allocation-results');
+        if (allocationResults && allocationResults.previousElementSibling) {
+            allocationResults.previousElementSibling.classList.remove('is-collapsed');
+        }
+        renderPolicyAllocationResults();
+    }
+
+    function handleGroupToggleClick(event) {
+        event.preventDefault();
+        var toggle = event.currentTarget;
+        var policyGroup = toggle.getAttribute('data-policy-group');
+        if (policyGroup) {
+            toggleGroupCollapse(policyGroup);
+        }
+    }
+
     function enableAvailablePolicyOptionsForGroup(policyGroup) {
         var policyExamples = POLICY_EXAMPLES[policyGroup] || [];
         for (var i = 0; i < policyExamples.length; i++) {
@@ -999,8 +1026,31 @@
                 var group = document.createElement('div');
                 group.className = 'allocation-group';
 
+                // Create the toggle button
+                var groupToggle = document.createElement('button');
+                groupToggle.type = 'button';
+                groupToggle.className = 'allocation-group-toggle';
+                groupToggle.setAttribute('data-policy-group', policy);
+                groupToggle.setAttribute('aria-expanded', collapsedPolicyGroups.indexOf(policy) === -1 ? 'true' : 'false');
+
+                var groupMain = document.createElement('div');
+                groupMain.className = 'allocation-group-main';
+
+                var categoryLabel = document.createElement('span');
+                categoryLabel.className = 'allocation-category';
+                categoryLabel.textContent = POLICY_LABELS[policy];
+
+                var chevron = document.createElement('span');
+                chevron.className = 'allocation-group-chevron';
+                chevron.setAttribute('aria-hidden', 'true');
+
+                groupMain.appendChild(categoryLabel);
+                groupMain.appendChild(chevron);
+                groupToggle.appendChild(groupMain);
+
                 var groupContent = document.createElement('div');
-                groupContent.className = 'allocation-group-content';
+                groupContent.className = 'allocation-group-content' + (collapsedPolicyGroups.indexOf(policy) > -1 ? ' collapsed' : '');
+
 
                 if (availableExamples.length > 0) {
                     var examplesContainer = document.createElement('div');
@@ -1077,11 +1127,17 @@
                     groupContent.appendChild(emptyMessage);
                 }
 
+                group.appendChild(groupToggle);
                 group.appendChild(groupContent);
                 allocationResults.appendChild(group);
             }
 
-            var exampleRows = allocationResults.querySelectorAll('.allocation-example-row');
+            // Add event listeners for group toggles
+            var groupToggles = allocationResults.querySelectorAll('.allocation-group-toggle');
+            for (var t = 0; t < groupToggles.length; t++) {
+                groupToggles[t].addEventListener('click', handleGroupToggleClick);
+            }
+
             for (var r = 0; r < exampleRows.length; r++) {
                 exampleRows[r].addEventListener('click', handlePolicyRowClick);
             }
@@ -1121,51 +1177,92 @@
         var isOverBudget = overrunAmount > 0;
 
         var existingSummary = totalsBox.querySelector('.allocation-summary');
-        if (existingSummary) {
-            existingSummary.parentNode.removeChild(existingSummary);
+        var summary = existingSummary;
+        if (!summary) {
+            summary = document.createElement('div');
+            summary.className = 'allocation-summary';
+            totalsBox.appendChild(summary);
         }
 
-        var summary = document.createElement('div');
-        summary.className = 'allocation-summary' + (isOverBudget ? ' is-over-budget' : '');
+        if (isOverBudget) {
+            summary.classList.add('is-over-budget');
+        } else {
+            summary.classList.remove('is-over-budget');
+        }
 
-        var availableLine = document.createElement('span');
+        var availableLine = summary.querySelector('.allocation-available-line');
+        if (!availableLine) {
+            availableLine = document.createElement('span');
+            availableLine.className = 'allocation-available-line';
+            summary.appendChild(availableLine);
+        }
         availableLine.textContent = '10-year tax revenue available: ' + formatCurrency(revenue);
 
-        var selectedLine = document.createElement('span');
+        var selectedLine = summary.querySelector('.allocation-selected-line');
+        if (!selectedLine) {
+            selectedLine = document.createElement('span');
+            selectedLine.className = 'allocation-selected-line';
+            summary.appendChild(selectedLine);
+        }
         selectedLine.textContent = 'Selected policy funding: ' + formatCurrency(selectedPolicyFunding);
 
-        var budgetLine = document.createElement('span');
+        var budgetLine = summary.querySelector('.allocation-budget-line');
+        if (!budgetLine) {
+            budgetLine = document.createElement('span');
+            budgetLine.className = 'allocation-budget-line';
+            summary.appendChild(budgetLine);
+        }
+
+        budgetLine.classList.remove('allocation-budget-warning');
         if (isOverBudget) {
-            budgetLine.className = 'allocation-budget-warning';
+            budgetLine.classList.add('allocation-budget-warning');
             budgetLine.textContent = 'Over budget by: ' + formatCurrency(overrunAmount);
         } else {
             budgetLine.textContent = 'Remaining revenue: ' + formatCurrency(remainingRevenue);
         }
 
-        var budgetHint = document.createElement('span');
-        budgetHint.className = 'allocation-budget-hint';
+        var budgetHint = summary.querySelector('.allocation-budget-hint');
+        if (!budgetHint) {
+            budgetHint = document.createElement('span');
+            budgetHint.className = 'allocation-budget-hint';
+            summary.appendChild(budgetHint);
+        }
+
+        budgetHint.classList.remove('allocation-overrun-message');
         if (isOverBudget) {
-            budgetHint.className += ' allocation-overrun-message';
+            budgetHint.classList.add('allocation-overrun-message');
             budgetHint.textContent = 'You need to tax billionaires more! Use the button to raise the rate by 1%.';
         } else {
             budgetHint.textContent = 'Selected policy costs are within available revenue.';
         }
 
-        summary.appendChild(availableLine);
-        summary.appendChild(selectedLine);
-        summary.appendChild(budgetLine);
+        var existingPinataEl = summary.querySelector('.allocation-pinata-drop');
 
         if (isOverBudget) {
-            var pinataEl = createOverBudgetPinata(getCurrentTaxRate() >= TAX_RATE_MAX);
-            var pinataBtn = pinataEl.querySelector('.allocation-pinata-button');
-            if (pinataBtn) {
-                pinataBtn.addEventListener('click', handleOverBudgetPinataClick);
+            if (!existingPinataEl) {
+                var pinataEl = createOverBudgetPinata(getCurrentTaxRate() >= TAX_RATE_MAX);
+                var pinataBtn = pinataEl.querySelector('.allocation-pinata-button');
+                if (pinataBtn) {
+                    pinataBtn.addEventListener('click', handleOverBudgetPinataClick);
+                }
+                summary.insertBefore(pinataEl, budgetHint);
+            } else {
+                var existingPinataButton = existingPinataEl.querySelector('.allocation-pinata-button');
+                if (existingPinataButton) {
+                    var isAtMaxRate = getCurrentTaxRate() >= TAX_RATE_MAX;
+                    existingPinataButton.disabled = isAtMaxRate;
+                    if (isAtMaxRate) {
+                        existingPinataButton.setAttribute('aria-label', 'Maximum tax rate reached');
+                        existingPinataButton.classList.add('is-maxed');
+                    } else {
+                        existingPinataButton.setAttribute('aria-label', 'Increase tax rate by 1 percent');
+                        existingPinataButton.classList.remove('is-maxed');
+                    }
+                }
             }
-            summary.appendChild(pinataEl);
+        } else if (existingPinataEl) {
+            existingPinataEl.parentNode.removeChild(existingPinataEl);
         }
-
-        summary.appendChild(budgetHint);
-        totalsBox.appendChild(summary);
     }
 
     function handlePolicyRowClick(event) {

@@ -152,11 +152,11 @@
       ]
     },
     {
-      "policy": "Reduce or eliminate the employer-side payroll tax",
-      "description": "Reduce or eliminate the employer-side payroll tax on wages.",
-      "minCost": 8500000000000,
-      "maxCost": 8500000000000,
-      "costLabel": "$8.5 trillion over 10 years",
+      "policy": "Reduce employer-side payroll tax on wages to 25%",
+      "description": "Reduce employer-side payroll tax on wages to 25%.",
+      "minCost": 2125000000000,
+      "maxCost": 2125000000000,
+      "costLabel": "$2.125 trillion over 10 years",
       "sources": [
         {
           "text": "Monthly Budget Review: August 2024",
