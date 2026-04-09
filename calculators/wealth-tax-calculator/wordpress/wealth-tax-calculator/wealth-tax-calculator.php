@@ -725,6 +725,52 @@ class Billionaire_Wealth_Tax_Calculator {
         );
     }
 
+    private function format_currency( $amount ) {
+        if ( $amount >= 1e12 ) {
+            return '$' . number_format( $amount / 1e12, 2 ) . ' Trillion';
+        }
+
+        if ( $amount >= 1e9 ) {
+            return '$' . number_format( $amount / 1e9, 1 ) . ' Billion';
+        }
+
+        return '$' . number_format( round( $amount ) );
+    }
+
+    private function get_initial_policy_funding_total() {
+        return 290e9 + 300e9 + 1.1e12
+            + 152e9
+            + 2.5e12 + 90e9 + 2.125e12
+            + 959e9
+            + 856e9
+            + 700e9;
+    }
+
+    private function get_initial_allocation_summary_markup() {
+        $default_tax_rate = 2;
+        $revenue          = 4.4e12 * ( $default_tax_rate / 5 );
+        $selected_funding = $this->get_initial_policy_funding_total();
+        $overrun_amount   = max( $selected_funding - $revenue, 0 );
+        $remaining_amount = max( $revenue - $selected_funding, 0 );
+        $is_over_budget   = $overrun_amount > 0;
+
+        ob_start();
+        ?>
+        <div class="allocation-summary<?php echo $is_over_budget ? ' is-over-budget' : ''; ?>">
+            <span class="allocation-available-line"><?php echo esc_html( '10-year tax revenue available: ' . $this->format_currency( $revenue ) ); ?></span>
+            <span class="allocation-selected-line"><?php echo esc_html( 'Selected policy funding: ' . $this->format_currency( $selected_funding ) ); ?></span>
+            <span class="allocation-budget-line<?php echo $is_over_budget ? ' allocation-budget-warning' : ''; ?>">
+                <?php echo esc_html( $is_over_budget ? 'Over budget by: ' . $this->format_currency( $overrun_amount ) : 'Remaining revenue: ' . $this->format_currency( $remaining_amount ) ); ?>
+            </span>
+            <span class="allocation-budget-hint<?php echo $is_over_budget ? ' allocation-overrun-message' : ''; ?>">
+                <?php echo esc_html( $is_over_budget ? 'You need to tax billionaires more! Use the button to raise the rate by 1%.' : 'Selected policy costs are within available revenue.' ); ?>
+            </span>
+        </div>
+        <?php
+
+        return ob_get_clean();
+    }
+
     /**
      * Render the calculator HTML for the shortcode.
      *
@@ -819,7 +865,7 @@ class Billionaire_Wealth_Tax_Calculator {
                         </div>
                     </div>
 
-                    <div id="wtc-allocationTotalsBox" class="allocation-totals-box"></div>
+                    <div id="wtc-allocationTotalsBox" class="allocation-totals-box"><?php echo $this->get_initial_allocation_summary_markup(); ?></div>
 
                     <div class="policy-allocation-section">
                         <h3 class="policy-header">Allocate Revenue to Policies</h3>

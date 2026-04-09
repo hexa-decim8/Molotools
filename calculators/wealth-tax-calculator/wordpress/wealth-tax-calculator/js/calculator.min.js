@@ -251,7 +251,7 @@
         // Directly update the DOM — avoid a full re-render which would lose event listeners
         var toggle = document.querySelector('.allocation-group-toggle[data-policy-group="' + policyGroup + '"]');
         if (!toggle) return;
-        var group = toggle.parentElement;
+        var group = toggle.closest('.allocation-group');
         var content = group.querySelector('.allocation-group-content');
         if (isNowCollapsed) {
             group.classList.add('is-collapsed');
@@ -990,11 +990,14 @@
 
             var rowFill = row.querySelector('.allocation-row-fill');
             if (rowFill) {
-                rowFill.style.width = isEnabled ? '100%' : '0%';
+                var nextFillWidth = isEnabled ? '100%' : '0%';
+                if (rowFill.style.width !== nextFillWidth) {
+                    rowFill.style.width = nextFillWidth;
+                }
             }
 
             var optionInput = row.querySelector('.policy-option-input');
-            if (optionInput) {
+            if (optionInput && optionInput.checked !== isEnabled) {
                 optionInput.checked = isEnabled;
             }
         }
