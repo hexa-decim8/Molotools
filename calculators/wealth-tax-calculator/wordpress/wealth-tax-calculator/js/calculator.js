@@ -1380,12 +1380,20 @@
             return 'https://www.linkedin.com/sharing/share-offsite/?url=' + encodedUrl;
         }
 
-        if (action === 'x') {
+        if (action === 'twitter' || action === 'x') {
             return 'https://twitter.com/intent/tweet?url=' + encodedUrl + '&text=' + encodedText;
+        }
+
+        if (action === 'pinterest') {
+            return 'https://pinterest.com/pin/create/button/?url=' + encodedUrl + '&description=' + encodedText;
         }
 
         if (action === 'facebook') {
             return 'https://www.facebook.com/sharer/sharer.php?u=' + encodedUrl;
+        }
+
+        if (action === 'whatsapp') {
+            return 'https://api.whatsapp.com/send?text=' + encodedTextWithUrl;
         }
 
         if (action === 'bluesky') {
@@ -1436,6 +1444,7 @@
         for (var b = 0; b < shareBlocks.length; b++) {
             var shareBlock = shareBlocks[b];
             var shareButtons = shareBlock.querySelectorAll('[data-share-action]');
+            var likeLinks = shareBlock.querySelectorAll('.like-btn a');
             var statusEl = shareBlock.querySelector('.wtc-share-status');
 
             for (var i = 0; i < shareButtons.length; i++) {
@@ -1462,6 +1471,12 @@
                         });
                     };
                 }(statusEl)));
+            }
+
+            for (var l = 0; l < likeLinks.length; l++) {
+                likeLinks[l].addEventListener('click', function (event) {
+                    event.preventDefault();
+                });
             }
         }
     }

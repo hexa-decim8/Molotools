@@ -684,9 +684,16 @@ class Billionaire_Wealth_Tax_Calculator {
         $js_file  = ( defined( 'WP_DEBUG' ) && WP_DEBUG ) ? 'calculator.js' : 'calculator.min.js';
 
         wp_enqueue_style(
+            'wealth-tax-calculator-fontawesome',
+            'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css',
+            array(),
+            '6.5.2'
+        );
+
+        wp_enqueue_style(
             'wealth-tax-calculator-styles',
             $this->plugin_url . 'css/' . $css_file,
-            array(),
+            array( 'wealth-tax-calculator-fontawesome' ),
             WTC_VERSION
         );
 
@@ -727,6 +734,29 @@ class Billionaire_Wealth_Tax_Calculator {
         ob_start();
         ?>
         <div class="calculator-container wealth-tax-widget mode-advanced">
+            <div class="wtc-share-block wtc-share-block-top">
+                <div class="container" aria-label="Share this calculator">
+                    <div class="tip">Share</div>
+                    <div class="share-window">
+                        <div class="share-bar">
+                            <div class="trigger"><a href="#" data-share-action="facebook" target="_blank" rel="noopener noreferrer" aria-label="Share on Facebook"><i class="fab fa-facebook-f" aria-hidden="true"></i><span class="wtc-sr-only">Facebook</span></a></div>
+                            <div class="trigger"><a href="#" data-share-action="twitter" target="_blank" rel="noopener noreferrer" aria-label="Share on Twitter"><i class="fab fa-twitter" aria-hidden="true"></i><span class="wtc-sr-only">Twitter</span></a></div>
+                            <div class="trigger"><a href="#" data-share-action="pinterest" target="_blank" rel="noopener noreferrer" aria-label="Share on Pinterest"><i class="fab fa-pinterest-p" aria-hidden="true"></i><span class="wtc-sr-only">Pinterest</span></a></div>
+                            <div class="trigger"><a href="#" data-share-action="linkedin" target="_blank" rel="noopener noreferrer" aria-label="Share on LinkedIn"><i class="fab fa-linkedin-in" aria-hidden="true"></i><span class="wtc-sr-only">LinkedIn</span></a></div>
+                            <div class="trigger"><a href="#" data-share-action="whatsapp" target="_blank" rel="noopener noreferrer" aria-label="Share on WhatsApp"><i class="fab fa-whatsapp" aria-hidden="true"></i><span class="wtc-sr-only">WhatsApp</span></a></div>
+                            <div class="trigger"><a href="#" data-share-action="email" target="_blank" rel="noopener noreferrer" aria-label="Share by Email"><i class="fas fa-paper-plane" aria-hidden="true"></i><span class="wtc-sr-only">Email</span></a></div>
+                        </div>
+                    </div>
+                    <div class="share">
+                        <div class="trigger share-btn"><a href="#" data-share-action="copy" aria-label="Copy share link"><i class="fas fa-plus" aria-hidden="true"></i> Share</a></div>
+                    </div>
+                    <div class="like">
+                        <div class="trigger like-btn"><a href="#" aria-label="Like"><i class="fas fa-heart" aria-hidden="true"></i> Like</a></div>
+                    </div>
+                </div>
+                <p class="wtc-share-status" aria-live="polite"></p>
+            </div>
+
             <div class="calculator-content">
                 <div class="calculator-inputs">
                     <div class="mode-toggle-section">
@@ -748,7 +778,6 @@ class Billionaire_Wealth_Tax_Calculator {
                             <div id="wtc-pr-slider" class="wtc-dragdealer">
                                 <div class="wtc-stripe">
                                     <div id="wtc-highlight-fill" class="wtc-highlight-fill"></div>
-                                    <div id="wtc-highlight-threshold" class="wtc-highlight-threshold" aria-hidden="true"></div>
 
                                     <div class="handle">
                                         <div class="wtc-infobox" id="wtc-sliderInfobox">
@@ -827,14 +856,24 @@ class Billionaire_Wealth_Tax_Calculator {
             </div>
 
             <div class="wtc-share-block wtc-share-block-bottom">
-                <div class="wtc-share-actions" aria-label="Share this calculator">
-                    <span class="wtc-share-label">Share:</span>
-                    <button type="button" class="wtc-share-button" data-share-action="copy">Copy Link</button>
-                    <a href="#" class="wtc-share-button" data-share-action="email" target="_blank" rel="noopener noreferrer">Email</a>
-                    <a href="#" class="wtc-share-button" data-share-action="linkedin" target="_blank" rel="noopener noreferrer">LinkedIn</a>
-                    <a href="#" class="wtc-share-button" data-share-action="x" target="_blank" rel="noopener noreferrer">X</a>
-                    <a href="#" class="wtc-share-button" data-share-action="facebook" target="_blank" rel="noopener noreferrer">Facebook</a>
-                    <a href="#" class="wtc-share-button" data-share-action="bluesky" target="_blank" rel="noopener noreferrer">Bluesky</a>
+                <div class="container" aria-label="Share this calculator">
+                    <div class="tip">Share</div>
+                    <div class="share-window">
+                        <div class="share-bar">
+                            <div class="trigger"><a href="#" data-share-action="facebook" target="_blank" rel="noopener noreferrer" aria-label="Share on Facebook"><i class="fab fa-facebook-f" aria-hidden="true"></i><span class="wtc-sr-only">Facebook</span></a></div>
+                            <div class="trigger"><a href="#" data-share-action="twitter" target="_blank" rel="noopener noreferrer" aria-label="Share on Twitter"><i class="fab fa-twitter" aria-hidden="true"></i><span class="wtc-sr-only">Twitter</span></a></div>
+                            <div class="trigger"><a href="#" data-share-action="pinterest" target="_blank" rel="noopener noreferrer" aria-label="Share on Pinterest"><i class="fab fa-pinterest-p" aria-hidden="true"></i><span class="wtc-sr-only">Pinterest</span></a></div>
+                            <div class="trigger"><a href="#" data-share-action="linkedin" target="_blank" rel="noopener noreferrer" aria-label="Share on LinkedIn"><i class="fab fa-linkedin-in" aria-hidden="true"></i><span class="wtc-sr-only">LinkedIn</span></a></div>
+                            <div class="trigger"><a href="#" data-share-action="whatsapp" target="_blank" rel="noopener noreferrer" aria-label="Share on WhatsApp"><i class="fab fa-whatsapp" aria-hidden="true"></i><span class="wtc-sr-only">WhatsApp</span></a></div>
+                            <div class="trigger"><a href="#" data-share-action="email" target="_blank" rel="noopener noreferrer" aria-label="Share by Email"><i class="fas fa-paper-plane" aria-hidden="true"></i><span class="wtc-sr-only">Email</span></a></div>
+                        </div>
+                    </div>
+                    <div class="share">
+                        <div class="trigger share-btn"><a href="#" data-share-action="copy" aria-label="Copy share link"><i class="fas fa-plus" aria-hidden="true"></i> Share</a></div>
+                    </div>
+                    <div class="like">
+                        <div class="trigger like-btn"><a href="#" aria-label="Like"><i class="fas fa-heart" aria-hidden="true"></i> Like</a></div>
+                    </div>
                 </div>
                 <p class="wtc-share-status" aria-live="polite"></p>
             </div>
