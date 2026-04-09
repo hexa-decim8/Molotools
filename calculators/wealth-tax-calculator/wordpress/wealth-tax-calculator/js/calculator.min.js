@@ -994,6 +994,7 @@
     function updatePolicyAllocation() {
         var allocationResults = el('wtc-allocationResults');
         if (!allocationResults) return;
+        ensureAllocationTotalsAtTop();
 
         if (selectedPolicies.length === 0) {
             selectedPolicyOptions = {};
@@ -1024,7 +1025,7 @@
                 }
 
                 var group = document.createElement('div');
-                group.className = 'allocation-group';
+                group.className = 'allocation-group' + (collapsedPolicyGroups.indexOf(policy) > -1 ? ' is-collapsed' : '');
 
                 // Create the toggle button
                 var groupToggle = document.createElement('button');
@@ -1164,7 +1165,23 @@
         return total;
     }
 
+    function ensureAllocationTotalsAtTop() {
+        var policySection = document.querySelector('.policy-allocation-section');
+        var totalsBox = el('wtc-allocationTotalsBox');
+        var allocationResults = el('wtc-allocationResults');
+
+        if (!policySection || !totalsBox || !allocationResults) {
+            return;
+        }
+
+        if (totalsBox.parentNode !== policySection || totalsBox.nextElementSibling !== allocationResults) {
+            policySection.insertBefore(totalsBox, allocationResults);
+        }
+    }
+
     function updateAllocationSummary() {
+        ensureAllocationTotalsAtTop();
+
         var totalsBox = el('wtc-allocationTotalsBox');
         if (!totalsBox) return;
 

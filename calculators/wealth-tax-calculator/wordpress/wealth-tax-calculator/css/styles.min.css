@@ -822,6 +822,21 @@
 
 .calculator-container .allocation-group-toggle {
     display: block;
+    width: 100%;
+    padding: 12px 16px;
+    background: transparent;
+    border: none;
+    color: #131110;
+    font-size: 1.1rem;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    font-family: var(--wtc-font-secondary);
+}
+
+.calculator-container .allocation-group-toggle:hover {
+    background-color: rgba(35, 48, 113, 0.05);
 }
 
 .calculator-container .allocation-group-main {
@@ -833,7 +848,26 @@
 }
 
 .calculator-container .allocation-group-chevron {
-    display: block;
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    position: relative;
+    transition: transform 0.3s ease;
+}
+
+.calculator-container .allocation-group-chevron::after {
+    content: '▼';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.8rem;
+    color: #233071;
+}
+
+.calculator-container .allocation-group.is-collapsed .allocation-group-chevron {
+    transform: rotate(-90deg);
 }
 
 .calculator-container .allocation-group-content {
