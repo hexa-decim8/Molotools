@@ -936,7 +936,7 @@
 }
 
 .calculator-container .allocation-example-list {
-    padding: 8px 0 12px 20px;
+    padding: 8px 20px 12px 20px;
 }
 
 .calculator-container .allocation-example-row {
@@ -954,6 +954,11 @@
 
 .calculator-container .allocation-example-row:last-child {
     margin-bottom: 0;
+}
+
+.calculator-container.mode-advanced .allocation-example-row {
+    background: #ffffff;
+    --fill-color: #27ae60;
 }
 
 .calculator-container .allocation-row-fill {
@@ -1582,10 +1587,6 @@
         padding: 10px 14px;
     }
 
-    .calculator-container .allocation-group-main {
-        align-items: flex-start;
-    }
-
     .calculator-container .policy-option-meta {
         margin-left: 0;
         flex-wrap: wrap;
@@ -1716,7 +1717,6 @@
         font-size: 0.82rem;
     }
 
-    .calculator-container .allocation-group-main,
     .calculator-container .allocation-item {
         flex-direction: column;
         align-items: flex-start;
