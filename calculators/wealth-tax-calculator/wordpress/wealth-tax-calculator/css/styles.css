@@ -958,7 +958,7 @@
 
 .calculator-container.mode-advanced .allocation-example-row {
     background: #ffffff;
-    --fill-color: #27ae60;
+    --fill-color: #dc3545;
 }
 
 .calculator-container .allocation-row-fill {
@@ -968,13 +968,13 @@
     height: 100%;
     width: 0%;
     background: var(--fill-color, #888);
-    opacity: 0.2;
+    opacity: 0;
     pointer-events: none;
     transition: width 0.08s ease-out, opacity 0.15s ease;
 }
 
 .calculator-container .allocation-example-row.is-enabled .allocation-row-fill {
-    opacity: 0.35;
+    opacity: 1;
 }
 
 .calculator-container .allocation-row-content {
