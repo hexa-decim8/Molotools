@@ -48,12 +48,12 @@
     };
 
     var POLICY_FILL_COLORS = {
-        healthcare:   '#e05a5a',
-        education:    '#4a90d9',
-        business:     '#9b59b6',
-        directRelief: '#27ae60',
-        housing:      '#e67e22',
-        childcare:    '#1abc9c'
+        healthcare:   '#E74C3C',
+        education:    '#E74C3C',
+        business:     '#E74C3C',
+        directRelief: '#E74C3C',
+        housing:      '#E74C3C',
+        childcare:    '#E74C3C'
     };
 
     var SANDERS_POLICY_SOURCES = [
