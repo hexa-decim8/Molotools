@@ -8,6 +8,9 @@ on:
       - .github/workflows/browser-validation.yml
       - .github/workflows/build-plugin.yml
       - .github/tests/browser/**
+      - scripts/**
+      - package.json
+      - package-lock.json
       - calculators/wealth-tax-calculator/wordpress/wealth-tax-calculator/**
   push:
     branches:
@@ -16,6 +19,9 @@ on:
       - .github/workflows/browser-validation.yml
       - .github/workflows/build-plugin.yml
       - .github/tests/browser/**
+      - scripts/**
+      - package.json
+      - package-lock.json
       - calculators/wealth-tax-calculator/wordpress/wealth-tax-calculator/**
   workflow_dispatch:
 
@@ -40,6 +46,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
+
+      - name: Install repository tooling
+        run: npm ci
+
+      - name: Validate minified asset parity
+        run: npm run minify:check
 
       - name: Install Playwright test runner
         run: npm install --no-save @playwright/test@1.54.2

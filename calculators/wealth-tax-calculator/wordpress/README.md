@@ -49,7 +49,7 @@ Update behavior:
 
 ## Build and Release Model
 
-This project no longer uses a local npm build system.
+This project uses deterministic npm tooling for minified asset generation.
 
 Builds are produced by GitHub Actions using the workflow in `.github/workflows/build-plugin.yml`.
 
@@ -57,8 +57,10 @@ What the workflow does:
 - Resolves version from the plugin header (or optional manual dispatch input)
 - Validates version consistency between plugin header `Version` and `WTC_VERSION`
 - Validates changelog entry for the release version
+- Regenerates `js/calculator.min.js` and `css/styles.min.css` from source assets
 - Builds `wealth-tax-calculator.zip` directly in CI
 - Commits the rebuilt zip into the repository, replacing the previous zip build
+- Commits refreshed minified assets when they changed
 - Creates a semantic release tag in `vX.Y.Z` format
 - Creates or updates the matching GitHub Release and uploads `wealth-tax-calculator.zip` as the release asset
 
@@ -71,6 +73,23 @@ Browser validation is handled by `.github/workflows/browser-validation.yml` and 
 
 The browser workflow validates calculator load, slider keyboard interaction, mode toggling behavior, and narrow-screen responsive layout before changes are merged.
 
+It also runs a minified-asset parity check to ensure committed `.min.js` and `.min.css` files match generated output.
+
+### Minified Asset Commands
+
+From the repository root:
+
+```bash
+npm ci
+npm run minify
+```
+
+To verify parity without keeping changes:
+
+```bash
+npm run minify:check
+```
+
 ## Releasing Updates
 
 1. Update plugin version values in `wealth-tax-calculator/wealth-tax-calculator.php`:
@@ -82,15 +101,22 @@ define( 'WTC_VERSION', '1.2.3' );
 
 2. Update `wealth-tax-calculator/CHANGELOG.md` with a matching section header.
 
-3. Commit and push to `main`.
+3. Regenerate minified assets:
 
-4. Let GitHub Actions rebuild and commit `wealth-tax-calculator.zip`.
+```bash
+npm ci
+npm run minify
+```
 
-5. The workflow automatically creates the semantic release tag (`v1.2.0`, `v1.2.1`, `v1.2.2`, `v1.2.3`, etc.) for the new version.
+4. Commit and push to `main`.
+
+5. Let GitHub Actions rebuild and commit `wealth-tax-calculator.zip`.
+
+6. The workflow automatically creates the semantic release tag (`v1.2.0`, `v1.2.1`, `v1.2.2`, `v1.2.3`, etc.) for the new version.
 
    - If the target tag already exists on a different commit, the workflow now auto-increments the patch version (for example `1.2.3` -> `1.2.4`) and updates both plugin version fields plus changelog heading before publishing.
 
-6. The workflow then creates or updates the GitHub Release and uploads `wealth-tax-calculator.zip` for updater compatibility.
+7. The workflow then creates or updates the GitHub Release and uploads `wealth-tax-calculator.zip` for updater compatibility.
 
 ## File Structure
 
