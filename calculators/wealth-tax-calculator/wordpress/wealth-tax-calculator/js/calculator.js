@@ -74,22 +74,35 @@
                 minAmount: 290e9,
                 maxAmount: 290e9,
                 costLabel: '$290 billion over 10 years',
-                description: 'Expand Medicare to cover dental, vision, and hearing care for all seniors.',
+                description: 'Expand Medicare to cover dental, vision, and hearing care for the approximately 68 million Americans enrolled in the program.',
                 sources: SANDERS_POLICY_SOURCES
             },
             {
                 minAmount: 300e9,
                 maxAmount: 300e9,
                 costLabel: '$300 billion over 10 years',
-                description: 'Ensure that seniors and people with disabilities are able to receive the home health care they need through Medicaid.',
+                description: 'Ensure seniors and people with disabilities are able to receive the home health care they need through Medicaid. Approximately 5.5 million people are in need of this care but cannot receive it due to inadequate funding.',
                 sources: SANDERS_POLICY_SOURCES
             },
             {
                 minAmount: 1.1e12,
                 maxAmount: 1.1e12,
                 costLabel: '$1.1 trillion over 10 years',
-                description: 'Reverse Medicaid and ACA cuts in the One Big Beautiful Bill.',
-                sources: SANDERS_POLICY_SOURCES
+                description: 'Restore coverage to the estimated 10 million Americans who will lose health insurance by 2034 due to Medicaid and ACA cuts in the One Big Beautiful Bill.',
+                sources: [
+                    {
+                        text: 'The Make Billionaires Pay Their Fair Share Act',
+                        url: 'https://www.sanders.senate.gov/wp-content/uploads/MakeBillionairesPayTheirFairShareAct.pdf'
+                    },
+                    {
+                        text: 'Saez-Zucman wealth tax revenue memo',
+                        url: 'https://www.sanders.senate.gov/wp-content/uploads/saez-zucman-sanders2026wealthtax.pdf'
+                    },
+                    {
+                        text: 'How Will the One Big Beautiful Bill Act Affect the ACA, Medicaid, and the Uninsured Rate? | KFF',
+                        url: 'https://www.kff.org/medicaid/issue-brief/how-will-the-one-big-beautiful-bill-act-affect-the-aca-medicaid-and-the-uninsured-rate/'
+                    }
+                ]
             }
         ],
         education: [
@@ -97,7 +110,7 @@
                 minAmount: 152e9,
                 maxAmount: 152e9,
                 costLabel: '$152 billion over 10 years',
-                description: 'Guarantee a $60,000 minimum public-school teacher salary nationwide.',
+                description: 'Guarantee a $60,000 minimum public-school teacher salary nationwide, giving approximately 1.4 million teachers a raise.',
                 sources: SANDERS_POLICY_SOURCES
             }
         ],
@@ -106,7 +119,7 @@
                 minAmount: 2e12,
                 maxAmount: 2.5e12,
                 costLabel: '$2.0-$2.5 trillion over 10 years',
-                description: 'Eliminate federal income taxes entirely for individuals earning up to $46,000 per year and married couples earning up to $92,000 per year.',
+                description: 'Eliminate federal income taxes entirely for individuals earning up to $46,000 per year and married couples earning up to $92,000 per year, which would benefit approximately 135-150 million people, or 70-75% of all federal income tax filers.',
                 sources: [
                     {
                         text: 'The Budget and Economic Outlook: 2024 to 2034',
@@ -122,7 +135,7 @@
                 minAmount: 50e9,
                 maxAmount: 90e9,
                 costLabel: '$50-$90 billion over 10 years',
-                description: 'Freeze property tax rates for seniors owning just one home.',
+                description: 'Freeze property tax rates for seniors owning just one home, saving money for approximately 45 million seniors.',
                 sources: [
                     {
                         text: 'Homeownership by Selected Demographic and Housing Characteristics'
@@ -136,7 +149,7 @@
                 minAmount: 2.125e12,
                 maxAmount: 2.125e12,
                 costLabel: '$2.125 trillion over 10 years',
-                description: 'Reduce employer-side payroll tax on wages to 25%.',
+                description: 'Reduce employer-side payroll tax on wages by 25%, putting more money directly into people\'s pockets.',
                 sources: [
                     {
                         text: 'Monthly Budget Review: August 2024',
@@ -180,7 +193,7 @@
                 minAmount: 700e9,
                 maxAmount: 700e9,
                 costLabel: '$700 billion over 10 years',
-                description: 'End the child care crisis in America by making sure that no family in America pays over 7 percent of their income on child care.',
+                description: 'End the child care crisis in America by making sure that no family pays over 7 percent of their income on child care. Approximately 25 million parents would see savings from this policy.',
                 sources: SANDERS_POLICY_SOURCES
             }
         ]
