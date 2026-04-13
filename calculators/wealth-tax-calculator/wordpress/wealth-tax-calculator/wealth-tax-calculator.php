@@ -882,6 +882,19 @@ class Billionaire_Wealth_Tax_Calculator {
                             <div class="comparison-text" id="wtc-comparisonText">Loading&hellip;</div>
                         </div>
 
+                        <div id="wtc-selectedPoliciesBox" class="selected-policies-box">
+                            <h4>Selected Policies</h4>
+                            <div id="wtc-selectedPoliciesList" class="selected-policies-list">
+                                <p class="selected-policies-empty">No policies selected yet.</p>
+                            </div>
+                        </div>
+
+                        <div id="wtc-nextStepWrapper" class="wtc-next-step-wrapper">
+                            <button type="button" id="wtc-nextStepButton" class="wtc-next-step-button">
+                                Next Step <span aria-hidden="true">&rarr;</span>
+                            </button>
+                        </div>
+
                         <div class="sources-box">
                             <h4>Sources</h4>
                             <ol class="sources-list" id="wtc-sourcesList">
@@ -924,6 +937,18 @@ class Billionaire_Wealth_Tax_Calculator {
                     </div>
                 </div>
                 <p class="wtc-share-status" aria-live="polite"></p>
+            </div>
+
+            <div id="wtc-finalSummary" class="wtc-final-summary" role="region" aria-label="Tax Plan Final Summary" aria-hidden="true">
+                <div class="wtc-final-summary-inner">
+                    <div class="wtc-final-summary-header">
+                        <button type="button" id="wtc-finalSummaryBack" class="wtc-fs-back-button">
+                            <span aria-hidden="true">&larr;</span> Back to Calculator
+                        </button>
+                        <h2 class="wtc-final-summary-title">Your Tax Plan Summary</h2>
+                    </div>
+                    <div id="wtc-finalSummaryBody" class="wtc-final-summary-body"></div>
+                </div>
             </div>
         </div>
         <?php
