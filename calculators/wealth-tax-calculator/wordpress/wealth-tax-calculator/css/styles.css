@@ -279,7 +279,7 @@
     padding: 40px 36px;
     display: grid;
     grid-template-columns: 1fr;
-    gap: 42px;
+    gap: 28px;
     align-items: start;
 }
 
@@ -970,11 +970,11 @@
     top: 0;
     left: 0;
     height: 100%;
-    width: 0%;
+    width: 100%;
     background: var(--fill-color, #888);
     opacity: 0.2;
     pointer-events: none;
-    transition: width 0.08s ease-out, opacity 0.15s ease;
+    transition: opacity 0.15s ease;
 }
 
 .calculator-container .allocation-example-row.is-enabled .allocation-row-fill {

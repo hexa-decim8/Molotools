@@ -956,18 +956,8 @@
             var index = row.getAttribute('data-index');
             var isEnabled = isOptionEnabled(policy, index);
 
-            if (isEnabled) {
-                row.classList.add('is-enabled');
-            } else {
-                row.classList.remove('is-enabled');
-            }
-
-            var rowFill = row.querySelector('.allocation-row-fill');
-            if (rowFill) {
-                var nextFillWidth = isEnabled ? '100%' : '0%';
-                if (rowFill.style.width !== nextFillWidth) {
-                    rowFill.style.width = nextFillWidth;
-                }
+            if (row.classList.contains('is-enabled') !== isEnabled) {
+                row.classList.toggle('is-enabled', isEnabled);
             }
 
             var optionInput = row.querySelector('.policy-option-input');
@@ -1049,7 +1039,6 @@
 
                         var rowFill = document.createElement('div');
                         rowFill.className = 'allocation-row-fill';
-                        rowFill.style.width = isEnabled ? '100%' : '0%';
 
                         var rowContent = document.createElement('div');
                         rowContent.className = 'allocation-row-content';
@@ -1261,18 +1250,15 @@
         var item = policyExamples[parseInt(index, 10)];
         if (!item) return;
 
-        var rowFill = row.querySelector('.allocation-row-fill');
         var optionInputEl = row.querySelector('.policy-option-input');
 
         if (isOptionEnabled(policy, index)) {
             disableOption(policy, index);
             row.classList.remove('is-enabled');
-            if (rowFill) rowFill.style.width = '0%';
             if (optionInputEl) optionInputEl.checked = false;
         } else {
             enableOption(policy, index, item);
             row.classList.add('is-enabled');
-            if (rowFill) rowFill.style.width = '100%';
             if (optionInputEl) optionInputEl.checked = true;
         }
 
@@ -1301,9 +1287,6 @@
             disableOption(policy, index);
             row.classList.remove('is-enabled');
         }
-
-        var rowFill = row.querySelector('.allocation-row-fill');
-        if (rowFill) rowFill.style.width = inputEl.checked ? '100%' : '0%';
 
         updateAllocationSummary();
     }
