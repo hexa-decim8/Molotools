@@ -15,6 +15,8 @@
     var POLICY_GROUP_KEYS = ['healthcare', 'education', 'business', 'directRelief', 'housing', 'childcare'];
     var selectedPolicies = POLICY_GROUP_KEYS.slice();
     var selectedPolicyOptions = {};
+    var selectedPoliciesOrder = [];
+    var dragPolicyKey = null;
     var collapsedPolicyGroups = [];
     var currentMode = 'advanced'; // 'basic' or 'advanced'
     var TAX_RATE_MIN = 1;
@@ -213,10 +215,18 @@
         selectedPolicyOptions[key] = {
             amount: maxAmount
         };
+        if (selectedPoliciesOrder.indexOf(key) === -1) {
+            selectedPoliciesOrder.push(key);
+        }
     }
 
     function disableOption(policy, index) {
-        delete selectedPolicyOptions[getPolicyOptionKey(policy, index)];
+        var key = getPolicyOptionKey(policy, index);
+        delete selectedPolicyOptions[key];
+        var orderIdx = selectedPoliciesOrder.indexOf(key);
+        if (orderIdx > -1) {
+            selectedPoliciesOrder.splice(orderIdx, 1);
+        }
     }
 
     function getOptionAmount(key) {
@@ -1228,6 +1238,361 @@
         } else if (existingPinataEl) {
             existingPinataEl.parentNode.removeChild(existingPinataEl);
         }
+
+        syncSelectedPoliciesBox();
+    }
+
+    // ── Selected Policies Box ──────────────────────────────────────────────────
+
+    function handlePolicyEntryDragStart(event) {
+        dragPolicyKey = event.currentTarget.getAttribute('data-key');
+        event.currentTarget.classList.add('is-dragging');
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', dragPolicyKey);
+    }
+
+    function handlePolicyEntryDragOver(event) {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+        var target = event.currentTarget;
+        if (target.getAttribute('data-key') !== dragPolicyKey) {
+            target.classList.add('drag-over');
+        }
+    }
+
+    function handlePolicyEntryDragLeave(event) {
+        event.currentTarget.classList.remove('drag-over');
+    }
+
+    function handlePolicyEntryDrop(event) {
+        event.preventDefault();
+        var target = event.currentTarget;
+        target.classList.remove('drag-over');
+        var targetKey = target.getAttribute('data-key');
+        if (!dragPolicyKey || dragPolicyKey === targetKey) {
+            return;
+        }
+        var srcIdx = selectedPoliciesOrder.indexOf(dragPolicyKey);
+        var tgtIdx = selectedPoliciesOrder.indexOf(targetKey);
+        if (srcIdx === -1 || tgtIdx === -1) {
+            return;
+        }
+        selectedPoliciesOrder.splice(srcIdx, 1);
+        selectedPoliciesOrder.splice(tgtIdx, 0, dragPolicyKey);
+        syncSelectedPoliciesBox();
+    }
+
+    function handlePolicyEntryDragEnd(event) {
+        event.currentTarget.classList.remove('is-dragging');
+        dragPolicyKey = null;
+        var list = el('wtc-selectedPoliciesList');
+        if (list) {
+            var entries = list.querySelectorAll('.selected-policy-entry');
+            for (var i = 0; i < entries.length; i++) {
+                entries[i].classList.remove('drag-over');
+            }
+        }
+    }
+
+    function syncSelectedPoliciesBox() {
+        var box = el('wtc-selectedPoliciesBox');
+        var list = el('wtc-selectedPoliciesList');
+        if (!box || !list) {
+            return;
+        }
+
+        var taxRate = getCurrentTaxRate();
+        var revenue = calculateRevenue(taxRate);
+
+        var activeKeys = [];
+        for (var o = 0; o < selectedPoliciesOrder.length; o++) {
+            if (Object.prototype.hasOwnProperty.call(selectedPolicyOptions, selectedPoliciesOrder[o])) {
+                activeKeys.push(selectedPoliciesOrder[o]);
+            }
+        }
+
+        list.innerHTML = '';
+
+        if (activeKeys.length === 0) {
+            var empty = document.createElement('p');
+            empty.className = 'selected-policies-empty';
+            empty.textContent = 'No policies selected yet.';
+            list.appendChild(empty);
+            return;
+        }
+
+        var cumulativeCost = 0;
+
+        for (var i = 0; i < activeKeys.length; i++) {
+            var key = activeKeys[i];
+            var parts = key.split(':');
+            var policy = parts[0];
+            var idx = parseInt(parts[1], 10);
+            var examples = POLICY_EXAMPLES[policy] || [];
+            var exampleData = examples[idx];
+            if (!exampleData) {
+                continue;
+            }
+
+            var itemCost = selectedPolicyOptions[key].amount;
+            cumulativeCost += itemCost;
+            var isFunded = cumulativeCost <= revenue;
+
+            var entry = document.createElement('div');
+            entry.className = 'selected-policy-entry' + (isFunded ? '' : ' is-unfunded');
+            entry.setAttribute('draggable', 'true');
+            entry.setAttribute('data-key', key);
+
+            var rank = document.createElement('span');
+            rank.className = 'selected-policy-rank';
+            rank.textContent = '#' + (i + 1);
+            entry.appendChild(rank);
+
+            var handle = document.createElement('span');
+            handle.className = 'selected-policy-drag-handle';
+            handle.textContent = '\u28FF';
+            handle.setAttribute('aria-hidden', 'true');
+            entry.appendChild(handle);
+
+            var body = document.createElement('div');
+            body.className = 'selected-policy-body';
+
+            var labelEl = document.createElement('span');
+            labelEl.className = 'selected-policy-label';
+            labelEl.textContent = (POLICY_LABELS[policy] || policy);
+            body.appendChild(labelEl);
+
+            var descEl = document.createElement('span');
+            descEl.className = 'selected-policy-desc';
+            descEl.textContent = exampleData.description;
+            body.appendChild(descEl);
+
+            var costEl = document.createElement('span');
+            costEl.className = 'selected-policy-cost';
+            costEl.textContent = formatCostLabel(exampleData);
+            body.appendChild(costEl);
+
+            entry.appendChild(body);
+
+            var status = document.createElement('span');
+            status.className = 'selected-policy-status ' + (isFunded ? 'funded' : 'unfunded');
+            status.textContent = isFunded ? 'Funded' : 'Unfunded';
+            entry.appendChild(status);
+
+            entry.addEventListener('dragstart', handlePolicyEntryDragStart);
+            entry.addEventListener('dragover', handlePolicyEntryDragOver);
+            entry.addEventListener('dragleave', handlePolicyEntryDragLeave);
+            entry.addEventListener('drop', handlePolicyEntryDrop);
+            entry.addEventListener('dragend', handlePolicyEntryDragEnd);
+
+            list.appendChild(entry);
+        }
+
+        var remaining = revenue - Math.min(cumulativeCost, revenue);
+        if (remaining > 0) {
+            var remainingEl = document.createElement('p');
+            remainingEl.className = 'selected-policies-remaining';
+            remainingEl.textContent = 'Remaining revenue: ' + formatCurrency(remaining);
+            list.appendChild(remainingEl);
+        }
+    }
+
+    // ── Final Summary screen ────────────────────────────────────────────────────
+
+    function buildFinalSummaryData() {
+        var taxRate = getCurrentTaxRate();
+        var revenue = calculateRevenue(taxRate);
+        var remaining = revenue;
+
+        var activeKeys = [];
+        for (var o = 0; o < selectedPoliciesOrder.length; o++) {
+            if (Object.prototype.hasOwnProperty.call(selectedPolicyOptions, selectedPoliciesOrder[o])) {
+                activeKeys.push(selectedPoliciesOrder[o]);
+            }
+        }
+
+        var items = [];
+        for (var i = 0; i < activeKeys.length; i++) {
+            var key = activeKeys[i];
+            var parts = key.split(':');
+            var policy = parts[0];
+            var idx = parseInt(parts[1], 10);
+            var examples = POLICY_EXAMPLES[policy] || [];
+            var exampleData = examples[idx];
+            if (!exampleData) { continue; }
+
+            var cost = selectedPolicyOptions[key].amount;
+            var status, fundedPercent;
+
+            if (remaining >= cost) {
+                status = 'full';
+                fundedPercent = 100;
+                remaining -= cost;
+            } else if (remaining > 0) {
+                fundedPercent = Math.round((remaining / cost) * 100);
+                status = 'partial';
+                remaining = 0;
+            } else {
+                status = 'none';
+                fundedPercent = 0;
+            }
+
+            items.push({
+                key: key,
+                policy: policy,
+                idx: idx,
+                exampleData: exampleData,
+                cost: cost,
+                status: status,
+                fundedPercent: fundedPercent
+            });
+        }
+
+        return {
+            taxRate: taxRate,
+            revenue: revenue,
+            remaining: remaining,
+            items: items
+        };
+    }
+
+    function renderFinalSummary() {
+        var summaryBody = el('wtc-finalSummaryBody');
+        if (!summaryBody) { return; }
+        summaryBody.innerHTML = '';
+
+        var data = buildFinalSummaryData();
+
+        // Stats bar
+        var statsDiv = document.createElement('div');
+        statsDiv.className = 'wtc-fs-stats';
+
+        var rateStat = document.createElement('div');
+        rateStat.className = 'wtc-fs-stat';
+        var rateLabel = document.createElement('span');
+        rateLabel.className = 'wtc-fs-stat-label';
+        rateLabel.textContent = 'Tax Rate';
+        var rateValue = document.createElement('span');
+        rateValue.className = 'wtc-fs-stat-value';
+        rateValue.textContent = data.taxRate.toFixed(1) + '%';
+        rateStat.appendChild(rateLabel);
+        rateStat.appendChild(rateValue);
+
+        var revenueStat = document.createElement('div');
+        revenueStat.className = 'wtc-fs-stat';
+        var revenueLabel = document.createElement('span');
+        revenueLabel.className = 'wtc-fs-stat-label';
+        revenueLabel.textContent = '10-Year Revenue';
+        var revenueValue = document.createElement('span');
+        revenueValue.className = 'wtc-fs-stat-value';
+        revenueValue.textContent = formatCurrency(data.revenue);
+        revenueStat.appendChild(revenueLabel);
+        revenueStat.appendChild(revenueValue);
+
+        statsDiv.appendChild(rateStat);
+        statsDiv.appendChild(revenueStat);
+        summaryBody.appendChild(statsDiv);
+
+        if (data.items.length === 0) {
+            var empty = document.createElement('p');
+            empty.className = 'wtc-fs-empty';
+            empty.textContent = 'No policies have been selected. Go back and select some policies to fund.';
+            summaryBody.appendChild(empty);
+            return;
+        }
+
+        // Policy entries
+        var list = document.createElement('div');
+        list.className = 'wtc-fs-list';
+
+        for (var i = 0; i < data.items.length; i++) {
+            var item = data.items[i];
+
+            var entry = document.createElement('div');
+            entry.className = 'wtc-fs-entry wtc-fs-' + item.status;
+
+            var entryHeader = document.createElement('div');
+            entryHeader.className = 'wtc-fs-entry-header';
+
+            var rank = document.createElement('span');
+            rank.className = 'wtc-fs-rank';
+            rank.textContent = '#' + (i + 1);
+
+            var label = document.createElement('span');
+            label.className = 'wtc-fs-label';
+            label.textContent = POLICY_LABELS[item.policy] || item.policy;
+
+            var badge = document.createElement('span');
+            badge.className = 'wtc-fs-badge wtc-fs-badge-' + item.status;
+            if (item.status === 'full') {
+                badge.textContent = 'Fully Funded';
+            } else if (item.status === 'partial') {
+                badge.textContent = item.fundedPercent + '% Funded';
+            } else {
+                badge.textContent = 'Not Funded';
+            }
+
+            entryHeader.appendChild(rank);
+            entryHeader.appendChild(label);
+            entryHeader.appendChild(badge);
+
+            var desc = document.createElement('p');
+            desc.className = 'wtc-fs-desc';
+            desc.textContent = item.exampleData.description;
+
+            var costEl = document.createElement('span');
+            costEl.className = 'wtc-fs-cost';
+            costEl.textContent = formatCostLabel(item.exampleData);
+
+            var progressWrap = document.createElement('div');
+            progressWrap.className = 'wtc-fs-progress';
+            var progressBar = document.createElement('div');
+            progressBar.className = 'wtc-fs-progress-bar wtc-fs-progress-' + item.status;
+            progressBar.style.width = item.fundedPercent + '%';
+            progressWrap.appendChild(progressBar);
+
+            entry.appendChild(entryHeader);
+            entry.appendChild(desc);
+            entry.appendChild(costEl);
+            entry.appendChild(progressWrap);
+
+            list.appendChild(entry);
+        }
+
+        summaryBody.appendChild(list);
+
+        if (data.remaining > 0) {
+            var remainingEl = document.createElement('p');
+            remainingEl.className = 'wtc-fs-remaining';
+            remainingEl.textContent = 'Remaining unallocated revenue: ' + formatCurrency(data.remaining);
+            summaryBody.appendChild(remainingEl);
+        }
+    }
+
+    function showFinalSummary() {
+        renderFinalSummary();
+        var container = document.querySelector('.calculator-container');
+        var summaryPanel = el('wtc-finalSummary');
+        if (!container || !summaryPanel) { return; }
+        container.classList.add('is-showing-summary');
+        summaryPanel.removeAttribute('aria-hidden');
+        summaryPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function hideFinalSummary() {
+        var container = document.querySelector('.calculator-container');
+        var summaryPanel = el('wtc-finalSummary');
+        if (!container || !summaryPanel) { return; }
+        container.classList.remove('is-showing-summary');
+        summaryPanel.setAttribute('aria-hidden', 'true');
+    }
+
+    function handleNextStepClick() {
+        showFinalSummary();
+    }
+
+    function handleFinalSummaryBackClick() {
+        hideFinalSummary();
     }
 
     function handlePolicyRowClick(event) {
@@ -1336,8 +1701,6 @@
 
         if (mode === 'basic') {
             currentValue = Math.round(currentValue);
-        } else {
-            selectAllPolicyOptionsForSelectedGroups();
         }
 
         setTaxRate(currentValue, true);
@@ -1571,8 +1934,6 @@
         ensureMoneyPile();
         initTaxRateSlider();
 
-        selectAllPolicyOptionsForSelectedGroups();
-
         // Apply advanced-mode class to container since we default to advanced
         var calculatorContainer = document.querySelector('.calculator-container');
         if (calculatorContainer) {
@@ -1587,6 +1948,16 @@
 
         initShareActions();
         updateDisplay();
+
+        var nextStepBtn = el('wtc-nextStepButton');
+        if (nextStepBtn) {
+            nextStepBtn.addEventListener('click', handleNextStepClick);
+        }
+
+        var backBtn = el('wtc-finalSummaryBack');
+        if (backBtn) {
+            backBtn.addEventListener('click', handleFinalSummaryBackClick);
+        }
     }
 
     if (document.readyState === 'loading') {
