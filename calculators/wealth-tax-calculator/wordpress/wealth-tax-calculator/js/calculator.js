@@ -1062,7 +1062,7 @@
 
                         var optionInput = document.createElement('input');
                         optionInput.type = 'checkbox';
-                        optionInput.className = 'plus-minus policy-option-input';
+                        optionInput.className = 'policy-option-input';
                         optionInput.checked = isEnabled;
                         optionInput.setAttribute('aria-label', 'Toggle policy option');
 

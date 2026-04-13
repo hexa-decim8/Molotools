@@ -332,6 +332,10 @@
     margin-bottom: 40px;
 }
 
+.calculator-container.mode-advanced .input-section {
+    margin-bottom: 18px;
+}
+
 .calculator-container .input-section label {
     display: flex;
     justify-content: space-between;
@@ -974,6 +978,7 @@
 }
 
 .calculator-container .allocation-example-row.is-enabled .allocation-row-fill {
+    background: #A8D5BA;
     opacity: 0.35;
 }
 
@@ -1387,7 +1392,7 @@
     padding: 30px;
     border-radius: 8px;
     text-align: center;
-    margin-bottom: 25px;
+    margin-bottom: 18px;
     box-shadow: 0 4px 15px rgba(18, 28, 80, 0.35);
 }
 
@@ -1429,14 +1434,14 @@
 /* ── Context box ──────────────────────────────────────────── */
 .calculator-container .context-box {
     background: #FCF4ED;
-    padding: 25px;
+    padding: 30px;
     border-radius: 8px;
     margin-bottom: 25px;
     border-left: 4px solid #E1B682;
 }
 
 .calculator-container .context-box h3 {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     margin: 0 0 12px;
     color: #233071;
     font-family: var(--wtc-font-primary);
@@ -1444,7 +1449,7 @@
 }
 
 .calculator-container .comparison-text {
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     color: #383533;
     line-height: 1.7;
     margin: 0;
@@ -1545,7 +1550,7 @@
 
     .calculator-container .tax-explanation,
     .calculator-container .comparison-text {
-        font-size: 1rem;
+        font-size: 1.05rem;
     }
 }
 
