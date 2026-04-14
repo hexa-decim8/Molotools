@@ -610,6 +610,7 @@ class WTC_Policy_Analytics {
         }
         $summary       = $this->build_summary( $analytics_data );
         $region_counts = isset( $summary['region_counts'] ) ? $summary['region_counts'] : array();
+        $county_counts = isset( $summary['county_counts'] ) ? $summary['county_counts'] : array();
 
         $mi_cities = array();
         foreach ( $region_counts as $bucket => $count ) {
@@ -618,10 +619,20 @@ class WTC_Policy_Analytics {
             }
         }
 
+        $mi_counties = array();
+        foreach ( $county_counts as $bucket => $count ) {
+            if ( strncmp( $bucket, 'mi_county_', 10 ) === 0 && 'mi_county_unknown' !== $bucket ) {
+                $mi_counties[ substr( $bucket, 10 ) ] = (int) $count;
+            }
+        }
+
         wp_localize_script(
             'wtc-admin-map',
             'wtcMichiganMap',
-            array( 'cities' => $mi_cities )
+            array(
+                'cities'   => $mi_cities,
+                'counties' => $mi_counties,
+            )
         );
     }
 
@@ -732,7 +743,7 @@ class WTC_Policy_Analytics {
                                     <input type="checkbox" name="<?php echo esc_attr( WTC_ANALYTICS_GEO_OPTION ); ?>" value="1" <?php checked( $this->geo_enabled(), true ); ?> />
                                     <?php esc_html_e( 'Filter to US-only responses', 'wealth-tax-calculator' ); ?>
                                 </label>
-                                <p class="description"><?php esc_html_e( 'Coarse IP-based region tracking is always active (state-level for US, city-level for Michigan). When this option is enabled, non-US visitors are excluded from analytics entirely. No raw IP addresses are stored.', 'wealth-tax-calculator' ); ?></p>
+                                <p class="description"><?php esc_html_e( 'Coarse IP-based region tracking is always active (state-level for US, city-level plus inferred county buckets for Michigan). When this option is enabled, non-US visitors are excluded from analytics entirely. No raw IP addresses are stored.', 'wealth-tax-calculator' ); ?></p>
                             </td>
                         </tr>
                         <tr>
@@ -862,6 +873,11 @@ class WTC_Policy_Analytics {
             <div class="card" style="max-width: 920px; margin-top: 20px;">
                 <h2><?php esc_html_e( 'Region Buckets', 'wealth-tax-calculator' ); ?></h2>
                 <?php $this->render_simple_count_table( $summary['region_counts'], __( 'Region bucket', 'wealth-tax-calculator' ), __( 'Submitted sessions', 'wealth-tax-calculator' ) ); ?>
+            </div>
+
+            <div class="card" style="max-width: 920px; margin-top: 20px;">
+                <h2><?php esc_html_e( 'Michigan County Buckets', 'wealth-tax-calculator' ); ?></h2>
+                <?php $this->render_county_count_table( $summary['county_counts'] ); ?>
             </div>
 
             <div class="card" style="max-width: 920px; margin-top: 20px;">
@@ -1116,6 +1132,221 @@ class WTC_Policy_Analytics {
         ) );
     }
 
+    private function get_michigan_county_slug_lookup() {
+        return array_flip( array(
+            'alcona', 'alger', 'allegan', 'alpena', 'antrim', 'arenac', 'baraga', 'barry', 'bay', 'benzie', 'berrien', 'branch', 'calhoun',
+            'cass', 'charlevoix', 'cheboygan', 'chippewa', 'clare', 'clinton', 'crawford', 'delta', 'dickinson', 'eaton', 'emmet', 'genesee',
+            'gladwin', 'gogebic', 'grand-traverse', 'gratiot', 'hillsdale', 'houghton', 'huron', 'ingham', 'ionia', 'iosco', 'iron', 'isabella',
+            'jackson', 'kalamazoo', 'kalkaska', 'kent', 'keweenaw', 'lake', 'lapeer', 'leelanau', 'lenawee', 'livingston', 'luce', 'mackinac',
+            'macomb', 'manistee', 'marquette', 'mason', 'mecosta', 'menominee', 'midland', 'missaukee', 'monroe', 'montcalm', 'montmorency',
+            'muskegon', 'newaygo', 'oakland', 'oceana', 'ogemaw', 'ontonagon', 'osceola', 'oscoda', 'otsego', 'ottawa', 'presque-isle',
+            'roscommon', 'saginaw', 'sanilac', 'schoolcraft', 'shiawassee', 'st-clair', 'st-joseph', 'tuscola', 'van-buren', 'washtenaw',
+            'wayne', 'wexford',
+        ) );
+    }
+
+    private function normalize_county_slug( $county ) {
+        $county = sanitize_text_field( $county );
+        if ( $county === '' ) {
+            return '';
+        }
+
+        $county = preg_replace( '/\s+county$/i', '', $county );
+        $slug   = sanitize_title( $county );
+        if ( $slug === '' ) {
+            return '';
+        }
+
+        $lookup = $this->get_michigan_county_slug_lookup();
+        return isset( $lookup[ $slug ] ) ? $slug : '';
+    }
+
+    private function get_michigan_city_to_county_map() {
+        return array(
+            'detroit' => 'wayne',
+            'dearborn' => 'wayne',
+            'dearborn-heights' => 'wayne',
+            'livonia' => 'wayne',
+            'westland' => 'wayne',
+            'taylor' => 'wayne',
+            'romulus' => 'wayne',
+            'lincoln-park' => 'wayne',
+            'allen-park' => 'wayne',
+            'southgate' => 'wayne',
+            'wyandotte' => 'wayne',
+            'trenton' => 'wayne',
+            'inkster' => 'wayne',
+            'garden-city' => 'wayne',
+            'hamtramck' => 'wayne',
+            'grand-rapids' => 'kent',
+            'wyoming' => 'kent',
+            'kentwood' => 'kent',
+            'walker' => 'kent',
+            'grandville' => 'kent',
+            'comstock-park' => 'kent',
+            'lowell' => 'kent',
+            'lansing' => 'ingham',
+            'east-lansing' => 'ingham',
+            'okemos' => 'ingham',
+            'mason' => 'ingham',
+            'flint' => 'genesee',
+            'grand-blanc' => 'genesee',
+            'burton' => 'genesee',
+            'davison' => 'genesee',
+            'clio' => 'genesee',
+            'mount-morris' => 'genesee',
+            'ann-arbor' => 'washtenaw',
+            'ypsilanti' => 'washtenaw',
+            'saline' => 'washtenaw',
+            'chelsea' => 'washtenaw',
+            'dexter' => 'washtenaw',
+            'milan' => 'washtenaw',
+            'kalamazoo' => 'kalamazoo',
+            'portage' => 'kalamazoo',
+            'battle-creek' => 'calhoun',
+            'marshall' => 'calhoun',
+            'albion' => 'calhoun',
+            'jackson' => 'jackson',
+            'saginaw' => 'saginaw',
+            'bay-city' => 'bay',
+            'midland' => 'midland',
+            'muskegon' => 'muskegon',
+            'muskegon-heights' => 'muskegon',
+            'norton-shores' => 'muskegon',
+            'holland' => 'ottawa',
+            'grand-haven' => 'ottawa',
+            'zeeland' => 'ottawa',
+            'traverse-city' => 'grand-traverse',
+            'petoskey' => 'emmet',
+            'charlevoix' => 'charlevoix',
+            'marquette' => 'marquette',
+            'escanaba' => 'delta',
+            'sault-ste-marie' => 'chippewa',
+            'iron-mountain' => 'dickinson',
+            'houghton' => 'houghton',
+            'cadillac' => 'wexford',
+            'monroe' => 'monroe',
+            'adrian' => 'lenawee',
+            'niles' => 'berrien',
+            'benton-harbor' => 'berrien',
+            'st-joseph' => 'berrien',
+            'coldwater' => 'branch',
+            'sturgis' => 'st-joseph',
+            'three-rivers' => 'st-joseph',
+            'port-huron' => 'st-clair',
+            'lapeer' => 'lapeer',
+            'howell' => 'livingston',
+            'brighton' => 'livingston',
+            'fenton' => 'genesee',
+            'royal-oak' => 'oakland',
+            'southfield' => 'oakland',
+            'farmington-hills' => 'oakland',
+            'troy' => 'oakland',
+            'pontiac' => 'oakland',
+            'novi' => 'oakland',
+            'oak-park' => 'oakland',
+            'waterford' => 'oakland',
+            'west-bloomfield' => 'oakland',
+            'rochester-hills' => 'oakland',
+            'wixom' => 'oakland',
+            'milford' => 'oakland',
+            'warren' => 'macomb',
+            'sterling-heights' => 'macomb',
+            'roseville' => 'macomb',
+            'clinton-township' => 'macomb',
+            'mount-clemens' => 'macomb',
+            'shelby-township' => 'macomb',
+            'macomb-township' => 'macomb',
+            'utica' => 'macomb',
+            'fraser' => 'macomb',
+            'eastpointe' => 'macomb',
+            'st-clair-shores' => 'macomb',
+            'auburn-hills' => 'oakland',
+            'oakland' => 'oakland',
+            'wayne' => 'wayne',
+            'macomb' => 'macomb',
+            'kent' => 'kent',
+            'washtenaw' => 'washtenaw',
+            'genesee' => 'genesee',
+            'ingham' => 'ingham',
+        );
+    }
+
+    private function get_michigan_postal_to_county_map() {
+        return array(
+            '48201' => 'wayne',
+            '48226' => 'wayne',
+            '48126' => 'wayne',
+            '48180' => 'wayne',
+            '49503' => 'kent',
+            '48933' => 'ingham',
+            '48104' => 'washtenaw',
+            '48502' => 'genesee',
+            '49007' => 'kalamazoo',
+            '48604' => 'saginaw',
+            '48067' => 'oakland',
+            '48336' => 'oakland',
+            '48066' => 'macomb',
+            '48093' => 'macomb',
+        );
+    }
+
+    private function infer_michigan_county_slug( $city_slug, $postal ) {
+        $city_slug = sanitize_title( sanitize_text_field( $city_slug ) );
+        $postal    = sanitize_text_field( $postal );
+
+        $city_to_county = $this->get_michigan_city_to_county_map();
+        if ( $city_slug !== '' && isset( $city_to_county[ $city_slug ] ) ) {
+            return sanitize_title( $city_to_county[ $city_slug ] );
+        }
+
+        $county_lookup = $this->get_michigan_county_slug_lookup();
+        if ( $city_slug !== '' && isset( $county_lookup[ $city_slug ] ) ) {
+            return $city_slug;
+        }
+
+        if ( preg_match( '/^\d{5}$/', $postal ) ) {
+            $postal_to_county = $this->get_michigan_postal_to_county_map();
+            if ( isset( $postal_to_county[ $postal ] ) ) {
+                return sanitize_title( $postal_to_county[ $postal ] );
+            }
+        }
+
+        return '';
+    }
+
+    private function normalize_michigan_county_bucket( $bucket, $city_slug = '', $postal = '' ) {
+        $bucket = sanitize_text_field( $bucket );
+        if ( strncmp( $bucket, 'mi_county_', 10 ) === 0 ) {
+            $county_slug = $this->normalize_county_slug( substr( $bucket, 10 ) );
+            return $county_slug ? 'mi_county_' . $county_slug : 'mi_county_unknown';
+        }
+
+        if ( strncmp( $bucket, 'mi_', 3 ) === 0 ) {
+            $city_slug = $city_slug ? $city_slug : substr( $bucket, 3 );
+            $county    = $this->infer_michigan_county_slug( $city_slug, $postal );
+            return $county ? 'mi_county_' . $county : 'mi_county_unknown';
+        }
+
+        return '';
+    }
+
+    private function format_county_bucket_label( $bucket ) {
+        $bucket = sanitize_text_field( $bucket );
+        if ( $bucket === 'mi_county_unknown' ) {
+            return __( 'Michigan (county unknown)', 'wealth-tax-calculator' );
+        }
+
+        if ( strncmp( $bucket, 'mi_county_', 10 ) === 0 ) {
+            $county_slug = sanitize_title( substr( $bucket, 10 ) );
+            if ( $county_slug !== '' ) {
+                return ucwords( str_replace( '-', ' ', $county_slug ) ) . ' County';
+            }
+        }
+
+        return $bucket;
+    }
+
     private function render_simple_count_table( $counts, $col_one, $col_two ) {
         if ( empty( $counts ) ) {
             echo '<p>' . esc_html__( 'No data yet.', 'wealth-tax-calculator' ) . '</p>';
@@ -1136,6 +1367,35 @@ class WTC_Policy_Analytics {
 
             echo '<tr>';
             echo '<td>' . esc_html( $key ) . '</td>';
+            echo '<td>' . esc_html( number_format_i18n( (int) $value ) ) . '</td>';
+            echo '</tr>';
+            $rows++;
+        }
+
+        echo '</tbody>';
+        echo '</table>';
+    }
+
+    private function render_county_count_table( $counts ) {
+        if ( empty( $counts ) ) {
+            echo '<p>' . esc_html__( 'No data yet.', 'wealth-tax-calculator' ) . '</p>';
+            return;
+        }
+
+        $limit = 20;
+        $rows  = 0;
+
+        echo '<table class="widefat striped">';
+        echo '<thead><tr><th>' . esc_html__( 'County', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Unique submitted sessions', 'wealth-tax-calculator' ) . '</th></tr></thead>';
+        echo '<tbody>';
+
+        foreach ( $counts as $key => $value ) {
+            if ( $rows >= $limit ) {
+                break;
+            }
+
+            echo '<tr>';
+            echo '<td>' . esc_html( $this->format_county_bucket_label( $key ) ) . '</td>';
             echo '<td>' . esc_html( number_format_i18n( (int) $value ) ) . '</td>';
             echo '</tr>';
             $rows++;
@@ -1227,7 +1487,7 @@ class WTC_Policy_Analytics {
         }
 
         echo '<table class="widefat striped">';
-        echo '<thead><tr><th>' . esc_html__( 'Submitted', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Mode', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Tax rate', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Region', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Prioritized selections', 'wealth-tax-calculator' ) . '</th></tr></thead>';
+        echo '<thead><tr><th>' . esc_html__( 'Submitted', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Mode', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Tax rate', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Region', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Michigan county', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Prioritized selections', 'wealth-tax-calculator' ) . '</th></tr></thead>';
         echo '<tbody>';
 
         foreach ( $rows as $row ) {
@@ -1239,6 +1499,7 @@ class WTC_Policy_Analytics {
             $mode         = isset( $row['mode'] ) ? sanitize_key( $row['mode'] ) : '';
             $tax_rate     = isset( $row['tax_rate_bucket'] ) ? sanitize_text_field( $row['tax_rate_bucket'] ) : '';
             $region       = isset( $row['region_bucket'] ) ? sanitize_text_field( $row['region_bucket'] ) : '';
+            $county       = isset( $row['county_bucket'] ) ? sanitize_text_field( $row['county_bucket'] ) : '';
             $items        = isset( $row['selected_items'] ) && is_array( $row['selected_items'] ) ? $row['selected_items'] : array();
 
             echo '<tr>';
@@ -1246,6 +1507,7 @@ class WTC_Policy_Analytics {
             echo '<td>' . esc_html( $mode !== '' ? $mode : '—' ) . '</td>';
             echo '<td>' . esc_html( $tax_rate !== '' ? $tax_rate . '%' : '—' ) . '</td>';
             echo '<td>' . esc_html( $region !== '' ? $region : '—' ) . '</td>';
+            echo '<td>' . esc_html( $county !== '' ? $this->format_county_bucket_label( $county ) : '—' ) . '</td>';
             echo '<td>';
 
             if ( empty( $items ) ) {
@@ -1367,6 +1629,7 @@ class WTC_Policy_Analytics {
         $rank_stats         = array();
         $policy_group_stats = array();
         $region_counts      = array();
+        $county_counts      = array();
         $tax_rate_counts    = array();
         $recent_submissions = array();
         $unique_sessions    = 0;
@@ -1466,6 +1729,7 @@ class WTC_Policy_Analytics {
                         'mode'            => isset( $submission['mode'] ) ? sanitize_key( $submission['mode'] ) : '',
                         'tax_rate_bucket' => isset( $submission['tax_rate_bucket'] ) ? sanitize_text_field( $submission['tax_rate_bucket'] ) : '',
                         'region_bucket'   => isset( $submission['region_bucket'] ) ? sanitize_text_field( $submission['region_bucket'] ) : '',
+                        'county_bucket'   => isset( $submission['county_bucket'] ) ? sanitize_text_field( $submission['county_bucket'] ) : '',
                         'selected_items'  => $selected_items,
                     );
 
@@ -1477,6 +1741,18 @@ class WTC_Policy_Analytics {
                         $region_counts[ $bucket ] = 0;
                     }
                     $region_counts[ $bucket ] += 1;
+
+                    $county_bucket = isset( $submission['county_bucket'] ) ? sanitize_text_field( $submission['county_bucket'] ) : '';
+                    if ( $county_bucket === '' ) {
+                        $city_slug      = strncmp( $bucket, 'mi_', 3 ) === 0 ? substr( $bucket, 3 ) : '';
+                        $county_bucket  = $this->normalize_michigan_county_bucket( $bucket, $city_slug );
+                    }
+                    if ( $county_bucket !== '' ) {
+                        if ( ! isset( $county_counts[ $county_bucket ] ) ) {
+                            $county_counts[ $county_bucket ] = 0;
+                        }
+                        $county_counts[ $county_bucket ] += 1;
+                    }
 
                     $rate = isset( $submission['tax_rate_bucket'] ) ? sanitize_text_field( $submission['tax_rate_bucket'] ) : '';
                     if ( $rate !== '' ) {
@@ -1538,6 +1814,20 @@ class WTC_Policy_Analytics {
                         $region_counts[ $bucket ] = 0;
                     }
                     $region_counts[ $bucket ] += (int) $count;
+                }
+            }
+
+            if ( ! empty( $day['counties'] ) && is_array( $day['counties'] ) ) {
+                foreach ( $day['counties'] as $bucket => $count ) {
+                    $bucket = $this->normalize_michigan_county_bucket( $bucket );
+                    if ( $bucket === '' ) {
+                        continue;
+                    }
+
+                    if ( ! isset( $county_counts[ $bucket ] ) ) {
+                        $county_counts[ $bucket ] = 0;
+                    }
+                    $county_counts[ $bucket ] += (int) $count;
                 }
             }
 
@@ -1604,6 +1894,7 @@ class WTC_Policy_Analytics {
             }
         );
         arsort( $region_counts );
+        arsort( $county_counts );
         ksort( $tax_rate_counts );
 
         usort(
@@ -1622,6 +1913,7 @@ class WTC_Policy_Analytics {
             'rank_rows'         => array_values( $rank_stats ),
             'policy_group_rows' => array_values( $policy_group_stats ),
             'region_counts'     => $region_counts,
+            'county_counts'     => $county_counts,
             'tax_rate_counts'   => $tax_rate_counts,
             'recent_submissions'=> $recent_submissions,
             'unique_sessions'   => $unique_sessions,
@@ -1711,6 +2003,7 @@ class WTC_Policy_Analytics {
                 'priority_rank_counts'  => array(),
                 'mode_counts'           => array(),
                 'regions'               => array(),
+                'counties'              => array(),
                 'tax_rate_counts'       => array(),
                 'sessions'              => array(),
                 'final_submissions'     => array(),
@@ -1719,6 +2012,7 @@ class WTC_Policy_Analytics {
 
         $geo_context   = $this->get_geo_context();
         $region_bucket = $geo_context['bucket'];
+        $county_bucket = isset( $geo_context['county_bucket'] ) ? sanitize_text_field( $geo_context['county_bucket'] ) : '';
         if ( $this->geo_enabled() && ! $geo_context['include'] ) {
             wp_send_json_success( array( 'ok' => true, 'excluded' => 'non-us' ) );
         }
@@ -1780,6 +2074,18 @@ class WTC_Policy_Analytics {
         }
         $day['regions'][ $region_bucket ] += 1;
 
+        $city_slug     = strncmp( $region_bucket, 'mi_', 3 ) === 0 ? substr( $region_bucket, 3 ) : '';
+        $county_bucket = $this->normalize_michigan_county_bucket( $county_bucket, $city_slug );
+        if ( $county_bucket !== '' ) {
+            if ( ! isset( $day['counties'] ) || ! is_array( $day['counties'] ) ) {
+                $day['counties'] = array();
+            }
+            if ( ! isset( $day['counties'][ $county_bucket ] ) ) {
+                $day['counties'][ $county_bucket ] = 0;
+            }
+            $day['counties'][ $county_bucket ] += 1;
+        }
+
         $day['final_submissions'][ $session_hash ] = array(
             'policy_key'       => sanitize_text_field( $policy_key ),
             'order'            => $clean_order,
@@ -1787,6 +2093,7 @@ class WTC_Policy_Analytics {
             'tax_rate_bucket'  => $tax_rate_bucket,
             'mode'             => $mode,
             'region_bucket'    => sanitize_text_field( $region_bucket ),
+            'county_bucket'    => $county_bucket,
             'submitted_at'     => time(),
         );
 
@@ -1823,22 +2130,28 @@ class WTC_Policy_Analytics {
             return array(
                 'include' => true,
                 'bucket'  => 'unknown',
+                'county_bucket' => '',
             );
         }
 
-        $cache_key = 'wtc_geo_bucket_' . md5( $ip );
+        $cache_key = 'wtc_geo_bucket_v2_' . md5( $ip );
         $cached    = get_transient( $cache_key );
         if ( is_array( $cached ) && isset( $cached['include'], $cached['bucket'] ) ) {
+            $bucket        = sanitize_text_field( $cached['bucket'] );
+            $cached_county = isset( $cached['county_bucket'] ) ? sanitize_text_field( $cached['county_bucket'] ) : '';
             return array(
                 'include' => (bool) $cached['include'],
-                'bucket'  => sanitize_text_field( $cached['bucket'] ),
+                'bucket'  => $bucket,
+                'county_bucket' => $this->normalize_michigan_county_bucket( $cached_county, strncmp( $bucket, 'mi_', 3 ) === 0 ? substr( $bucket, 3 ) : '' ),
             );
         }
         if ( false !== $cached && is_string( $cached ) ) {
             // Backward compatibility for string-only transient values.
+            $bucket = sanitize_text_field( $cached );
             return array(
                 'include' => $cached !== 'outside_michigan',
-                'bucket'  => sanitize_text_field( $cached ),
+                'bucket'  => $bucket,
+                'county_bucket' => $this->normalize_michigan_county_bucket( $bucket ),
             );
         }
 
@@ -1857,6 +2170,7 @@ class WTC_Policy_Analytics {
             $unknown = array(
                 'include' => true,
                 'bucket'  => 'unknown',
+                'county_bucket' => '',
             );
             set_transient( $cache_key, $unknown, 12 * HOUR_IN_SECONDS );
             return $unknown;
@@ -1867,6 +2181,7 @@ class WTC_Policy_Analytics {
             $unknown = array(
                 'include' => true,
                 'bucket'  => 'unknown',
+                'county_bucket' => '',
             );
             set_transient( $cache_key, $unknown, 12 * HOUR_IN_SECONDS );
             return $unknown;
@@ -1875,15 +2190,33 @@ class WTC_Policy_Analytics {
         $country = isset( $body['country_code'] ) ? strtoupper( sanitize_text_field( $body['country_code'] ) ) : '';
         $region  = isset( $body['region_code'] ) ? strtoupper( sanitize_text_field( $body['region_code'] ) ) : '';
         $city    = isset( $body['city'] ) ? sanitize_title( sanitize_text_field( $body['city'] ) ) : '';
+        $postal  = isset( $body['postal'] ) ? sanitize_text_field( $body['postal'] ) : '';
 
         $include = true;
         $bucket  = 'unknown';
+        $county_bucket = '';
 
         if ( $country !== 'US' ) {
             $include = false;
             $bucket  = 'non_us';
         } elseif ( $region === 'MI' ) {
             $bucket = $city ? 'mi_' . $city : 'mi_unknown';
+
+            $county_slug = '';
+            foreach ( array( 'county', 'county_name', 'state_district', 'district' ) as $county_field ) {
+                if ( isset( $body[ $county_field ] ) ) {
+                    $county_slug = $this->normalize_county_slug( $body[ $county_field ] );
+                    if ( $county_slug !== '' ) {
+                        break;
+                    }
+                }
+            }
+
+            if ( $county_slug === '' ) {
+                $county_slug = $this->infer_michigan_county_slug( $city, $postal );
+            }
+
+            $county_bucket = $county_slug ? 'mi_county_' . $county_slug : 'mi_county_unknown';
         } elseif ( $region ) {
             $bucket = 'us_' . strtolower( $region );
         } else {
@@ -1893,6 +2226,7 @@ class WTC_Policy_Analytics {
         $result = array(
             'include' => $include,
             'bucket'  => $bucket,
+            'county_bucket' => $county_bucket,
         );
 
         set_transient( $cache_key, $result, 24 * HOUR_IN_SECONDS );
