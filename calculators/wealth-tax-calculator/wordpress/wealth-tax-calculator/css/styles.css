@@ -2015,6 +2015,36 @@
     font-weight: 700;
 }
 
+.calculator-container .wtc-fs-slider-block {
+    margin-bottom: 28px;
+    padding: 18px;
+    background: rgba(255, 255, 255, 0.66);
+    border: 1px solid #E1B682;
+    border-radius: 10px;
+}
+
+.calculator-container .wtc-fs-slider-title {
+    margin: 0 0 14px;
+    font-size: 1rem;
+    color: #233071;
+    font-family: var(--wtc-font-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.calculator-container .wtc-fs-slider-shell {
+    position: relative;
+    margin-bottom: 10px;
+}
+
+.calculator-container .wtc-fs-dragdealer {
+    margin-top: 170px;
+}
+
+.calculator-container .wtc-fs-range-labels {
+    margin-top: 8px;
+}
+
 .calculator-container .wtc-fs-stats {
     display: flex;
     gap: 16px;
@@ -2060,6 +2090,16 @@
     border: 1px solid #E1B682;
     border-radius: 8px;
     padding: 16px;
+    cursor: grab;
+}
+
+.calculator-container .wtc-fs-entry.is-dragging {
+    opacity: 0.8;
+}
+
+.calculator-container .wtc-fs-entry.drag-over {
+    border-color: #406BBF;
+    box-shadow: 0 0 0 2px rgba(64, 107, 191, 0.2);
 }
 
 .calculator-container .wtc-fs-entry.wtc-fs-partial {
@@ -2101,6 +2141,18 @@
     color: #233071;
     text-transform: uppercase;
     letter-spacing: 0.04em;
+}
+
+.calculator-container .wtc-fs-drag-handle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    color: #406BBF;
+    font-size: 1rem;
+    line-height: 1;
 }
 
 .calculator-container .wtc-fs-badge {
@@ -2182,4 +2234,32 @@
     font-style: italic;
     text-align: center;
     padding: 32px 0;
+}
+
+@media (max-width: 768px) {
+    .calculator-container .wtc-fs-dragdealer {
+        margin-top: 180px;
+    }
+
+    .calculator-container .wtc-fs-slider-shell .wtc-infobox {
+        width: 220px;
+    }
+}
+
+@media (max-width: 600px) {
+    .calculator-container.is-showing-summary .wtc-final-summary {
+        padding: 26px 16px;
+    }
+
+    .calculator-container .wtc-fs-slider-block {
+        padding: 14px;
+    }
+
+    .calculator-container .wtc-fs-dragdealer {
+        margin-top: 192px;
+    }
+
+    .calculator-container .wtc-fs-slider-shell .wtc-infobox {
+        width: 206px;
+    }
 }

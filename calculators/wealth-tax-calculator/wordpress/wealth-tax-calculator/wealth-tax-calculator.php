@@ -666,9 +666,9 @@ class WTC_Policy_Analytics {
                                 <label>
                                     <input type="hidden" name="<?php echo esc_attr( WTC_ANALYTICS_GEO_OPTION ); ?>" value="0" />
                                     <input type="checkbox" name="<?php echo esc_attr( WTC_ANALYTICS_GEO_OPTION ); ?>" value="1" <?php checked( $this->geo_enabled(), true ); ?> />
-                                    <?php esc_html_e( 'Enable coarse IP-based US region tracking (Michigan city detail)', 'wealth-tax-calculator' ); ?>
+                                    <?php esc_html_e( 'Filter to US-only responses', 'wealth-tax-calculator' ); ?>
                                 </label>
-                                <p class="description"><?php esc_html_e( 'When enabled, analytics only include US responses. Michigan responses are grouped by city (mi_city), while other US responses are grouped by state (us_state). No raw IP is stored in analytics records.', 'wealth-tax-calculator' ); ?></p>
+                                <p class="description"><?php esc_html_e( 'Coarse IP-based region tracking is always active (state-level for US, city-level for Michigan). When this option is enabled, non-US visitors are excluded from analytics entirely. No raw IP addresses are stored.', 'wealth-tax-calculator' ); ?></p>
                             </td>
                         </tr>
                         <tr>
@@ -684,13 +684,14 @@ class WTC_Policy_Analytics {
 
             <div class="card" style="max-width: 920px; margin-top: 20px;">
                 <h2><?php esc_html_e( 'Summary', 'wealth-tax-calculator' ); ?></h2>
-                <p><strong><?php esc_html_e( 'Tracked interactions:', 'wealth-tax-calculator' ); ?></strong> <?php echo esc_html( number_format_i18n( $summary['total_events'] ) ); ?></p>
+                <p><strong><?php esc_html_e( 'Submitted sessions:', 'wealth-tax-calculator' ); ?></strong> <?php echo esc_html( number_format_i18n( $summary['total_events'] ) ); ?></p>
+                <p><strong><?php esc_html_e( 'Unique sessions:', 'wealth-tax-calculator' ); ?></strong> <?php echo esc_html( number_format_i18n( $summary['unique_sessions'] ) ); ?></p>
                 <p><strong><?php esc_html_e( 'Days stored:', 'wealth-tax-calculator' ); ?></strong> <?php echo esc_html( number_format_i18n( $summary['days_count'] ) ); ?></p>
             </div>
 
             <div class="card" style="max-width: 920px; margin-top: 20px;">
-                <h2><?php esc_html_e( 'Most Selected Sub-Policies', 'wealth-tax-calculator' ); ?></h2>
-                <?php $this->render_simple_count_table( $summary['enabled_counts'], __( 'Sub-policy', 'wealth-tax-calculator' ), __( 'Enabled count', 'wealth-tax-calculator' ) ); ?>
+                <h2><?php esc_html_e( 'Most Selected Sub-Policies (Final Submissions)', 'wealth-tax-calculator' ); ?></h2>
+                <?php $this->render_simple_count_table( $summary['enabled_counts'], __( 'Sub-policy', 'wealth-tax-calculator' ), __( 'Sessions selected', 'wealth-tax-calculator' ) ); ?>
             </div>
 
             <div class="card" style="max-width: 920px; margin-top: 20px;">
@@ -698,12 +699,15 @@ class WTC_Policy_Analytics {
                 <?php $this->render_simple_count_table( $summary['top_rank_counts'], __( 'Sub-policy', 'wealth-tax-calculator' ), __( 'Times ranked #1', 'wealth-tax-calculator' ) ); ?>
             </div>
 
-            <?php if ( $this->geo_enabled() ) : ?>
-                <div class="card" style="max-width: 920px; margin-top: 20px;">
-                    <h2><?php esc_html_e( 'Region Buckets', 'wealth-tax-calculator' ); ?></h2>
-                    <?php $this->render_simple_count_table( $summary['region_counts'], __( 'Region bucket', 'wealth-tax-calculator' ), __( 'Interactions', 'wealth-tax-calculator' ) ); ?>
-                </div>
-            <?php endif; ?>
+            <div class="card" style="max-width: 920px; margin-top: 20px;">
+                <h2><?php esc_html_e( 'Region Buckets', 'wealth-tax-calculator' ); ?></h2>
+                <?php $this->render_simple_count_table( $summary['region_counts'], __( 'Region bucket', 'wealth-tax-calculator' ), __( 'Submitted sessions', 'wealth-tax-calculator' ) ); ?>
+            </div>
+
+            <div class="card" style="max-width: 920px; margin-top: 20px;">
+                <h2><?php esc_html_e( 'Tax Rate Distribution', 'wealth-tax-calculator' ); ?></h2>
+                <?php $this->render_simple_count_table( $summary['tax_rate_counts'], __( 'Tax rate (%)', 'wealth-tax-calculator' ), __( 'Submitted sessions', 'wealth-tax-calculator' ) ); ?>
+            </div>
 
             <div class="card" style="max-width: 920px; margin-top: 20px;">
                 <h2><?php esc_html_e( 'Data Management', 'wealth-tax-calculator' ); ?></h2>
@@ -750,6 +754,8 @@ class WTC_Policy_Analytics {
         $enabled_counts  = array();
         $top_rank_counts = array();
         $region_counts   = array();
+        $tax_rate_counts = array();
+        $unique_sessions = 0;
         $total_events    = 0;
 
         foreach ( $analytics_data as $day ) {
@@ -757,6 +763,63 @@ class WTC_Policy_Analytics {
                 continue;
             }
 
+            if ( ! empty( $day['final_submissions'] ) && is_array( $day['final_submissions'] ) ) {
+                $submissions = $day['final_submissions'];
+                $total_events += count( $submissions );
+                $unique_sessions += count( $submissions );
+
+                foreach ( $submissions as $submission ) {
+                    if ( ! is_array( $submission ) ) {
+                        continue;
+                    }
+
+                    $order = isset( $submission['order'] ) && is_array( $submission['order'] )
+                        ? $submission['order']
+                        : array();
+
+                    for ( $i = 0; $i < count( $order ); $i++ ) {
+                        $policy_key = sanitize_text_field( $order[ $i ] );
+                        if ( ! preg_match( '/^[a-zA-Z]+:[0-9]+$/', $policy_key ) ) {
+                            continue;
+                        }
+
+                        if ( ! isset( $enabled_counts[ $policy_key ] ) ) {
+                            $enabled_counts[ $policy_key ] = 0;
+                        }
+                        $enabled_counts[ $policy_key ] += 1;
+                    }
+
+                    if ( ! empty( $order ) ) {
+                        $rank_one = sanitize_text_field( $order[0] );
+                        if ( preg_match( '/^[a-zA-Z]+:[0-9]+$/', $rank_one ) ) {
+                            if ( ! isset( $top_rank_counts[ $rank_one ] ) ) {
+                                $top_rank_counts[ $rank_one ] = 0;
+                            }
+                            $top_rank_counts[ $rank_one ] += 1;
+                        }
+                    }
+
+                    $bucket = isset( $submission['region_bucket'] ) ? sanitize_text_field( $submission['region_bucket'] ) : 'unknown';
+                    if ( $bucket === '' ) {
+                        $bucket = 'unknown';
+                    }
+                    if ( ! isset( $region_counts[ $bucket ] ) ) {
+                        $region_counts[ $bucket ] = 0;
+                    }
+                    $region_counts[ $bucket ] += 1;
+
+                    $rate = isset( $submission['tax_rate_bucket'] ) ? sanitize_text_field( $submission['tax_rate_bucket'] ) : '';
+                    if ( $rate !== '' ) {
+                        if ( ! isset( $tax_rate_counts[ $rate ] ) ) {
+                            $tax_rate_counts[ $rate ] = 0;
+                        }
+                        $tax_rate_counts[ $rate ] += 1;
+                    }
+                }
+                continue;
+            }
+
+            // Legacy fallback for historical analytics records.
             $total_events += isset( $day['event_total'] ) ? (int) $day['event_total'] : 0;
 
             if ( ! empty( $day['policy_enabled'] ) && is_array( $day['policy_enabled'] ) ) {
@@ -785,16 +848,32 @@ class WTC_Policy_Analytics {
                     $region_counts[ $bucket ] += (int) $count;
                 }
             }
+
+            if ( ! empty( $day['tax_rate_counts'] ) && is_array( $day['tax_rate_counts'] ) ) {
+                foreach ( $day['tax_rate_counts'] as $rate => $count ) {
+                    if ( ! isset( $tax_rate_counts[ $rate ] ) ) {
+                        $tax_rate_counts[ $rate ] = 0;
+                    }
+                    $tax_rate_counts[ $rate ] += (int) $count;
+                }
+            }
+
+            if ( ! empty( $day['sessions'] ) && is_array( $day['sessions'] ) ) {
+                $unique_sessions += count( $day['sessions'] );
+            }
         }
 
         arsort( $enabled_counts );
         arsort( $top_rank_counts );
         arsort( $region_counts );
+        ksort( $tax_rate_counts );
 
         return array(
             'enabled_counts'  => $enabled_counts,
             'top_rank_counts' => $top_rank_counts,
             'region_counts'   => $region_counts,
+            'tax_rate_counts' => $tax_rate_counts,
+            'unique_sessions' => $unique_sessions,
             'days_count'      => count( $analytics_data ),
             'total_events'    => $total_events,
         );
@@ -835,7 +914,18 @@ class WTC_Policy_Analytics {
         $rank       = isset( $_POST['rank'] ) ? (int) $_POST['rank'] : 0;
         $order_raw  = isset( $_POST['order'] ) ? wp_unslash( $_POST['order'] ) : '[]';
 
-        if ( ! in_array( $event_type, array( 'policy_toggle', 'policy_reorder' ), true ) ) {
+        $tax_rate_raw    = isset( $_POST['tax_rate'] ) ? sanitize_text_field( wp_unslash( $_POST['tax_rate'] ) ) : '';
+        $tax_rate_val    = strlen( $tax_rate_raw ) ? (float) $tax_rate_raw : null;
+        $tax_rate_bucket = ( null !== $tax_rate_val && $tax_rate_val >= 1.0 && $tax_rate_val <= 10.0 )
+            ? (string) (int) round( $tax_rate_val )
+            : '';
+
+        $session_raw  = isset( $_POST['session'] ) ? sanitize_text_field( wp_unslash( $_POST['session'] ) ) : '';
+        $session_hash = ( strlen( $session_raw ) <= 64 && preg_match( '/^wtc_\d+_[a-zA-Z0-9]{6,16}$/', $session_raw ) )
+            ? substr( md5( $session_raw ), 0, 12 )
+            : '';
+
+        if ( ! in_array( $event_type, array( 'policy_toggle', 'policy_reorder', 'next_step_submit' ), true ) ) {
             wp_send_json_error( array( 'message' => 'invalid-event-type' ), 400 );
         }
 
@@ -866,19 +956,29 @@ class WTC_Policy_Analytics {
                 'priority_rank_counts'  => array(),
                 'mode_counts'           => array(),
                 'regions'               => array(),
+                'tax_rate_counts'       => array(),
+                'sessions'              => array(),
+                'final_submissions'     => array(),
             );
         }
 
-        $region_bucket = null;
-        if ( $this->geo_enabled() ) {
-            $geo_context = $this->get_geo_context();
-            if ( ! $geo_context['include'] ) {
-                wp_send_json_success( array( 'ok' => true, 'excluded' => 'non-us' ) );
-            }
-            $region_bucket = $geo_context['bucket'];
+        $geo_context   = $this->get_geo_context();
+        $region_bucket = $geo_context['bucket'];
+        if ( $this->geo_enabled() && ! $geo_context['include'] ) {
+            wp_send_json_success( array( 'ok' => true, 'excluded' => 'non-us' ) );
         }
 
         $day =& $data[ $today ];
+
+        if ( ! isset( $day['final_submissions'] ) || ! is_array( $day['final_submissions'] ) ) {
+            $day['final_submissions'] = array();
+        }
+
+        if ( $event_type !== 'next_step_submit' ) {
+            // Submit-only model: ignore interaction-level events from older clients.
+            wp_send_json_success( array( 'ok' => true, 'ignored' => 'legacy-event' ) );
+        }
+
         $day['event_total'] = isset( $day['event_total'] ) ? (int) $day['event_total'] + 1 : 1;
 
         if ( ! isset( $day['mode_counts'][ $mode ] ) ) {
@@ -886,51 +986,56 @@ class WTC_Policy_Analytics {
         }
         $day['mode_counts'][ $mode ] += 1;
 
-        if ( $event_type === 'policy_toggle' ) {
-            $is_enabled = $enabled === '1';
-            $target_key = $is_enabled ? 'policy_enabled' : 'policy_disabled';
-            if ( ! isset( $day[ $target_key ][ $policy_key ] ) ) {
-                $day[ $target_key ][ $policy_key ] = 0;
+        $clean_order = array();
+        for ( $i = 0; $i < count( $order ); $i++ ) {
+            $item_key = sanitize_text_field( $order[ $i ] );
+            if ( ! preg_match( '/^[a-zA-Z]+:[0-9]+$/', $item_key ) ) {
+                continue;
             }
-            $day[ $target_key ][ $policy_key ] += 1;
+            if ( in_array( $item_key, $clean_order, true ) ) {
+                continue;
+            }
+            $clean_order[] = $item_key;
         }
 
-        if ( $event_type === 'policy_reorder' ) {
-            for ( $i = 0; $i < count( $order ); $i++ ) {
-                $rank_key = (string) ( $i + 1 );
-                $item_key = sanitize_text_field( $order[ $i ] );
-
-                if ( ! preg_match( '/^[a-zA-Z]+:[0-9]+$/', $item_key ) ) {
-                    continue;
-                }
-
-                if ( ! isset( $day['priority_rank_counts'][ $rank_key ] ) ) {
-                    $day['priority_rank_counts'][ $rank_key ] = array();
-                }
-                if ( ! isset( $day['priority_rank_counts'][ $rank_key ][ $item_key ] ) ) {
-                    $day['priority_rank_counts'][ $rank_key ][ $item_key ] = 0;
-                }
-                $day['priority_rank_counts'][ $rank_key ][ $item_key ] += 1;
-            }
-
-            if ( $rank > 0 ) {
-                $rank_key = (string) $rank;
-                if ( ! isset( $day['priority_rank_counts'][ $rank_key ] ) ) {
-                    $day['priority_rank_counts'][ $rank_key ] = array();
-                }
-                if ( ! isset( $day['priority_rank_counts'][ $rank_key ][ $policy_key ] ) ) {
-                    $day['priority_rank_counts'][ $rank_key ][ $policy_key ] = 0;
-                }
-                $day['priority_rank_counts'][ $rank_key ][ $policy_key ] += 1;
-            }
+        if ( empty( $clean_order ) ) {
+            wp_send_json_error( array( 'message' => 'invalid-order' ), 400 );
         }
 
-        if ( $this->geo_enabled() ) {
-            if ( ! isset( $day['regions'][ $region_bucket ] ) ) {
-                $day['regions'][ $region_bucket ] = 0;
-            }
-            $day['regions'][ $region_bucket ] += 1;
+        if ( $session_hash === '' ) {
+            wp_send_json_error( array( 'message' => 'invalid-session' ), 400 );
         }
+
+        if ( $tax_rate_bucket !== '' ) {
+            if ( ! isset( $day['tax_rate_counts'] ) ) {
+                $day['tax_rate_counts'] = array();
+            }
+            if ( ! isset( $day['tax_rate_counts'][ $tax_rate_bucket ] ) ) {
+                $day['tax_rate_counts'][ $tax_rate_bucket ] = 0;
+            }
+            $day['tax_rate_counts'][ $tax_rate_bucket ] += 1;
+        }
+
+        if ( ! isset( $day['sessions'] ) ) {
+            $day['sessions'] = array();
+        }
+        if ( ! isset( $day['sessions'][ $session_hash ] ) && count( $day['sessions'] ) < 5000 ) {
+            $day['sessions'][ $session_hash ] = 1;
+        }
+
+        if ( ! isset( $day['regions'][ $region_bucket ] ) ) {
+            $day['regions'][ $region_bucket ] = 0;
+        }
+        $day['regions'][ $region_bucket ] += 1;
+
+        $day['final_submissions'][ $session_hash ] = array(
+            'policy_key'       => sanitize_text_field( $policy_key ),
+            'order'            => $clean_order,
+            'tax_rate_bucket'  => $tax_rate_bucket,
+            'mode'             => $mode,
+            'region_bucket'    => sanitize_text_field( $region_bucket ),
+            'submitted_at'     => time(),
+        );
 
         update_option( WTC_ANALYTICS_OPTION_KEY, $data, false );
         wp_send_json_success( array( 'ok' => true ) );
@@ -1443,6 +1548,50 @@ class Billionaire_Wealth_Tax_Calculator {
                             <span aria-hidden="true">&larr;</span> Back to Calculator
                         </button>
                         <h2 class="wtc-final-summary-title">Your Tax Plan Summary</h2>
+                    </div>
+                    <div class="wtc-fs-slider-block">
+                        <h3 class="wtc-fs-slider-title">Adjust Tax Rate</h3>
+                        <div class="wtc-fs-slider-shell">
+                            <div id="wtc-fs-pr-slider" class="wtc-dragdealer wtc-fs-dragdealer">
+                                <div class="wtc-stripe">
+                                    <div id="wtc-fs-highlight-fill" class="wtc-highlight-fill"></div>
+
+                                    <div class="handle">
+                                        <div class="wtc-infobox" id="wtc-fs-sliderInfobox">
+                                            <div class="wtc-titlebar">
+                                                <span id="wtc-fs-plan-holder">Tax Rate:</span>
+                                                <span id="wtc-fs-device-holder">2.0%</span>
+                                            </div>
+                                            <div class="wtc-innerbox">
+                                                <div class="wtc-annual-label">10-YEAR REVENUE:</div>
+                                                <div class="wtc-annual-price" id="wtc-fs-annualPrice">$880.0 Billion</div>
+                                            </div>
+                                        </div>
+
+                                        <div
+                                            class="wtc-square"
+                                            id="wtc-fs-sliderHandle"
+                                            role="slider"
+                                            tabindex="0"
+                                            aria-valuemin="1"
+                                            aria-valuemax="10"
+                                            aria-valuenow="2"
+                                            aria-valuetext="2.0%"
+                                            aria-label="Summary tax rate percentage"
+                                        >
+                                            <span class="value" id="wtc-fs-sliderValue">2.0%</span>
+                                            <span class="menu-line"></span>
+                                            <span class="menu-line"></span>
+                                            <span class="menu-line"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="range-labels wtc-fs-range-labels" aria-hidden="true">
+                            <span>1%</span>
+                            <span>10%</span>
+                        </div>
                     </div>
                     <div id="wtc-finalSummaryBody" class="wtc-final-summary-body"></div>
                 </div>

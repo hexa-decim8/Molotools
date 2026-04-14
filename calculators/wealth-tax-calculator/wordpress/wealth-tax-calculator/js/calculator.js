@@ -26,6 +26,11 @@
         suppressCallback: false,
         resizeTicking: false
     };
+    var summarySliderController = {
+        instance: null,
+        suppressCallback: false,
+        resizeTicking: false
+    };
     var moneyPileController = {
         shell: null,
         field: null,
@@ -38,7 +43,6 @@
         nonce: '',
         sessionId: ''
     };
-    var hasTrackedNextStepPrioritization = false;
     var requestFrame = typeof window.requestAnimationFrame === 'function'
         ? function (callback) { return window.requestAnimationFrame(callback); }
         : function (callback) { return window.setTimeout(callback, 16); };
@@ -639,6 +643,54 @@
         }
     }
 
+    function keepSummarySliderInfoboxVisible() {
+        var sliderWrapper = el('wtc-fs-pr-slider');
+        var sliderInfoBox = el('wtc-fs-sliderInfobox');
+
+        if (!sliderWrapper || !sliderInfoBox) {
+            return;
+        }
+
+        var handleWrapper = sliderInfoBox.parentElement;
+        if (!handleWrapper) {
+            return;
+        }
+
+        if (supportsCssVariables) {
+            sliderInfoBox.style.setProperty('--wtc-infobox-offset', '0px');
+            sliderInfoBox.style.setProperty('--wtc-infobox-pointer-offset', '0px');
+        } else {
+            sliderInfoBox.style.marginLeft = '0px';
+        }
+
+        var sliderRect = sliderWrapper.getBoundingClientRect();
+        var handleRect = handleWrapper.getBoundingClientRect();
+        var infoBoxWidth = sliderInfoBox.offsetWidth;
+
+        if (!infoBoxWidth || sliderRect.width <= 0) {
+            return;
+        }
+
+        var gutter = 8;
+        var handleCenter = handleRect.left + (handleRect.width / 2);
+        var desiredLeft = handleCenter - (infoBoxWidth / 2);
+        var minLeft = sliderRect.left + gutter;
+        var maxLeft = sliderRect.right - gutter - infoBoxWidth;
+        var boundedLeft = clampNumber(desiredLeft, minLeft, maxLeft);
+        var offset = boundedLeft - desiredLeft;
+
+        var pointerLimit = (infoBoxWidth / 2) - 20;
+        var pointerOffset = clampNumber(-offset, -pointerLimit, pointerLimit);
+
+        if (supportsCssVariables) {
+            sliderInfoBox.style.setProperty('--wtc-infobox-offset', offset.toFixed(2) + 'px');
+            sliderInfoBox.style.setProperty('--wtc-infobox-pointer-offset', pointerOffset.toFixed(2) + 'px');
+        } else {
+            sliderInfoBox.style.left = '50%';
+            sliderInfoBox.style.marginLeft = offset.toFixed(2) + 'px';
+        }
+    }
+
     function ensureMoneyPile() {
         if (moneyPileController.initialized) {
             return true;
@@ -809,6 +861,16 @@
         sliderController.suppressCallback = false;
     }
 
+    function syncSummaryDragdealerPosition(taxRate) {
+        if (!summarySliderController.instance) {
+            return;
+        }
+
+        summarySliderController.suppressCallback = true;
+        summarySliderController.instance.setValue(rateToRatio(taxRate), 0, true);
+        summarySliderController.suppressCallback = false;
+    }
+
     function setTaxRate(taxRate, syncHandlePosition) {
         var input = getTaxRateInput();
         if (!input) {
@@ -892,6 +954,119 @@
             requestFrame(function () {
                 sliderController.resizeTicking = false;
                 keepSliderInfoboxVisible();
+            });
+        }
+
+        window.addEventListener('resize', handleViewportChange);
+        window.addEventListener('orientationchange', handleViewportChange);
+    }
+
+    function syncSummarySliderDecor(taxRate, revenue) {
+        var sliderValue = el('wtc-fs-sliderValue');
+        var annualPrice = el('wtc-fs-annualPrice');
+        var planHolder = el('wtc-fs-plan-holder');
+        var deviceHolder = el('wtc-fs-device-holder');
+        var highlightFill = el('wtc-fs-highlight-fill');
+        var handle = el('wtc-fs-sliderHandle');
+
+        var rateText = taxRate.toFixed(1) + '%';
+        var progress = rateToRatio(taxRate) * 100;
+
+        if (sliderValue) {
+            sliderValue.textContent = rateText;
+        }
+
+        if (planHolder) {
+            planHolder.textContent = 'Tax Rate:';
+        }
+
+        if (deviceHolder) {
+            deviceHolder.textContent = rateText;
+        }
+
+        if (annualPrice) {
+            annualPrice.textContent = formatCurrency(revenue);
+        }
+
+        if (highlightFill) {
+            highlightFill.style.width = progress.toFixed(2) + '%';
+        }
+
+        if (handle) {
+            handle.setAttribute('aria-valuenow', taxRate.toFixed(1));
+            handle.setAttribute('aria-valuetext', rateText);
+        }
+
+        keepSummarySliderInfoboxVisible();
+    }
+
+    function handleSummarySliderKeydown(event) {
+        var key = event.key;
+        var step = currentMode === 'basic' ? 1 : 0.1;
+        var currentValue = getCurrentTaxRate();
+        var nextValue = currentValue;
+
+        if (key === 'ArrowLeft' || key === 'ArrowDown') {
+            nextValue = currentValue - step;
+        } else if (key === 'ArrowRight' || key === 'ArrowUp') {
+            nextValue = currentValue + step;
+        } else if (key === 'PageDown') {
+            nextValue = currentValue - 1;
+        } else if (key === 'PageUp') {
+            nextValue = currentValue + 1;
+        } else if (key === 'Home') {
+            nextValue = TAX_RATE_MIN;
+        } else if (key === 'End') {
+            nextValue = TAX_RATE_MAX;
+        } else {
+            return;
+        }
+
+        event.preventDefault();
+        setTaxRate(nextValue, true);
+    }
+
+    function initSummaryTaxRateSlider() {
+        var sliderWrapper = el('wtc-fs-pr-slider');
+        var sliderHandle = el('wtc-fs-sliderHandle');
+        var taxRateInput = getTaxRateInput();
+
+        if (!sliderWrapper || !sliderHandle || !taxRateInput || typeof Dragdealer === 'undefined') {
+            return;
+        }
+
+        summarySliderController.instance = new Dragdealer('wtc-fs-pr-slider', {
+            x: rateToRatio(getCurrentTaxRate()),
+            speed: 0.15,
+            animationCallback: function (x) {
+                if (summarySliderController.suppressCallback) {
+                    return;
+                }
+
+                var nextRate = quantizeTaxRate(ratioToRate(x));
+                var nextValue = currentMode === 'basic' ? String(Math.round(nextRate)) : nextRate.toFixed(1);
+
+                if (taxRateInput.value !== nextValue) {
+                    taxRateInput.value = nextValue;
+                    updateDisplay();
+                } else {
+                    syncSummarySliderDecor(nextRate, calculateRevenue(nextRate));
+                }
+            }
+        });
+
+        sliderHandle.addEventListener('keydown', handleSummarySliderKeydown);
+        syncSummaryDragdealerPosition(getCurrentTaxRate());
+
+        function handleViewportChange() {
+            if (summarySliderController.resizeTicking) {
+                return;
+            }
+
+            summarySliderController.resizeTicking = true;
+            requestFrame(function () {
+                summarySliderController.resizeTicking = false;
+                keepSummarySliderInfoboxVisible();
             });
         }
 
@@ -1357,23 +1532,34 @@
         }
         selectedPoliciesOrder.splice(srcIdx, 1);
         selectedPoliciesOrder.splice(tgtIdx, 0, dragPolicyKey);
-        sendAnalyticsEvent('policy_reorder', dragPolicyKey, {
-            rank: tgtIdx + 1,
-            order: getActivePolicyKeysInOrder()
-        });
         syncSelectedPoliciesBox();
+        if (isFinalSummaryVisible()) {
+            renderFinalSummary();
+        }
+    }
+
+    function clearPolicyDragOverClasses() {
+        var selectedList = el('wtc-selectedPoliciesList');
+        if (selectedList) {
+            var selectedEntries = selectedList.querySelectorAll('.selected-policy-entry');
+            for (var i = 0; i < selectedEntries.length; i++) {
+                selectedEntries[i].classList.remove('drag-over');
+            }
+        }
+
+        var summaryBody = el('wtc-finalSummaryBody');
+        if (summaryBody) {
+            var summaryEntries = summaryBody.querySelectorAll('.wtc-fs-entry');
+            for (var j = 0; j < summaryEntries.length; j++) {
+                summaryEntries[j].classList.remove('drag-over');
+            }
+        }
     }
 
     function handlePolicyEntryDragEnd(event) {
         event.currentTarget.classList.remove('is-dragging');
         dragPolicyKey = null;
-        var list = el('wtc-selectedPoliciesList');
-        if (list) {
-            var entries = list.querySelectorAll('.selected-policy-entry');
-            for (var i = 0; i < entries.length; i++) {
-                entries[i].classList.remove('drag-over');
-            }
-        }
+        clearPolicyDragOverClasses();
     }
 
     function syncSelectedPoliciesBox() {
@@ -1710,6 +1896,8 @@
 
             var entry = document.createElement('div');
             entry.className = 'wtc-fs-entry wtc-fs-' + item.status;
+            entry.setAttribute('draggable', 'true');
+            entry.setAttribute('data-key', item.key);
 
             var entryHeader = document.createElement('div');
             entryHeader.className = 'wtc-fs-entry-header';
@@ -1717,6 +1905,11 @@
             var rank = document.createElement('span');
             rank.className = 'wtc-fs-rank';
             rank.textContent = '#' + (i + 1);
+
+            var dragHandle = document.createElement('span');
+            dragHandle.className = 'wtc-fs-drag-handle';
+            dragHandle.textContent = '\u28FF';
+            dragHandle.setAttribute('aria-hidden', 'true');
 
             var label = document.createElement('span');
             label.className = 'wtc-fs-label';
@@ -1733,6 +1926,7 @@
             }
 
             entryHeader.appendChild(rank);
+            entryHeader.appendChild(dragHandle);
             entryHeader.appendChild(label);
             entryHeader.appendChild(badge);
 
@@ -1755,6 +1949,11 @@
             entry.appendChild(desc);
             entry.appendChild(costEl);
             entry.appendChild(progressWrap);
+            entry.addEventListener('dragstart', handlePolicyEntryDragStart);
+            entry.addEventListener('dragover', handlePolicyEntryDragOver);
+            entry.addEventListener('dragleave', handlePolicyEntryDragLeave);
+            entry.addEventListener('drop', handlePolicyEntryDrop);
+            entry.addEventListener('dragend', handlePolicyEntryDragEnd);
 
             list.appendChild(entry);
         }
@@ -1767,6 +1966,14 @@
             remainingEl.textContent = 'Remaining unallocated revenue: ' + formatCurrency(data.remaining);
             summaryBody.appendChild(remainingEl);
         }
+
+        syncSummarySliderDecor(data.taxRate, data.revenue);
+        syncSummaryDragdealerPosition(data.taxRate);
+    }
+
+    function isFinalSummaryVisible() {
+        var summaryPanel = el('wtc-finalSummary');
+        return !!(summaryPanel && summaryPanel.getAttribute('aria-hidden') !== 'true');
     }
 
     function showFinalSummary() {
@@ -1788,31 +1995,16 @@
     }
 
     function trackNextStepPrioritizationSnapshot() {
-        if (hasTrackedNextStepPrioritization || !analyticsController.enabled) {
-            return;
-        }
-
         var activeKeys = getActivePolicyKeysInOrder();
         if (!activeKeys.length) {
             return;
         }
 
-        // Record the selected sub-policies at the moment the user advances.
-        for (var i = 0; i < activeKeys.length; i++) {
-            sendAnalyticsEvent('policy_toggle', activeKeys[i], {
-                enabled: true,
-                rank: i + 1,
-                order: activeKeys
-            });
-        }
-
-        // Record the full priority ordering in one event.
-        sendAnalyticsEvent('policy_reorder', activeKeys[0], {
+        // Submit one authoritative snapshot for this session.
+        sendAnalyticsEvent('next_step_submit', 'submit:0', {
             rank: 1,
             order: activeKeys
         });
-
-        hasTrackedNextStepPrioritization = true;
     }
 
     function handleNextStepClick() {
@@ -1860,12 +2052,6 @@
             isEnabledNow = true;
         }
 
-        sendAnalyticsEvent('policy_toggle', policyKey, {
-            enabled: isEnabledNow,
-            rank: isEnabledNow ? (selectedPoliciesOrder.indexOf(policyKey) + 1) : 0,
-            order: getActivePolicyKeysInOrder()
-        });
-
         updateAllocationSummary();
     }
 
@@ -1894,12 +2080,6 @@
             disableOption(policy, index);
             row.classList.remove('is-enabled');
         }
-
-        sendAnalyticsEvent('policy_toggle', policyKey, {
-            enabled: isEnabledNow,
-            rank: isEnabledNow ? (selectedPoliciesOrder.indexOf(policyKey) + 1) : 0,
-            order: getActivePolicyKeysInOrder()
-        });
 
         updateAllocationSummary();
     }
@@ -1965,6 +2145,8 @@
         var rateDisplay = el('wtc-rateDisplay');
         if (rateDisplay) { rateDisplay.textContent = taxRate.toFixed(1) + '%'; }
         syncSliderDecor(taxRate, revenue);
+        syncSummarySliderDecor(taxRate, revenue);
+        syncSummaryDragdealerPosition(taxRate);
 
         var comparisonSelection = getBestFitFundedComparisons(revenue);
         var fundableComparisons = comparisonSelection.comparisons;
@@ -2042,6 +2224,10 @@
 
         // Update policy allocation
         updatePolicyAllocation();
+
+        if (isFinalSummaryVisible()) {
+            renderFinalSummary();
+        }
     }
 
     function setShareStatus(statusEl, message) {
@@ -2173,6 +2359,7 @@
         applyCompatibilityClasses();
         ensureMoneyPile();
         initTaxRateSlider();
+        initSummaryTaxRateSlider();
 
         // Apply advanced-mode class to container since we default to advanced
         var calculatorContainer = document.querySelector('.calculator-container');
