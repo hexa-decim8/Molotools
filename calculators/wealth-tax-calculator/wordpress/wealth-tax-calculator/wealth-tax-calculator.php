@@ -794,7 +794,7 @@ class WTC_Policy_Analytics {
                                         /* translators: 1: policy group label, 2: selected amount */
                                         __( '%1$s: %2$s selected over 10 years', 'wealth-tax-calculator' ),
                                         isset( $group_row['label'] ) ? sanitize_text_field( $group_row['label'] ) : __( 'Unknown', 'wealth-tax-calculator' ),
-                                        $this->format_currency( $selected_amount )
+                                        $this->format_compact_currency( $selected_amount )
                                     );
                                     ?>
                                     <span class="wtc-analytics-stacked-segment" style="width: <?php echo esc_attr( $segment_width ); ?>%; background: <?php echo esc_attr( isset( $group_row['color'] ) ? sanitize_hex_color( $group_row['color'] ) : '#406BBF' ); ?>;" title="<?php echo esc_attr( $segment_title ); ?>"></span>
