@@ -1239,7 +1239,9 @@
             existingPinataEl.parentNode.removeChild(existingPinataEl);
         }
 
-        syncSelectedPoliciesBox();
+        if (currentMode === 'advanced') {
+            syncSelectedPoliciesBox();
+        }
     }
 
     // ── Selected Policies Box ──────────────────────────────────────────────────
