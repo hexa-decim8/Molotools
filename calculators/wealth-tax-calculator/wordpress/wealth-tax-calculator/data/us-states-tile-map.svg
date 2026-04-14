@@ -1,0 +1,216 @@
+<svg id="wtc-us-map" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 540" role="img" aria-labelledby="wtc-us-map-title wtc-us-map-desc">
+  <title id="wtc-us-map-title">United States visitors map</title>
+  <desc id="wtc-us-map-desc">Tile map of the United States used to display state-level visitor counts outside Michigan.</desc>
+  <style>
+    .wtc-us-state-shape { rx: 10; ry: 10; }
+  </style>
+  <rect x="0" y="0" width="820" height="540" fill="#f9f5f0" />
+  <g class="wtc-us-states" transform="translate(26,26)">
+    <g id="wtc-us-state-wa" class="wtc-us-state" data-state="WA" transform="translate(0,0)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">WA</text>
+    </g>
+    <g id="wtc-us-state-id" class="wtc-us-state" data-state="ID" transform="translate(62,0)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">ID</text>
+    </g>
+    <g id="wtc-us-state-mt" class="wtc-us-state" data-state="MT" transform="translate(124,0)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">MT</text>
+    </g>
+    <g id="wtc-us-state-nd" class="wtc-us-state" data-state="ND" transform="translate(186,0)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">ND</text>
+    </g>
+    <g id="wtc-us-state-mn" class="wtc-us-state" data-state="MN" transform="translate(248,0)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">MN</text>
+    </g>
+    <g id="wtc-us-state-wi" class="wtc-us-state" data-state="WI" transform="translate(310,0)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">WI</text>
+    </g>
+    <g id="wtc-us-state-mi" class="wtc-us-state" data-state="MI" transform="translate(372,0)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">MI</text>
+    </g>
+    <g id="wtc-us-state-vt" class="wtc-us-state" data-state="VT" transform="translate(558,0)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">VT</text>
+    </g>
+    <g id="wtc-us-state-nh" class="wtc-us-state" data-state="NH" transform="translate(620,0)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">NH</text>
+    </g>
+    <g id="wtc-us-state-me" class="wtc-us-state" data-state="ME" transform="translate(682,0)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">ME</text>
+    </g>
+
+    <g id="wtc-us-state-or" class="wtc-us-state" data-state="OR" transform="translate(0,62)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">OR</text>
+    </g>
+    <g id="wtc-us-state-nv" class="wtc-us-state" data-state="NV" transform="translate(62,62)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">NV</text>
+    </g>
+    <g id="wtc-us-state-wy" class="wtc-us-state" data-state="WY" transform="translate(124,62)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">WY</text>
+    </g>
+    <g id="wtc-us-state-sd" class="wtc-us-state" data-state="SD" transform="translate(186,62)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">SD</text>
+    </g>
+    <g id="wtc-us-state-ia" class="wtc-us-state" data-state="IA" transform="translate(248,62)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">IA</text>
+    </g>
+    <g id="wtc-us-state-il" class="wtc-us-state" data-state="IL" transform="translate(310,62)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">IL</text>
+    </g>
+    <g id="wtc-us-state-in" class="wtc-us-state" data-state="IN" transform="translate(372,62)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">IN</text>
+    </g>
+    <g id="wtc-us-state-oh" class="wtc-us-state" data-state="OH" transform="translate(434,62)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">OH</text>
+    </g>
+    <g id="wtc-us-state-pa" class="wtc-us-state" data-state="PA" transform="translate(496,62)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">PA</text>
+    </g>
+    <g id="wtc-us-state-ny" class="wtc-us-state" data-state="NY" transform="translate(558,62)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">NY</text>
+    </g>
+    <g id="wtc-us-state-ma" class="wtc-us-state" data-state="MA" transform="translate(620,62)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">MA</text>
+    </g>
+    <g id="wtc-us-state-ri" class="wtc-us-state" data-state="RI" transform="translate(682,62)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">RI</text>
+    </g>
+
+    <g id="wtc-us-state-ca" class="wtc-us-state" data-state="CA" transform="translate(0,124)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">CA</text>
+    </g>
+    <g id="wtc-us-state-ut" class="wtc-us-state" data-state="UT" transform="translate(62,124)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">UT</text>
+    </g>
+    <g id="wtc-us-state-co" class="wtc-us-state" data-state="CO" transform="translate(124,124)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">CO</text>
+    </g>
+    <g id="wtc-us-state-ne" class="wtc-us-state" data-state="NE" transform="translate(186,124)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">NE</text>
+    </g>
+    <g id="wtc-us-state-mo" class="wtc-us-state" data-state="MO" transform="translate(248,124)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">MO</text>
+    </g>
+    <g id="wtc-us-state-ky" class="wtc-us-state" data-state="KY" transform="translate(310,124)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">KY</text>
+    </g>
+    <g id="wtc-us-state-wv" class="wtc-us-state" data-state="WV" transform="translate(372,124)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">WV</text>
+    </g>
+    <g id="wtc-us-state-va" class="wtc-us-state" data-state="VA" transform="translate(434,124)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">VA</text>
+    </g>
+    <g id="wtc-us-state-md" class="wtc-us-state" data-state="MD" transform="translate(496,124)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">MD</text>
+    </g>
+    <g id="wtc-us-state-nj" class="wtc-us-state" data-state="NJ" transform="translate(558,124)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">NJ</text>
+    </g>
+    <g id="wtc-us-state-ct" class="wtc-us-state" data-state="CT" transform="translate(620,124)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">CT</text>
+    </g>
+    <g id="wtc-us-state-de" class="wtc-us-state" data-state="DE" transform="translate(682,124)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">DE</text>
+    </g>
+
+    <g id="wtc-us-state-az" class="wtc-us-state" data-state="AZ" transform="translate(0,186)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">AZ</text>
+    </g>
+    <g id="wtc-us-state-nm" class="wtc-us-state" data-state="NM" transform="translate(62,186)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">NM</text>
+    </g>
+    <g id="wtc-us-state-ks" class="wtc-us-state" data-state="KS" transform="translate(124,186)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">KS</text>
+    </g>
+    <g id="wtc-us-state-ar" class="wtc-us-state" data-state="AR" transform="translate(186,186)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">AR</text>
+    </g>
+    <g id="wtc-us-state-tn" class="wtc-us-state" data-state="TN" transform="translate(248,186)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">TN</text>
+    </g>
+    <g id="wtc-us-state-nc" class="wtc-us-state" data-state="NC" transform="translate(310,186)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">NC</text>
+    </g>
+    <g id="wtc-us-state-sc" class="wtc-us-state" data-state="SC" transform="translate(372,186)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">SC</text>
+    </g>
+
+    <g id="wtc-us-state-ok" class="wtc-us-state" data-state="OK" transform="translate(124,248)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">OK</text>
+    </g>
+    <g id="wtc-us-state-la" class="wtc-us-state" data-state="LA" transform="translate(186,248)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">LA</text>
+    </g>
+    <g id="wtc-us-state-ms" class="wtc-us-state" data-state="MS" transform="translate(248,248)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">MS</text>
+    </g>
+    <g id="wtc-us-state-al" class="wtc-us-state" data-state="AL" transform="translate(310,248)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">AL</text>
+    </g>
+    <g id="wtc-us-state-ga" class="wtc-us-state" data-state="GA" transform="translate(372,248)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">GA</text>
+    </g>
+
+    <g id="wtc-us-state-tx" class="wtc-us-state" data-state="TX" transform="translate(62,310)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">TX</text>
+    </g>
+    <g id="wtc-us-state-fl" class="wtc-us-state" data-state="FL" transform="translate(434,310)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">FL</text>
+    </g>
+
+    <g id="wtc-us-state-ak" class="wtc-us-state" data-state="AK" transform="translate(0,434)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">AK</text>
+    </g>
+    <g id="wtc-us-state-hi" class="wtc-us-state" data-state="HI" transform="translate(62,434)">
+      <rect class="wtc-us-state-shape" width="54" height="54" />
+      <text class="wtc-us-state-label" x="27" y="32">HI</text>
+    </g>
+  </g>
+</svg>

@@ -618,10 +618,29 @@ class WTC_Policy_Analytics {
             }
         }
 
+        $us_states = array();
+        foreach ( $region_counts as $bucket => $count ) {
+            if ( strncmp( $bucket, 'us_', 3 ) !== 0 || 'us_unknown' === $bucket ) {
+                continue;
+            }
+
+            $state_code = strtoupper( substr( $bucket, 3 ) );
+            if ( 'MI' === $state_code || ! preg_match( '/^[A-Z]{2}$/', $state_code ) ) {
+                continue;
+            }
+
+            $us_states[ $state_code ] = (int) $count;
+        }
+
         wp_localize_script(
             'wtc-admin-map',
             'wtcMichiganMap',
             array( 'cities' => $mi_cities )
+        );
+        wp_localize_script(
+            'wtc-admin-map',
+            'wtcUnitedStatesMap',
+            array( 'states' => $us_states )
         );
     }
 
@@ -705,6 +724,7 @@ class WTC_Policy_Analytics {
         $submitted_sessions = isset( $summary['total_events'] ) ? (int) $summary['total_events'] : 0;
         $unique_sessions    = isset( $summary['unique_sessions'] ) ? (int) $summary['unique_sessions'] : 0;
         $days_stored        = isset( $summary['days_count'] ) ? (int) $summary['days_count'] : 0;
+        $average_tax_rate   = isset( $summary['average_tax_rate'] ) ? (float) $summary['average_tax_rate'] : 0.0;
         ?>
         <div class="wrap">
             <h1><?php esc_html_e( 'Wealth Tax Calculator Analytics', 'wealth-tax-calculator' ); ?></h1>
@@ -759,8 +779,8 @@ class WTC_Policy_Analytics {
                         <span class="wtc-analytics-stat-value"><?php echo esc_html( number_format_i18n( $unique_sessions ) ); ?></span>
                     </div>
                     <div class="wtc-analytics-stat" role="listitem">
-                        <span class="wtc-analytics-stat-label"><?php esc_html_e( 'Days Stored', 'wealth-tax-calculator' ); ?></span>
-                        <span class="wtc-analytics-stat-value"><?php echo esc_html( number_format_i18n( $days_stored ) ); ?></span>
+                        <span class="wtc-analytics-stat-label"><?php esc_html_e( 'Average Tax Rate', 'wealth-tax-calculator' ); ?></span>
+                        <span class="wtc-analytics-stat-value"><?php echo esc_html( $average_tax_rate > 0 ? number_format_i18n( $average_tax_rate, 1 ) . '%' : '—' ); ?></span>
                     </div>
                 </div>
 
@@ -841,6 +861,8 @@ class WTC_Policy_Analytics {
                     </section>
                 </div>
             </div>
+
+            <?php $this->render_us_map( $summary['region_counts'] ); ?>
 
             <?php $this->render_michigan_map( $summary['region_counts'] ); ?>
 
@@ -1068,6 +1090,66 @@ class WTC_Policy_Analytics {
                             </tbody>
                         </table>
                     </details>
+                <?php endif; ?>
+            <?php endif; ?>
+        </div>
+        <?php
+    }
+
+    private function render_us_map( array $region_counts ) {
+        $us_states  = array();
+        $us_unknown = 0;
+        foreach ( $region_counts as $bucket => $count ) {
+            if ( strncmp( $bucket, 'us_', 3 ) !== 0 ) {
+                continue;
+            }
+
+            if ( 'us_unknown' === $bucket ) {
+                $us_unknown += (int) $count;
+                continue;
+            }
+
+            $state_code = strtoupper( substr( $bucket, 3 ) );
+            if ( 'MI' === $state_code || ! preg_match( '/^[A-Z]{2}$/', $state_code ) ) {
+                continue;
+            }
+
+            $us_states[ $state_code ] = (int) $count;
+        }
+
+        $svg_path = plugin_dir_path( __FILE__ ) . 'data/us-states-tile-map.svg';
+        $has_data = ! empty( $us_states );
+        ?>
+        <div class="card wtc-us-map-card" style="max-width: 920px; margin-top: 20px;">
+            <h2><?php esc_html_e( 'U.S. Visitors Outside Michigan', 'wealth-tax-calculator' ); ?></h2>
+            <p class="description"><?php esc_html_e( 'State-level view of submitted sessions from outside Michigan. Michigan traffic remains in the detailed map below.', 'wealth-tax-calculator' ); ?></p>
+            <?php if ( ! $has_data ) : ?>
+                <p><?php esc_html_e( 'No outside-Michigan U.S. visitor data yet.', 'wealth-tax-calculator' ); ?></p>
+            <?php else : ?>
+                <div class="wtc-us-map-wrap">
+                    <?php
+                    if ( file_exists( $svg_path ) ) {
+                        // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents, WordPress.Security.EscapeOutput.OutputNotEscaped
+                        echo file_get_contents( $svg_path );
+                    }
+                    ?>
+                    <div id="wtc-us-map-tooltip"></div>
+                </div>
+                <div class="wtc-us-map-legend" aria-hidden="true">
+                    <span class="wtc-us-map-legend-item"><span class="wtc-us-map-legend-swatch wtc-us-level-1"></span><span><?php esc_html_e( 'Lower session volume', 'wealth-tax-calculator' ); ?></span></span>
+                    <span class="wtc-us-map-legend-item"><span class="wtc-us-map-legend-swatch wtc-us-level-3"></span><span><?php esc_html_e( 'Moderate session volume', 'wealth-tax-calculator' ); ?></span></span>
+                    <span class="wtc-us-map-legend-item"><span class="wtc-us-map-legend-swatch wtc-us-level-5"></span><span><?php esc_html_e( 'Higher session volume', 'wealth-tax-calculator' ); ?></span></span>
+                </div>
+                <?php if ( $us_unknown > 0 ) : ?>
+                    <p class="wtc-us-map-footnote">
+                        <?php
+                        printf(
+                            /* translators: %d: number of sessions */
+                            esc_html__( 'State could not be resolved for %d additional U.S. sessions.', 'wealth-tax-calculator' ),
+                            (int) $us_unknown
+                        );
+                        ?>
+                    </p>
                 <?php endif; ?>
             <?php endif; ?>
         </div>
@@ -1371,6 +1453,8 @@ class WTC_Policy_Analytics {
         $recent_submissions = array();
         $unique_sessions    = 0;
         $total_events       = 0;
+        $tax_rate_total     = 0.0;
+        $tax_rate_samples   = 0;
 
         foreach ( $analytics_data as $day ) {
             if ( ! is_array( $day ) ) {
@@ -1464,6 +1548,7 @@ class WTC_Policy_Analytics {
                     $recent_submissions[] = array(
                         'submitted_at'    => isset( $submission['submitted_at'] ) ? (int) $submission['submitted_at'] : 0,
                         'mode'            => isset( $submission['mode'] ) ? sanitize_key( $submission['mode'] ) : '',
+                        'tax_rate_value'  => isset( $submission['tax_rate_value'] ) ? (float) $submission['tax_rate_value'] : null,
                         'tax_rate_bucket' => isset( $submission['tax_rate_bucket'] ) ? sanitize_text_field( $submission['tax_rate_bucket'] ) : '',
                         'region_bucket'   => isset( $submission['region_bucket'] ) ? sanitize_text_field( $submission['region_bucket'] ) : '',
                         'selected_items'  => $selected_items,
@@ -1484,6 +1569,12 @@ class WTC_Policy_Analytics {
                             $tax_rate_counts[ $rate ] = 0;
                         }
                         $tax_rate_counts[ $rate ] += 1;
+                    }
+
+                    $tax_rate_value = isset( $submission['tax_rate_value'] ) ? (float) $submission['tax_rate_value'] : null;
+                    if ( null !== $tax_rate_value && $tax_rate_value >= WTC_TAX_RATE_MIN && $tax_rate_value <= WTC_TAX_RATE_MAX ) {
+                        $tax_rate_total += $tax_rate_value;
+                        $tax_rate_samples += 1;
                     }
                 }
                 continue;
@@ -1547,6 +1638,11 @@ class WTC_Policy_Analytics {
                         $tax_rate_counts[ $rate ] = 0;
                     }
                     $tax_rate_counts[ $rate ] += (int) $count;
+
+                    if ( is_numeric( $rate ) ) {
+                        $tax_rate_total += (float) $rate * (int) $count;
+                        $tax_rate_samples += (int) $count;
+                    }
                 }
             }
 
@@ -1616,6 +1712,8 @@ class WTC_Policy_Analytics {
             $recent_submissions = array_slice( $recent_submissions, 0, 20 );
         }
 
+        $average_tax_rate = $tax_rate_samples > 0 ? round( $tax_rate_total / $tax_rate_samples, 1 ) : 0.0;
+
         return array(
             'enabled_rows'      => array_values( $enabled_stats ),
             'top_rank_rows'     => array_values( $top_rank_stats ),
@@ -1626,6 +1724,7 @@ class WTC_Policy_Analytics {
             'recent_submissions'=> $recent_submissions,
             'unique_sessions'   => $unique_sessions,
             'days_count'        => count( $analytics_data ),
+            'average_tax_rate'  => $average_tax_rate,
             'total_events'      => $total_events,
         );
     }
@@ -1784,6 +1883,7 @@ class WTC_Policy_Analytics {
             'policy_key'       => sanitize_text_field( $policy_key ),
             'order'            => $clean_order,
             'selected_items'   => $clean_selected_items,
+            'tax_rate_value'   => ( null !== $tax_rate_val && $tax_rate_val >= WTC_TAX_RATE_MIN && $tax_rate_val <= WTC_TAX_RATE_MAX ) ? round( $tax_rate_val, 1 ) : null,
             'tax_rate_bucket'  => $tax_rate_bucket,
             'mode'             => $mode,
             'region_bucket'    => sanitize_text_field( $region_bucket ),
