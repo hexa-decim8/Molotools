@@ -17,6 +17,7 @@
     var selectedPolicyOptions = {};
     var selectedPoliciesOrder = [];
     var dragPolicyKey = null;
+    var popularityChartMode = 'enabled';
     var collapsedPolicyGroups = [];
     var currentMode = 'advanced'; // 'basic' or 'advanced'
     var TAX_RATE_MIN = 1;
@@ -32,10 +33,7 @@
         resizeTicking: false
     };
     var moneyPileController = {
-        shell: null,
-        field: null,
-        columns: [],
-        initialized: false
+        stages: {}
     };
     var analyticsController = {
         enabled: false,
@@ -49,6 +47,18 @@
     var supportsCssVariables = !!(window.CSS && window.CSS.supports && window.CSS.supports('--wtc-test', '0'));
     var MONEY_PILE_PROFILES = [0.26, 0.4, 0.58, 0.82, 1, 0.92, 0.72, 0.5, 0.34];
     var MONEY_PILE_MAX_BUNDLES = 14;
+    var MONEY_PILE_STAGE_CONFIGS = [
+        {
+            key: 'main',
+            shellSelector: '.wtc-slider-shell',
+            fieldId: 'wtc-moneyField'
+        },
+        {
+            key: 'summary',
+            shellSelector: '.wtc-fs-slider-shell',
+            fieldId: 'wtc-fs-moneyField'
+        }
+    ];
 
     // Policy category labels
     var POLICY_LABELS = {
@@ -61,13 +71,15 @@
     };
 
     var POLICY_FILL_COLORS = {
-        healthcare:   '#E74C3C',
-        education:    '#E74C3C',
-        business:     '#E74C3C',
-        directRelief: '#E74C3C',
-        housing:      '#E74C3C',
-        childcare:    '#E74C3C'
+        healthcare:   '#D1495B',
+        education:    '#2B59C3',
+        business:     '#2A9D8F',
+        directRelief: '#F4A261',
+        housing:      '#7B2CBF',
+        childcare:    '#3A86FF'
     };
+
+    var CHART_SWATCHES = ['#D1495B', '#2B59C3', '#2A9D8F', '#F4A261', '#7B2CBF', '#3A86FF', '#EF476F', '#118AB2', '#06D6A0', '#FFD166', '#8338EC', '#8E9AAF'];
 
     var SANDERS_POLICY_SOURCES = [
         {
@@ -686,21 +698,28 @@
         keepInfoboxVisible('wtc-fs-pr-slider', 'wtc-fs-sliderInfobox');
     }
 
-    function ensureMoneyPile() {
-        if (moneyPileController.initialized) {
-            return true;
+    function ensureMoneyPileStage(stageConfig) {
+        if (!stageConfig) {
+            return null;
         }
 
-        var shell = document.querySelector('.wtc-slider-shell');
-        var field = el('wtc-moneyField');
+        if (moneyPileController.stages[stageConfig.key]) {
+            return moneyPileController.stages[stageConfig.key];
+        }
+
+        var shell = document.querySelector(stageConfig.shellSelector);
+        var field = el(stageConfig.fieldId);
 
         if (!shell || !field) {
-            return false;
+            return null;
         }
 
-        moneyPileController.shell = shell;
-        moneyPileController.field = field;
-        moneyPileController.columns = [];
+        var stage = {
+            shell: shell,
+            field: field,
+            columns: []
+        };
+
         field.innerHTML = '';
 
         for (var columnIndex = 0; columnIndex < MONEY_PILE_PROFILES.length; columnIndex++) {
@@ -748,14 +767,27 @@
             }
 
             field.appendChild(column);
-            moneyPileController.columns.push({
+            stage.columns.push({
                 profile: MONEY_PILE_PROFILES[columnIndex],
                 bundles: bundles
             });
         }
 
-        moneyPileController.initialized = true;
-        return true;
+        moneyPileController.stages[stageConfig.key] = stage;
+        return stage;
+    }
+
+    function ensureMoneyPile() {
+        var initializedCount = 0;
+
+        for (var stageIndex = 0; stageIndex < MONEY_PILE_STAGE_CONFIGS.length; stageIndex++) {
+            var stage = ensureMoneyPileStage(MONEY_PILE_STAGE_CONFIGS[stageIndex]);
+            if (stage) {
+                initializedCount++;
+            }
+        }
+
+        return initializedCount > 0;
     }
 
     function syncMoneyPile(taxRate) {
@@ -766,40 +798,49 @@
         var progress = rateToRatio(taxRate);
         var visibleRatio = 0.08 + (Math.pow(progress, 0.72) * 0.92);
 
-        if (supportsCssVariables) {
-            moneyPileController.shell.style.setProperty('--wtc-money-progress', visibleRatio.toFixed(3));
-        }
+        for (var stageIndex = 0; stageIndex < MONEY_PILE_STAGE_CONFIGS.length; stageIndex++) {
+            var stageConfig = MONEY_PILE_STAGE_CONFIGS[stageIndex];
+            var stage = moneyPileController.stages[stageConfig.key];
 
-        for (var columnIndex = 0; columnIndex < moneyPileController.columns.length; columnIndex++) {
-            var column = moneyPileController.columns[columnIndex];
-            var bundleTarget = Math.round(column.profile * visibleRatio * MONEY_PILE_MAX_BUNDLES);
-
-            if (visibleRatio > 0.02) {
-                bundleTarget = Math.max(1, bundleTarget);
+            if (!stage) {
+                continue;
             }
 
-            for (var bundleIndex = 0; bundleIndex < column.bundles.length; bundleIndex++) {
-                if (bundleIndex < bundleTarget) {
-                    column.bundles[bundleIndex].classList.add('is-active');
-                    if (!supportsCssVariables) {
-                        column.bundles[bundleIndex].style.opacity = '1';
-                        column.bundles[bundleIndex].style.transform = buildMoneyBundleTransform(
-                            parseFloat(column.bundles[bundleIndex].getAttribute('data-bundle-scale')),
-                            parseFloat(column.bundles[bundleIndex].getAttribute('data-bundle-tilt')),
-                            true
-                        );
-                        column.bundles[bundleIndex].style.filter = 'saturate(1)';
-                    }
-                } else {
-                    column.bundles[bundleIndex].classList.remove('is-active');
-                    if (!supportsCssVariables) {
-                        column.bundles[bundleIndex].style.opacity = '0';
-                        column.bundles[bundleIndex].style.transform = buildMoneyBundleTransform(
-                            parseFloat(column.bundles[bundleIndex].getAttribute('data-bundle-scale')),
-                            parseFloat(column.bundles[bundleIndex].getAttribute('data-bundle-tilt')),
-                            false
-                        );
-                        column.bundles[bundleIndex].style.filter = 'saturate(0.86)';
+            if (supportsCssVariables) {
+                stage.shell.style.setProperty('--wtc-money-progress', visibleRatio.toFixed(3));
+            }
+
+            for (var columnIndex = 0; columnIndex < stage.columns.length; columnIndex++) {
+                var column = stage.columns[columnIndex];
+                var bundleTarget = Math.round(column.profile * visibleRatio * MONEY_PILE_MAX_BUNDLES);
+
+                if (visibleRatio > 0.02) {
+                    bundleTarget = Math.max(1, bundleTarget);
+                }
+
+                for (var bundleIndex = 0; bundleIndex < column.bundles.length; bundleIndex++) {
+                    if (bundleIndex < bundleTarget) {
+                        column.bundles[bundleIndex].classList.add('is-active');
+                        if (!supportsCssVariables) {
+                            column.bundles[bundleIndex].style.opacity = '1';
+                            column.bundles[bundleIndex].style.transform = buildMoneyBundleTransform(
+                                parseFloat(column.bundles[bundleIndex].getAttribute('data-bundle-scale')),
+                                parseFloat(column.bundles[bundleIndex].getAttribute('data-bundle-tilt')),
+                                true
+                            );
+                            column.bundles[bundleIndex].style.filter = 'saturate(1)';
+                        }
+                    } else {
+                        column.bundles[bundleIndex].classList.remove('is-active');
+                        if (!supportsCssVariables) {
+                            column.bundles[bundleIndex].style.opacity = '0';
+                            column.bundles[bundleIndex].style.transform = buildMoneyBundleTransform(
+                                parseFloat(column.bundles[bundleIndex].getAttribute('data-bundle-scale')),
+                                parseFloat(column.bundles[bundleIndex].getAttribute('data-bundle-tilt')),
+                                false
+                            );
+                            column.bundles[bundleIndex].style.filter = 'saturate(0.86)';
+                        }
                     }
                 }
             }
@@ -1017,6 +1058,7 @@
             handle.setAttribute('aria-valuetext', rateText);
         }
 
+        syncMoneyPile(taxRate);
         keepSummarySliderInfoboxVisible();
     }
 
@@ -1434,6 +1476,66 @@
         return total;
     }
 
+    function formatCompactCurrency(amount) {
+        if (amount >= 1e12) {
+            return '$' + (amount / 1e12).toFixed(2) + 'T';
+        }
+        if (amount >= 1e9) {
+            return '$' + (amount / 1e9).toFixed(1) + 'B';
+        }
+        return '$' + formatWholeNumber(amount);
+    }
+
+    function getBudgetSnapshotData() {
+        var taxRate = getCurrentTaxRate();
+        var revenue = calculateRevenue(taxRate);
+        var selectedTotal = calculateSelectedPolicyFunding();
+        var overrun = Math.max(selectedTotal - revenue, 0);
+        var remaining = Math.max(revenue - selectedTotal, 0);
+
+        return {
+            taxRate: taxRate,
+            revenue: revenue,
+            annualRevenue: revenue / 10,
+            selectedTotal: selectedTotal,
+            annualSelectedTotal: selectedTotal / 10,
+            overrun: overrun,
+            annualOverrun: overrun / 10,
+            remaining: remaining,
+            annualRemaining: remaining / 10,
+            isOverBudget: overrun > 0
+        };
+    }
+
+    function getPopularityRowsByMode(mode) {
+        var config = (typeof wealthTaxConfig !== 'undefined' && wealthTaxConfig.popularity)
+            ? wealthTaxConfig.popularity
+            : null;
+        var rows = [];
+
+        if (config && mode === 'top-rank' && config.top_rank_rows && config.top_rank_rows.length) {
+            rows = config.top_rank_rows;
+        } else if (config && config.enabled_rows && config.enabled_rows.length) {
+            rows = config.enabled_rows;
+        }
+
+        var normalized = [];
+        for (var i = 0; i < rows.length; i++) {
+            var row = rows[i];
+            if (!row || typeof row.count !== 'number' || row.count <= 0) {
+                continue;
+            }
+
+            normalized.push({
+                key: row.policy_key || ('row-' + i),
+                label: row.label || row.policy_key || ('Policy ' + (i + 1)),
+                count: row.count
+            });
+        }
+
+        return normalized;
+    }
+
     function getOrCreateChild(parent, selector, tag, cls) {
         var child = parent.querySelector(selector);
         if (!child) {
@@ -1445,7 +1547,37 @@
     }
 
     function updateAllocationSummary() {
-        // Allocation totals box has been removed - this function now only syncs selected policies
+        var snapshotData = getBudgetSnapshotData();
+        var policySection = document.querySelector('.policy-allocation-section');
+        var allocationResults = el('wtc-allocationResults');
+
+        if (policySection && allocationResults) {
+            var card = policySection.querySelector('.wtc-budget-snapshot');
+
+            if (!card) {
+                card = document.createElement('div');
+                card.className = 'wtc-budget-snapshot';
+                card.innerHTML =
+                    '<div class="wtc-budget-snapshot-header">Budget Snapshot</div>' +
+                    '<div class="wtc-budget-snapshot-grid">' +
+                        '<div class="wtc-budget-cell"><span class="wtc-budget-label">10-Year Revenue</span><strong class="wtc-budget-value" data-slot="revenue"></strong><span class="wtc-budget-sub" data-slot="revenueAnnual"></span></div>' +
+                        '<div class="wtc-budget-cell"><span class="wtc-budget-label">Selected Policies</span><strong class="wtc-budget-value" data-slot="selected"></strong><span class="wtc-budget-sub" data-slot="selectedAnnual"></span></div>' +
+                        '<div class="wtc-budget-cell wtc-budget-balance"><span class="wtc-budget-label" data-slot="balanceLabel"></span><strong class="wtc-budget-value" data-slot="balance"></strong><span class="wtc-budget-sub" data-slot="balanceAnnual"></span></div>' +
+                    '</div>';
+
+                policySection.insertBefore(card, allocationResults);
+            }
+
+            card.classList.toggle('is-over-budget', snapshotData.isOverBudget);
+            card.querySelector('[data-slot="revenue"]').textContent = formatCurrency(snapshotData.revenue);
+            card.querySelector('[data-slot="revenueAnnual"]').textContent = 'Annual: ' + formatCurrency(snapshotData.annualRevenue);
+            card.querySelector('[data-slot="selected"]').textContent = formatCurrency(snapshotData.selectedTotal);
+            card.querySelector('[data-slot="selectedAnnual"]').textContent = 'Annual: ' + formatCurrency(snapshotData.annualSelectedTotal);
+            card.querySelector('[data-slot="balanceLabel"]').textContent = snapshotData.isOverBudget ? 'Funding Gap' : 'Remaining Budget';
+            card.querySelector('[data-slot="balance"]').textContent = formatCurrency(snapshotData.isOverBudget ? snapshotData.overrun : snapshotData.remaining);
+            card.querySelector('[data-slot="balanceAnnual"]').textContent = 'Annual: ' + formatCurrency(snapshotData.isOverBudget ? snapshotData.annualOverrun : snapshotData.annualRemaining);
+        }
+
         if (currentMode === 'advanced') {
             syncSelectedPoliciesBox();
         }
@@ -1630,12 +1762,12 @@
 
             var itemCost = selectedPolicyOptions[key].amount;
             cumulativeCost += itemCost;
-            var isFunded = cumulativeCost <= revenue;
 
             var entry = document.createElement('div');
             entry.className = 'selected-policy-entry';
             entry.setAttribute('draggable', 'true');
             entry.setAttribute('data-key', key);
+            entry.style.setProperty('--wtc-policy-color', POLICY_FILL_COLORS[policy] || '#406BBF');
 
             var rank = document.createElement('span');
             rank.className = 'selected-policy-rank';
@@ -1757,6 +1889,7 @@
         }
 
         var items = [];
+        var categoryTotalsByKey = {};
         for (var i = 0; i < activeKeys.length; i++) {
             var key = activeKeys[i];
             var parts = key.split(':');
@@ -1787,6 +1920,17 @@
                 status: 'none',
                 fundedPercent: 0
             });
+
+            if (!Object.prototype.hasOwnProperty.call(categoryTotalsByKey, policy)) {
+                categoryTotalsByKey[policy] = {
+                    policy: policy,
+                    label: POLICY_LABELS[policy] || policy,
+                    color: POLICY_FILL_COLORS[policy] || '#406BBF',
+                    selected: 0,
+                    funded: 0
+                };
+            }
+            categoryTotalsByKey[policy].selected += cost;
         }
 
         if (currentMode === 'advanced' && items.length > 2) {
@@ -1836,11 +1980,17 @@
         }
 
         var totalAllocated = 0;
+        var totalSelected = 0;
         for (var a = 0; a < items.length; a++) {
             var summaryItem = items[a];
             var safeCost = summaryItem.cost;
             var allocated = Math.max(0, Math.min(summaryItem.fundedAmount, safeCost));
             totalAllocated += allocated;
+            totalSelected += safeCost;
+
+            if (Object.prototype.hasOwnProperty.call(categoryTotalsByKey, summaryItem.policy)) {
+                categoryTotalsByKey[summaryItem.policy].funded += allocated;
+            }
 
             if (safeCost <= 0 || allocated <= 0) {
                 summaryItem.status = 'none';
@@ -1860,10 +2010,30 @@
 
         remaining = Math.max(0, revenue - totalAllocated);
 
+        var categoryTotals = [];
+        for (var categoryKey in categoryTotalsByKey) {
+            if (!Object.prototype.hasOwnProperty.call(categoryTotalsByKey, categoryKey)) {
+                continue;
+            }
+            categoryTotals.push(categoryTotalsByKey[categoryKey]);
+        }
+
+        categoryTotals.sort(function (left, right) {
+            if (left.selected === right.selected) {
+                return left.label < right.label ? -1 : 1;
+            }
+            return left.selected > right.selected ? -1 : 1;
+        });
+
         return {
             taxRate: taxRate,
             revenue: revenue,
+            annualRevenue: revenue / 10,
             remaining: remaining,
+            overrun: Math.max(totalSelected - revenue, 0),
+            selectedTotal: totalSelected,
+            annualSelectedTotal: totalSelected / 10,
+            categoryTotals: categoryTotals,
             items: items
         };
     }
@@ -1898,12 +2068,159 @@
         var revenueValue = document.createElement('span');
         revenueValue.className = 'wtc-fs-stat-value';
         revenueValue.textContent = formatCurrency(data.revenue);
+        var revenueSubValue = document.createElement('span');
+        revenueSubValue.className = 'wtc-fs-stat-subvalue';
+        revenueSubValue.textContent = 'Annual: ' + formatCurrency(data.annualRevenue);
         revenueStat.appendChild(revenueLabel);
         revenueStat.appendChild(revenueValue);
+        revenueStat.appendChild(revenueSubValue);
+
+        var selectedStat = document.createElement('div');
+        selectedStat.className = 'wtc-fs-stat';
+        var selectedLabel = document.createElement('span');
+        selectedLabel.className = 'wtc-fs-stat-label';
+        selectedLabel.textContent = 'Selected Cost';
+        var selectedValue = document.createElement('span');
+        selectedValue.className = 'wtc-fs-stat-value';
+        selectedValue.textContent = formatCurrency(data.selectedTotal);
+        var selectedSubValue = document.createElement('span');
+        selectedSubValue.className = 'wtc-fs-stat-subvalue';
+        selectedSubValue.textContent = 'Annual: ' + formatCurrency(data.annualSelectedTotal);
+        selectedStat.appendChild(selectedLabel);
+        selectedStat.appendChild(selectedValue);
+        selectedStat.appendChild(selectedSubValue);
 
         statsDiv.appendChild(rateStat);
         statsDiv.appendChild(revenueStat);
+        statsDiv.appendChild(selectedStat);
         summaryBody.appendChild(statsDiv);
+
+        if (data.overrun > 0) {
+            var overrunAlert = document.createElement('div');
+            overrunAlert.className = 'wtc-fs-alert';
+            overrunAlert.textContent = 'Funding gap: ' + formatCurrency(data.overrun) + ' (Annual gap: ' + formatCurrency(data.overrun / 10) + ')';
+            summaryBody.appendChild(overrunAlert);
+        }
+
+        var chartPanel = document.createElement('div');
+        chartPanel.className = 'wtc-fs-chart-panel';
+
+        var stackedCard = document.createElement('section');
+        stackedCard.className = 'wtc-fs-chart-card';
+        var stackedTitle = document.createElement('h4');
+        stackedTitle.className = 'wtc-fs-chart-title';
+        stackedTitle.textContent = 'Category Allocation Mix';
+        stackedCard.appendChild(stackedTitle);
+
+        var stackedBar = document.createElement('div');
+        stackedBar.className = 'wtc-fs-stacked-bar';
+        if (data.selectedTotal > 0 && data.categoryTotals.length) {
+            for (var c = 0; c < data.categoryTotals.length; c++) {
+                var categoryTotal = data.categoryTotals[c];
+                var segment = document.createElement('span');
+                segment.className = 'wtc-fs-stacked-segment';
+                segment.style.width = ((categoryTotal.selected / data.selectedTotal) * 100).toFixed(2) + '%';
+                segment.style.background = categoryTotal.color;
+                segment.title = categoryTotal.label + ': ' + formatCurrency(categoryTotal.selected);
+                stackedBar.appendChild(segment);
+            }
+        }
+        stackedCard.appendChild(stackedBar);
+
+        var stackedLegend = document.createElement('div');
+        stackedLegend.className = 'wtc-fs-legend';
+        for (var l = 0; l < data.categoryTotals.length; l++) {
+            var category = data.categoryTotals[l];
+            var legendItem = document.createElement('div');
+            legendItem.className = 'wtc-fs-legend-item';
+            legendItem.innerHTML = '<span class="wtc-fs-legend-swatch" style="background:' + category.color + '"></span>' +
+                '<span class="wtc-fs-legend-label">' + category.label + '</span>' +
+                '<span class="wtc-fs-legend-value">' + formatCompactCurrency(category.selected) + '</span>';
+            stackedLegend.appendChild(legendItem);
+        }
+        stackedCard.appendChild(stackedLegend);
+        chartPanel.appendChild(stackedCard);
+
+        var pieCard = document.createElement('section');
+        pieCard.className = 'wtc-fs-chart-card';
+        var pieTitle = document.createElement('h4');
+        pieTitle.className = 'wtc-fs-chart-title';
+        pieTitle.textContent = 'Policy Popularity';
+        pieCard.appendChild(pieTitle);
+
+        var toggleRow = document.createElement('div');
+        toggleRow.className = 'wtc-fs-chart-toggle';
+
+        var enabledBtn = document.createElement('button');
+        enabledBtn.type = 'button';
+        enabledBtn.className = 'wtc-fs-toggle-btn' + (popularityChartMode === 'enabled' ? ' is-active' : '');
+        enabledBtn.textContent = 'Most Selected';
+        enabledBtn.addEventListener('click', function () {
+            popularityChartMode = 'enabled';
+            renderFinalSummary();
+        });
+        toggleRow.appendChild(enabledBtn);
+
+        var topRankBtn = document.createElement('button');
+        topRankBtn.type = 'button';
+        topRankBtn.className = 'wtc-fs-toggle-btn' + (popularityChartMode === 'top-rank' ? ' is-active' : '');
+        topRankBtn.textContent = 'Top Ranked #1';
+        topRankBtn.addEventListener('click', function () {
+            popularityChartMode = 'top-rank';
+            renderFinalSummary();
+        });
+        toggleRow.appendChild(topRankBtn);
+        pieCard.appendChild(toggleRow);
+
+        var popularityRows = getPopularityRowsByMode(popularityChartMode);
+        if (!popularityRows.length) {
+            var noPieData = document.createElement('p');
+            noPieData.className = 'wtc-fs-empty';
+            noPieData.textContent = 'Popularity data appears after submissions are recorded.';
+            pieCard.appendChild(noPieData);
+        } else {
+            var totalCount = 0;
+            for (var p = 0; p < popularityRows.length; p++) {
+                totalCount += popularityRows[p].count;
+            }
+
+            var gradientParts = [];
+            var currentAngle = 0;
+            for (var g = 0; g < popularityRows.length; g++) {
+                var row = popularityRows[g];
+                var ratio = row.count / totalCount;
+                var nextAngle = currentAngle + (ratio * 360);
+                var swatchColor = CHART_SWATCHES[g % CHART_SWATCHES.length];
+                row.color = swatchColor;
+                row.percent = Math.round(ratio * 1000) / 10;
+                gradientParts.push(swatchColor + ' ' + currentAngle.toFixed(2) + 'deg ' + nextAngle.toFixed(2) + 'deg');
+                currentAngle = nextAngle;
+            }
+
+            var donut = document.createElement('div');
+            donut.className = 'wtc-fs-donut';
+            donut.style.background = 'conic-gradient(' + gradientParts.join(', ') + ')';
+            donut.setAttribute('role', 'img');
+            donut.setAttribute('aria-label', 'Policy popularity pie chart');
+            pieCard.appendChild(donut);
+
+            var pieLegend = document.createElement('div');
+            pieLegend.className = 'wtc-fs-legend wtc-fs-legend-scroll';
+            for (var r = 0; r < popularityRows.length; r++) {
+                var popularityRow = popularityRows[r];
+                var popularityLegend = document.createElement('div');
+                popularityLegend.className = 'wtc-fs-legend-item';
+                popularityLegend.innerHTML =
+                    '<span class="wtc-fs-legend-swatch" style="background:' + popularityRow.color + '"></span>' +
+                    '<span class="wtc-fs-legend-label">' + popularityRow.label + '</span>' +
+                    '<span class="wtc-fs-legend-value">' + popularityRow.count + ' (' + popularityRow.percent.toFixed(1) + '%)</span>';
+                pieLegend.appendChild(popularityLegend);
+            }
+            pieCard.appendChild(pieLegend);
+        }
+
+        chartPanel.appendChild(pieCard);
+        summaryBody.appendChild(chartPanel);
 
         if (data.items.length === 0) {
             var empty = document.createElement('p');
@@ -1924,6 +2241,7 @@
             entry.className = 'wtc-fs-entry wtc-fs-' + item.status;
             entry.setAttribute('draggable', 'true');
             entry.setAttribute('data-key', item.key);
+            entry.style.setProperty('--wtc-policy-color', POLICY_FILL_COLORS[item.policy] || '#406BBF');
 
             var entryHeader = document.createElement('div');
             entryHeader.className = 'wtc-fs-entry-header';
@@ -1963,6 +2281,10 @@
             var costEl = document.createElement('span');
             costEl.className = 'wtc-fs-cost';
             costEl.textContent = formatCostLabel(item.exampleData);
+            if (item.status === 'partial') {
+                var gapAmount = Math.max(0, item.cost - Math.max(0, Math.min(item.fundedAmount, item.cost)));
+                costEl.title = 'Funding gap: ' + formatCurrency(gapAmount);
+            }
 
             var progressWrap = document.createElement('div');
             progressWrap.className = 'wtc-fs-progress';
