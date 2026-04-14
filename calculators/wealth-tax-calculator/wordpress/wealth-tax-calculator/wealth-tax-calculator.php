@@ -733,6 +733,14 @@ class WTC_Policy_Analytics {
         $days_stored         = isset( $summary['days_count'] ) ? (int) $summary['days_count'] : 0;
         $repeat_fingerprints = isset( $summary['repeat_fingerprints'] ) ? (int) $summary['repeat_fingerprints'] : 0;
         $change_events_total = isset( $summary['change_events_total'] ) ? (int) $summary['change_events_total'] : 0;
+
+        $mi_analytics_data = $this->filter_analytics_data_to_michigan( $analytics_data );
+        $mi_summary        = $this->build_summary( $mi_analytics_data );
+        $mi_submitted_sessions  = isset( $mi_summary['total_events'] ) ? (int) $mi_summary['total_events'] : 0;
+        $mi_unique_sessions     = isset( $mi_summary['unique_sessions'] ) ? (int) $mi_summary['unique_sessions'] : 0;
+        $mi_days_stored         = isset( $mi_summary['days_count'] ) ? (int) $mi_summary['days_count'] : 0;
+        $mi_repeat_fingerprints = isset( $mi_summary['repeat_fingerprints'] ) ? (int) $mi_summary['repeat_fingerprints'] : 0;
+        $mi_change_events_total = isset( $mi_summary['change_events_total'] ) ? (int) $mi_summary['change_events_total'] : 0;
         ?>
         <div class="wrap">
             <h1><?php esc_html_e( 'Wealth Tax Calculator Analytics', 'wealth-tax-calculator' ); ?></h1>
@@ -891,6 +899,13 @@ class WTC_Policy_Analytics {
                 </div>
             </div>
 
+            <div class="wtc-analytics-section-toggle" role="tablist" aria-label="<?php esc_attr_e( 'Analytics report scope', 'wealth-tax-calculator' ); ?>">
+                <button type="button" class="wtc-analytics-toggle-btn is-active" data-wtc-section-target="all" role="tab" aria-selected="true"><?php esc_html_e( 'All Data', 'wealth-tax-calculator' ); ?></button>
+                <button type="button" class="wtc-analytics-toggle-btn" data-wtc-section-target="michigan" role="tab" aria-selected="false"><?php esc_html_e( 'Michigan-Only', 'wealth-tax-calculator' ); ?></button>
+            </div>
+
+            <div class="wtc-analytics-section-panel is-active" data-wtc-section-panel="all">
+
             <?php $this->render_us_state_map( $summary['region_counts'] ); ?>
 
             <?php $this->render_michigan_map( $summary['region_counts'] ); ?>
@@ -937,6 +952,61 @@ class WTC_Policy_Analytics {
                 <?php $this->render_cross_session_changes_table( isset( $summary['cross_session_changes'] ) ? $summary['cross_session_changes'] : array() ); ?>
             </div>
             <?php endif; ?>
+            </div>
+
+            <div class="wtc-analytics-section-panel" data-wtc-section-panel="michigan" hidden>
+
+            <div class="card wtc-analytics-card" style="max-width: 920px; margin-top: 20px;">
+                <h2><?php esc_html_e( 'Michigan-Only Statistics (Excludes Non-Michigan Data)', 'wealth-tax-calculator' ); ?></h2>
+                <p class="description"><?php esc_html_e( 'This section only includes Michigan buckets (mi_* and mi_county_*), including unknown Michigan buckets. All non-Michigan buckets such as us_* and non_us are excluded.', 'wealth-tax-calculator' ); ?></p>
+
+                <div class="wtc-analytics-stats" role="list" aria-label="<?php esc_attr_e( 'Michigan-only analytics summary metrics', 'wealth-tax-calculator' ); ?>">
+                    <div class="wtc-analytics-stat" role="listitem">
+                        <span class="wtc-analytics-stat-label"><?php esc_html_e( 'Michigan Submitted Sessions', 'wealth-tax-calculator' ); ?></span>
+                        <span class="wtc-analytics-stat-value"><?php echo esc_html( number_format_i18n( $mi_submitted_sessions ) ); ?></span>
+                    </div>
+                    <div class="wtc-analytics-stat" role="listitem">
+                        <span class="wtc-analytics-stat-label"><?php esc_html_e( 'Michigan Unique Sessions', 'wealth-tax-calculator' ); ?></span>
+                        <span class="wtc-analytics-stat-value"><?php echo esc_html( number_format_i18n( $mi_unique_sessions ) ); ?></span>
+                    </div>
+                    <div class="wtc-analytics-stat" role="listitem">
+                        <span class="wtc-analytics-stat-label"><?php esc_html_e( 'Michigan Days Stored', 'wealth-tax-calculator' ); ?></span>
+                        <span class="wtc-analytics-stat-value"><?php echo esc_html( number_format_i18n( $mi_days_stored ) ); ?></span>
+                    </div>
+                    <?php if ( $this->fingerprint_enabled() ) : ?>
+                    <div class="wtc-analytics-stat" role="listitem">
+                        <span class="wtc-analytics-stat-label"><?php esc_html_e( 'Michigan Repeat Visitors', 'wealth-tax-calculator' ); ?></span>
+                        <span class="wtc-analytics-stat-value"><?php echo esc_html( number_format_i18n( $mi_repeat_fingerprints ) ); ?></span>
+                    </div>
+                    <div class="wtc-analytics-stat" role="listitem">
+                        <span class="wtc-analytics-stat-label"><?php esc_html_e( 'Michigan Change Events', 'wealth-tax-calculator' ); ?></span>
+                        <span class="wtc-analytics-stat-value"><?php echo esc_html( number_format_i18n( $mi_change_events_total ) ); ?></span>
+                    </div>
+                    <?php endif; ?>
+                </div>
+
+                <h3><?php esc_html_e( 'Most Selected Sub-Policies (Michigan)', 'wealth-tax-calculator' ); ?></h3>
+                <?php $this->render_policy_count_table( isset( $mi_summary['enabled_rows'] ) ? $mi_summary['enabled_rows'] : array(), __( 'Sessions selected', 'wealth-tax-calculator' ) ); ?>
+
+                <h3><?php esc_html_e( 'Most Prioritized (Rank #1, Michigan)', 'wealth-tax-calculator' ); ?></h3>
+                <?php $this->render_policy_count_table( isset( $mi_summary['top_rank_rows'] ) ? $mi_summary['top_rank_rows'] : array(), __( 'Times ranked #1', 'wealth-tax-calculator' ) ); ?>
+
+                <h3><?php esc_html_e( 'Priority Rank Breakdown (Michigan)', 'wealth-tax-calculator' ); ?></h3>
+                <?php $this->render_rank_breakdown_table( isset( $mi_summary['rank_rows'] ) ? $mi_summary['rank_rows'] : array() ); ?>
+
+                <h3><?php esc_html_e( 'Michigan Region Buckets', 'wealth-tax-calculator' ); ?></h3>
+                <?php $this->render_simple_count_table( isset( $mi_summary['region_counts'] ) ? $mi_summary['region_counts'] : array(), __( 'Region bucket', 'wealth-tax-calculator' ), __( 'Submitted sessions', 'wealth-tax-calculator' ), 100 ); ?>
+
+                <h3><?php esc_html_e( 'Michigan County Buckets', 'wealth-tax-calculator' ); ?></h3>
+                <?php $this->render_county_count_table( isset( $mi_summary['county_counts'] ) ? $mi_summary['county_counts'] : array() ); ?>
+
+                <h3><?php esc_html_e( 'Tax Rate Distribution (Michigan)', 'wealth-tax-calculator' ); ?></h3>
+                <?php $this->render_simple_count_table( isset( $mi_summary['tax_rate_counts'] ) ? $mi_summary['tax_rate_counts'] : array(), __( 'Tax rate (%)', 'wealth-tax-calculator' ), __( 'Submitted sessions', 'wealth-tax-calculator' ) ); ?>
+
+                <h3><?php esc_html_e( 'Recent Submission Detail (Michigan)', 'wealth-tax-calculator' ); ?></h3>
+                <?php $this->render_recent_submissions_table( isset( $mi_summary['recent_submissions'] ) ? $mi_summary['recent_submissions'] : array() ); ?>
+            </div>
+            </div>
 
             <div class="card" style="max-width: 920px; margin-top: 20px;">
                 <h2><?php esc_html_e( 'Data Management', 'wealth-tax-calculator' ); ?></h2>
@@ -1518,6 +1588,126 @@ class WTC_Policy_Analytics {
         }
 
         return '';
+    }
+
+    private function is_michigan_region_bucket( $bucket ) {
+        $bucket = sanitize_text_field( $bucket );
+        return strncmp( $bucket, 'mi_', 3 ) === 0;
+    }
+
+    private function filter_analytics_data_to_michigan( $analytics_data ) {
+        if ( ! is_array( $analytics_data ) ) {
+            return array();
+        }
+
+        $filtered_data = array();
+
+        foreach ( $analytics_data as $day_key => $day ) {
+            if ( ! is_array( $day ) ) {
+                continue;
+            }
+
+            $filtered_day = array(
+                'event_total'          => 0,
+                'policy_enabled'       => array(),
+                'policy_disabled'      => array(),
+                'priority_rank_counts' => array(),
+                'mode_counts'          => array(),
+                'regions'              => array(),
+                'counties'             => array(),
+                'tax_rate_counts'      => array(),
+                'sessions'             => array(),
+                'final_submissions'    => array(),
+            );
+
+            if ( ! empty( $day['final_submissions'] ) && is_array( $day['final_submissions'] ) ) {
+                foreach ( $day['final_submissions'] as $session_hash => $submission ) {
+                    if ( ! is_array( $submission ) ) {
+                        continue;
+                    }
+
+                    $region_bucket = isset( $submission['region_bucket'] ) ? sanitize_text_field( $submission['region_bucket'] ) : '';
+                    if ( ! $this->is_michigan_region_bucket( $region_bucket ) ) {
+                        continue;
+                    }
+
+                    $filtered_day['final_submissions'][ $session_hash ] = $submission;
+                    $filtered_day['event_total'] += 1;
+
+                    if ( is_string( $session_hash ) && $session_hash !== '' ) {
+                        $filtered_day['sessions'][ $session_hash ] = 1;
+                    }
+
+                    $mode = isset( $submission['mode'] ) ? sanitize_key( $submission['mode'] ) : '';
+                    if ( $mode !== '' ) {
+                        if ( ! isset( $filtered_day['mode_counts'][ $mode ] ) ) {
+                            $filtered_day['mode_counts'][ $mode ] = 0;
+                        }
+                        $filtered_day['mode_counts'][ $mode ] += 1;
+                    }
+
+                    if ( ! isset( $filtered_day['regions'][ $region_bucket ] ) ) {
+                        $filtered_day['regions'][ $region_bucket ] = 0;
+                    }
+                    $filtered_day['regions'][ $region_bucket ] += 1;
+
+                    $county_bucket = isset( $submission['county_bucket'] ) ? sanitize_text_field( $submission['county_bucket'] ) : '';
+                    $city_slug     = substr( $region_bucket, 3 );
+                    $county_bucket = $this->normalize_michigan_county_bucket( $county_bucket, $city_slug );
+
+                    if ( $county_bucket !== '' ) {
+                        if ( ! isset( $filtered_day['counties'][ $county_bucket ] ) ) {
+                            $filtered_day['counties'][ $county_bucket ] = 0;
+                        }
+                        $filtered_day['counties'][ $county_bucket ] += 1;
+                    }
+
+                    $rate = isset( $submission['tax_rate_bucket'] ) ? sanitize_text_field( $submission['tax_rate_bucket'] ) : '';
+                    if ( $rate !== '' ) {
+                        if ( ! isset( $filtered_day['tax_rate_counts'][ $rate ] ) ) {
+                            $filtered_day['tax_rate_counts'][ $rate ] = 0;
+                        }
+                        $filtered_day['tax_rate_counts'][ $rate ] += 1;
+                    }
+                }
+            } else {
+                if ( ! empty( $day['regions'] ) && is_array( $day['regions'] ) ) {
+                    foreach ( $day['regions'] as $bucket => $count ) {
+                        $bucket = sanitize_text_field( $bucket );
+                        if ( ! $this->is_michigan_region_bucket( $bucket ) ) {
+                            continue;
+                        }
+
+                        $bucket_count = max( 0, (int) $count );
+                        if ( ! isset( $filtered_day['regions'][ $bucket ] ) ) {
+                            $filtered_day['regions'][ $bucket ] = 0;
+                        }
+                        $filtered_day['regions'][ $bucket ] += $bucket_count;
+                        $filtered_day['event_total'] += $bucket_count;
+                    }
+                }
+
+                if ( ! empty( $day['counties'] ) && is_array( $day['counties'] ) ) {
+                    foreach ( $day['counties'] as $bucket => $count ) {
+                        $bucket = $this->normalize_michigan_county_bucket( $bucket );
+                        if ( $bucket === '' ) {
+                            continue;
+                        }
+
+                        if ( ! isset( $filtered_day['counties'][ $bucket ] ) ) {
+                            $filtered_day['counties'][ $bucket ] = 0;
+                        }
+                        $filtered_day['counties'][ $bucket ] += max( 0, (int) $count );
+                    }
+                }
+            }
+
+            if ( $filtered_day['event_total'] > 0 || ! empty( $filtered_day['regions'] ) || ! empty( $filtered_day['counties'] ) ) {
+                $filtered_data[ $day_key ] = $filtered_day;
+            }
+        }
+
+        return $filtered_data;
     }
 
     private function format_county_bucket_label( $bucket ) {

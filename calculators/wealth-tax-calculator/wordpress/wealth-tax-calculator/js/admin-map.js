@@ -51,6 +51,53 @@
         }
     }
 
+    function initAnalyticsScopeTabs() {
+        var tabGroups = document.querySelectorAll('.wtc-analytics-section-toggle');
+        if (!tabGroups.length) {
+            return;
+        }
+
+        for (var i = 0; i < tabGroups.length; i++) {
+            (function (tabGroup) {
+                var scopeRoot = tabGroup.parentElement;
+                if (!scopeRoot) {
+                    return;
+                }
+
+                var buttons = tabGroup.querySelectorAll('.wtc-analytics-toggle-btn');
+                var panels = scopeRoot.querySelectorAll('.wtc-analytics-section-panel');
+                if (!buttons.length || !panels.length) {
+                    return;
+                }
+
+                function showPanel(target) {
+                    for (var p = 0; p < panels.length; p++) {
+                        var panel = panels[p];
+                        var isTarget = panel.getAttribute('data-wtc-section-panel') === target;
+                        panel.hidden = !isTarget;
+                        panel.classList.toggle('is-active', isTarget);
+                    }
+
+                    for (var b = 0; b < buttons.length; b++) {
+                        var button = buttons[b];
+                        var isActive = button.getAttribute('data-wtc-section-target') === target;
+                        button.classList.toggle('is-active', isActive);
+                        button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                    }
+                }
+
+                for (var b = 0; b < buttons.length; b++) {
+                    buttons[b].addEventListener('click', function () {
+                        var target = this.getAttribute('data-wtc-section-target');
+                        if (target) {
+                            showPanel(target);
+                        }
+                    });
+                }
+            }(tabGroups[i]));
+        }
+    }
+
     var WTC_US_STATE_TILES = {
         'WA': {x:0, y:0, label:'Washington'},
         'OR': {x:0, y:1, label:'Oregon'},
@@ -395,6 +442,7 @@
 
     function init() {
         initAnalyticsCharts();
+        initAnalyticsScopeTabs();
         initUsMap();
 
         if (typeof window.wtcMichiganMap === 'undefined') {
