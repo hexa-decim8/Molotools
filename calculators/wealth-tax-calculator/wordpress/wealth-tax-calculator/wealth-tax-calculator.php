@@ -2116,17 +2116,10 @@ class Billionaire_Wealth_Tax_Calculator {
 
             <div class="calculator-content">
                 <div class="calculator-inputs">
-                    <div class="mode-toggle-section">
-                        <div class="mode-toggle">
-                            <button class="mode-button" data-mode="basic">Basic</button>
-                            <button class="mode-button active" data-mode="advanced">Advanced</button>
-                        </div>
-                    </div>
-
                     <div class="input-section">
                         <h3 class="wtc-step-heading">Step 1: Select Billionaire Taxation Rate</h3>
                         <div class="slider-container wtc-slider-shell">
-                            <input type="hidden" id="wtc-taxRate" value="2" aria-label="Tax rate percentage">
+                            <input type="hidden" id="wtc-taxRate" value="5" aria-label="Tax rate percentage">
 
                             <div class="wtc-money-stage" aria-hidden="true">
                                 <div class="wtc-money-stage-glow"></div>
@@ -2141,11 +2134,11 @@ class Billionaire_Wealth_Tax_Calculator {
                                         <div class="wtc-infobox" id="wtc-sliderInfobox">
                                             <div class="wtc-titlebar">
                                                 <span id="wtc-plan-holder">Tax Rate:</span>
-                                                <span id="wtc-device-holder">2.0%</span>
+                                                <span id="wtc-device-holder">5.0%</span>
                                             </div>
                                             <div class="wtc-innerbox">
                                                 <div class="wtc-annual-label">10-YEAR REVENUE:</div>
-                                                <div class="wtc-annual-price" id="wtc-annualPrice">$880.0 Billion</div>
+                                                <div class="wtc-annual-price" id="wtc-annualPrice">$2.2 Trillion</div>
                                             </div>
                                         </div>
 
@@ -2156,11 +2149,11 @@ class Billionaire_Wealth_Tax_Calculator {
                                             tabindex="0"
                                             aria-valuemin="1"
                                             aria-valuemax="10"
-                                            aria-valuenow="2"
-                                            aria-valuetext="2.0%"
+                                            aria-valuenow="5"
+                                            aria-valuetext="5.0%"
                                             aria-label="Tax rate percentage"
                                         >
-                                            <span class="value" id="wtc-sliderValue">2.0%</span>
+                                            <span class="value" id="wtc-sliderValue">5.0%</span>
                                             <span class="menu-line"></span>
                                             <span class="menu-line"></span>
                                             <span class="menu-line"></span>
@@ -2255,11 +2248,11 @@ class Billionaire_Wealth_Tax_Calculator {
                                         <div class="wtc-infobox" id="wtc-fs-sliderInfobox">
                                             <div class="wtc-titlebar">
                                                 <span id="wtc-fs-plan-holder">Tax Rate:</span>
-                                                <span id="wtc-fs-device-holder">2.0%</span>
+                                                <span id="wtc-fs-device-holder">5.0%</span>
                                             </div>
                                             <div class="wtc-innerbox">
                                                 <div class="wtc-annual-label">10-YEAR REVENUE:</div>
-                                                <div class="wtc-annual-price" id="wtc-fs-annualPrice">$880.0 Billion</div>
+                                                <div class="wtc-annual-price" id="wtc-fs-annualPrice">$2.2 Trillion</div>
                                             </div>
                                         </div>
 
@@ -2270,11 +2263,11 @@ class Billionaire_Wealth_Tax_Calculator {
                                             tabindex="0"
                                             aria-valuemin="1"
                                             aria-valuemax="10"
-                                            aria-valuenow="2"
-                                            aria-valuetext="2.0%"
+                                            aria-valuenow="5"
+                                            aria-valuetext="5.0%"
                                             aria-label="Summary tax rate percentage"
                                         >
-                                            <span class="value" id="wtc-fs-sliderValue">2.0%</span>
+                                            <span class="value" id="wtc-fs-sliderValue">5.0%</span>
                                             <span class="menu-line"></span>
                                             <span class="menu-line"></span>
                                             <span class="menu-line"></span>

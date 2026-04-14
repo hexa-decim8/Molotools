@@ -2104,47 +2104,6 @@
         updateAllocationSummary();
     }
 
-    function handleModeToggle(event) {
-        var button = event.target;
-        var mode = button.getAttribute('data-mode');
-
-        if (mode === currentMode) return;
-
-        currentMode = mode;
-
-        var modeButtons = document.querySelectorAll('.mode-button');
-        for (var i = 0; i < modeButtons.length; i++) {
-            modeButtons[i].classList.toggle('active', modeButtons[i].getAttribute('data-mode') === mode);
-        }
-
-        var policySection = document.querySelector('.policy-allocation-section');
-        if (policySection) {
-            if (mode === 'basic') {
-                policySection.classList.add('hidden');
-            } else {
-                policySection.classList.remove('hidden');
-            }
-        }
-
-        // Toggle advanced-mode class so only advanced-only hidden UI is scoped in CSS.
-        var calculatorContainer = document.querySelector('.calculator-container');
-        if (calculatorContainer) {
-            if (mode === 'basic') {
-                calculatorContainer.classList.remove('mode-advanced');
-            } else {
-                calculatorContainer.classList.add('mode-advanced');
-            }
-        }
-        
-        var currentValue = getCurrentTaxRate();
-
-        if (mode === 'basic') {
-            currentValue = Math.round(currentValue);
-        }
-
-        setTaxRate(currentValue, true);
-    }
-
     // ── DOM ────────────────────────────────────────────────────────────────────
 
     function el(id) {
@@ -2378,12 +2337,6 @@
         var calculatorContainer = document.querySelector('.calculator-container');
         if (calculatorContainer) {
             calculatorContainer.classList.add('mode-advanced');
-        }
-
-        // Set up event listeners for mode toggle buttons
-        var modeButtons = document.querySelectorAll('.mode-button');
-        for (var i = 0; i < modeButtons.length; i++) {
-            modeButtons[i].addEventListener('click', handleModeToggle);
         }
 
         initShareActions();
