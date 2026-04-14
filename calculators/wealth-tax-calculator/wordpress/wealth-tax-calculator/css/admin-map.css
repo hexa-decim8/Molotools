@@ -8,117 +8,6 @@
     position: relative;
 }
 
-.wtc-us-map-wrap {
-    position: relative;
-    border: 1px solid #e0d8d0;
-    border-radius: 6px;
-    background: linear-gradient(180deg, #f7f2ea 0%, #fdfaf6 100%);
-    padding: 12px;
-    overflow-x: auto;
-}
-
-#wtc-us-state-map {
-    display: grid;
-    grid-template-columns: repeat(13, minmax(44px, 1fr));
-    grid-template-rows: repeat(7, minmax(40px, auto));
-    gap: 6px;
-    min-width: 650px;
-}
-
-.wtc-us-state-tile {
-    border: 1px solid rgba(35, 48, 113, 0.28);
-    border-radius: 8px;
-    color: #1d1a17;
-    padding: 6px 4px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    line-height: 1.15;
-    cursor: default;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
-    transition: transform 0.12s ease, box-shadow 0.12s ease;
-}
-
-.wtc-us-state-tile.has-data {
-    color: #fff;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
-}
-
-.wtc-us-state-tile:focus,
-.wtc-us-state-tile:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
-    outline: 2px solid #e1b682;
-    outline-offset: 1px;
-}
-
-.wtc-us-state-code {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.03em;
-}
-
-.wtc-us-state-count {
-    font-size: 10px;
-    opacity: 0.92;
-    margin-top: 2px;
-}
-
-#wtc-us-map-tooltip {
-    display: none;
-    position: absolute;
-    z-index: 9999;
-    background: #121c50;
-    color: #fff;
-    font-size: 12px;
-    line-height: 1.4;
-    padding: 5px 9px;
-    border-radius: 4px;
-    pointer-events: none;
-    white-space: nowrap;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
-}
-
-.wtc-us-map-legend {
-    margin-top: 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-    font-size: 12px;
-    color: #383533;
-}
-
-.wtc-us-map-legend-swatch {
-    width: 18px;
-    height: 10px;
-    border-radius: 3px;
-    border: 1px solid rgba(35, 48, 113, 0.28);
-}
-
-.wtc-us-map-legend-low {
-    background: rgba(64, 107, 191, 0.15);
-}
-
-.wtc-us-map-legend-high {
-    background: rgba(64, 107, 191, 0.9);
-}
-
-.wtc-us-map-state-summary {
-    margin-top: 12px;
-}
-
-.wtc-us-map-state-summary summary {
-    cursor: pointer;
-    font-size: 13px;
-    color: #7b6f66;
-}
-
-.wtc-us-map-state-summary summary:hover {
-    color: #233071;
-}
-
 .wtc-mi-map-wrap {
     position: relative;
     display: inline-block;
@@ -126,7 +15,23 @@
     max-width: 500px;
 }
 
+.wtc-us-map-wrap {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+    max-width: 760px;
+}
+
 .wtc-mi-map-wrap svg#wtc-michigan-map {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid #e0d8d0;
+    border-radius: 4px;
+    background: #f9f5f0;
+}
+
+.wtc-us-map-wrap svg#wtc-us-map {
     display: block;
     width: 100%;
     height: auto;
@@ -162,8 +67,70 @@
     outline-offset: 1px;
 }
 
+.wtc-us-map-wrap .wtc-us-state {
+    cursor: default;
+    outline: none;
+}
+
+.wtc-us-map-wrap .wtc-us-state-shape {
+    fill: #ece4d8;
+    stroke: #b5a28e;
+    stroke-width: 1.4;
+    transition: fill 0.15s ease, stroke 0.15s ease, transform 0.15s ease;
+}
+
+.wtc-us-map-wrap .wtc-us-state-label {
+    fill: #4c4036;
+    font-size: 14px;
+    font-weight: 700;
+    text-anchor: middle;
+    pointer-events: none;
+}
+
+.wtc-us-map-wrap .wtc-us-state.has-data {
+    cursor: pointer;
+}
+
+.wtc-us-map-wrap .wtc-us-state.has-data:hover .wtc-us-state-shape,
+.wtc-us-map-wrap .wtc-us-state.has-data:focus .wtc-us-state-shape,
+.wtc-us-map-wrap .wtc-us-state.has-data:focus-within .wtc-us-state-shape {
+    stroke: #233071;
+    stroke-width: 2.2;
+}
+
+.wtc-us-map-wrap .wtc-us-state.wtc-us-level-1 .wtc-us-state-shape,
+.wtc-us-map-legend-swatch.wtc-us-level-1 {
+    fill: #d7e1f7;
+    background: #d7e1f7;
+}
+
+.wtc-us-map-wrap .wtc-us-state.wtc-us-level-2 .wtc-us-state-shape,
+.wtc-us-map-legend-swatch.wtc-us-level-2 {
+    fill: #aec4ef;
+    background: #aec4ef;
+}
+
+.wtc-us-map-wrap .wtc-us-state.wtc-us-level-3 .wtc-us-state-shape,
+.wtc-us-map-legend-swatch.wtc-us-level-3 {
+    fill: #7f9dde;
+    background: #7f9dde;
+}
+
+.wtc-us-map-wrap .wtc-us-state.wtc-us-level-4 .wtc-us-state-shape,
+.wtc-us-map-legend-swatch.wtc-us-level-4 {
+    fill: #5978ca;
+    background: #5978ca;
+}
+
+.wtc-us-map-wrap .wtc-us-state.wtc-us-level-5 .wtc-us-state-shape,
+.wtc-us-map-legend-swatch.wtc-us-level-5 {
+    fill: #2f54a3;
+    background: #2f54a3;
+}
+
 /* Tooltip */
-#wtc-mi-map-tooltip {
+#wtc-mi-map-tooltip,
+#wtc-us-map-tooltip {
     display: none;
     position: absolute;
     z-index: 9999;
@@ -197,6 +164,36 @@
 
 .wtc-mi-map-legend-item svg {
     flex-shrink: 0;
+}
+
+.wtc-us-map-legend {
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.wtc-us-map-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #383533;
+}
+
+.wtc-us-map-legend-swatch {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    border: 1px solid rgba(35, 48, 113, 0.16);
+}
+
+.wtc-us-map-footnote {
+    margin: 10px 0 0;
+    color: #6d625b;
+    font-size: 12px;
 }
 
 /* Unlocated list */

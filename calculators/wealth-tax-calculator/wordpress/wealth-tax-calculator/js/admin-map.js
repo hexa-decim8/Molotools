@@ -337,114 +337,55 @@
         'washington-township': {x:466.4, y:459.1, label:'Washington Township'},
     };
 
+    var WTC_US_STATES = {
+        AL: 'Alabama', AK: 'Alaska', AZ: 'Arizona', AR: 'Arkansas', CA: 'California',
+        CO: 'Colorado', CT: 'Connecticut', DE: 'Delaware', FL: 'Florida', GA: 'Georgia',
+        HI: 'Hawaii', ID: 'Idaho', IL: 'Illinois', IN: 'Indiana', IA: 'Iowa',
+        KS: 'Kansas', KY: 'Kentucky', LA: 'Louisiana', ME: 'Maine', MD: 'Maryland',
+        MA: 'Massachusetts', MI: 'Michigan', MN: 'Minnesota', MS: 'Mississippi', MO: 'Missouri',
+        MT: 'Montana', NE: 'Nebraska', NV: 'Nevada', NH: 'New Hampshire', NJ: 'New Jersey',
+        NM: 'New Mexico', NY: 'New York', NC: 'North Carolina', ND: 'North Dakota', OH: 'Ohio',
+        OK: 'Oklahoma', OR: 'Oregon', PA: 'Pennsylvania', RI: 'Rhode Island', SC: 'South Carolina',
+        SD: 'South Dakota', TN: 'Tennessee', TX: 'Texas', UT: 'Utah', VT: 'Vermont',
+        VA: 'Virginia', WA: 'Washington', WV: 'West Virginia', WI: 'Wisconsin', WY: 'Wyoming'
+    };
+
     var BUBBLE_MIN = 4;
     var BUBBLE_MAX = 28;
     var SVG_NS = 'http://www.w3.org/2000/svg';
 
-    function initUsMap() {
-        if (typeof window.wtcUsMap === 'undefined') {
-            return;
-        }
-
-        var mapConfig = window.wtcUsMap;
-        var stateCounts = mapConfig.states || {};
-        var mapEl = document.getElementById('wtc-us-state-map');
-        if (!mapEl) {
-            return;
-        }
-
-        var tooltip = document.getElementById('wtc-us-map-tooltip');
-        var maxCount = 0;
-        Object.keys(WTC_US_STATE_TILES).forEach(function (code) {
-            var count = parseInt(stateCounts[code], 10);
-            if (!isNaN(count) && count > maxCount) {
-                maxCount = count;
-            }
-        });
-        if (maxCount < 1) {
-            maxCount = 1;
-        }
-
-        function showTooltip(e, label, count) {
-            if (!tooltip) {
-                return;
-            }
-            tooltip.textContent = label + ': ' + count + ' session' + (count !== 1 ? 's' : '');
-            tooltip.style.display = 'block';
-
-            var rect = mapEl.getBoundingClientRect();
-            var x = e.clientX - rect.left;
-            var y = e.clientY - rect.top;
-            var left = x + 12;
-            var tooltipWidth = tooltip.offsetWidth;
-            if (left + tooltipWidth > rect.width) {
-                left = x - tooltipWidth - 12;
-            }
-            tooltip.style.left = left + 'px';
-            tooltip.style.top = (y - 30) + 'px';
-        }
-
-        function hideTooltip() {
-            if (tooltip) {
-                tooltip.style.display = 'none';
-            }
-        }
-
-        Object.keys(WTC_US_STATE_TILES).forEach(function (code) {
-            var tile = WTC_US_STATE_TILES[code];
-            var count = parseInt(stateCounts[code], 10);
-            if (isNaN(count) || count < 0) {
-                count = 0;
-            }
-
-            var tileEl = document.createElement('button');
-            tileEl.type = 'button';
-            tileEl.className = 'wtc-us-state-tile';
-            tileEl.style.gridColumn = String(tile.x + 1);
-            tileEl.style.gridRow = String(tile.y + 1);
-
-            var ratio = count > 0 ? Math.log(count + 1) / Math.log(maxCount + 1) : 0;
-            var alpha = count > 0 ? (0.18 + (0.72 * ratio)) : 0.08;
-            tileEl.style.backgroundColor = 'rgba(64, 107, 191, ' + alpha.toFixed(2) + ')';
-            if (count > 0) {
-                tileEl.classList.add('has-data');
-            }
-
-            var codeEl = document.createElement('span');
-            codeEl.className = 'wtc-us-state-code';
-            codeEl.textContent = code;
-
-            var countEl = document.createElement('span');
-            countEl.className = 'wtc-us-state-count';
-            countEl.textContent = String(count);
-
-            tileEl.appendChild(codeEl);
-            tileEl.appendChild(countEl);
-            tileEl.setAttribute('aria-label', tile.label + ': ' + count + ' session' + (count !== 1 ? 's' : ''));
-            tileEl.title = tile.label + ': ' + count + ' session' + (count !== 1 ? 's' : '');
-
-            tileEl.addEventListener('mousemove', function (e) {
-                showTooltip(e, tile.label, count);
-            });
-            tileEl.addEventListener('mouseleave', hideTooltip);
-            tileEl.addEventListener('focus', function (e) {
-                var rect = tileEl.getBoundingClientRect();
-                showTooltip({
-                    clientX: (rect.left + rect.right) / 2,
-                    clientY: rect.top
-                }, tile.label, count);
-            });
-            tileEl.addEventListener('blur', hideTooltip);
-
-            mapEl.appendChild(tileEl);
-        });
+    function getSessionLabel(label, count) {
+        return label + ': ' + count + ' session' + (count !== 1 ? 's' : '');
     }
 
-    function init() {
-        initAnalyticsCharts();
-        initAnalyticsScopeTabs();
-        initUsMap();
+    function positionTooltip(tooltip, wrapEl, clientX, clientY) {
+        var rect = wrapEl.getBoundingClientRect();
+        var pageX = clientX - rect.left;
+        var pageY = clientY - rect.top;
+        var tooltipWidth = tooltip.offsetWidth;
+        var left = pageX + 12;
 
+        if (left + tooltipWidth > rect.width) {
+            left = pageX - tooltipWidth - 12;
+        }
+
+        tooltip.style.left = left + 'px';
+        tooltip.style.top = (pageY - 28) + 'px';
+    }
+
+    function showTooltip(tooltip, wrapEl, clientX, clientY, label, count) {
+        tooltip.textContent = getSessionLabel(label, count);
+        tooltip.style.display = 'block';
+        positionTooltip(tooltip, wrapEl, clientX, clientY);
+    }
+
+    function hideTooltip(tooltip) {
+        if (tooltip) {
+            tooltip.style.display = 'none';
+        }
+    }
+
+    function initMichiganMap() {
         if (typeof window.wtcMichiganMap === 'undefined') {
             return;
         }
@@ -456,11 +397,9 @@
             return;
         }
 
-        // Build list of known cities that have data
         var bubbleData = [];
         var maxCount = 0;
         Object.keys(cities).forEach(function (bucket) {
-            // bucket is already the mi_* slug suffix, e.g. "detroit"
             var count = parseInt(cities[bucket], 10);
             if (!count || count <= 0) return;
             if (!Object.prototype.hasOwnProperty.call(WTC_MI_CITIES, bucket)) return;
@@ -473,84 +412,154 @@
             return;
         }
 
-        // Create a group for bubbles on top of county paths
         var group = document.createElementNS(SVG_NS, 'g');
         group.setAttribute('class', 'wtc-bubbles');
         group.setAttribute('aria-hidden', 'true');
         svgEl.appendChild(group);
 
-        // Draw bubbles (smallest first so largest renders on top)
         bubbleData.sort(function (a, b) { return a.count - b.count; });
 
-        bubbleData.forEach(function (d) {
-            var t = maxCount > 1 ? Math.sqrt(d.count / maxCount) : 1;
-            var r = Math.round(BUBBLE_MIN + t * (BUBBLE_MAX - BUBBLE_MIN));
+        bubbleData.forEach(function (dataPoint) {
+            var scale = maxCount > 1 ? Math.sqrt(dataPoint.count / maxCount) : 1;
+            var radius = Math.round(BUBBLE_MIN + scale * (BUBBLE_MAX - BUBBLE_MIN));
 
             var circle = document.createElementNS(SVG_NS, 'circle');
             circle.setAttribute('class', 'wtc-mi-bubble');
-            circle.setAttribute('cx', d.x);
-            circle.setAttribute('cy', d.y);
-            circle.setAttribute('r', r);
-            circle.setAttribute('data-city', d.label);
-            circle.setAttribute('data-count', d.count);
+            circle.setAttribute('cx', dataPoint.x);
+            circle.setAttribute('cy', dataPoint.y);
+            circle.setAttribute('r', radius);
+            circle.setAttribute('data-city', dataPoint.label);
+            circle.setAttribute('data-count', dataPoint.count);
             circle.setAttribute('tabindex', '0');
             circle.setAttribute('role', 'img');
-            circle.setAttribute('aria-label', d.label + ': ' + d.count + ' session' + (d.count !== 1 ? 's' : ''));
+            circle.setAttribute('aria-label', getSessionLabel(dataPoint.label, dataPoint.count));
             group.appendChild(circle);
         });
 
-        // Tooltip
         var tooltip = document.getElementById('wtc-mi-map-tooltip');
-        if (!tooltip) return;
+        var wrapEl = svgEl.closest('.wtc-mi-map-wrap');
+        if (!tooltip || !wrapEl) return;
 
-        function showTooltip(e, label, count) {
-            tooltip.textContent = label + ': ' + count + ' session' + (count !== 1 ? 's' : '');
-            tooltip.style.display = 'block';
-            positionTooltip(e);
-        }
-
-        function positionTooltip(e) {
-            var rect = svgEl.closest('.wtc-mi-map-wrap').getBoundingClientRect();
-            var pageX = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-            var pageY = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-            var tw = tooltip.offsetWidth;
-            var left = pageX + 12;
-            if (left + tw > rect.width) {
-                left = pageX - tw - 12;
-            }
-            tooltip.style.left = left + 'px';
-            tooltip.style.top = (pageY - 28) + 'px';
-        }
-
-        function hideTooltip() {
-            tooltip.style.display = 'none';
-        }
-
-        group.addEventListener('mousemove', function (e) {
-            var t = e.target;
-            if (t.classList.contains('wtc-mi-bubble')) {
-                showTooltip(e, t.getAttribute('data-city'), parseInt(t.getAttribute('data-count'), 10));
+        group.addEventListener('mousemove', function (event) {
+            var target = event.target;
+            if (target.classList.contains('wtc-mi-bubble')) {
+                showTooltip(tooltip, wrapEl, event.clientX, event.clientY, target.getAttribute('data-city'), parseInt(target.getAttribute('data-count'), 10));
             } else {
-                hideTooltip();
+                hideTooltip(tooltip);
             }
         });
 
-        group.addEventListener('mouseleave', hideTooltip);
+        group.addEventListener('mouseleave', function () {
+            hideTooltip(tooltip);
+        });
 
-        group.addEventListener('focusin', function (e) {
-            var t = e.target;
-            if (t.classList.contains('wtc-mi-bubble')) {
-                var rect = t.getBoundingClientRect();
-                var wrapRect = svgEl.closest('.wtc-mi-map-wrap').getBoundingClientRect();
-                var fakeEvent = {
-                    clientX: (rect.left + rect.right) / 2,
-                    clientY: rect.top
-                };
-                showTooltip(fakeEvent, t.getAttribute('data-city'), parseInt(t.getAttribute('data-count'), 10));
+        group.addEventListener('focusin', function (event) {
+            var target = event.target;
+            if (target.classList.contains('wtc-mi-bubble')) {
+                var rect = target.getBoundingClientRect();
+                showTooltip(tooltip, wrapEl, (rect.left + rect.right) / 2, rect.top, target.getAttribute('data-city'), parseInt(target.getAttribute('data-count'), 10));
             }
         });
 
-        group.addEventListener('focusout', hideTooltip);
+        group.addEventListener('focusout', function () {
+            hideTooltip(tooltip);
+        });
+    }
+
+    function initUnitedStatesMap() {
+        if (typeof window.wtcUnitedStatesMap === 'undefined') {
+            return;
+        }
+
+        var mapConfig = window.wtcUnitedStatesMap;
+        var states = mapConfig.states || {};
+        var svgEl = document.getElementById('wtc-us-map');
+        var tooltip = document.getElementById('wtc-us-map-tooltip');
+        var wrapEl = svgEl ? svgEl.closest('.wtc-us-map-wrap') : null;
+        var maxCount = 0;
+
+        if (!svgEl || !tooltip || !wrapEl) {
+            return;
+        }
+
+        Object.keys(states).forEach(function (code) {
+            var normalizedCode = String(code).toUpperCase();
+            var count = parseInt(states[code], 10);
+            var stateEl;
+            var level;
+
+            if (!count || count <= 0) return;
+            if (!Object.prototype.hasOwnProperty.call(WTC_US_STATES, normalizedCode)) return;
+
+            stateEl = svgEl.querySelector('#wtc-us-state-' + normalizedCode.toLowerCase());
+            if (!stateEl) return;
+
+            if (count > maxCount) {
+                maxCount = count;
+            }
+
+            stateEl.setAttribute('data-state-name', WTC_US_STATES[normalizedCode]);
+            stateEl.setAttribute('data-count', String(count));
+            stateEl.setAttribute('tabindex', '0');
+            stateEl.setAttribute('role', 'img');
+            stateEl.setAttribute('aria-label', getSessionLabel(WTC_US_STATES[normalizedCode], count));
+            stateEl.classList.add('has-data');
+        });
+
+        if (!maxCount) {
+            return;
+        }
+
+        Object.keys(states).forEach(function (code) {
+            var normalizedCode = String(code).toUpperCase();
+            var count = parseInt(states[code], 10);
+            var stateEl;
+            var level;
+
+            if (!count || count <= 0) return;
+
+            stateEl = svgEl.querySelector('#wtc-us-state-' + normalizedCode.toLowerCase());
+            if (!stateEl || !stateEl.classList.contains('has-data')) return;
+
+            level = maxCount > 1 ? Math.ceil((count / maxCount) * 5) : 5;
+            level = Math.max(1, Math.min(5, level));
+            stateEl.classList.add('wtc-us-level-' + level);
+        });
+
+        svgEl.addEventListener('mousemove', function (event) {
+            var target = event.target.closest ? event.target.closest('.wtc-us-state.has-data') : null;
+            if (!target) {
+                hideTooltip(tooltip);
+                return;
+            }
+
+            showTooltip(tooltip, wrapEl, event.clientX, event.clientY, target.getAttribute('data-state-name'), parseInt(target.getAttribute('data-count'), 10));
+        });
+
+        svgEl.addEventListener('mouseleave', function () {
+            hideTooltip(tooltip);
+        });
+
+        svgEl.addEventListener('focusin', function (event) {
+            var target = event.target.closest ? event.target.closest('.wtc-us-state.has-data') : null;
+            var rect;
+            if (!target) {
+                return;
+            }
+
+            rect = target.getBoundingClientRect();
+            showTooltip(tooltip, wrapEl, (rect.left + rect.right) / 2, rect.top, target.getAttribute('data-state-name'), parseInt(target.getAttribute('data-count'), 10));
+        });
+
+        svgEl.addEventListener('focusout', function () {
+            hideTooltip(tooltip);
+        });
+    }
+
+    function init() {
+        initAnalyticsCharts();
+        initUnitedStatesMap();
+        initMichiganMap();
     }
 
     if (document.readyState === 'loading') {
