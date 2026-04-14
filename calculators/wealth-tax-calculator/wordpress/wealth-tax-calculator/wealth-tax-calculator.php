@@ -900,17 +900,6 @@ class WTC_Policy_Analytics {
                 <button type="button" class="wtc-analytics-toggle-btn is-active" data-wtc-section-target="all" role="tab" aria-selected="true"><?php esc_html_e( 'All Responses', 'wealth-tax-calculator' ); ?></button>
                 <button type="button" class="wtc-analytics-toggle-btn" data-wtc-section-target="michigan" role="tab" aria-selected="false"><?php esc_html_e( 'Michigan Only', 'wealth-tax-calculator' ); ?></button>
                 <button type="button" class="wtc-analytics-toggle-btn" data-wtc-section-target="state" role="tab" aria-selected="false"><?php esc_html_e( 'By State', 'wealth-tax-calculator' ); ?></button>
-                <div class="wtc-analytics-state-picker-wrap">
-                    <label for="wtc-state-analytics-select" class="wtc-analytics-state-picker-label"><?php esc_html_e( 'Select state', 'wealth-tax-calculator' ); ?></label>
-                    <select id="wtc-state-analytics-select" class="wtc-analytics-state-picker" aria-label="<?php esc_attr_e( 'Select a state for analytics details', 'wealth-tax-calculator' ); ?>">
-                        <?php foreach ( $state_map as $state_code => $state_label ) : ?>
-                            <?php $state_total = isset( $state_totals[ $state_code ] ) ? (int) $state_totals[ $state_code ] : 0; ?>
-                            <option value="<?php echo esc_attr( $state_code ); ?>" <?php selected( $state_code, $default_state_code ); ?> <?php disabled( $state_total <= 0 ); ?>>
-                                <?php echo esc_html( $state_label . ' (' . $state_code . ')' ); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
             </div>
 
             <div class="wtc-analytics-section-panel is-active" data-wtc-section-panel="all">
@@ -1136,7 +1125,7 @@ class WTC_Policy_Analytics {
 
             <div class="card wtc-analytics-card" style="max-width: 920px; margin-top: 20px;">
                 <h2><span id="wtc-state-panel-title"><?php echo esc_html( $default_state_label ); ?></span> <?php esc_html_e( 'Statistics', 'wealth-tax-calculator' ); ?></h2>
-                <p class="description"><?php esc_html_e( 'Select a state from the dropdown beside the tabs to view state-specific metrics and county bubbles.', 'wealth-tax-calculator' ); ?></p>
+                <p class="description"><?php esc_html_e( 'Select a state from the US map below to view state-specific metrics and county bubbles.', 'wealth-tax-calculator' ); ?></p>
 
                 <div class="wtc-analytics-stats" role="list" aria-label="<?php esc_attr_e( 'State analytics summary metrics', 'wealth-tax-calculator' ); ?>">
                     <div class="wtc-analytics-stat" role="listitem">

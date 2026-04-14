@@ -326,30 +326,6 @@
     margin: 16px 0 4px;
 }
 
-.wtc-analytics-state-picker-wrap {
-    margin-left: auto;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.wtc-analytics-state-picker-label {
-    font-size: 12px;
-    font-weight: 600;
-    color: #4c4036;
-}
-
-.wtc-analytics-state-picker {
-    min-width: 230px;
-    border: 1px solid #c3a27d;
-    border-radius: 999px;
-    background: #fff;
-    color: #233071;
-    font-size: 12px;
-    font-weight: 700;
-    padding: 6px 12px;
-}
-
 .wtc-analytics-section-panel {
     margin-top: 0;
 }
@@ -610,16 +586,6 @@
 }
 
 @media (max-width: 782px) {
-    .wtc-analytics-state-picker-wrap {
-        width: 100%;
-        margin-left: 0;
-    }
-
-    .wtc-analytics-state-picker {
-        flex: 1;
-        min-width: 0;
-    }
-
     .wtc-state-map-grid {
         grid-template-columns: 1fr;
     }

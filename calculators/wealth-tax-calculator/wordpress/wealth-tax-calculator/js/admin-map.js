@@ -533,7 +533,6 @@
         var payload = window.wtcStateAnalytics;
         var states = payload.states || {};
         var geometryTemplates = payload.geometryTemplates || {};
-        var selector = document.getElementById('wtc-state-analytics-select');
         var titleEl = document.getElementById('wtc-state-panel-title');
         var countyTitleEl = document.getElementById('wtc-state-county-title');
         var submittedEl = document.getElementById('wtc-state-submitted-sessions');
@@ -554,8 +553,21 @@
             countyTableEl = countyTableBodyEl.closest('table');
         }
 
-        if (!selector || !titleEl || !submittedEl || !uniqueEl || !daysEl || !avgEl || !countyBubblesEl || !countyEmptyEl || !countyGeometryEl || !countyGeometryEmptyEl || !countyTableEl || !countyTableBodyEl || !countyTableEmptyEl || !tileMapEl) {
+        if (!titleEl || !submittedEl || !uniqueEl || !daysEl || !avgEl || !countyBubblesEl || !countyEmptyEl || !countyGeometryEl || !countyGeometryEmptyEl || !countyTableEl || !countyTableBodyEl || !countyTableEmptyEl || !tileMapEl) {
             return;
+        }
+
+        function getFirstStateWithData() {
+            var keys = Object.keys(states);
+            for (var i = 0; i < keys.length; i++) {
+                var key = keys[i];
+                var entry = states[key] || {};
+                if (entry.hasData) {
+                    return key;
+                }
+            }
+
+            return keys.length ? keys[0] : '';
         }
 
         function showStateTab() {
@@ -648,31 +660,25 @@
             buildStateTileMap(tileMapEl, normalizedCode, states);
         }
 
-        selector.addEventListener('change', function () {
-            updateStatePanel(this.value);
-            showStateTab();
-        });
-
         tileMapEl.addEventListener('click', function (event) {
             var tile = event.target.closest ? event.target.closest('.wtc-state-tile[data-state-code]') : null;
             if (!tile) {
                 return;
             }
 
-            if (selector.querySelector('option[value="' + tile.getAttribute('data-state-code') + '"]:disabled')) {
+            if (tile.classList.contains('is-empty')) {
                 return;
             }
 
-            selector.value = tile.getAttribute('data-state-code');
-            updateStatePanel(selector.value);
+            updateStatePanel(tile.getAttribute('data-state-code'));
             showStateTab();
         });
 
-        if (!selector.value) {
-            selector.value = defaultState;
+        if (!states[defaultState]) {
+            defaultState = getFirstStateWithData();
         }
 
-        updateStatePanel(selector.value || defaultState);
+        updateStatePanel(defaultState || getFirstStateWithData());
     }
 
     function normalizeSectionKey(text) {
