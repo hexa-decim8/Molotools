@@ -32,10 +32,7 @@
         resizeTicking: false
     };
     var moneyPileController = {
-        shell: null,
-        field: null,
-        columns: [],
-        initialized: false
+        stages: {}
     };
     var analyticsController = {
         enabled: false,
@@ -49,6 +46,18 @@
     var supportsCssVariables = !!(window.CSS && window.CSS.supports && window.CSS.supports('--wtc-test', '0'));
     var MONEY_PILE_PROFILES = [0.26, 0.4, 0.58, 0.82, 1, 0.92, 0.72, 0.5, 0.34];
     var MONEY_PILE_MAX_BUNDLES = 14;
+    var MONEY_PILE_STAGE_CONFIGS = [
+        {
+            key: 'main',
+            shellSelector: '.wtc-slider-shell',
+            fieldId: 'wtc-moneyField'
+        },
+        {
+            key: 'summary',
+            shellSelector: '.wtc-fs-slider-shell',
+            fieldId: 'wtc-fs-moneyField'
+        }
+    ];
 
     // Policy category labels
     var POLICY_LABELS = {
@@ -686,21 +695,28 @@
         keepInfoboxVisible('wtc-fs-pr-slider', 'wtc-fs-sliderInfobox');
     }
 
-    function ensureMoneyPile() {
-        if (moneyPileController.initialized) {
-            return true;
+    function ensureMoneyPileStage(stageConfig) {
+        if (!stageConfig) {
+            return null;
         }
 
-        var shell = document.querySelector('.wtc-slider-shell');
-        var field = el('wtc-moneyField');
+        if (moneyPileController.stages[stageConfig.key]) {
+            return moneyPileController.stages[stageConfig.key];
+        }
+
+        var shell = document.querySelector(stageConfig.shellSelector);
+        var field = el(stageConfig.fieldId);
 
         if (!shell || !field) {
-            return false;
+            return null;
         }
 
-        moneyPileController.shell = shell;
-        moneyPileController.field = field;
-        moneyPileController.columns = [];
+        var stage = {
+            shell: shell,
+            field: field,
+            columns: []
+        };
+
         field.innerHTML = '';
 
         for (var columnIndex = 0; columnIndex < MONEY_PILE_PROFILES.length; columnIndex++) {
@@ -748,14 +764,27 @@
             }
 
             field.appendChild(column);
-            moneyPileController.columns.push({
+            stage.columns.push({
                 profile: MONEY_PILE_PROFILES[columnIndex],
                 bundles: bundles
             });
         }
 
-        moneyPileController.initialized = true;
-        return true;
+        moneyPileController.stages[stageConfig.key] = stage;
+        return stage;
+    }
+
+    function ensureMoneyPile() {
+        var initializedCount = 0;
+
+        for (var stageIndex = 0; stageIndex < MONEY_PILE_STAGE_CONFIGS.length; stageIndex++) {
+            var stage = ensureMoneyPileStage(MONEY_PILE_STAGE_CONFIGS[stageIndex]);
+            if (stage) {
+                initializedCount++;
+            }
+        }
+
+        return initializedCount > 0;
     }
 
     function syncMoneyPile(taxRate) {
@@ -766,40 +795,49 @@
         var progress = rateToRatio(taxRate);
         var visibleRatio = 0.08 + (Math.pow(progress, 0.72) * 0.92);
 
-        if (supportsCssVariables) {
-            moneyPileController.shell.style.setProperty('--wtc-money-progress', visibleRatio.toFixed(3));
-        }
+        for (var stageIndex = 0; stageIndex < MONEY_PILE_STAGE_CONFIGS.length; stageIndex++) {
+            var stageConfig = MONEY_PILE_STAGE_CONFIGS[stageIndex];
+            var stage = moneyPileController.stages[stageConfig.key];
 
-        for (var columnIndex = 0; columnIndex < moneyPileController.columns.length; columnIndex++) {
-            var column = moneyPileController.columns[columnIndex];
-            var bundleTarget = Math.round(column.profile * visibleRatio * MONEY_PILE_MAX_BUNDLES);
-
-            if (visibleRatio > 0.02) {
-                bundleTarget = Math.max(1, bundleTarget);
+            if (!stage) {
+                continue;
             }
 
-            for (var bundleIndex = 0; bundleIndex < column.bundles.length; bundleIndex++) {
-                if (bundleIndex < bundleTarget) {
-                    column.bundles[bundleIndex].classList.add('is-active');
-                    if (!supportsCssVariables) {
-                        column.bundles[bundleIndex].style.opacity = '1';
-                        column.bundles[bundleIndex].style.transform = buildMoneyBundleTransform(
-                            parseFloat(column.bundles[bundleIndex].getAttribute('data-bundle-scale')),
-                            parseFloat(column.bundles[bundleIndex].getAttribute('data-bundle-tilt')),
-                            true
-                        );
-                        column.bundles[bundleIndex].style.filter = 'saturate(1)';
-                    }
-                } else {
-                    column.bundles[bundleIndex].classList.remove('is-active');
-                    if (!supportsCssVariables) {
-                        column.bundles[bundleIndex].style.opacity = '0';
-                        column.bundles[bundleIndex].style.transform = buildMoneyBundleTransform(
-                            parseFloat(column.bundles[bundleIndex].getAttribute('data-bundle-scale')),
-                            parseFloat(column.bundles[bundleIndex].getAttribute('data-bundle-tilt')),
-                            false
-                        );
-                        column.bundles[bundleIndex].style.filter = 'saturate(0.86)';
+            if (supportsCssVariables) {
+                stage.shell.style.setProperty('--wtc-money-progress', visibleRatio.toFixed(3));
+            }
+
+            for (var columnIndex = 0; columnIndex < stage.columns.length; columnIndex++) {
+                var column = stage.columns[columnIndex];
+                var bundleTarget = Math.round(column.profile * visibleRatio * MONEY_PILE_MAX_BUNDLES);
+
+                if (visibleRatio > 0.02) {
+                    bundleTarget = Math.max(1, bundleTarget);
+                }
+
+                for (var bundleIndex = 0; bundleIndex < column.bundles.length; bundleIndex++) {
+                    if (bundleIndex < bundleTarget) {
+                        column.bundles[bundleIndex].classList.add('is-active');
+                        if (!supportsCssVariables) {
+                            column.bundles[bundleIndex].style.opacity = '1';
+                            column.bundles[bundleIndex].style.transform = buildMoneyBundleTransform(
+                                parseFloat(column.bundles[bundleIndex].getAttribute('data-bundle-scale')),
+                                parseFloat(column.bundles[bundleIndex].getAttribute('data-bundle-tilt')),
+                                true
+                            );
+                            column.bundles[bundleIndex].style.filter = 'saturate(1)';
+                        }
+                    } else {
+                        column.bundles[bundleIndex].classList.remove('is-active');
+                        if (!supportsCssVariables) {
+                            column.bundles[bundleIndex].style.opacity = '0';
+                            column.bundles[bundleIndex].style.transform = buildMoneyBundleTransform(
+                                parseFloat(column.bundles[bundleIndex].getAttribute('data-bundle-scale')),
+                                parseFloat(column.bundles[bundleIndex].getAttribute('data-bundle-tilt')),
+                                false
+                            );
+                            column.bundles[bundleIndex].style.filter = 'saturate(0.86)';
+                        }
                     }
                 }
             }
@@ -1017,6 +1055,7 @@
             handle.setAttribute('aria-valuetext', rateText);
         }
 
+        syncMoneyPile(taxRate);
         keepSummarySliderInfoboxVisible();
     }
 

@@ -2033,8 +2033,16 @@
 }
 
 .calculator-container .wtc-fs-slider-shell {
+    --wtc-money-progress: 0.25;
+    --wtc-slider-stage-top: 0px;
+    --wtc-slider-stage-height: 164px;
     position: relative;
     margin-bottom: 10px;
+    isolation: isolate;
+}
+
+.calculator-container.no-cssvars .wtc-fs-slider-shell {
+    isolation: auto;
 }
 
 .calculator-container .wtc-fs-dragdealer {

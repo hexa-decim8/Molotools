@@ -2049,6 +2049,11 @@ class Billionaire_Wealth_Tax_Calculator {
                     <div class="wtc-fs-slider-block">
                         <h3 class="wtc-fs-slider-title">Adjust Tax Rate</h3>
                         <div class="wtc-fs-slider-shell">
+                            <div class="wtc-money-stage" aria-hidden="true">
+                                <div class="wtc-money-stage-glow"></div>
+                                <div class="wtc-money-field" id="wtc-fs-moneyField"></div>
+                            </div>
+
                             <div id="wtc-fs-pr-slider" class="wtc-dragdealer wtc-fs-dragdealer">
                                 <div class="wtc-stripe">
                                     <div id="wtc-fs-highlight-fill" class="wtc-highlight-fill"></div>
