@@ -51,6 +51,106 @@
         }
     }
 
+    function initAnalyticsScopeTabs() {
+        var tabGroups = document.querySelectorAll('.wtc-analytics-section-toggle');
+        if (!tabGroups.length) {
+            return;
+        }
+
+        for (var i = 0; i < tabGroups.length; i++) {
+            (function (tabGroup) {
+                var scopeRoot = tabGroup.parentElement;
+                if (!scopeRoot) {
+                    return;
+                }
+
+                var buttons = tabGroup.querySelectorAll('.wtc-analytics-toggle-btn');
+                var panels = scopeRoot.querySelectorAll('.wtc-analytics-section-panel');
+                if (!buttons.length || !panels.length) {
+                    return;
+                }
+
+                function showPanel(target) {
+                    for (var p = 0; p < panels.length; p++) {
+                        var panel = panels[p];
+                        var isTarget = panel.getAttribute('data-wtc-section-panel') === target;
+                        panel.hidden = !isTarget;
+                        panel.classList.toggle('is-active', isTarget);
+                    }
+
+                    for (var b = 0; b < buttons.length; b++) {
+                        var button = buttons[b];
+                        var isActive = button.getAttribute('data-wtc-section-target') === target;
+                        button.classList.toggle('is-active', isActive);
+                        button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                    }
+                }
+
+                for (var b = 0; b < buttons.length; b++) {
+                    buttons[b].addEventListener('click', function () {
+                        var target = this.getAttribute('data-wtc-section-target');
+                        if (target) {
+                            showPanel(target);
+                        }
+                    });
+                }
+            }(tabGroups[i]));
+        }
+    }
+
+    var WTC_US_STATE_TILES = {
+        'WA': {x:0, y:0, label:'Washington'},
+        'OR': {x:0, y:1, label:'Oregon'},
+        'CA': {x:0, y:2, label:'California'},
+        'AK': {x:0, y:6, label:'Alaska'},
+        'ID': {x:1, y:1, label:'Idaho'},
+        'NV': {x:1, y:2, label:'Nevada'},
+        'HI': {x:1, y:6, label:'Hawaii'},
+        'MT': {x:2, y:0, label:'Montana'},
+        'WY': {x:2, y:1, label:'Wyoming'},
+        'UT': {x:2, y:2, label:'Utah'},
+        'AZ': {x:2, y:3, label:'Arizona'},
+        'CO': {x:3, y:2, label:'Colorado'},
+        'NM': {x:3, y:3, label:'New Mexico'},
+        'ND': {x:4, y:0, label:'North Dakota'},
+        'SD': {x:4, y:1, label:'South Dakota'},
+        'NE': {x:4, y:2, label:'Nebraska'},
+        'KS': {x:4, y:3, label:'Kansas'},
+        'OK': {x:4, y:4, label:'Oklahoma'},
+        'TX': {x:4, y:5, label:'Texas'},
+        'MN': {x:5, y:0, label:'Minnesota'},
+        'IA': {x:5, y:1, label:'Iowa'},
+        'MO': {x:5, y:2, label:'Missouri'},
+        'AR': {x:5, y:3, label:'Arkansas'},
+        'LA': {x:5, y:4, label:'Louisiana'},
+        'WI': {x:6, y:0, label:'Wisconsin'},
+        'IL': {x:6, y:1, label:'Illinois'},
+        'KY': {x:6, y:2, label:'Kentucky'},
+        'TN': {x:6, y:3, label:'Tennessee'},
+        'MS': {x:6, y:4, label:'Mississippi'},
+        'MI': {x:7, y:0, label:'Michigan'},
+        'IN': {x:7, y:1, label:'Indiana'},
+        'OH': {x:8, y:1, label:'Ohio'},
+        'WV': {x:8, y:2, label:'West Virginia'},
+        'AL': {x:7, y:4, label:'Alabama'},
+        'GA': {x:8, y:4, label:'Georgia'},
+        'FL': {x:9, y:5, label:'Florida'},
+        'VA': {x:9, y:2, label:'Virginia'},
+        'NC': {x:9, y:3, label:'North Carolina'},
+        'SC': {x:9, y:4, label:'South Carolina'},
+        'PA': {x:9, y:1, label:'Pennsylvania'},
+        'NY': {x:10, y:0, label:'New York'},
+        'NJ': {x:10, y:1, label:'New Jersey'},
+        'DE': {x:10, y:2, label:'Delaware'},
+        'MD': {x:10, y:3, label:'Maryland'},
+        'VT': {x:11, y:0, label:'Vermont'},
+        'NH': {x:11, y:1, label:'New Hampshire'},
+        'MA': {x:11, y:2, label:'Massachusetts'},
+        'CT': {x:11, y:3, label:'Connecticut'},
+        'RI': {x:12, y:3, label:'Rhode Island'},
+        'ME': {x:12, y:1, label:'Maine'}
+    };
+
     var WTC_MI_CITIES = {
         'detroit': {x:463.6, y:491.1, label:'Detroit'},
         'grand-rapids': {x:305.1, y:440.2, label:'Grand Rapids'},

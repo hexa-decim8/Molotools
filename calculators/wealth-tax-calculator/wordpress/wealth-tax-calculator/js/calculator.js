@@ -1476,28 +1476,34 @@
         if (policySection && allocationResults) {
             var card = policySection.querySelector('.wtc-budget-snapshot');
 
-            if (!card) {
-                card = document.createElement('div');
-                card.className = 'wtc-budget-snapshot';
-                card.innerHTML =
-                    '<div class="wtc-budget-snapshot-header">Budget Snapshot</div>' +
-                    '<div class="wtc-budget-snapshot-grid">' +
-                        '<div class="wtc-budget-cell"><span class="wtc-budget-label">10-Year Revenue</span><strong class="wtc-budget-value" data-slot="revenue"></strong><span class="wtc-budget-sub" data-slot="revenueAnnual"></span></div>' +
-                        '<div class="wtc-budget-cell"><span class="wtc-budget-label">Selected Policies</span><strong class="wtc-budget-value" data-slot="selected"></strong><span class="wtc-budget-sub" data-slot="selectedAnnual"></span></div>' +
-                        '<div class="wtc-budget-cell wtc-budget-balance"><span class="wtc-budget-label" data-slot="balanceLabel"></span><strong class="wtc-budget-value" data-slot="balance"></strong><span class="wtc-budget-sub" data-slot="balanceAnnual"></span></div>' +
-                    '</div>';
+            if (currentMode === 'advanced') {
+                if (card) {
+                    card.remove();
+                }
+            } else {
+                if (!card) {
+                    card = document.createElement('div');
+                    card.className = 'wtc-budget-snapshot';
+                    card.innerHTML =
+                        '<div class="wtc-budget-snapshot-header">Budget Snapshot</div>' +
+                        '<div class="wtc-budget-snapshot-grid">' +
+                            '<div class="wtc-budget-cell"><span class="wtc-budget-label">10-Year Revenue</span><strong class="wtc-budget-value" data-slot="revenue"></strong><span class="wtc-budget-sub" data-slot="revenueAnnual"></span></div>' +
+                            '<div class="wtc-budget-cell"><span class="wtc-budget-label">Selected Policies</span><strong class="wtc-budget-value" data-slot="selected"></strong><span class="wtc-budget-sub" data-slot="selectedAnnual"></span></div>' +
+                            '<div class="wtc-budget-cell wtc-budget-balance"><span class="wtc-budget-label" data-slot="balanceLabel"></span><strong class="wtc-budget-value" data-slot="balance"></strong><span class="wtc-budget-sub" data-slot="balanceAnnual"></span></div>' +
+                        '</div>';
 
-                policySection.insertBefore(card, allocationResults);
+                    policySection.insertBefore(card, allocationResults);
+                }
+
+                card.classList.toggle('is-over-budget', snapshotData.isOverBudget);
+                card.querySelector('[data-slot="revenue"]').textContent = formatCurrency(snapshotData.revenue);
+                card.querySelector('[data-slot="revenueAnnual"]').textContent = 'Annual: ' + formatCurrency(snapshotData.annualRevenue);
+                card.querySelector('[data-slot="selected"]').textContent = formatCurrency(snapshotData.selectedTotal);
+                card.querySelector('[data-slot="selectedAnnual"]').textContent = 'Annual: ' + formatCurrency(snapshotData.annualSelectedTotal);
+                card.querySelector('[data-slot="balanceLabel"]').textContent = snapshotData.isOverBudget ? 'Funding Gap' : 'Remaining Budget';
+                card.querySelector('[data-slot="balance"]').textContent = formatCurrency(snapshotData.isOverBudget ? snapshotData.overrun : snapshotData.remaining);
+                card.querySelector('[data-slot="balanceAnnual"]').textContent = 'Annual: ' + formatCurrency(snapshotData.isOverBudget ? snapshotData.annualOverrun : snapshotData.annualRemaining);
             }
-
-            card.classList.toggle('is-over-budget', snapshotData.isOverBudget);
-            card.querySelector('[data-slot="revenue"]').textContent = formatCurrency(snapshotData.revenue);
-            card.querySelector('[data-slot="revenueAnnual"]').textContent = 'Annual: ' + formatCurrency(snapshotData.annualRevenue);
-            card.querySelector('[data-slot="selected"]').textContent = formatCurrency(snapshotData.selectedTotal);
-            card.querySelector('[data-slot="selectedAnnual"]').textContent = 'Annual: ' + formatCurrency(snapshotData.annualSelectedTotal);
-            card.querySelector('[data-slot="balanceLabel"]').textContent = snapshotData.isOverBudget ? 'Funding Gap' : 'Remaining Budget';
-            card.querySelector('[data-slot="balance"]').textContent = formatCurrency(snapshotData.isOverBudget ? snapshotData.overrun : snapshotData.remaining);
-            card.querySelector('[data-slot="balanceAnnual"]').textContent = 'Annual: ' + formatCurrency(snapshotData.isOverBudget ? snapshotData.annualOverrun : snapshotData.annualRemaining);
         }
 
         if (currentMode === 'advanced') {
@@ -2104,47 +2110,6 @@
         updateAllocationSummary();
     }
 
-    function handleModeToggle(event) {
-        var button = event.target;
-        var mode = button.getAttribute('data-mode');
-
-        if (mode === currentMode) return;
-
-        currentMode = mode;
-
-        var modeButtons = document.querySelectorAll('.mode-button');
-        for (var i = 0; i < modeButtons.length; i++) {
-            modeButtons[i].classList.toggle('active', modeButtons[i].getAttribute('data-mode') === mode);
-        }
-
-        var policySection = document.querySelector('.policy-allocation-section');
-        if (policySection) {
-            if (mode === 'basic') {
-                policySection.classList.add('hidden');
-            } else {
-                policySection.classList.remove('hidden');
-            }
-        }
-
-        // Toggle advanced-mode class so only advanced-only hidden UI is scoped in CSS.
-        var calculatorContainer = document.querySelector('.calculator-container');
-        if (calculatorContainer) {
-            if (mode === 'basic') {
-                calculatorContainer.classList.remove('mode-advanced');
-            } else {
-                calculatorContainer.classList.add('mode-advanced');
-            }
-        }
-        
-        var currentValue = getCurrentTaxRate();
-
-        if (mode === 'basic') {
-            currentValue = Math.round(currentValue);
-        }
-
-        setTaxRate(currentValue, true);
-    }
-
     // ── DOM ────────────────────────────────────────────────────────────────────
 
     function el(id) {
@@ -2378,12 +2343,6 @@
         var calculatorContainer = document.querySelector('.calculator-container');
         if (calculatorContainer) {
             calculatorContainer.classList.add('mode-advanced');
-        }
-
-        // Set up event listeners for mode toggle buttons
-        var modeButtons = document.querySelectorAll('.mode-button');
-        for (var i = 0; i < modeButtons.length; i++) {
-            modeButtons[i].addEventListener('click', handleModeToggle);
         }
 
         initShareActions();

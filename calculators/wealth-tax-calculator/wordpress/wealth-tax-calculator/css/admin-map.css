@@ -319,6 +319,21 @@
     border-color: #233071;
 }
 
+.wtc-analytics-section-toggle {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 16px 0 4px;
+}
+
+.wtc-analytics-section-panel {
+    margin-top: 0;
+}
+
+.wtc-analytics-section-panel[hidden] {
+    display: none;
+}
+
 .wtc-analytics-donut {
     width: 178px;
     height: 178px;
@@ -381,5 +396,9 @@
 @media (max-width: 782px) {
     .wtc-analytics-chart-panel {
         grid-template-columns: 1fr;
+    }
+
+    #wtc-us-state-map {
+        min-width: 620px;
     }
 }
