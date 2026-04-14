@@ -1000,7 +1000,7 @@
 }
 
 .calculator-container .allocation-example-row.is-enabled .allocation-row-fill {
-    background: var(--fill-color, #406BBF);
+    background: var(--fill-color, #6BAA75);
     opacity: 0.34;
 }
 
@@ -1566,7 +1566,6 @@
     gap: 8px;
     background: #fff;
     border: 1px solid #E1B682;
-    border-left: 5px solid var(--wtc-policy-color, #406BBF);
     border-radius: 6px;
     padding: 8px 10px;
     cursor: grab;
@@ -1590,19 +1589,7 @@
 
 
 .calculator-container .selected-policy-rank {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: var(--wtc-policy-color, #233071);
-    color: #fff;
-    font-size: 0.7rem;
-    font-weight: 700;
-    margin-top: 2px;
-    font-family: var(--wtc-font-primary);
+    display: none;
 }
 
 .calculator-container .selected-policy-drag-handle {
@@ -2128,7 +2115,6 @@
 .calculator-container .wtc-fs-entry {
     background: #fff;
     border: 1px solid #E1B682;
-    border-left: 5px solid var(--wtc-policy-color, #406BBF);
     border-radius: 8px;
     padding: 16px;
     cursor: grab;
@@ -2161,18 +2147,7 @@
 }
 
 .calculator-container .wtc-fs-rank {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: #233071;
-    color: #fff;
-    font-size: 0.7rem;
-    font-weight: 700;
-    font-family: var(--wtc-font-primary);
+    display: none;
 }
 
 .calculator-container .wtc-fs-label {
@@ -2197,28 +2172,19 @@
 }
 
 .calculator-container .wtc-fs-badge {
-    display: inline-block;
-    padding: 2px 10px;
-    border-radius: 10px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    display: none;
 }
 
 .calculator-container .wtc-fs-badge-full {
-    background: #D4EDDA;
-    color: #1A6630;
+    display: none;
 }
 
 .calculator-container .wtc-fs-badge-partial {
-    background: #FFF3CD;
-    color: #856404;
+    display: none;
 }
 
 .calculator-container .wtc-fs-badge-none {
-    background: #F8D7DA;
-    color: #8B1A22;
+    display: none;
 }
 
 .calculator-container .wtc-fs-desc {
