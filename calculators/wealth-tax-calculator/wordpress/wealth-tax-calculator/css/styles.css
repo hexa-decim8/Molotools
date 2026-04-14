@@ -367,7 +367,7 @@
     --wtc-slider-stage-top: 22px;
     --wtc-slider-stage-height: 194px;
     position: relative;
-    padding-top: 202px;
+    padding-top: 216px;
     isolation: isolate;
 }
 
@@ -1886,7 +1886,7 @@
     .calculator-container .wtc-slider-shell {
         --wtc-slider-stage-top: 30px;
         --wtc-slider-stage-height: 198px;
-        padding-top: 214px;
+        padding-top: 228px;
     }
 
     .calculator-container .wtc-money-field {
@@ -1942,7 +1942,7 @@
     .calculator-container .wtc-slider-shell {
         --wtc-slider-stage-top: 34px;
         --wtc-slider-stage-height: 202px;
-        padding-top: 228px;
+        padding-top: 236px;
     }
 
     .calculator-container .wtc-money-stage {
