@@ -1,0 +1,112 @@
+/* Wealth Tax Calculator — Michigan visitor map (admin dashboard) */
+
+.wtc-mi-map-card {
+    position: relative;
+}
+
+.wtc-mi-map-wrap {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+    max-width: 500px;
+}
+
+.wtc-mi-map-wrap svg#wtc-michigan-map {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid #e0d8d0;
+    border-radius: 4px;
+    background: #f9f5f0;
+}
+
+/* County fill and borders */
+.wtc-mi-map-wrap .wtc-county {
+    fill: #ece4d8;
+    stroke: #b5a28e;
+    stroke-width: 0.6;
+    stroke-linejoin: round;
+    transition: fill 0.15s ease;
+}
+
+/* City bubbles */
+.wtc-mi-map-wrap .wtc-mi-bubble {
+    fill: #406BBF;
+    fill-opacity: 0.75;
+    stroke: #233071;
+    stroke-width: 1;
+    cursor: pointer;
+    outline: none;
+    transition: fill-opacity 0.12s ease, r 0.12s ease;
+}
+
+.wtc-mi-map-wrap .wtc-mi-bubble:hover,
+.wtc-mi-map-wrap .wtc-mi-bubble:focus {
+    fill-opacity: 1;
+    outline: 2px solid #E1B682;
+    outline-offset: 1px;
+}
+
+/* Tooltip */
+#wtc-mi-map-tooltip {
+    display: none;
+    position: absolute;
+    z-index: 9999;
+    background: #121C50;
+    color: #fff;
+    font-size: 12px;
+    line-height: 1.4;
+    padding: 5px 9px;
+    border-radius: 4px;
+    pointer-events: none;
+    white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+}
+
+/* Legend */
+.wtc-mi-map-legend {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.wtc-mi-map-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #383533;
+}
+
+.wtc-mi-map-legend-item svg {
+    flex-shrink: 0;
+}
+
+/* Unlocated list */
+.wtc-mi-unlocated {
+    margin-top: 16px;
+}
+
+.wtc-mi-unlocated summary {
+    cursor: pointer;
+    font-size: 13px;
+    color: #7b6f66;
+    user-select: none;
+}
+
+.wtc-mi-unlocated summary:hover {
+    color: #233071;
+}
+
+.wtc-mi-unlocated table {
+    margin-top: 8px;
+    font-size: 12px;
+    width: auto;
+}
+
+.wtc-mi-unlocated th,
+.wtc-mi-unlocated td {
+    padding: 4px 10px;
+}

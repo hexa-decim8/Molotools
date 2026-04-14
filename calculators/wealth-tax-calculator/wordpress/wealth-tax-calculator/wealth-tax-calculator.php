@@ -579,10 +579,50 @@ class WTC_Policy_Analytics {
     public function __construct() {
         add_action( 'admin_init', array( $this, 'register_settings' ) );
         add_action( 'admin_menu', array( $this, 'add_analytics_submenu' ) );
+        add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_map_assets' ) );
         add_action( 'admin_post_wtc_reset_analytics', array( $this, 'handle_reset_analytics' ) );
         add_action( 'wp_ajax_wtc_track_policy_event', array( $this, 'track_policy_event' ) );
         add_action( 'wp_ajax_nopriv_wtc_track_policy_event', array( $this, 'track_policy_event' ) );
         add_action( WTC_UPDATE_CRON_HOOK, array( $this, 'prune_old_analytics_data' ) );
+    }
+
+    public function enqueue_admin_map_assets( $hook ) {
+        if ( 'settings_page_wealth-tax-calculator-analytics' !== $hook ) {
+            return;
+        }
+        wp_enqueue_style(
+            'wtc-admin-map',
+            plugin_dir_url( __FILE__ ) . 'css/admin-map.css',
+            array(),
+            WTC_VERSION
+        );
+        wp_enqueue_script(
+            'wtc-admin-map',
+            plugin_dir_url( __FILE__ ) . 'js/admin-map.js',
+            array(),
+            WTC_VERSION,
+            true
+        );
+
+        $analytics_data = get_option( WTC_ANALYTICS_OPTION_KEY, array() );
+        if ( ! is_array( $analytics_data ) ) {
+            $analytics_data = array();
+        }
+        $summary       = $this->build_summary( $analytics_data );
+        $region_counts = isset( $summary['region_counts'] ) ? $summary['region_counts'] : array();
+
+        $mi_cities = array();
+        foreach ( $region_counts as $bucket => $count ) {
+            if ( strncmp( $bucket, 'mi_', 3 ) === 0 && 'mi_unknown' !== $bucket ) {
+                $mi_cities[ substr( $bucket, 3 ) ] = (int) $count;
+            }
+        }
+
+        wp_localize_script(
+            'wtc-admin-map',
+            'wtcMichiganMap',
+            array( 'cities' => $mi_cities )
+        );
     }
 
     public function is_enabled() {
@@ -689,6 +729,8 @@ class WTC_Policy_Analytics {
                 <p><strong><?php esc_html_e( 'Days stored:', 'wealth-tax-calculator' ); ?></strong> <?php echo esc_html( number_format_i18n( $summary['days_count'] ) ); ?></p>
             </div>
 
+            <?php $this->render_michigan_map( $summary['region_counts'] ); ?>
+
             <div class="card" style="max-width: 920px; margin-top: 20px;">
                 <h2><?php esc_html_e( 'Most Selected Sub-Policies (Final Submissions)', 'wealth-tax-calculator' ); ?></h2>
                 <?php $this->render_simple_count_table( $summary['enabled_counts'], __( 'Sub-policy', 'wealth-tax-calculator' ), __( 'Sessions selected', 'wealth-tax-calculator' ) ); ?>
@@ -719,6 +761,128 @@ class WTC_Policy_Analytics {
             </div>
         </div>
         <?php
+    }
+
+    private function render_michigan_map( array $region_counts ) {
+        $mi_cities  = array();
+        $mi_unknown = 0;
+        foreach ( $region_counts as $bucket => $count ) {
+            if ( strncmp( $bucket, 'mi_', 3 ) !== 0 ) {
+                continue;
+            }
+            if ( 'mi_unknown' === $bucket ) {
+                $mi_unknown += (int) $count;
+            } else {
+                $mi_cities[ substr( $bucket, 3 ) ] = (int) $count;
+            }
+        }
+
+        $svg_path = plugin_dir_path( __FILE__ ) . 'data/michigan-counties.svg';
+        $has_data = ! empty( $mi_cities ) || $mi_unknown > 0;
+        ?>
+        <div class="card wtc-mi-map-card" style="max-width: 920px; margin-top: 20px;">
+            <h2><?php esc_html_e( 'Michigan Visitors Map', 'wealth-tax-calculator' ); ?></h2>
+            <?php if ( ! $has_data ) : ?>
+                <p><?php esc_html_e( 'No Michigan visitor data yet.', 'wealth-tax-calculator' ); ?></p>
+            <?php else : ?>
+                <div class="wtc-mi-map-wrap">
+                    <?php
+                    if ( file_exists( $svg_path ) ) {
+                        // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents, WordPress.Security.EscapeOutput.OutputNotEscaped
+                        echo file_get_contents( $svg_path );
+                    }
+                    ?>
+                    <div id="wtc-mi-map-tooltip"></div>
+                </div>
+                <div class="wtc-mi-map-legend" aria-hidden="true">
+                    <span class="wtc-mi-map-legend-item">
+                        <svg width="10" height="10" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <circle cx="5" cy="5" r="4" fill="#406BBF" fill-opacity="0.75" stroke="#233071" stroke-width="1"/>
+                        </svg>
+                        <span><?php esc_html_e( 'Smaller = fewer sessions', 'wealth-tax-calculator' ); ?></span>
+                    </span>
+                    <span class="wtc-mi-map-legend-item">
+                        <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <circle cx="9" cy="9" r="8" fill="#406BBF" fill-opacity="0.75" stroke="#233071" stroke-width="1"/>
+                        </svg>
+                        <span><?php esc_html_e( 'Larger = more sessions', 'wealth-tax-calculator' ); ?></span>
+                    </span>
+                </div>
+                <?php
+                $known_slugs    = $this->get_known_city_slugs();
+                $unknown_cities = array_diff_key( $mi_cities, $known_slugs );
+                $total_unlocated = $mi_unknown;
+                foreach ( $unknown_cities as $c ) {
+                    $total_unlocated += $c;
+                }
+                if ( $total_unlocated > 0 ) :
+                ?>
+                    <details class="wtc-mi-unlocated">
+                        <summary><?php
+                            /* translators: %d: number of sessions */
+                            printf( esc_html__( 'Unlocated Michigan sessions: %d', 'wealth-tax-calculator' ), (int) $total_unlocated );
+                        ?></summary>
+                        <table class="widefat striped">
+                            <thead><tr>
+                                <th><?php esc_html_e( 'City slug', 'wealth-tax-calculator' ); ?></th>
+                                <th><?php esc_html_e( 'Sessions', 'wealth-tax-calculator' ); ?></th>
+                            </tr></thead>
+                            <tbody>
+                            <?php if ( $mi_unknown > 0 ) : ?>
+                                <tr><td><?php esc_html_e( '(city unknown)', 'wealth-tax-calculator' ); ?></td><td><?php echo esc_html( number_format_i18n( $mi_unknown ) ); ?></td></tr>
+                            <?php endif; ?>
+                            <?php foreach ( $unknown_cities as $slug => $count ) : ?>
+                                <tr><td><?php echo esc_html( $slug ); ?></td><td><?php echo esc_html( number_format_i18n( $count ) ); ?></td></tr>
+                            <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </details>
+                <?php endif; ?>
+            <?php endif; ?>
+        </div>
+        <?php
+    }
+
+    private function get_known_city_slugs() {
+        return array_flip( array(
+            'detroit', 'grand-rapids', 'warren', 'sterling-heights', 'ann-arbor',
+            'lansing', 'flint', 'dearborn', 'livonia', 'troy', 'westland',
+            'kalamazoo', 'saginaw', 'muskegon', 'holland', 'battle-creek',
+            'bay-city', 'pontiac', 'midland', 'jackson', 'portage', 'royal-oak',
+            'southfield', 'farmington-hills', 'st-clair-shores', 'canton',
+            'clinton-township', 'ypsilanti', 'dearborn-heights', 'taylor',
+            'roseville', 'novi', 'east-lansing', 'mount-pleasant', 'port-huron',
+            'traverse-city', 'alpena', 'marquette', 'escanaba', 'sault-ste-marie',
+            'iron-mountain', 'houghton', 'cadillac', 'petoskey', 'manistee',
+            'big-rapids', 'niles', 'benton-harbor', 'adrian', 'monroe', 'owosso',
+            'mount-clemens', 'auburn-hills', 'wyoming', 'kentwood', 'romulus',
+            'ferndale', 'lincoln-park', 'allen-park', 'southgate', 'wyandotte',
+            'trenton', 'grosse-pointe', 'hamtramck', 'inkster', 'garden-city',
+            'walker', 'grandville', 'hudsonville', 'zeeland', 'comstock-park',
+            'ionia', 'greenville', 'okemos', 'rochester-hills', 'oak-park',
+            'waterford', 'west-bloomfield', 'shelby-township', 'macomb-township',
+            'harper-woods', 'grosse-pointe-woods', 'grosse-pointe-park', 'riverview',
+            'highland-park', 'alma', 'sturgis', 'st-joseph', 'iron-river',
+            'ironwood', 'menominee', 'gaylord', 'rogers-city', 'cheboygan',
+            'boyne-city', 'charlevoix', 'ludington', 'reed-city', 'newaygo',
+            'allegan', 'st-johns', 'hastings', 'charlotte', 'mason', 'howell',
+            'brighton', 'milford', 'fenton', 'grand-blanc', 'burton', 'davison',
+            'swartz-creek', 'lapeer', 'imlay-city', 'sandusky', 'port-austin',
+            'bad-axe', 'caro', 'cass-city', 'tawas-city', 'oscoda', 'west-branch',
+            'grayling', 'roscommon', 'houghton-lake', 'clare', 'gladwin',
+            'harrison', 'lake-city', 'evart', 'howard-city', 'muskegon-heights',
+            'norton-shores', 'spring-lake', 'coopersville', 'lowell', 'grand-haven',
+            'wayland', 'otsego', 'paw-paw', 'dowagiac', 'south-haven',
+            'stevensville', 'three-rivers', 'coldwater', 'marshall', 'albion',
+            'tecumseh', 'milan', 'saline', 'chelsea', 'dexter', 'south-lyon',
+            'wixom', 'clio', 'mount-morris', 'linden', 'holly', 'lake-orion',
+            'clarkston', 'oxford', 'romeo', 'richmond', 'new-baltimore',
+            'chesterfield-township', 'utica', 'eastpointe', 'fraser', 'center-line',
+            'madison-heights', 'hazel-park', 'berkley', 'clawson', 'birmingham',
+            'bloomfield-hills', 'waterford-charter-township', 'white-lake-township',
+            'highland-township', 'hartland-township', 'commerce-township',
+            'shelby-charter-township', 'harrison-township', 'washington-township',
+        ) );
     }
 
     private function render_simple_count_table( $counts, $col_one, $col_two ) {
