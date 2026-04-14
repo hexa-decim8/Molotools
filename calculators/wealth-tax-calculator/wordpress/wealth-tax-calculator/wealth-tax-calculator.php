@@ -794,6 +794,128 @@ class WTC_Policy_Analytics {
         <?php
     }
 
+    private function get_policy_group_palette() {
+        return array(
+            'healthcare'   => array( 'label' => __( 'Healthcare', 'wealth-tax-calculator' ), 'color' => '#D1495B' ),
+            'education'    => array( 'label' => __( 'Education', 'wealth-tax-calculator' ), 'color' => '#2B59C3' ),
+            'business'     => array( 'label' => __( 'Tax Relief', 'wealth-tax-calculator' ), 'color' => '#2A9D8F' ),
+            'directrelief' => array( 'label' => __( 'Direct Relief', 'wealth-tax-calculator' ), 'color' => '#F4A261' ),
+            'housing'      => array( 'label' => __( 'Housing', 'wealth-tax-calculator' ), 'color' => '#7B2CBF' ),
+            'childcare'    => array( 'label' => __( 'Childcare & Families', 'wealth-tax-calculator' ), 'color' => '#3A86FF' ),
+        );
+    }
+
+    private function get_chart_swatches() {
+        return array( '#D1495B', '#2B59C3', '#2A9D8F', '#F4A261', '#7B2CBF', '#3A86FF', '#EF476F', '#118AB2', '#06D6A0', '#FFD166', '#8338EC', '#8E9AAF' );
+    }
+
+    private function get_policy_group_label( $policy_group ) {
+        $policy_group = sanitize_key( $policy_group );
+        $palette      = $this->get_policy_group_palette();
+        if ( isset( $palette[ $policy_group ]['label'] ) ) {
+            return $palette[ $policy_group ]['label'];
+        }
+
+        return ucwords( str_replace( array( '-', '_' ), ' ', $policy_group ) );
+    }
+
+    private function get_policy_group_color( $policy_group ) {
+        $policy_group = sanitize_key( $policy_group );
+        $palette      = $this->get_policy_group_palette();
+        if ( isset( $palette[ $policy_group ]['color'] ) ) {
+            return $palette[ $policy_group ]['color'];
+        }
+
+        return '#406BBF';
+    }
+
+    private function format_compact_currency( $amount ) {
+        $amount = (float) $amount;
+
+        if ( $amount >= 1e12 ) {
+            return '$' . number_format( $amount / 1e12, 2 ) . 'T';
+        }
+
+        if ( $amount >= 1e9 ) {
+            return '$' . number_format( $amount / 1e9, 1 ) . 'B';
+        }
+
+        return '$' . number_format_i18n( (int) round( $amount ) );
+    }
+
+    private function format_currency( $amount ) {
+        $amount = (float) $amount;
+
+        if ( $amount >= 1e12 ) {
+            return '$' . number_format_i18n( $amount / 1e12, 2 ) . ' Trillion';
+        }
+
+        if ( $amount >= 1e9 ) {
+            return '$' . number_format_i18n( $amount / 1e9, 1 ) . ' Billion';
+        }
+
+        return '$' . number_format_i18n( (int) round( $amount ) );
+    }
+
+    private function render_analytics_popularity_chart( $rows, $empty_text ) {
+        $rows = is_array( $rows ) ? $rows : array();
+        $rows = array_values( $rows );
+
+        $normalized_rows = array();
+        $total_count     = 0;
+
+        foreach ( $rows as $row ) {
+            if ( ! is_array( $row ) ) {
+                continue;
+            }
+
+            $count = isset( $row['count'] ) ? (int) $row['count'] : 0;
+            if ( $count <= 0 ) {
+                continue;
+            }
+
+            $normalized_rows[] = array(
+                'label' => isset( $row['label'] ) ? sanitize_text_field( $row['label'] ) : '',
+                'count' => $count,
+            );
+            $total_count += $count;
+        }
+
+        if ( $total_count <= 0 || empty( $normalized_rows ) ) {
+            echo '<p class="wtc-analytics-empty">' . esc_html( $empty_text ) . '</p>';
+            return;
+        }
+
+        $swatches       = $this->get_chart_swatches();
+        $gradient_parts = array();
+        $current_angle  = 0.0;
+
+        foreach ( $normalized_rows as $index => $row ) {
+            $ratio      = $row['count'] / $total_count;
+            $next_angle = $current_angle + ( $ratio * 360 );
+            $color      = $swatches[ $index % count( $swatches ) ];
+
+            $normalized_rows[ $index ]['color']   = $color;
+            $normalized_rows[ $index ]['percent'] = round( $ratio * 100, 1 );
+
+            $gradient_parts[] = $color . ' ' . number_format( $current_angle, 2, '.', '' ) . 'deg ' . number_format( $next_angle, 2, '.', '' ) . 'deg';
+            $current_angle    = $next_angle;
+        }
+
+        echo '<div class="wtc-analytics-donut" role="img" aria-label="' . esc_attr__( 'Policy popularity chart', 'wealth-tax-calculator' ) . '" style="background: conic-gradient(' . esc_attr( implode( ', ', $gradient_parts ) ) . ');"></div>';
+        echo '<div class="wtc-analytics-legend wtc-analytics-legend-scroll">';
+
+        foreach ( $normalized_rows as $row ) {
+            echo '<div class="wtc-analytics-legend-item">';
+            echo '<span class="wtc-analytics-legend-swatch" style="background:' . esc_attr( sanitize_hex_color( $row['color'] ) ) . '"></span>';
+            echo '<span class="wtc-analytics-legend-label">' . esc_html( $row['label'] ) . '</span>';
+            echo '<span class="wtc-analytics-legend-value">' . esc_html( number_format_i18n( $row['count'] ) . ' (' . number_format_i18n( $row['percent'], 1 ) . '%)' ) . '</span>';
+            echo '</div>';
+        }
+
+        echo '</div>';
+    }
+
     private function render_michigan_map( array $region_counts ) {
         $mi_cities  = array();
         $mi_unknown = 0;
