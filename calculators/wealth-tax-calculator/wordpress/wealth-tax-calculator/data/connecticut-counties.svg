@@ -1,0 +1,12 @@
+<svg id="wtc-state-map-ct" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 240" role="img" aria-label="Connecticut county map">
+  <g class="wtc-counties">
+    <path id="wtc-county-fairfield" class="wtc-county" data-county="Fairfield" d="M18 134 L122 126 L136 182 L34 206 L16 170 Z"/>
+    <path id="wtc-county-litchfield" class="wtc-county" data-county="Litchfield" d="M16 36 L132 34 L124 126 L18 134 Z"/>
+    <path id="wtc-county-new-haven" class="wtc-county" data-county="New Haven" d="M122 126 L228 120 L238 176 L136 182 Z"/>
+    <path id="wtc-county-hartford" class="wtc-county" data-county="Hartford" d="M132 34 L242 34 L228 120 L124 126 Z"/>
+    <path id="wtc-county-middlesex" class="wtc-county" data-county="Middlesex" d="M238 132 L300 126 L304 178 L246 192 L236 168 Z"/>
+    <path id="wtc-county-tolland" class="wtc-county" data-county="Tolland" d="M242 34 L326 34 L314 112 L228 120 Z"/>
+    <path id="wtc-county-new-london" class="wtc-county" data-county="New London" d="M300 126 L450 120 L458 178 L304 178 Z"/>
+    <path id="wtc-county-windham" class="wtc-county" data-county="Windham" d="M326 34 L458 32 L450 120 L314 112 Z"/>
+  </g>
+</svg>

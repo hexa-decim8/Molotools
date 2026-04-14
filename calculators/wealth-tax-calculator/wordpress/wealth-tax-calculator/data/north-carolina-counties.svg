@@ -1,0 +1,34 @@
+<svg id="wtc-state-map-nc" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 420" role="img" aria-label="North Carolina county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-alamance" class="wtc-county" data-county="Alamance" x="20" y="20" width="126" height="52"/>
+    <rect id="wtc-county-brunswick" class="wtc-county" data-county="Brunswick" x="156" y="20" width="126" height="52"/>
+    <rect id="wtc-county-buncombe" class="wtc-county" data-county="Buncombe" x="292" y="20" width="126" height="52"/>
+    <rect id="wtc-county-cabarrus" class="wtc-county" data-county="Cabarrus" x="428" y="20" width="126" height="52"/>
+    <rect id="wtc-county-caldwell" class="wtc-county" data-county="Caldwell" x="564" y="20" width="126" height="52"/>
+    <rect id="wtc-county-catawba" class="wtc-county" data-county="Catawba" x="700" y="20" width="126" height="52"/>
+    <rect id="wtc-county-cumberland" class="wtc-county" data-county="Cumberland" x="836" y="20" width="126" height="52"/>
+    <rect id="wtc-county-davidson" class="wtc-county" data-county="Davidson" x="972" y="20" width="126" height="52"/>
+
+    <rect id="wtc-county-durham" class="wtc-county" data-county="Durham" x="20" y="82" width="126" height="52"/>
+    <rect id="wtc-county-forsyth" class="wtc-county" data-county="Forsyth" x="156" y="82" width="126" height="52"/>
+    <rect id="wtc-county-gaston" class="wtc-county" data-county="Gaston" x="292" y="82" width="126" height="52"/>
+    <rect id="wtc-county-guilford" class="wtc-county" data-county="Guilford" x="428" y="82" width="126" height="52"/>
+    <rect id="wtc-county-harnett" class="wtc-county" data-county="Harnett" x="564" y="82" width="126" height="52"/>
+    <rect id="wtc-county-iredell" class="wtc-county" data-county="Iredell" x="700" y="82" width="126" height="52"/>
+    <rect id="wtc-county-johnston" class="wtc-county" data-county="Johnston" x="836" y="82" width="126" height="52"/>
+    <rect id="wtc-county-mecklenburg" class="wtc-county" data-county="Mecklenburg" x="972" y="82" width="126" height="52"/>
+
+    <rect id="wtc-county-new-hanover" class="wtc-county" data-county="New Hanover" x="20" y="144" width="126" height="52"/>
+    <rect id="wtc-county-onslow" class="wtc-county" data-county="Onslow" x="156" y="144" width="126" height="52"/>
+    <rect id="wtc-county-orange" class="wtc-county" data-county="Orange" x="292" y="144" width="126" height="52"/>
+    <rect id="wtc-county-pitt" class="wtc-county" data-county="Pitt" x="428" y="144" width="126" height="52"/>
+    <rect id="wtc-county-randolph" class="wtc-county" data-county="Randolph" x="564" y="144" width="126" height="52"/>
+    <rect id="wtc-county-robeson" class="wtc-county" data-county="Robeson" x="700" y="144" width="126" height="52"/>
+    <rect id="wtc-county-rowan" class="wtc-county" data-county="Rowan" x="836" y="144" width="126" height="52"/>
+    <rect id="wtc-county-union" class="wtc-county" data-county="Union" x="972" y="144" width="126" height="52"/>
+
+    <rect id="wtc-county-wake" class="wtc-county" data-county="Wake" x="20" y="206" width="126" height="52"/>
+    <rect id="wtc-county-wayne" class="wtc-county" data-county="Wayne" x="156" y="206" width="126" height="52"/>
+    <rect id="wtc-county-wilson" class="wtc-county" data-county="Wilson" x="292" y="206" width="126" height="52"/>
+  </g>
+</svg>

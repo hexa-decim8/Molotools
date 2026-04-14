@@ -1,0 +1,32 @@
+<svg id="wtc-state-map-al" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 460" role="img" aria-label="Alabama county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-autauga" class="wtc-county" data-county="Autauga" x="20" y="20" width="126" height="52"/>
+    <rect id="wtc-county-baldwin" class="wtc-county" data-county="Baldwin" x="156" y="20" width="126" height="52"/>
+    <rect id="wtc-county-barbour" class="wtc-county" data-county="Barbour" x="292" y="20" width="126" height="52"/>
+    <rect id="wtc-county-calhoun" class="wtc-county" data-county="Calhoun" x="428" y="20" width="126" height="52"/>
+    <rect id="wtc-county-cherokee" class="wtc-county" data-county="Cherokee" x="564" y="20" width="126" height="52"/>
+    <rect id="wtc-county-cullman" class="wtc-county" data-county="Cullman" x="700" y="20" width="126" height="52"/>
+    <rect id="wtc-county-dallas" class="wtc-county" data-county="Dallas" x="836" y="20" width="126" height="52"/>
+    <rect id="wtc-county-dekalb" class="wtc-county" data-county="DeKalb" x="972" y="20" width="126" height="52"/>
+
+    <rect id="wtc-county-elmore" class="wtc-county" data-county="Elmore" x="20" y="82" width="126" height="52"/>
+    <rect id="wtc-county-escambia" class="wtc-county" data-county="Escambia" x="156" y="82" width="126" height="52"/>
+    <rect id="wtc-county-etowah" class="wtc-county" data-county="Etowah" x="292" y="82" width="126" height="52"/>
+    <rect id="wtc-county-houston" class="wtc-county" data-county="Houston" x="428" y="82" width="126" height="52"/>
+    <rect id="wtc-county-jefferson" class="wtc-county" data-county="Jefferson" x="564" y="82" width="126" height="52"/>
+    <rect id="wtc-county-lauderdale" class="wtc-county" data-county="Lauderdale" x="700" y="82" width="126" height="52"/>
+    <rect id="wtc-county-lee" class="wtc-county" data-county="Lee" x="836" y="82" width="126" height="52"/>
+    <rect id="wtc-county-limestone" class="wtc-county" data-county="Limestone" x="972" y="82" width="126" height="52"/>
+
+    <rect id="wtc-county-madison" class="wtc-county" data-county="Madison" x="20" y="144" width="126" height="52"/>
+    <rect id="wtc-county-marion" class="wtc-county" data-county="Marion" x="156" y="144" width="126" height="52"/>
+    <rect id="wtc-county-marshall" class="wtc-county" data-county="Marshall" x="292" y="144" width="126" height="52"/>
+    <rect id="wtc-county-mobile" class="wtc-county" data-county="Mobile" x="428" y="144" width="126" height="52"/>
+    <rect id="wtc-county-montgomery" class="wtc-county" data-county="Montgomery" x="564" y="144" width="126" height="52"/>
+    <rect id="wtc-county-morgan" class="wtc-county" data-county="Morgan" x="700" y="144" width="126" height="52"/>
+    <rect id="wtc-county-shelby" class="wtc-county" data-county="Shelby" x="836" y="144" width="126" height="52"/>
+    <rect id="wtc-county-talladega" class="wtc-county" data-county="Talladega" x="972" y="144" width="126" height="52"/>
+
+    <rect id="wtc-county-tuscaloosa" class="wtc-county" data-county="Tuscaloosa" x="20" y="206" width="126" height="52"/>
+  </g>
+</svg>

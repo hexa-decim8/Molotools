@@ -1,0 +1,29 @@
+<svg id="wtc-state-map-sc" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 420" role="img" aria-label="South Carolina county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-aiken" class="wtc-county" data-county="Aiken" x="20" y="20" width="126" height="52"/>
+    <rect id="wtc-county-anderson" class="wtc-county" data-county="Anderson" x="156" y="20" width="126" height="52"/>
+    <rect id="wtc-county-beaufort" class="wtc-county" data-county="Beaufort" x="292" y="20" width="126" height="52"/>
+    <rect id="wtc-county-berkeley" class="wtc-county" data-county="Berkeley" x="428" y="20" width="126" height="52"/>
+    <rect id="wtc-county-charleston" class="wtc-county" data-county="Charleston" x="564" y="20" width="126" height="52"/>
+    <rect id="wtc-county-cherokee" class="wtc-county" data-county="Cherokee" x="700" y="20" width="126" height="52"/>
+    <rect id="wtc-county-chester" class="wtc-county" data-county="Chester" x="836" y="20" width="126" height="52"/>
+    <rect id="wtc-county-clarendon" class="wtc-county" data-county="Clarendon" x="972" y="20" width="126" height="52"/>
+
+    <rect id="wtc-county-colleton" class="wtc-county" data-county="Colleton" x="20" y="82" width="126" height="52"/>
+    <rect id="wtc-county-darlington" class="wtc-county" data-county="Darlington" x="156" y="82" width="126" height="52"/>
+    <rect id="wtc-county-dorchester" class="wtc-county" data-county="Dorchester" x="292" y="82" width="126" height="52"/>
+    <rect id="wtc-county-florence" class="wtc-county" data-county="Florence" x="428" y="82" width="126" height="52"/>
+    <rect id="wtc-county-georgetown" class="wtc-county" data-county="Georgetown" x="564" y="82" width="126" height="52"/>
+    <rect id="wtc-county-greenville" class="wtc-county" data-county="Greenville" x="700" y="82" width="126" height="52"/>
+    <rect id="wtc-county-horry" class="wtc-county" data-county="Horry" x="836" y="82" width="126" height="52"/>
+    <rect id="wtc-county-lexington" class="wtc-county" data-county="Lexington" x="972" y="82" width="126" height="52"/>
+
+    <rect id="wtc-county-marion" class="wtc-county" data-county="Marion" x="20" y="144" width="126" height="52"/>
+    <rect id="wtc-county-newberry" class="wtc-county" data-county="Newberry" x="156" y="144" width="126" height="52"/>
+    <rect id="wtc-county-orangeburg" class="wtc-county" data-county="Orangeburg" x="292" y="144" width="126" height="52"/>
+    <rect id="wtc-county-richland" class="wtc-county" data-county="Richland" x="428" y="144" width="126" height="52"/>
+    <rect id="wtc-county-spartanburg" class="wtc-county" data-county="Spartanburg" x="564" y="144" width="126" height="52"/>
+    <rect id="wtc-county-sumter" class="wtc-county" data-county="Sumter" x="700" y="144" width="126" height="52"/>
+    <rect id="wtc-county-york" class="wtc-county" data-county="York" x="836" y="144" width="126" height="52"/>
+  </g>
+</svg>

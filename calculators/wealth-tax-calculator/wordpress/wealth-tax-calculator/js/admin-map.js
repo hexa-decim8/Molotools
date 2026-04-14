@@ -100,6 +100,401 @@
         }
     }
 
+    function formatNumber(value) {
+        var number = parseInt(value, 10);
+        if (!number || number < 0) {
+            number = 0;
+        }
+
+        return number.toLocaleString();
+    }
+
+    function formatAverageRate(value) {
+        var number = parseFloat(value);
+        if (!number || number <= 0) {
+            return '-';
+        }
+
+        return number.toFixed(1) + '%';
+    }
+
+    function buildStateTileMap(container, selectedStateCode, stateAnalytics) {
+        var tileKeys;
+        var maxCount = 0;
+        var code;
+        var i;
+
+        if (!container) {
+            return;
+        }
+
+        tileKeys = Object.keys(WTC_US_STATE_TILES);
+        for (i = 0; i < tileKeys.length; i++) {
+            code = tileKeys[i];
+            if (!stateAnalytics[code]) {
+                continue;
+            }
+
+            maxCount = Math.max(maxCount, parseInt(stateAnalytics[code].stateSessions, 10) || 0);
+        }
+
+        container.innerHTML = '';
+
+        for (i = 0; i < tileKeys.length; i++) {
+            code = tileKeys[i];
+            (function (stateCode) {
+                var tile = document.createElement('button');
+                var tileMeta = WTC_US_STATE_TILES[stateCode];
+                var stateEntry = stateAnalytics[stateCode] || {};
+                var stateLabel = stateEntry.label || tileMeta.label || stateCode;
+                var count = parseInt(stateEntry.stateSessions, 10) || 0;
+                var level = maxCount > 0 ? Math.max(1, Math.min(5, Math.ceil((count / maxCount) * 5))) : 1;
+                var isSelected = stateCode === selectedStateCode;
+
+                tile.type = 'button';
+                tile.className = 'wtc-state-tile wtc-us-level-' + level + (isSelected ? ' is-selected' : '') + (count > 0 ? ' has-data' : ' is-empty');
+                tile.style.gridColumn = String(tileMeta.x + 1);
+                tile.style.gridRow = String(tileMeta.y + 1);
+                tile.setAttribute('data-state-code', stateCode);
+                tile.setAttribute('title', getSessionLabel(stateLabel, count));
+                tile.setAttribute('aria-label', getSessionLabel(stateLabel, count));
+                tile.textContent = stateCode;
+                container.appendChild(tile);
+            }(code));
+        }
+    }
+
+    function renderCountyBubbles(container, counties) {
+        var maxCount = 0;
+        var i;
+
+        if (!container) {
+            return;
+        }
+
+        container.innerHTML = '';
+
+        if (!counties || !counties.length) {
+            return;
+        }
+
+        for (i = 0; i < counties.length; i++) {
+            maxCount = Math.max(maxCount, parseInt(counties[i].count, 10) || 0);
+        }
+
+        counties.slice(0, 36).forEach(function (county) {
+            var count = parseInt(county.count, 10) || 0;
+            var ratio = maxCount > 0 ? Math.sqrt(count / maxCount) : 0;
+            var size = Math.round(30 + ratio * 58);
+            var bubble = document.createElement('div');
+            var countEl = document.createElement('span');
+            var labelEl = document.createElement('span');
+
+            bubble.className = 'wtc-state-county-bubble';
+            bubble.style.width = size + 'px';
+            bubble.style.height = size + 'px';
+            bubble.title = county.label + ': ' + formatNumber(count);
+
+            countEl.className = 'wtc-state-county-bubble-count';
+            countEl.textContent = formatNumber(count);
+
+            labelEl.className = 'wtc-state-county-bubble-label';
+            labelEl.textContent = county.label;
+
+            bubble.appendChild(countEl);
+            bubble.appendChild(labelEl);
+            container.appendChild(bubble);
+        });
+    }
+
+    function renderCountyTable(tableBody, tableEl, emptyEl, counties) {
+        var i;
+
+        if (!tableBody || !tableEl || !emptyEl) {
+            return;
+        }
+
+        tableBody.innerHTML = '';
+
+        if (!counties || !counties.length) {
+            tableEl.hidden = true;
+            emptyEl.hidden = false;
+            return;
+        }
+
+        for (i = 0; i < counties.length && i < 20; i++) {
+            var row = document.createElement('tr');
+            var countyCell = document.createElement('td');
+            var countCell = document.createElement('td');
+
+            countyCell.textContent = counties[i].label;
+            countCell.textContent = formatNumber(counties[i].count);
+
+            row.appendChild(countyCell);
+            row.appendChild(countCell);
+            tableBody.appendChild(row);
+        }
+
+        tableEl.hidden = false;
+        emptyEl.hidden = true;
+    }
+
+    function extractCountySlug(bucket, stateCode) {
+        var prefix = String(stateCode || '').toLowerCase() + '_county_';
+        var value = String(bucket || '').toLowerCase();
+        if (value.indexOf(prefix) !== 0) {
+            return '';
+        }
+
+        return value.substring(prefix.length);
+    }
+
+    function clearStateCountyGeometry(hostEl, emptyEl) {
+        if (hostEl) {
+            hostEl.innerHTML = '';
+        }
+        if (emptyEl) {
+            emptyEl.hidden = false;
+        }
+    }
+
+    function renderStateCountyGeometryFromTemplate(stateCode, templateId, hostEl, emptyEl, counties) {
+        var templateRoot = document.getElementById(templateId);
+        var svgTemplate;
+        var svgEl;
+        var maxCount = 0;
+        var points = [];
+        var bubbleGroup;
+        var tooltipEl;
+
+        if (!hostEl || !templateRoot) {
+            clearStateCountyGeometry(hostEl, emptyEl);
+            return;
+        }
+
+        svgTemplate = templateRoot.querySelector('svg');
+        if (!svgTemplate) {
+            clearStateCountyGeometry(hostEl, emptyEl);
+            return;
+        }
+
+        svgEl = svgTemplate.cloneNode(true);
+        svgEl.id = 'wtc-state-map-' + String(stateCode || '').toLowerCase();
+
+        hostEl.innerHTML = '';
+        hostEl.appendChild(svgEl);
+
+        tooltipEl = document.createElement('div');
+        tooltipEl.className = 'wtc-state-county-map-tooltip';
+        hostEl.appendChild(tooltipEl);
+
+        counties.forEach(function (county) {
+            var count = parseInt(county.count, 10) || 0;
+            var slug;
+            var path;
+            var bbox;
+
+            if (count <= 0) {
+                return;
+            }
+
+            slug = extractCountySlug(county.bucket, stateCode);
+            if (!slug || slug === 'unknown') {
+                return;
+            }
+
+            path = svgEl.querySelector('#wtc-county-' + slug);
+            if (!path || typeof path.getBBox !== 'function') {
+                return;
+            }
+
+            bbox = path.getBBox();
+            maxCount = Math.max(maxCount, count);
+            points.push({
+                count: count,
+                x: bbox.x + (bbox.width / 2),
+                y: bbox.y + (bbox.height / 2),
+                label: county.label || slug
+            });
+        });
+
+        if (!points.length) {
+            clearStateCountyGeometry(hostEl, emptyEl);
+            hostEl.appendChild(svgEl);
+            return;
+        }
+
+        bubbleGroup = document.createElementNS(SVG_NS, 'g');
+        bubbleGroup.setAttribute('class', 'wtc-state-county-map-bubbles');
+        svgEl.appendChild(bubbleGroup);
+
+        points.sort(function (a, b) { return a.count - b.count; });
+
+        points.forEach(function (point) {
+            var ratio = maxCount > 0 ? Math.sqrt(point.count / maxCount) : 0;
+            var radius = Math.round(5 + ratio * 20);
+            var circle = document.createElementNS(SVG_NS, 'circle');
+
+            circle.setAttribute('class', 'wtc-state-county-map-bubble');
+            circle.setAttribute('cx', point.x);
+            circle.setAttribute('cy', point.y);
+            circle.setAttribute('r', radius);
+            circle.setAttribute('data-county', point.label);
+            circle.setAttribute('data-count', point.count);
+            circle.setAttribute('tabindex', '0');
+            circle.setAttribute('role', 'img');
+            circle.setAttribute('aria-label', getSessionLabel(point.label, point.count));
+            bubbleGroup.appendChild(circle);
+        });
+
+        if (emptyEl) {
+            emptyEl.hidden = true;
+        }
+
+        if (!tooltipEl) {
+            return;
+        }
+
+        bubbleGroup.addEventListener('mousemove', function (event) {
+            var target = event.target;
+            if (target.classList.contains('wtc-state-county-map-bubble')) {
+                showTooltip(tooltipEl, hostEl, event.clientX, event.clientY, target.getAttribute('data-county'), parseInt(target.getAttribute('data-count'), 10));
+            } else {
+                hideTooltip(tooltipEl);
+            }
+        });
+
+        bubbleGroup.addEventListener('mouseleave', function () {
+            hideTooltip(tooltipEl);
+        });
+
+        bubbleGroup.addEventListener('focusin', function (event) {
+            var target = event.target;
+            var rect;
+            if (!target.classList.contains('wtc-state-county-map-bubble')) {
+                return;
+            }
+
+            rect = target.getBoundingClientRect();
+            showTooltip(tooltipEl, hostEl, (rect.left + rect.right) / 2, rect.top, target.getAttribute('data-county'), parseInt(target.getAttribute('data-count'), 10));
+        });
+
+        bubbleGroup.addEventListener('focusout', function () {
+            hideTooltip(tooltipEl);
+        });
+    }
+
+    function renderStateCountyGeometry(stateCode, templateMap, hostEl, emptyEl, counties) {
+        var normalizedCode = String(stateCode || '').toUpperCase();
+        var templateId = templateMap && templateMap[normalizedCode] ? templateMap[normalizedCode] : '';
+
+        if (templateId) {
+            renderStateCountyGeometryFromTemplate(normalizedCode, templateId, hostEl, emptyEl, counties);
+            return;
+        }
+
+        clearStateCountyGeometry(hostEl, emptyEl);
+    }
+
+    function initStateAnalyticsPanel() {
+        if (typeof window.wtcStateAnalytics === 'undefined') {
+            return;
+        }
+
+        var payload = window.wtcStateAnalytics;
+        var states = payload.states || {};
+        var geometryTemplates = payload.geometryTemplates || {};
+        var selector = document.getElementById('wtc-state-analytics-select');
+        var titleEl = document.getElementById('wtc-state-panel-title');
+        var countyTitleEl = document.getElementById('wtc-state-county-title');
+        var submittedEl = document.getElementById('wtc-state-submitted-sessions');
+        var uniqueEl = document.getElementById('wtc-state-unique-sessions');
+        var daysEl = document.getElementById('wtc-state-days-stored');
+        var avgEl = document.getElementById('wtc-state-average-rate');
+        var countyBubblesEl = document.getElementById('wtc-state-county-bubbles');
+        var countyEmptyEl = document.getElementById('wtc-state-county-empty');
+        var countyGeometryEl = document.getElementById('wtc-state-county-geometry');
+        var countyGeometryEmptyEl = document.getElementById('wtc-state-county-geometry-empty');
+        var countyTableEl = document.getElementById('wtc-state-county-table');
+        var countyTableBodyEl = document.getElementById('wtc-state-county-table-body');
+        var countyTableEmptyEl = document.getElementById('wtc-state-county-table-empty');
+        var tileMapEl = document.getElementById('wtc-state-geo-map');
+        var defaultState = payload.defaultState || 'MI';
+
+        if (!countyTableEl && countyTableBodyEl && countyTableBodyEl.closest) {
+            countyTableEl = countyTableBodyEl.closest('table');
+        }
+
+        if (!selector || !titleEl || !submittedEl || !uniqueEl || !daysEl || !avgEl || !countyBubblesEl || !countyEmptyEl || !countyGeometryEl || !countyGeometryEmptyEl || !countyTableEl || !countyTableBodyEl || !countyTableEmptyEl || !tileMapEl) {
+            return;
+        }
+
+        function showStateTab() {
+            var stateTabButton = document.querySelector('.wtc-analytics-section-toggle .wtc-analytics-toggle-btn[data-wtc-section-target="state"]');
+            if (stateTabButton && !stateTabButton.classList.contains('is-active')) {
+                stateTabButton.click();
+            }
+        }
+
+        function updateStatePanel(stateCode) {
+            var normalizedCode = String(stateCode || '').toUpperCase();
+            var stateEntry = states[normalizedCode];
+            var totals;
+            var counties;
+
+            if (!stateEntry) {
+                return;
+            }
+
+            totals = stateEntry.totals || {};
+            counties = Array.isArray(stateEntry.counties) ? stateEntry.counties : [];
+
+            titleEl.textContent = stateEntry.label || normalizedCode;
+            if (countyTitleEl) {
+                countyTitleEl.textContent = stateEntry.label || normalizedCode;
+            }
+
+            submittedEl.textContent = formatNumber(totals.submittedSessions);
+            uniqueEl.textContent = formatNumber(totals.uniqueSessions);
+            daysEl.textContent = formatNumber(totals.daysStored);
+            avgEl.textContent = formatAverageRate(totals.averageTaxRate);
+
+            renderCountyBubbles(countyBubblesEl, counties);
+            countyEmptyEl.hidden = counties.length > 0;
+
+            renderStateCountyGeometry(normalizedCode, geometryTemplates, countyGeometryEl, countyGeometryEmptyEl, counties);
+
+            renderCountyTable(countyTableBodyEl, countyTableEl, countyTableEmptyEl, counties);
+            buildStateTileMap(tileMapEl, normalizedCode, states);
+        }
+
+        selector.addEventListener('change', function () {
+            updateStatePanel(this.value);
+            showStateTab();
+        });
+
+        tileMapEl.addEventListener('click', function (event) {
+            var tile = event.target.closest ? event.target.closest('.wtc-state-tile[data-state-code]') : null;
+            if (!tile) {
+                return;
+            }
+
+            if (selector.querySelector('option[value="' + tile.getAttribute('data-state-code') + '"]:disabled')) {
+                return;
+            }
+
+            selector.value = tile.getAttribute('data-state-code');
+            updateStatePanel(selector.value);
+            showStateTab();
+        });
+
+        if (!selector.value) {
+            selector.value = defaultState;
+        }
+
+        updateStatePanel(selector.value || defaultState);
+    }
+
     function normalizeSectionKey(text) {
         return String(text || '')
             .toLowerCase()
@@ -135,7 +530,7 @@
     }
 
     function initCollapsibleAnalyticsSections() {
-        var cards = document.querySelectorAll('.wrap > .card, .wrap > .wtc-analytics-section-panel > .card');
+        var cards = document.querySelectorAll('.wrap > .card:not(.wtc-no-collapse), .wrap > .wtc-analytics-section-panel > .card:not(.wtc-no-collapse)');
         var collapsedState = loadCollapsedSectionState();
         var keyCounts = {};
 
@@ -679,6 +1074,7 @@
     function init() {
         initAnalyticsCharts();
         initAnalyticsScopeTabs();
+        initStateAnalyticsPanel();
         initCollapsibleAnalyticsSections();
         initUnitedStatesMap();
         initMichiganMap();

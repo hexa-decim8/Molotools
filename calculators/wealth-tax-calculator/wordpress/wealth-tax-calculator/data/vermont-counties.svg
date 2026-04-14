@@ -1,0 +1,18 @@
+<svg id="wtc-state-map-vt" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 620" role="img" aria-label="Vermont county map">
+  <g class="wtc-counties">
+    <path id="wtc-county-grand-isle" class="wtc-county" data-county="Grand Isle" d="M132 42 L172 38 L182 72 L148 86 L126 68 Z"/>
+    <path id="wtc-county-franklin" class="wtc-county" data-county="Franklin" d="M88 82 L156 78 L172 126 L126 154 L82 134 Z"/>
+    <path id="wtc-county-orleans" class="wtc-county" data-county="Orleans" d="M156 74 L226 70 L242 122 L192 150 L168 126 Z"/>
+    <path id="wtc-county-essex" class="wtc-county" data-county="Essex" d="M226 70 L286 64 L306 130 L258 172 L240 122 Z"/>
+    <path id="wtc-county-lamoille" class="wtc-county" data-county="Lamoille" d="M128 156 L188 152 L198 206 L148 228 L118 196 Z"/>
+    <path id="wtc-county-caledonia" class="wtc-county" data-county="Caledonia" d="M188 150 L254 170 L252 230 L196 246 L180 208 Z"/>
+    <path id="wtc-county-washington" class="wtc-county" data-county="Washington" d="M114 230 L176 226 L178 286 L122 308 L96 270 Z"/>
+    <path id="wtc-county-chittenden" class="wtc-county" data-county="Chittenden" d="M72 154 L128 154 L118 224 L86 248 L58 208 Z"/>
+    <path id="wtc-county-addison" class="wtc-county" data-county="Addison" d="M70 248 L122 308 L116 372 L66 378 L40 314 Z"/>
+    <path id="wtc-county-orange" class="wtc-county" data-county="Orange" d="M176 246 L230 236 L236 304 L186 322 L168 286 Z"/>
+    <path id="wtc-county-rutland" class="wtc-county" data-county="Rutland" d="M68 378 L116 372 L118 448 L68 456 L42 402 Z"/>
+    <path id="wtc-county-windsor" class="wtc-county" data-county="Windsor" d="M186 322 L246 304 L258 388 L198 416 L170 364 Z"/>
+    <path id="wtc-county-bennington" class="wtc-county" data-county="Bennington" d="M52 458 L102 452 L108 536 L56 548 L36 500 Z"/>
+    <path id="wtc-county-windham" class="wtc-county" data-county="Windham" d="M198 418 L256 388 L278 476 L224 538 L184 510 Z"/>
+  </g>
+</svg>

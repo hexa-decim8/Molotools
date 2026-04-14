@@ -326,6 +326,30 @@
     margin: 16px 0 4px;
 }
 
+.wtc-analytics-state-picker-wrap {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.wtc-analytics-state-picker-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #4c4036;
+}
+
+.wtc-analytics-state-picker {
+    min-width: 230px;
+    border: 1px solid #c3a27d;
+    border-radius: 999px;
+    background: #fff;
+    color: #233071;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 6px 12px;
+}
+
 .wtc-analytics-section-panel {
     margin-top: 0;
 }
@@ -379,6 +403,150 @@
 }
 
 .wtc-analytics-section-panel[hidden] {
+    display: none;
+}
+
+.wtc-state-map-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 1fr);
+    gap: 14px;
+    align-items: start;
+}
+
+#wtc-state-geo-map {
+    display: grid;
+    grid-template-columns: repeat(13, 1fr);
+    gap: 6px;
+    min-width: 320px;
+    background: #fbf6ef;
+    border: 1px solid #e0d8d0;
+    border-radius: 6px;
+    padding: 10px;
+}
+
+.wtc-state-tile {
+    border: 1px solid #b5a28e;
+    border-radius: 4px;
+    min-height: 26px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #2f2b29;
+    background: #ece4d8;
+    cursor: pointer;
+}
+
+.wtc-state-tile.is-empty {
+    opacity: 0.58;
+}
+
+.wtc-state-tile.is-selected {
+    outline: 2px solid #233071;
+    outline-offset: 1px;
+}
+
+.wtc-state-tile:focus-visible {
+    outline: 2px solid #233071;
+    outline-offset: 1px;
+}
+
+.wtc-state-county-bubble-panel {
+    border: 1px solid #e4d6c8;
+    border-radius: 8px;
+    background: #fffaf4;
+    padding: 10px;
+}
+
+.wtc-state-county-geo-title {
+    margin: 0 0 8px;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #233071;
+}
+
+.wtc-state-county-geometry {
+    margin-bottom: 10px;
+    position: relative;
+}
+
+.wtc-state-county-geometry svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid #e0d8d0;
+    border-radius: 4px;
+    background: #f9f5f0;
+}
+
+.wtc-state-county-geometry .wtc-state-county-map-bubble {
+    fill: #406BBF;
+    fill-opacity: 0.75;
+    stroke: #233071;
+    stroke-width: 1;
+    cursor: pointer;
+}
+
+.wtc-state-county-geometry .wtc-state-county-map-bubble:hover,
+.wtc-state-county-geometry .wtc-state-county-map-bubble:focus {
+    fill-opacity: 1;
+    outline: 2px solid #E1B682;
+    outline-offset: 1px;
+}
+
+.wtc-state-county-map-tooltip {
+    position: absolute;
+    z-index: 9999;
+    display: none;
+    background: #121C50;
+    color: #fff;
+    font-size: 12px;
+    line-height: 1.4;
+    padding: 5px 9px;
+    border-radius: 4px;
+    pointer-events: none;
+    white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+}
+
+.wtc-state-county-bubbles {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 8px;
+    min-height: 110px;
+}
+
+.wtc-state-county-bubble {
+    border-radius: 50%;
+    background: rgba(64, 107, 191, 0.17);
+    border: 1px solid rgba(35, 48, 113, 0.55);
+    color: #233071;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 4px;
+    overflow: hidden;
+}
+
+.wtc-state-county-bubble-count {
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.wtc-state-county-bubble-label {
+    font-size: 9px;
+    line-height: 1.2;
+    margin-top: 3px;
+    max-width: 90%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#wtc-state-map-tooltip {
     display: none;
 }
 
@@ -442,6 +610,24 @@
 }
 
 @media (max-width: 782px) {
+    .wtc-analytics-state-picker-wrap {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .wtc-analytics-state-picker {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .wtc-state-map-grid {
+        grid-template-columns: 1fr;
+    }
+
+    #wtc-state-geo-map {
+        min-width: 0;
+    }
+
     .wtc-analytics-chart-panel {
         grid-template-columns: 1fr;
     }

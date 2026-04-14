@@ -1,0 +1,35 @@
+<svg id="wtc-state-map-tx" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 560" role="img" aria-label="Texas county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-bell" class="wtc-county" data-county="Bell" x="20" y="20" width="126" height="52"/>
+    <rect id="wtc-county-bexar" class="wtc-county" data-county="Bexar" x="156" y="20" width="126" height="52"/>
+    <rect id="wtc-county-brazoria" class="wtc-county" data-county="Brazoria" x="292" y="20" width="126" height="52"/>
+    <rect id="wtc-county-brazos" class="wtc-county" data-county="Brazos" x="428" y="20" width="126" height="52"/>
+    <rect id="wtc-county-cameron" class="wtc-county" data-county="Cameron" x="564" y="20" width="126" height="52"/>
+    <rect id="wtc-county-collin" class="wtc-county" data-county="Collin" x="700" y="20" width="126" height="52"/>
+    <rect id="wtc-county-dallas" class="wtc-county" data-county="Dallas" x="836" y="20" width="126" height="52"/>
+    <rect id="wtc-county-denton" class="wtc-county" data-county="Denton" x="972" y="20" width="126" height="52"/>
+
+    <rect id="wtc-county-el-paso" class="wtc-county" data-county="El Paso" x="20" y="82" width="126" height="52"/>
+    <rect id="wtc-county-fort-bend" class="wtc-county" data-county="Fort Bend" x="156" y="82" width="126" height="52"/>
+    <rect id="wtc-county-galveston" class="wtc-county" data-county="Galveston" x="292" y="82" width="126" height="52"/>
+    <rect id="wtc-county-guadalupe" class="wtc-county" data-county="Guadalupe" x="428" y="82" width="126" height="52"/>
+    <rect id="wtc-county-harris" class="wtc-county" data-county="Harris" x="564" y="82" width="126" height="52"/>
+    <rect id="wtc-county-hays" class="wtc-county" data-county="Hays" x="700" y="82" width="126" height="52"/>
+    <rect id="wtc-county-hidalgo" class="wtc-county" data-county="Hidalgo" x="836" y="82" width="126" height="52"/>
+    <rect id="wtc-county-jefferson" class="wtc-county" data-county="Jefferson" x="972" y="82" width="126" height="52"/>
+
+    <rect id="wtc-county-lubbock" class="wtc-county" data-county="Lubbock" x="20" y="144" width="126" height="52"/>
+    <rect id="wtc-county-mclennan" class="wtc-county" data-county="McLennan" x="156" y="144" width="126" height="52"/>
+    <rect id="wtc-county-midland" class="wtc-county" data-county="Midland" x="292" y="144" width="126" height="52"/>
+    <rect id="wtc-county-montgomery" class="wtc-county" data-county="Montgomery" x="428" y="144" width="126" height="52"/>
+    <rect id="wtc-county-nueces" class="wtc-county" data-county="Nueces" x="564" y="144" width="126" height="52"/>
+    <rect id="wtc-county-potter" class="wtc-county" data-county="Potter" x="700" y="144" width="126" height="52"/>
+    <rect id="wtc-county-smith" class="wtc-county" data-county="Smith" x="836" y="144" width="126" height="52"/>
+    <rect id="wtc-county-tarrant" class="wtc-county" data-county="Tarrant" x="972" y="144" width="126" height="52"/>
+
+    <rect id="wtc-county-travis" class="wtc-county" data-county="Travis" x="20" y="206" width="126" height="52"/>
+    <rect id="wtc-county-webb" class="wtc-county" data-county="Webb" x="156" y="206" width="126" height="52"/>
+    <rect id="wtc-county-wichita" class="wtc-county" data-county="Wichita" x="292" y="206" width="126" height="52"/>
+    <rect id="wtc-county-williamson" class="wtc-county" data-county="Williamson" x="428" y="206" width="126" height="52"/>
+  </g>
+</svg>

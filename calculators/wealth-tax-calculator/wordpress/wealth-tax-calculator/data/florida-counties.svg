@@ -1,0 +1,38 @@
+<svg id="wtc-state-map-fl" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 520" role="img" aria-label="Florida county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-alachua" class="wtc-county" data-county="Alachua" x="20" y="20" width="126" height="52"/>
+    <rect id="wtc-county-bay" class="wtc-county" data-county="Bay" x="156" y="20" width="126" height="52"/>
+    <rect id="wtc-county-brevard" class="wtc-county" data-county="Brevard" x="292" y="20" width="126" height="52"/>
+    <rect id="wtc-county-broward" class="wtc-county" data-county="Broward" x="428" y="20" width="126" height="52"/>
+    <rect id="wtc-county-charlotte" class="wtc-county" data-county="Charlotte" x="564" y="20" width="126" height="52"/>
+    <rect id="wtc-county-citrus" class="wtc-county" data-county="Citrus" x="700" y="20" width="126" height="52"/>
+    <rect id="wtc-county-clay" class="wtc-county" data-county="Clay" x="836" y="20" width="126" height="52"/>
+    <rect id="wtc-county-collier" class="wtc-county" data-county="Collier" x="972" y="20" width="126" height="52"/>
+
+    <rect id="wtc-county-duval" class="wtc-county" data-county="Duval" x="20" y="82" width="126" height="52"/>
+    <rect id="wtc-county-escambia" class="wtc-county" data-county="Escambia" x="156" y="82" width="126" height="52"/>
+    <rect id="wtc-county-hernando" class="wtc-county" data-county="Hernando" x="292" y="82" width="126" height="52"/>
+    <rect id="wtc-county-hillsborough" class="wtc-county" data-county="Hillsborough" x="428" y="82" width="126" height="52"/>
+    <rect id="wtc-county-indian-river" class="wtc-county" data-county="Indian River" x="564" y="82" width="126" height="52"/>
+    <rect id="wtc-county-lake" class="wtc-county" data-county="Lake" x="700" y="82" width="126" height="52"/>
+    <rect id="wtc-county-lee" class="wtc-county" data-county="Lee" x="836" y="82" width="126" height="52"/>
+    <rect id="wtc-county-leon" class="wtc-county" data-county="Leon" x="972" y="82" width="126" height="52"/>
+
+    <rect id="wtc-county-manatee" class="wtc-county" data-county="Manatee" x="20" y="144" width="126" height="52"/>
+    <rect id="wtc-county-marion" class="wtc-county" data-county="Marion" x="156" y="144" width="126" height="52"/>
+    <rect id="wtc-county-miami-dade" class="wtc-county" data-county="Miami-Dade" x="292" y="144" width="126" height="52"/>
+    <rect id="wtc-county-orange" class="wtc-county" data-county="Orange" x="428" y="144" width="126" height="52"/>
+    <rect id="wtc-county-osceola" class="wtc-county" data-county="Osceola" x="564" y="144" width="126" height="52"/>
+    <rect id="wtc-county-palm-beach" class="wtc-county" data-county="Palm Beach" x="700" y="144" width="126" height="52"/>
+    <rect id="wtc-county-pasco" class="wtc-county" data-county="Pasco" x="836" y="144" width="126" height="52"/>
+    <rect id="wtc-county-pinellas" class="wtc-county" data-county="Pinellas" x="972" y="144" width="126" height="52"/>
+
+    <rect id="wtc-county-polk" class="wtc-county" data-county="Polk" x="20" y="206" width="126" height="52"/>
+    <rect id="wtc-county-santa-rosa" class="wtc-county" data-county="Santa Rosa" x="156" y="206" width="126" height="52"/>
+    <rect id="wtc-county-sarasota" class="wtc-county" data-county="Sarasota" x="292" y="206" width="126" height="52"/>
+    <rect id="wtc-county-seminole" class="wtc-county" data-county="Seminole" x="428" y="206" width="126" height="52"/>
+    <rect id="wtc-county-st-johns" class="wtc-county" data-county="St. Johns" x="564" y="206" width="126" height="52"/>
+    <rect id="wtc-county-st-lucie" class="wtc-county" data-county="St. Lucie" x="700" y="206" width="126" height="52"/>
+    <rect id="wtc-county-volusia" class="wtc-county" data-county="Volusia" x="836" y="206" width="126" height="52"/>
+  </g>
+</svg>

@@ -1,0 +1,21 @@
+<svg id="wtc-state-map-nv" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 700" role="img" aria-label="Nevada county map">
+  <g class="wtc-counties">
+    <path id="wtc-county-washoe" class="wtc-county" data-county="Washoe" d="M76 42 L208 34 L228 142 L126 164 L68 112 Z"/>
+    <path id="wtc-county-humboldt" class="wtc-county" data-county="Humboldt" d="M208 34 L336 44 L348 156 L228 142 Z"/>
+    <path id="wtc-county-elko" class="wtc-county" data-county="Elko" d="M336 44 L476 60 L470 178 L348 156 Z"/>
+    <path id="wtc-county-pershing" class="wtc-county" data-county="Pershing" d="M172 168 L252 164 L254 250 L176 258 L150 210 Z"/>
+    <path id="wtc-county-lander" class="wtc-county" data-county="Lander" d="M254 164 L322 170 L326 256 L254 250 Z"/>
+    <path id="wtc-county-eureka" class="wtc-county" data-county="Eureka" d="M322 170 L384 176 L392 254 L326 256 Z"/>
+    <path id="wtc-county-white-pine" class="wtc-county" data-county="White Pine" d="M392 176 L462 184 L458 286 L394 288 Z"/>
+    <path id="wtc-county-churchill" class="wtc-county" data-county="Churchill" d="M152 258 L250 250 L244 326 L162 336 L134 290 Z"/>
+    <path id="wtc-county-lyon" class="wtc-county" data-county="Lyon" d="M96 254 L152 258 L162 336 L106 344 L78 298 Z"/>
+    <path id="wtc-county-storey" class="wtc-county" data-county="Storey" d="M108 220 L132 218 L138 242 L114 244 Z"/>
+    <path id="wtc-county-carson-city" class="wtc-county" data-county="Carson City" d="M90 214 L108 212 L112 232 L92 236 Z"/>
+    <path id="wtc-county-douglas" class="wtc-county" data-county="Douglas" d="M70 236 L96 236 L102 272 L72 276 Z"/>
+    <path id="wtc-county-mineral" class="wtc-county" data-county="Mineral" d="M104 344 L168 336 L174 396 L112 404 L90 366 Z"/>
+    <path id="wtc-county-nye" class="wtc-county" data-county="Nye" d="M174 336 L332 326 L330 474 L180 494 L146 420 Z"/>
+    <path id="wtc-county-esmeralda" class="wtc-county" data-county="Esmeralda" d="M112 404 L176 394 L174 446 L116 458 Z"/>
+    <path id="wtc-county-lincoln" class="wtc-county" data-county="Lincoln" d="M332 326 L430 318 L442 468 L338 474 Z"/>
+    <path id="wtc-county-clark" class="wtc-county" data-county="Clark" d="M180 494 L338 474 L362 640 L212 658 L166 586 Z"/>
+  </g>
+</svg>

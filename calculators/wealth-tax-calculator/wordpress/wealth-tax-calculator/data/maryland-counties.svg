@@ -1,0 +1,30 @@
+<svg id="wtc-state-map-md" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 420" role="img" aria-label="Maryland county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-garrett" class="wtc-county" data-county="Garrett" x="20" y="20" width="90" height="50"/>
+    <rect id="wtc-county-allegany" class="wtc-county" data-county="Allegany" x="114" y="20" width="90" height="50"/>
+    <rect id="wtc-county-washington" class="wtc-county" data-county="Washington" x="208" y="20" width="90" height="50"/>
+    <rect id="wtc-county-frederick" class="wtc-county" data-county="Frederick" x="302" y="20" width="90" height="50"/>
+    <rect id="wtc-county-carroll" class="wtc-county" data-county="Carroll" x="396" y="20" width="90" height="50"/>
+    <rect id="wtc-county-baltimore" class="wtc-county" data-county="Baltimore" x="490" y="20" width="90" height="50"/>
+    <rect id="wtc-county-harford" class="wtc-county" data-county="Harford" x="584" y="20" width="90" height="50"/>
+
+    <rect id="wtc-county-montgomery" class="wtc-county" data-county="Montgomery" x="302" y="74" width="90" height="50"/>
+    <rect id="wtc-county-howard" class="wtc-county" data-county="Howard" x="396" y="74" width="90" height="50"/>
+    <rect id="wtc-county-anne-arundel" class="wtc-county" data-county="Anne Arundel" x="490" y="74" width="90" height="50"/>
+    <rect id="wtc-county-baltimore-city" class="wtc-county" data-county="Baltimore City" x="584" y="74" width="90" height="50"/>
+    <rect id="wtc-county-prince-georges" class="wtc-county" data-county="Prince George's" x="302" y="128" width="90" height="50"/>
+    <rect id="wtc-county-charles" class="wtc-county" data-county="Charles" x="396" y="128" width="90" height="50"/>
+    <rect id="wtc-county-calvert" class="wtc-county" data-county="Calvert" x="490" y="128" width="90" height="50"/>
+    <rect id="wtc-county-st-marys" class="wtc-county" data-county="St. Mary's" x="584" y="128" width="90" height="50"/>
+
+    <rect id="wtc-county-cecil" class="wtc-county" data-county="Cecil" x="584" y="182" width="90" height="50"/>
+    <rect id="wtc-county-kent" class="wtc-county" data-county="Kent" x="490" y="182" width="90" height="50"/>
+    <rect id="wtc-county-queen-annes" class="wtc-county" data-county="Queen Anne's" x="396" y="182" width="90" height="50"/>
+    <rect id="wtc-county-caroline" class="wtc-county" data-county="Caroline" x="490" y="236" width="90" height="50"/>
+    <rect id="wtc-county-talbot" class="wtc-county" data-county="Talbot" x="396" y="236" width="90" height="50"/>
+    <rect id="wtc-county-dorchester" class="wtc-county" data-county="Dorchester" x="302" y="236" width="90" height="50"/>
+    <rect id="wtc-county-wicomico" class="wtc-county" data-county="Wicomico" x="396" y="290" width="90" height="50"/>
+    <rect id="wtc-county-somerset" class="wtc-county" data-county="Somerset" x="302" y="290" width="90" height="50"/>
+    <rect id="wtc-county-worcester" class="wtc-county" data-county="Worcester" x="490" y="290" width="90" height="50"/>
+  </g>
+</svg>

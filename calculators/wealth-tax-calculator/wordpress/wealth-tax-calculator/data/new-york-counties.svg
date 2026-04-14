@@ -1,0 +1,32 @@
+<svg id="wtc-state-map-ny" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 420" role="img" aria-label="New York county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-albany" class="wtc-county" data-county="Albany" x="20" y="20" width="126" height="52"/>
+    <rect id="wtc-county-bronx" class="wtc-county" data-county="Bronx" x="156" y="20" width="126" height="52"/>
+    <rect id="wtc-county-broome" class="wtc-county" data-county="Broome" x="292" y="20" width="126" height="52"/>
+    <rect id="wtc-county-chautauqua" class="wtc-county" data-county="Chautauqua" x="428" y="20" width="126" height="52"/>
+    <rect id="wtc-county-clinton" class="wtc-county" data-county="Clinton" x="564" y="20" width="126" height="52"/>
+    <rect id="wtc-county-columbia" class="wtc-county" data-county="Columbia" x="700" y="20" width="126" height="52"/>
+    <rect id="wtc-county-dutchess" class="wtc-county" data-county="Dutchess" x="836" y="20" width="126" height="52"/>
+    <rect id="wtc-county-erie" class="wtc-county" data-county="Erie" x="972" y="20" width="126" height="52"/>
+
+    <rect id="wtc-county-kings" class="wtc-county" data-county="Kings" x="20" y="82" width="126" height="52"/>
+    <rect id="wtc-county-monroe" class="wtc-county" data-county="Monroe" x="156" y="82" width="126" height="52"/>
+    <rect id="wtc-county-nassau" class="wtc-county" data-county="Nassau" x="292" y="82" width="126" height="52"/>
+    <rect id="wtc-county-new-york" class="wtc-county" data-county="New York" x="428" y="82" width="126" height="52"/>
+    <rect id="wtc-county-oneida" class="wtc-county" data-county="Oneida" x="564" y="82" width="126" height="52"/>
+    <rect id="wtc-county-onondaga" class="wtc-county" data-county="Onondaga" x="700" y="82" width="126" height="52"/>
+    <rect id="wtc-county-ontario" class="wtc-county" data-county="Ontario" x="836" y="82" width="126" height="52"/>
+    <rect id="wtc-county-orange" class="wtc-county" data-county="Orange" x="972" y="82" width="126" height="52"/>
+
+    <rect id="wtc-county-queens" class="wtc-county" data-county="Queens" x="20" y="144" width="126" height="52"/>
+    <rect id="wtc-county-richmond" class="wtc-county" data-county="Richmond" x="156" y="144" width="126" height="52"/>
+    <rect id="wtc-county-rockland" class="wtc-county" data-county="Rockland" x="292" y="144" width="126" height="52"/>
+    <rect id="wtc-county-saratoga" class="wtc-county" data-county="Saratoga" x="428" y="144" width="126" height="52"/>
+    <rect id="wtc-county-schenectady" class="wtc-county" data-county="Schenectady" x="564" y="144" width="126" height="52"/>
+    <rect id="wtc-county-suffolk" class="wtc-county" data-county="Suffolk" x="700" y="144" width="126" height="52"/>
+    <rect id="wtc-county-sullivan" class="wtc-county" data-county="Sullivan" x="836" y="144" width="126" height="52"/>
+    <rect id="wtc-county-ulster" class="wtc-county" data-county="Ulster" x="972" y="144" width="126" height="52"/>
+
+    <rect id="wtc-county-westchester" class="wtc-county" data-county="Westchester" x="20" y="206" width="126" height="52"/>
+  </g>
+</svg>

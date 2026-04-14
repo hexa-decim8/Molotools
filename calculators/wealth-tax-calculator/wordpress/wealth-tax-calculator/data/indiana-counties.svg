@@ -1,0 +1,33 @@
+<svg id="wtc-state-map-in" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 420" role="img" aria-label="Indiana county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-allen" class="wtc-county" data-county="Allen" x="20" y="20" width="126" height="52"/>
+    <rect id="wtc-county-bartholomew" class="wtc-county" data-county="Bartholomew" x="156" y="20" width="126" height="52"/>
+    <rect id="wtc-county-boone" class="wtc-county" data-county="Boone" x="292" y="20" width="126" height="52"/>
+    <rect id="wtc-county-clark" class="wtc-county" data-county="Clark" x="428" y="20" width="126" height="52"/>
+    <rect id="wtc-county-delaware" class="wtc-county" data-county="Delaware" x="564" y="20" width="126" height="52"/>
+    <rect id="wtc-county-elkhart" class="wtc-county" data-county="Elkhart" x="700" y="20" width="126" height="52"/>
+    <rect id="wtc-county-floyd" class="wtc-county" data-county="Floyd" x="836" y="20" width="126" height="52"/>
+    <rect id="wtc-county-hamilton" class="wtc-county" data-county="Hamilton" x="972" y="20" width="126" height="52"/>
+
+    <rect id="wtc-county-hancock" class="wtc-county" data-county="Hancock" x="20" y="82" width="126" height="52"/>
+    <rect id="wtc-county-hendricks" class="wtc-county" data-county="Hendricks" x="156" y="82" width="126" height="52"/>
+    <rect id="wtc-county-howard" class="wtc-county" data-county="Howard" x="292" y="82" width="126" height="52"/>
+    <rect id="wtc-county-jackson" class="wtc-county" data-county="Jackson" x="428" y="82" width="126" height="52"/>
+    <rect id="wtc-county-johnson" class="wtc-county" data-county="Johnson" x="564" y="82" width="126" height="52"/>
+    <rect id="wtc-county-knox" class="wtc-county" data-county="Knox" x="700" y="82" width="126" height="52"/>
+    <rect id="wtc-county-lake" class="wtc-county" data-county="Lake" x="836" y="82" width="126" height="52"/>
+    <rect id="wtc-county-laporte" class="wtc-county" data-county="LaPorte" x="972" y="82" width="126" height="52"/>
+
+    <rect id="wtc-county-madison" class="wtc-county" data-county="Madison" x="20" y="144" width="126" height="52"/>
+    <rect id="wtc-county-marion" class="wtc-county" data-county="Marion" x="156" y="144" width="126" height="52"/>
+    <rect id="wtc-county-monroe" class="wtc-county" data-county="Monroe" x="292" y="144" width="126" height="52"/>
+    <rect id="wtc-county-montgomery" class="wtc-county" data-county="Montgomery" x="428" y="144" width="126" height="52"/>
+    <rect id="wtc-county-morgan" class="wtc-county" data-county="Morgan" x="564" y="144" width="126" height="52"/>
+    <rect id="wtc-county-porter" class="wtc-county" data-county="Porter" x="700" y="144" width="126" height="52"/>
+    <rect id="wtc-county-st-joseph" class="wtc-county" data-county="St. Joseph" x="836" y="144" width="126" height="52"/>
+    <rect id="wtc-county-tippecanoe" class="wtc-county" data-county="Tippecanoe" x="972" y="144" width="126" height="52"/>
+
+    <rect id="wtc-county-vanderburgh" class="wtc-county" data-county="Vanderburgh" x="20" y="206" width="126" height="52"/>
+    <rect id="wtc-county-vigo" class="wtc-county" data-county="Vigo" x="156" y="206" width="126" height="52"/>
+  </g>
+</svg>

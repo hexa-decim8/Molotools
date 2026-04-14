@@ -1,0 +1,65 @@
+<svg id="wtc-state-map-mt" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 420" role="img" aria-label="Montana county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-beaverhead" class="wtc-county" data-county="Beaverhead" x="20" y="20" width="96" height="42"/>
+    <rect id="wtc-county-big-horn" class="wtc-county" data-county="Big Horn" x="124" y="20" width="96" height="42"/>
+    <rect id="wtc-county-blaine" class="wtc-county" data-county="Blaine" x="228" y="20" width="96" height="42"/>
+    <rect id="wtc-county-broadwater" class="wtc-county" data-county="Broadwater" x="332" y="20" width="96" height="42"/>
+    <rect id="wtc-county-carbon" class="wtc-county" data-county="Carbon" x="436" y="20" width="96" height="42"/>
+    <rect id="wtc-county-carter" class="wtc-county" data-county="Carter" x="540" y="20" width="96" height="42"/>
+    <rect id="wtc-county-cascade" class="wtc-county" data-county="Cascade" x="644" y="20" width="96" height="42"/>
+    <rect id="wtc-county-chouteau" class="wtc-county" data-county="Chouteau" x="748" y="20" width="96" height="42"/>
+    <rect id="wtc-county-custer" class="wtc-county" data-county="Custer" x="852" y="20" width="96" height="42"/>
+    <rect id="wtc-county-daniels" class="wtc-county" data-county="Daniels" x="956" y="20" width="96" height="42"/>
+
+    <rect id="wtc-county-dawson" class="wtc-county" data-county="Dawson" x="20" y="70" width="96" height="42"/>
+    <rect id="wtc-county-deer-lodge" class="wtc-county" data-county="Deer Lodge" x="124" y="70" width="96" height="42"/>
+    <rect id="wtc-county-fallon" class="wtc-county" data-county="Fallon" x="228" y="70" width="96" height="42"/>
+    <rect id="wtc-county-fergus" class="wtc-county" data-county="Fergus" x="332" y="70" width="96" height="42"/>
+    <rect id="wtc-county-flathead" class="wtc-county" data-county="Flathead" x="436" y="70" width="96" height="42"/>
+    <rect id="wtc-county-gallatin" class="wtc-county" data-county="Gallatin" x="540" y="70" width="96" height="42"/>
+    <rect id="wtc-county-garfield" class="wtc-county" data-county="Garfield" x="644" y="70" width="96" height="42"/>
+    <rect id="wtc-county-glacier" class="wtc-county" data-county="Glacier" x="748" y="70" width="96" height="42"/>
+    <rect id="wtc-county-golden-valley" class="wtc-county" data-county="Golden Valley" x="852" y="70" width="96" height="42"/>
+    <rect id="wtc-county-granite" class="wtc-county" data-county="Granite" x="956" y="70" width="96" height="42"/>
+
+    <rect id="wtc-county-hill" class="wtc-county" data-county="Hill" x="20" y="120" width="96" height="42"/>
+    <rect id="wtc-county-jefferson" class="wtc-county" data-county="Jefferson" x="124" y="120" width="96" height="42"/>
+    <rect id="wtc-county-judith-basin" class="wtc-county" data-county="Judith Basin" x="228" y="120" width="96" height="42"/>
+    <rect id="wtc-county-lake" class="wtc-county" data-county="Lake" x="332" y="120" width="96" height="42"/>
+    <rect id="wtc-county-lewis-and-clark" class="wtc-county" data-county="Lewis and Clark" x="436" y="120" width="96" height="42"/>
+    <rect id="wtc-county-liberty" class="wtc-county" data-county="Liberty" x="540" y="120" width="96" height="42"/>
+    <rect id="wtc-county-lincoln" class="wtc-county" data-county="Lincoln" x="644" y="120" width="96" height="42"/>
+    <rect id="wtc-county-madison" class="wtc-county" data-county="Madison" x="748" y="120" width="96" height="42"/>
+    <rect id="wtc-county-mccone" class="wtc-county" data-county="McCone" x="852" y="120" width="96" height="42"/>
+    <rect id="wtc-county-meagher" class="wtc-county" data-county="Meagher" x="956" y="120" width="96" height="42"/>
+
+    <rect id="wtc-county-mineral" class="wtc-county" data-county="Mineral" x="20" y="170" width="96" height="42"/>
+    <rect id="wtc-county-missoula" class="wtc-county" data-county="Missoula" x="124" y="170" width="96" height="42"/>
+    <rect id="wtc-county-musselshell" class="wtc-county" data-county="Musselshell" x="228" y="170" width="96" height="42"/>
+    <rect id="wtc-county-park" class="wtc-county" data-county="Park" x="332" y="170" width="96" height="42"/>
+    <rect id="wtc-county-petroleum" class="wtc-county" data-county="Petroleum" x="436" y="170" width="96" height="42"/>
+    <rect id="wtc-county-phillips" class="wtc-county" data-county="Phillips" x="540" y="170" width="96" height="42"/>
+    <rect id="wtc-county-pondera" class="wtc-county" data-county="Pondera" x="644" y="170" width="96" height="42"/>
+    <rect id="wtc-county-powder-river" class="wtc-county" data-county="Powder River" x="748" y="170" width="96" height="42"/>
+    <rect id="wtc-county-powell" class="wtc-county" data-county="Powell" x="852" y="170" width="96" height="42"/>
+    <rect id="wtc-county-prairie" class="wtc-county" data-county="Prairie" x="956" y="170" width="96" height="42"/>
+
+    <rect id="wtc-county-ravalli" class="wtc-county" data-county="Ravalli" x="20" y="220" width="96" height="42"/>
+    <rect id="wtc-county-richland" class="wtc-county" data-county="Richland" x="124" y="220" width="96" height="42"/>
+    <rect id="wtc-county-roosevelt" class="wtc-county" data-county="Roosevelt" x="228" y="220" width="96" height="42"/>
+    <rect id="wtc-county-rosebud" class="wtc-county" data-county="Rosebud" x="332" y="220" width="96" height="42"/>
+    <rect id="wtc-county-sanders" class="wtc-county" data-county="Sanders" x="436" y="220" width="96" height="42"/>
+    <rect id="wtc-county-sheridan" class="wtc-county" data-county="Sheridan" x="540" y="220" width="96" height="42"/>
+    <rect id="wtc-county-silver-bow" class="wtc-county" data-county="Silver Bow" x="644" y="220" width="96" height="42"/>
+    <rect id="wtc-county-stillwater" class="wtc-county" data-county="Stillwater" x="748" y="220" width="96" height="42"/>
+    <rect id="wtc-county-sweet-grass" class="wtc-county" data-county="Sweet Grass" x="852" y="220" width="96" height="42"/>
+    <rect id="wtc-county-teton" class="wtc-county" data-county="Teton" x="956" y="220" width="96" height="42"/>
+
+    <rect id="wtc-county-toole" class="wtc-county" data-county="Toole" x="20" y="270" width="96" height="42"/>
+    <rect id="wtc-county-treasure" class="wtc-county" data-county="Treasure" x="124" y="270" width="96" height="42"/>
+    <rect id="wtc-county-valley" class="wtc-county" data-county="Valley" x="228" y="270" width="96" height="42"/>
+    <rect id="wtc-county-wheatland" class="wtc-county" data-county="Wheatland" x="332" y="270" width="96" height="42"/>
+    <rect id="wtc-county-wibaux" class="wtc-county" data-county="Wibaux" x="436" y="270" width="96" height="42"/>
+    <rect id="wtc-county-yellowstone" class="wtc-county" data-county="Yellowstone" x="540" y="270" width="96" height="42"/>
+  </g>
+</svg>

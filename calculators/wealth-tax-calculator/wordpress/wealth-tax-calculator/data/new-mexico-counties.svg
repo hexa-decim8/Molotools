@@ -1,0 +1,37 @@
+<svg id="wtc-state-map-nm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 560" role="img" aria-label="New Mexico county map">
+  <g class="wtc-counties">
+    <path id="wtc-county-san-juan" class="wtc-county" data-county="San Juan" d="M28 24 L138 20 L146 90 L32 92 Z"/>
+    <path id="wtc-county-rio-arriba" class="wtc-county" data-county="Rio Arriba" d="M138 20 L250 22 L258 98 L146 90 Z"/>
+    <path id="wtc-county-taos" class="wtc-county" data-county="Taos" d="M250 22 L318 24 L322 98 L258 98 Z"/>
+    <path id="wtc-county-colfax" class="wtc-county" data-county="Colfax" d="M318 24 L410 26 L408 102 L322 98 Z"/>
+    <path id="wtc-county-union" class="wtc-county" data-county="Union" d="M410 26 L530 30 L526 110 L408 102 Z"/>
+    <path id="wtc-county-mckinley" class="wtc-county" data-county="McKinley" d="M28 92 L138 90 L140 166 L30 168 Z"/>
+    <path id="wtc-county-sandoval" class="wtc-county" data-county="Sandoval" d="M140 90 L230 94 L228 170 L140 166 Z"/>
+    <path id="wtc-county-los-alamos" class="wtc-county" data-county="Los Alamos" d="M230 108 L250 108 L250 126 L230 126 Z"/>
+    <path id="wtc-county-santa-fe" class="wtc-county" data-county="Santa Fe" d="M228 94 L292 96 L292 172 L228 170 Z"/>
+    <path id="wtc-county-mora" class="wtc-county" data-county="Mora" d="M292 96 L352 98 L350 170 L292 172 Z"/>
+    <path id="wtc-county-san-miguel" class="wtc-county" data-county="San Miguel" d="M352 98 L426 100 L422 176 L350 170 Z"/>
+    <path id="wtc-county-harding" class="wtc-county" data-county="Harding" d="M426 100 L506 106 L500 180 L422 176 Z"/>
+    <path id="wtc-county-cibola" class="wtc-county" data-county="Cibola" d="M30 168 L122 168 L124 242 L34 244 Z"/>
+    <path id="wtc-county-bernalillo" class="wtc-county" data-county="Bernalillo" d="M124 168 L196 168 L194 244 L124 242 Z"/>
+    <path id="wtc-county-torrance" class="wtc-county" data-county="Torrance" d="M194 168 L270 172 L268 246 L194 244 Z"/>
+    <path id="wtc-county-guadalupe" class="wtc-county" data-county="Guadalupe" d="M270 172 L344 170 L344 248 L268 246 Z"/>
+    <path id="wtc-county-quay" class="wtc-county" data-county="Quay" d="M344 170 L430 176 L426 250 L344 248 Z"/>
+    <path id="wtc-county-catron" class="wtc-county" data-county="Catron" d="M34 244 L122 242 L122 332 L40 336 Z"/>
+    <path id="wtc-county-valencia" class="wtc-county" data-county="Valencia" d="M122 242 L182 244 L182 322 L122 322 Z"/>
+    <path id="wtc-county-socorro" class="wtc-county" data-county="Socorro" d="M182 244 L252 246 L252 334 L182 332 Z"/>
+    <path id="wtc-county-lincoln" class="wtc-county" data-county="Lincoln" d="M252 246 L328 248 L326 334 L252 334 Z"/>
+    <path id="wtc-county-de-baca" class="wtc-county" data-county="De Baca" d="M328 248 L394 250 L394 334 L326 334 Z"/>
+    <path id="wtc-county-roosevelt" class="wtc-county" data-county="Roosevelt" d="M394 250 L462 252 L462 334 L394 334 Z"/>
+    <path id="wtc-county-grant" class="wtc-county" data-county="Grant" d="M40 336 L108 334 L110 410 L46 414 Z"/>
+    <path id="wtc-county-sierra" class="wtc-county" data-county="Sierra" d="M110 332 L176 332 L176 414 L110 410 Z"/>
+    <path id="wtc-county-otero" class="wtc-county" data-county="Otero" d="M176 334 L260 334 L260 414 L176 414 Z"/>
+    <path id="wtc-county-chaves" class="wtc-county" data-county="Chaves" d="M260 334 L344 334 L344 414 L260 414 Z"/>
+    <path id="wtc-county-lea" class="wtc-county" data-county="Lea" d="M344 334 L434 334 L434 414 L344 414 Z"/>
+    <path id="wtc-county-hidalgo" class="wtc-county" data-county="Hidalgo" d="M46 414 L108 412 L108 500 L54 504 Z"/>
+    <path id="wtc-county-luna" class="wtc-county" data-county="Luna" d="M108 412 L172 414 L172 498 L108 500 Z"/>
+    <path id="wtc-county-dona-ana" class="wtc-county" data-county="Dona Ana" d="M172 414 L248 414 L248 500 L172 498 Z"/>
+    <path id="wtc-county-eddy" class="wtc-county" data-county="Eddy" d="M248 414 L336 414 L336 502 L248 500 Z"/>
+    <path id="wtc-county-curry" class="wtc-county" data-county="Curry" d="M434 334 L514 334 L514 414 L434 414 Z"/>
+  </g>
+</svg>

@@ -1,0 +1,32 @@
+<svg id="wtc-state-map-la" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 420" role="img" aria-label="Louisiana county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-acadia" class="wtc-county" data-county="Acadia" x="20" y="20" width="126" height="52"/>
+    <rect id="wtc-county-ascension" class="wtc-county" data-county="Ascension" x="156" y="20" width="126" height="52"/>
+    <rect id="wtc-county-bossier" class="wtc-county" data-county="Bossier" x="292" y="20" width="126" height="52"/>
+    <rect id="wtc-county-caddo" class="wtc-county" data-county="Caddo" x="428" y="20" width="126" height="52"/>
+    <rect id="wtc-county-calcasieu" class="wtc-county" data-county="Calcasieu" x="564" y="20" width="126" height="52"/>
+    <rect id="wtc-county-east-baton-rouge" class="wtc-county" data-county="East Baton Rouge" x="700" y="20" width="126" height="52"/>
+    <rect id="wtc-county-iberia" class="wtc-county" data-county="Iberia" x="836" y="20" width="126" height="52"/>
+    <rect id="wtc-county-jefferson" class="wtc-county" data-county="Jefferson" x="972" y="20" width="126" height="52"/>
+
+    <rect id="wtc-county-lafayette" class="wtc-county" data-county="Lafayette" x="20" y="82" width="126" height="52"/>
+    <rect id="wtc-county-lafourche" class="wtc-county" data-county="Lafourche" x="156" y="82" width="126" height="52"/>
+    <rect id="wtc-county-lincoln" class="wtc-county" data-county="Lincoln" x="292" y="82" width="126" height="52"/>
+    <rect id="wtc-county-livingston" class="wtc-county" data-county="Livingston" x="428" y="82" width="126" height="52"/>
+    <rect id="wtc-county-orleans" class="wtc-county" data-county="Orleans" x="564" y="82" width="126" height="52"/>
+    <rect id="wtc-county-ouachita" class="wtc-county" data-county="Ouachita" x="700" y="82" width="126" height="52"/>
+    <rect id="wtc-county-plaquemines" class="wtc-county" data-county="Plaquemines" x="836" y="82" width="126" height="52"/>
+    <rect id="wtc-county-rapides" class="wtc-county" data-county="Rapides" x="972" y="82" width="126" height="52"/>
+
+    <rect id="wtc-county-st-bernard" class="wtc-county" data-county="St. Bernard" x="20" y="144" width="126" height="52"/>
+    <rect id="wtc-county-st-charles" class="wtc-county" data-county="St. Charles" x="156" y="144" width="126" height="52"/>
+    <rect id="wtc-county-st-james" class="wtc-county" data-county="St. James" x="292" y="144" width="126" height="52"/>
+    <rect id="wtc-county-st-john-the-baptist" class="wtc-county" data-county="St. John the Baptist" x="428" y="144" width="126" height="52"/>
+    <rect id="wtc-county-st-landry" class="wtc-county" data-county="St. Landry" x="564" y="144" width="126" height="52"/>
+    <rect id="wtc-county-st-mary" class="wtc-county" data-county="St. Mary" x="700" y="144" width="126" height="52"/>
+    <rect id="wtc-county-st-tammany" class="wtc-county" data-county="St. Tammany" x="836" y="144" width="126" height="52"/>
+    <rect id="wtc-county-tangipahoa" class="wtc-county" data-county="Tangipahoa" x="972" y="144" width="126" height="52"/>
+
+    <rect id="wtc-county-terrebonne" class="wtc-county" data-county="Terrebonne" x="20" y="206" width="126" height="52"/>
+  </g>
+</svg>

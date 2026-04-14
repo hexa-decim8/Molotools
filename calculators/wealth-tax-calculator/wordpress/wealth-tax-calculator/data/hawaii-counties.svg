@@ -1,0 +1,9 @@
+<svg id="wtc-state-map-hi" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 240" role="img" aria-label="Hawaii county map">
+  <g class="wtc-counties">
+    <path id="wtc-county-kauai" class="wtc-county" data-county="Kauai" d="M36 92 L72 78 L104 96 L98 126 L62 138 L32 120 Z"/>
+    <path id="wtc-county-honolulu" class="wtc-county" data-county="Honolulu" d="M166 118 L222 104 L274 118 L258 146 L198 154 Z"/>
+    <path id="wtc-county-kalawao" class="wtc-county" data-county="Kalawao" d="M336 112 L360 102 L374 118 L352 132 L334 126 Z"/>
+    <path id="wtc-county-maui" class="wtc-county" data-county="Maui" d="M330 132 L364 120 L406 134 L398 162 L350 172 L322 154 Z"/>
+    <path id="wtc-county-hawaii" class="wtc-county" data-county="Hawaii" d="M452 104 L522 124 L518 200 L444 214 L408 162 Z"/>
+  </g>
+</svg>

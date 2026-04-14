@@ -1,0 +1,23 @@
+<svg id="wtc-state-map-ia" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 420" role="img" aria-label="Iowa county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-black-hawk" class="wtc-county" data-county="Black Hawk" x="20" y="20" width="126" height="52"/>
+    <rect id="wtc-county-boone" class="wtc-county" data-county="Boone" x="156" y="20" width="126" height="52"/>
+    <rect id="wtc-county-buena-vista" class="wtc-county" data-county="Buena Vista" x="292" y="20" width="126" height="52"/>
+    <rect id="wtc-county-clinton" class="wtc-county" data-county="Clinton" x="428" y="20" width="126" height="52"/>
+    <rect id="wtc-county-dallas" class="wtc-county" data-county="Dallas" x="564" y="20" width="126" height="52"/>
+    <rect id="wtc-county-dubuque" class="wtc-county" data-county="Dubuque" x="700" y="20" width="126" height="52"/>
+    <rect id="wtc-county-johnson" class="wtc-county" data-county="Johnson" x="836" y="20" width="126" height="52"/>
+    <rect id="wtc-county-linn" class="wtc-county" data-county="Linn" x="972" y="20" width="126" height="52"/>
+
+    <rect id="wtc-county-marion" class="wtc-county" data-county="Marion" x="20" y="82" width="126" height="52"/>
+    <rect id="wtc-county-marshall" class="wtc-county" data-county="Marshall" x="156" y="82" width="126" height="52"/>
+    <rect id="wtc-county-plymouth" class="wtc-county" data-county="Plymouth" x="292" y="82" width="126" height="52"/>
+    <rect id="wtc-county-polk" class="wtc-county" data-county="Polk" x="428" y="82" width="126" height="52"/>
+    <rect id="wtc-county-pottawattamie" class="wtc-county" data-county="Pottawattamie" x="564" y="82" width="126" height="52"/>
+    <rect id="wtc-county-scott" class="wtc-county" data-county="Scott" x="700" y="82" width="126" height="52"/>
+    <rect id="wtc-county-story" class="wtc-county" data-county="Story" x="836" y="82" width="126" height="52"/>
+    <rect id="wtc-county-woodbury" class="wtc-county" data-county="Woodbury" x="972" y="82" width="126" height="52"/>
+
+    <rect id="wtc-county-wapello" class="wtc-county" data-county="Wapello" x="20" y="144" width="126" height="52"/>
+  </g>
+</svg>

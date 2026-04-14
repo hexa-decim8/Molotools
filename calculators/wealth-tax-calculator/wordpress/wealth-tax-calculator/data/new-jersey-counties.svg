@@ -1,0 +1,25 @@
+<svg id="wtc-state-map-nj" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 420" role="img" aria-label="New Jersey county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-sussex" class="wtc-county" data-county="Sussex" x="24" y="24" width="90" height="52"/>
+    <rect id="wtc-county-passaic" class="wtc-county" data-county="Passaic" x="118" y="24" width="90" height="52"/>
+    <rect id="wtc-county-bergen" class="wtc-county" data-county="Bergen" x="212" y="24" width="90" height="52"/>
+    <rect id="wtc-county-warren" class="wtc-county" data-county="Warren" x="24" y="80" width="90" height="52"/>
+    <rect id="wtc-county-morris" class="wtc-county" data-county="Morris" x="118" y="80" width="90" height="52"/>
+    <rect id="wtc-county-essex" class="wtc-county" data-county="Essex" x="212" y="80" width="90" height="52"/>
+    <rect id="wtc-county-hudson" class="wtc-county" data-county="Hudson" x="306" y="80" width="90" height="52"/>
+    <rect id="wtc-county-hunterdon" class="wtc-county" data-county="Hunterdon" x="24" y="136" width="90" height="52"/>
+    <rect id="wtc-county-somerset" class="wtc-county" data-county="Somerset" x="118" y="136" width="90" height="52"/>
+    <rect id="wtc-county-union" class="wtc-county" data-county="Union" x="212" y="136" width="90" height="52"/>
+    <rect id="wtc-county-middlesex" class="wtc-county" data-county="Middlesex" x="306" y="136" width="90" height="52"/>
+    <rect id="wtc-county-mercer" class="wtc-county" data-county="Mercer" x="24" y="192" width="90" height="52"/>
+    <rect id="wtc-county-monmouth" class="wtc-county" data-county="Monmouth" x="306" y="192" width="90" height="52"/>
+    <rect id="wtc-county-burlington" class="wtc-county" data-county="Burlington" x="118" y="192" width="90" height="52"/>
+    <rect id="wtc-county-ocean" class="wtc-county" data-county="Ocean" x="212" y="192" width="90" height="52"/>
+    <rect id="wtc-county-camden" class="wtc-county" data-county="Camden" x="118" y="248" width="90" height="52"/>
+    <rect id="wtc-county-gloucester" class="wtc-county" data-county="Gloucester" x="24" y="248" width="90" height="52"/>
+    <rect id="wtc-county-atlantic" class="wtc-county" data-county="Atlantic" x="212" y="248" width="90" height="52"/>
+    <rect id="wtc-county-salem" class="wtc-county" data-county="Salem" x="24" y="304" width="90" height="52"/>
+    <rect id="wtc-county-cumberland" class="wtc-county" data-county="Cumberland" x="118" y="304" width="90" height="52"/>
+    <rect id="wtc-county-cape-may" class="wtc-county" data-county="Cape May" x="212" y="304" width="90" height="52"/>
+  </g>
+</svg>

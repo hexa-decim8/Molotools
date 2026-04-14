@@ -1,0 +1,9 @@
+<svg id="wtc-state-map-ri" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" role="img" aria-label="Rhode Island county map">
+  <g class="wtc-counties">
+    <path id="wtc-county-providence" class="wtc-county" data-county="Providence" d="M26 38 L128 38 L140 96 L112 132 L54 130 L28 84 Z"/>
+    <path id="wtc-county-kent" class="wtc-county" data-county="Kent" d="M112 96 L186 94 L192 144 L138 170 L108 138 Z"/>
+    <path id="wtc-county-bristol" class="wtc-county" data-county="Bristol" d="M192 96 L220 100 L224 142 L194 144 Z"/>
+    <path id="wtc-county-newport" class="wtc-county" data-county="Newport" d="M224 126 L252 136 L256 186 L228 196 L216 164 Z"/>
+    <path id="wtc-county-washington" class="wtc-county" data-county="Washington" d="M94 142 L138 170 L188 162 L206 204 L178 226 L108 222 L74 178 Z"/>
+  </g>
+</svg>

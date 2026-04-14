@@ -1,0 +1,39 @@
+<svg id="wtc-state-map-oh" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 420" role="img" aria-label="Ohio county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-allen" class="wtc-county" data-county="Allen" x="20" y="20" width="126" height="52"/>
+    <rect id="wtc-county-athens" class="wtc-county" data-county="Athens" x="156" y="20" width="126" height="52"/>
+    <rect id="wtc-county-belmont" class="wtc-county" data-county="Belmont" x="292" y="20" width="126" height="52"/>
+    <rect id="wtc-county-butler" class="wtc-county" data-county="Butler" x="428" y="20" width="126" height="52"/>
+    <rect id="wtc-county-clark" class="wtc-county" data-county="Clark" x="564" y="20" width="126" height="52"/>
+    <rect id="wtc-county-clermont" class="wtc-county" data-county="Clermont" x="700" y="20" width="126" height="52"/>
+    <rect id="wtc-county-columbiana" class="wtc-county" data-county="Columbiana" x="836" y="20" width="126" height="52"/>
+    <rect id="wtc-county-cuyahoga" class="wtc-county" data-county="Cuyahoga" x="972" y="20" width="126" height="52"/>
+
+    <rect id="wtc-county-delaware" class="wtc-county" data-county="Delaware" x="20" y="82" width="126" height="52"/>
+    <rect id="wtc-county-fairfield" class="wtc-county" data-county="Fairfield" x="156" y="82" width="126" height="52"/>
+    <rect id="wtc-county-franklin" class="wtc-county" data-county="Franklin" x="292" y="82" width="126" height="52"/>
+    <rect id="wtc-county-greene" class="wtc-county" data-county="Greene" x="428" y="82" width="126" height="52"/>
+    <rect id="wtc-county-hamilton" class="wtc-county" data-county="Hamilton" x="564" y="82" width="126" height="52"/>
+    <rect id="wtc-county-hancock" class="wtc-county" data-county="Hancock" x="700" y="82" width="126" height="52"/>
+    <rect id="wtc-county-knox" class="wtc-county" data-county="Knox" x="836" y="82" width="126" height="52"/>
+    <rect id="wtc-county-lake" class="wtc-county" data-county="Lake" x="972" y="82" width="126" height="52"/>
+
+    <rect id="wtc-county-licking" class="wtc-county" data-county="Licking" x="20" y="144" width="126" height="52"/>
+    <rect id="wtc-county-lorain" class="wtc-county" data-county="Lorain" x="156" y="144" width="126" height="52"/>
+    <rect id="wtc-county-lucas" class="wtc-county" data-county="Lucas" x="292" y="144" width="126" height="52"/>
+    <rect id="wtc-county-mahoning" class="wtc-county" data-county="Mahoning" x="428" y="144" width="126" height="52"/>
+    <rect id="wtc-county-medina" class="wtc-county" data-county="Medina" x="564" y="144" width="126" height="52"/>
+    <rect id="wtc-county-miami" class="wtc-county" data-county="Miami" x="700" y="144" width="126" height="52"/>
+    <rect id="wtc-county-montgomery" class="wtc-county" data-county="Montgomery" x="836" y="144" width="126" height="52"/>
+    <rect id="wtc-county-portage" class="wtc-county" data-county="Portage" x="972" y="144" width="126" height="52"/>
+
+    <rect id="wtc-county-richland" class="wtc-county" data-county="Richland" x="20" y="206" width="126" height="52"/>
+    <rect id="wtc-county-sandusky" class="wtc-county" data-county="Sandusky" x="156" y="206" width="126" height="52"/>
+    <rect id="wtc-county-stark" class="wtc-county" data-county="Stark" x="292" y="206" width="126" height="52"/>
+    <rect id="wtc-county-summit" class="wtc-county" data-county="Summit" x="428" y="206" width="126" height="52"/>
+    <rect id="wtc-county-trumbull" class="wtc-county" data-county="Trumbull" x="564" y="206" width="126" height="52"/>
+    <rect id="wtc-county-warren" class="wtc-county" data-county="Warren" x="700" y="206" width="126" height="52"/>
+    <rect id="wtc-county-wayne" class="wtc-county" data-county="Wayne" x="836" y="206" width="126" height="52"/>
+    <rect id="wtc-county-wood" class="wtc-county" data-county="Wood" x="972" y="206" width="126" height="52"/>
+  </g>
+</svg>

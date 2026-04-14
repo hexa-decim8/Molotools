@@ -1,0 +1,32 @@
+<svg id="wtc-state-map-va" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 460" role="img" aria-label="Virginia county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-albemarle" class="wtc-county" data-county="Albemarle" x="20" y="20" width="126" height="52"/>
+    <rect id="wtc-county-alexandria" class="wtc-county" data-county="Alexandria" x="156" y="20" width="126" height="52"/>
+    <rect id="wtc-county-arlington" class="wtc-county" data-county="Arlington" x="292" y="20" width="126" height="52"/>
+    <rect id="wtc-county-botetourt" class="wtc-county" data-county="Botetourt" x="428" y="20" width="126" height="52"/>
+    <rect id="wtc-county-charlottesville" class="wtc-county" data-county="Charlottesville" x="564" y="20" width="126" height="52"/>
+    <rect id="wtc-county-chesapeake" class="wtc-county" data-county="Chesapeake" x="700" y="20" width="126" height="52"/>
+    <rect id="wtc-county-chesterfield" class="wtc-county" data-county="Chesterfield" x="836" y="20" width="126" height="52"/>
+    <rect id="wtc-county-fairfax" class="wtc-county" data-county="Fairfax" x="972" y="20" width="126" height="52"/>
+
+    <rect id="wtc-county-frederick" class="wtc-county" data-county="Frederick" x="20" y="82" width="126" height="52"/>
+    <rect id="wtc-county-hampton" class="wtc-county" data-county="Hampton" x="156" y="82" width="126" height="52"/>
+    <rect id="wtc-county-hanover" class="wtc-county" data-county="Hanover" x="292" y="82" width="126" height="52"/>
+    <rect id="wtc-county-henrico" class="wtc-county" data-county="Henrico" x="428" y="82" width="126" height="52"/>
+    <rect id="wtc-county-loudoun" class="wtc-county" data-county="Loudoun" x="564" y="82" width="126" height="52"/>
+    <rect id="wtc-county-lynchburg" class="wtc-county" data-county="Lynchburg" x="700" y="82" width="126" height="52"/>
+    <rect id="wtc-county-newport-news" class="wtc-county" data-county="Newport News" x="836" y="82" width="126" height="52"/>
+    <rect id="wtc-county-norfolk" class="wtc-county" data-county="Norfolk" x="972" y="82" width="126" height="52"/>
+
+    <rect id="wtc-county-portsmouth" class="wtc-county" data-county="Portsmouth" x="20" y="144" width="126" height="52"/>
+    <rect id="wtc-county-prince-william" class="wtc-county" data-county="Prince William" x="156" y="144" width="126" height="52"/>
+    <rect id="wtc-county-richmond-city" class="wtc-county" data-county="Richmond city" x="292" y="144" width="126" height="52"/>
+    <rect id="wtc-county-roanoke" class="wtc-county" data-county="Roanoke" x="428" y="144" width="126" height="52"/>
+    <rect id="wtc-county-spotsylvania" class="wtc-county" data-county="Spotsylvania" x="564" y="144" width="126" height="52"/>
+    <rect id="wtc-county-stafford" class="wtc-county" data-county="Stafford" x="700" y="144" width="126" height="52"/>
+    <rect id="wtc-county-suffolk" class="wtc-county" data-county="Suffolk" x="836" y="144" width="126" height="52"/>
+    <rect id="wtc-county-virginia-beach" class="wtc-county" data-county="Virginia Beach" x="972" y="144" width="126" height="52"/>
+
+    <rect id="wtc-county-york" class="wtc-county" data-county="York" x="20" y="206" width="126" height="52"/>
+  </g>
+</svg>

@@ -1,0 +1,33 @@
+<svg id="wtc-state-map-wi" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 420" role="img" aria-label="Wisconsin county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-barron" class="wtc-county" data-county="Barron" x="20" y="20" width="126" height="52"/>
+    <rect id="wtc-county-brown" class="wtc-county" data-county="Brown" x="156" y="20" width="126" height="52"/>
+    <rect id="wtc-county-calumet" class="wtc-county" data-county="Calumet" x="292" y="20" width="126" height="52"/>
+    <rect id="wtc-county-chippewa" class="wtc-county" data-county="Chippewa" x="428" y="20" width="126" height="52"/>
+    <rect id="wtc-county-dane" class="wtc-county" data-county="Dane" x="564" y="20" width="126" height="52"/>
+    <rect id="wtc-county-dodge" class="wtc-county" data-county="Dodge" x="700" y="20" width="126" height="52"/>
+    <rect id="wtc-county-door" class="wtc-county" data-county="Door" x="836" y="20" width="126" height="52"/>
+    <rect id="wtc-county-douglas" class="wtc-county" data-county="Douglas" x="972" y="20" width="126" height="52"/>
+
+    <rect id="wtc-county-eau-claire" class="wtc-county" data-county="Eau Claire" x="20" y="82" width="126" height="52"/>
+    <rect id="wtc-county-fond-du-lac" class="wtc-county" data-county="Fond du Lac" x="156" y="82" width="126" height="52"/>
+    <rect id="wtc-county-grant" class="wtc-county" data-county="Grant" x="292" y="82" width="126" height="52"/>
+    <rect id="wtc-county-jefferson" class="wtc-county" data-county="Jefferson" x="428" y="82" width="126" height="52"/>
+    <rect id="wtc-county-kenosha" class="wtc-county" data-county="Kenosha" x="564" y="82" width="126" height="52"/>
+    <rect id="wtc-county-la-crosse" class="wtc-county" data-county="La Crosse" x="700" y="82" width="126" height="52"/>
+    <rect id="wtc-county-manitowoc" class="wtc-county" data-county="Manitowoc" x="836" y="82" width="126" height="52"/>
+    <rect id="wtc-county-marathon" class="wtc-county" data-county="Marathon" x="972" y="82" width="126" height="52"/>
+
+    <rect id="wtc-county-milwaukee" class="wtc-county" data-county="Milwaukee" x="20" y="144" width="126" height="52"/>
+    <rect id="wtc-county-ozaukee" class="wtc-county" data-county="Ozaukee" x="156" y="144" width="126" height="52"/>
+    <rect id="wtc-county-racine" class="wtc-county" data-county="Racine" x="292" y="144" width="126" height="52"/>
+    <rect id="wtc-county-rock" class="wtc-county" data-county="Rock" x="428" y="144" width="126" height="52"/>
+    <rect id="wtc-county-sauk" class="wtc-county" data-county="Sauk" x="564" y="144" width="126" height="52"/>
+    <rect id="wtc-county-sheboygan" class="wtc-county" data-county="Sheboygan" x="700" y="144" width="126" height="52"/>
+    <rect id="wtc-county-taylor" class="wtc-county" data-county="Taylor" x="836" y="144" width="126" height="52"/>
+    <rect id="wtc-county-walworth" class="wtc-county" data-county="Walworth" x="972" y="144" width="126" height="52"/>
+
+    <rect id="wtc-county-waukesha" class="wtc-county" data-county="Waukesha" x="20" y="206" width="126" height="52"/>
+    <rect id="wtc-county-winnebago" class="wtc-county" data-county="Winnebago" x="156" y="206" width="126" height="52"/>
+  </g>
+</svg>

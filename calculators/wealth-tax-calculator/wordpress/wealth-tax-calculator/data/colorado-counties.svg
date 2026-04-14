@@ -1,0 +1,74 @@
+<svg id="wtc-state-map-co" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 520" role="img" aria-label="Colorado county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-adams" class="wtc-county" data-county="Adams" x="20" y="20" width="96" height="42"/>
+    <rect id="wtc-county-alamosa" class="wtc-county" data-county="Alamosa" x="124" y="20" width="96" height="42"/>
+    <rect id="wtc-county-arapahoe" class="wtc-county" data-county="Arapahoe" x="228" y="20" width="96" height="42"/>
+    <rect id="wtc-county-archuleta" class="wtc-county" data-county="Archuleta" x="332" y="20" width="96" height="42"/>
+    <rect id="wtc-county-baca" class="wtc-county" data-county="Baca" x="436" y="20" width="96" height="42"/>
+    <rect id="wtc-county-bent" class="wtc-county" data-county="Bent" x="540" y="20" width="96" height="42"/>
+    <rect id="wtc-county-boulder" class="wtc-county" data-county="Boulder" x="644" y="20" width="96" height="42"/>
+    <rect id="wtc-county-broomfield" class="wtc-county" data-county="Broomfield" x="748" y="20" width="96" height="42"/>
+    <rect id="wtc-county-chaffee" class="wtc-county" data-county="Chaffee" x="852" y="20" width="96" height="42"/>
+    <rect id="wtc-county-cheyenne" class="wtc-county" data-county="Cheyenne" x="956" y="20" width="96" height="42"/>
+
+    <rect id="wtc-county-clear-creek" class="wtc-county" data-county="Clear Creek" x="20" y="70" width="96" height="42"/>
+    <rect id="wtc-county-conejos" class="wtc-county" data-county="Conejos" x="124" y="70" width="96" height="42"/>
+    <rect id="wtc-county-costilla" class="wtc-county" data-county="Costilla" x="228" y="70" width="96" height="42"/>
+    <rect id="wtc-county-crowley" class="wtc-county" data-county="Crowley" x="332" y="70" width="96" height="42"/>
+    <rect id="wtc-county-custer" class="wtc-county" data-county="Custer" x="436" y="70" width="96" height="42"/>
+    <rect id="wtc-county-delta" class="wtc-county" data-county="Delta" x="540" y="70" width="96" height="42"/>
+    <rect id="wtc-county-denver" class="wtc-county" data-county="Denver" x="644" y="70" width="96" height="42"/>
+    <rect id="wtc-county-dolores" class="wtc-county" data-county="Dolores" x="748" y="70" width="96" height="42"/>
+    <rect id="wtc-county-douglas" class="wtc-county" data-county="Douglas" x="852" y="70" width="96" height="42"/>
+    <rect id="wtc-county-eagle" class="wtc-county" data-county="Eagle" x="956" y="70" width="96" height="42"/>
+
+    <rect id="wtc-county-el-paso" class="wtc-county" data-county="El Paso" x="20" y="120" width="96" height="42"/>
+    <rect id="wtc-county-elbert" class="wtc-county" data-county="Elbert" x="124" y="120" width="96" height="42"/>
+    <rect id="wtc-county-fremont" class="wtc-county" data-county="Fremont" x="228" y="120" width="96" height="42"/>
+    <rect id="wtc-county-garfield" class="wtc-county" data-county="Garfield" x="332" y="120" width="96" height="42"/>
+    <rect id="wtc-county-gilpin" class="wtc-county" data-county="Gilpin" x="436" y="120" width="96" height="42"/>
+    <rect id="wtc-county-grand" class="wtc-county" data-county="Grand" x="540" y="120" width="96" height="42"/>
+    <rect id="wtc-county-gunnison" class="wtc-county" data-county="Gunnison" x="644" y="120" width="96" height="42"/>
+    <rect id="wtc-county-hinsdale" class="wtc-county" data-county="Hinsdale" x="748" y="120" width="96" height="42"/>
+    <rect id="wtc-county-huerfano" class="wtc-county" data-county="Huerfano" x="852" y="120" width="96" height="42"/>
+    <rect id="wtc-county-jackson" class="wtc-county" data-county="Jackson" x="956" y="120" width="96" height="42"/>
+
+    <rect id="wtc-county-jefferson" class="wtc-county" data-county="Jefferson" x="20" y="170" width="96" height="42"/>
+    <rect id="wtc-county-kiowa" class="wtc-county" data-county="Kiowa" x="124" y="170" width="96" height="42"/>
+    <rect id="wtc-county-kit-carson" class="wtc-county" data-county="Kit Carson" x="228" y="170" width="96" height="42"/>
+    <rect id="wtc-county-la-plata" class="wtc-county" data-county="La Plata" x="332" y="170" width="96" height="42"/>
+    <rect id="wtc-county-lake" class="wtc-county" data-county="Lake" x="436" y="170" width="96" height="42"/>
+    <rect id="wtc-county-larimer" class="wtc-county" data-county="Larimer" x="540" y="170" width="96" height="42"/>
+    <rect id="wtc-county-las-animas" class="wtc-county" data-county="Las Animas" x="644" y="170" width="96" height="42"/>
+    <rect id="wtc-county-lincoln" class="wtc-county" data-county="Lincoln" x="748" y="170" width="96" height="42"/>
+    <rect id="wtc-county-logan" class="wtc-county" data-county="Logan" x="852" y="170" width="96" height="42"/>
+    <rect id="wtc-county-mesa" class="wtc-county" data-county="Mesa" x="956" y="170" width="96" height="42"/>
+
+    <rect id="wtc-county-mineral" class="wtc-county" data-county="Mineral" x="20" y="220" width="96" height="42"/>
+    <rect id="wtc-county-moffat" class="wtc-county" data-county="Moffat" x="124" y="220" width="96" height="42"/>
+    <rect id="wtc-county-montezuma" class="wtc-county" data-county="Montezuma" x="228" y="220" width="96" height="42"/>
+    <rect id="wtc-county-montrose" class="wtc-county" data-county="Montrose" x="332" y="220" width="96" height="42"/>
+    <rect id="wtc-county-morgan" class="wtc-county" data-county="Morgan" x="436" y="220" width="96" height="42"/>
+    <rect id="wtc-county-otero" class="wtc-county" data-county="Otero" x="540" y="220" width="96" height="42"/>
+    <rect id="wtc-county-ouray" class="wtc-county" data-county="Ouray" x="644" y="220" width="96" height="42"/>
+    <rect id="wtc-county-park" class="wtc-county" data-county="Park" x="748" y="220" width="96" height="42"/>
+    <rect id="wtc-county-phillips" class="wtc-county" data-county="Phillips" x="852" y="220" width="96" height="42"/>
+    <rect id="wtc-county-pitkin" class="wtc-county" data-county="Pitkin" x="956" y="220" width="96" height="42"/>
+
+    <rect id="wtc-county-prowlers" class="wtc-county" data-county="Prowers" x="20" y="270" width="96" height="42"/>
+    <rect id="wtc-county-pueblo" class="wtc-county" data-county="Pueblo" x="124" y="270" width="96" height="42"/>
+    <rect id="wtc-county-rio-blanco" class="wtc-county" data-county="Rio Blanco" x="228" y="270" width="96" height="42"/>
+    <rect id="wtc-county-rio-grande" class="wtc-county" data-county="Rio Grande" x="332" y="270" width="96" height="42"/>
+    <rect id="wtc-county-routt" class="wtc-county" data-county="Routt" x="436" y="270" width="96" height="42"/>
+    <rect id="wtc-county-saguache" class="wtc-county" data-county="Saguache" x="540" y="270" width="96" height="42"/>
+    <rect id="wtc-county-san-juan" class="wtc-county" data-county="San Juan" x="644" y="270" width="96" height="42"/>
+    <rect id="wtc-county-san-miguel" class="wtc-county" data-county="San Miguel" x="748" y="270" width="96" height="42"/>
+    <rect id="wtc-county-sedgwick" class="wtc-county" data-county="Sedgwick" x="852" y="270" width="96" height="42"/>
+    <rect id="wtc-county-summit" class="wtc-county" data-county="Summit" x="956" y="270" width="96" height="42"/>
+
+    <rect id="wtc-county-teller" class="wtc-county" data-county="Teller" x="20" y="320" width="96" height="42"/>
+    <rect id="wtc-county-washington" class="wtc-county" data-county="Washington" x="124" y="320" width="96" height="42"/>
+    <rect id="wtc-county-weld" class="wtc-county" data-county="Weld" x="228" y="320" width="96" height="42"/>
+    <rect id="wtc-county-yuma" class="wtc-county" data-county="Yuma" x="332" y="320" width="96" height="42"/>
+  </g>
+</svg>

@@ -1,0 +1,48 @@
+<svg id="wtc-state-map-wa" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 520" role="img" aria-label="Washington county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-whatcom" class="wtc-county" data-county="Whatcom" x="20" y="20" width="72" height="46"/>
+    <rect id="wtc-county-skagit" class="wtc-county" data-county="Skagit" x="96" y="20" width="72" height="46"/>
+    <rect id="wtc-county-san-juan" class="wtc-county" data-county="San Juan" x="172" y="20" width="72" height="46"/>
+    <rect id="wtc-county-okanogan" class="wtc-county" data-county="Okanogan" x="248" y="20" width="72" height="46"/>
+    <rect id="wtc-county-ferry" class="wtc-county" data-county="Ferry" x="324" y="20" width="72" height="46"/>
+    <rect id="wtc-county-stevens" class="wtc-county" data-county="Stevens" x="400" y="20" width="72" height="46"/>
+    <rect id="wtc-county-pend-oreille" class="wtc-county" data-county="Pend Oreille" x="476" y="20" width="72" height="46"/>
+
+    <rect id="wtc-county-island" class="wtc-county" data-county="Island" x="20" y="70" width="72" height="46"/>
+    <rect id="wtc-county-snohomish" class="wtc-county" data-county="Snohomish" x="96" y="70" width="72" height="46"/>
+    <rect id="wtc-county-chelan" class="wtc-county" data-county="Chelan" x="172" y="70" width="72" height="46"/>
+    <rect id="wtc-county-douglas" class="wtc-county" data-county="Douglas" x="248" y="70" width="72" height="46"/>
+    <rect id="wtc-county-lincoln" class="wtc-county" data-county="Lincoln" x="324" y="70" width="72" height="46"/>
+    <rect id="wtc-county-spokane" class="wtc-county" data-county="Spokane" x="400" y="70" width="72" height="46"/>
+
+    <rect id="wtc-county-jefferson" class="wtc-county" data-county="Jefferson" x="20" y="120" width="72" height="46"/>
+    <rect id="wtc-county-king" class="wtc-county" data-county="King" x="96" y="120" width="72" height="46"/>
+    <rect id="wtc-county-kittitas" class="wtc-county" data-county="Kittitas" x="172" y="120" width="72" height="46"/>
+    <rect id="wtc-county-grant" class="wtc-county" data-county="Grant" x="248" y="120" width="72" height="46"/>
+    <rect id="wtc-county-adams" class="wtc-county" data-county="Adams" x="324" y="120" width="72" height="46"/>
+    <rect id="wtc-county-whitman" class="wtc-county" data-county="Whitman" x="400" y="120" width="72" height="46"/>
+
+    <rect id="wtc-county-clallam" class="wtc-county" data-county="Clallam" x="20" y="170" width="72" height="46"/>
+    <rect id="wtc-county-kitsap" class="wtc-county" data-county="Kitsap" x="96" y="170" width="72" height="46"/>
+    <rect id="wtc-county-pierce" class="wtc-county" data-county="Pierce" x="172" y="170" width="72" height="46"/>
+    <rect id="wtc-county-yakima" class="wtc-county" data-county="Yakima" x="248" y="170" width="72" height="46"/>
+    <rect id="wtc-county-benton" class="wtc-county" data-county="Benton" x="324" y="170" width="72" height="46"/>
+    <rect id="wtc-county-franklin" class="wtc-county" data-county="Franklin" x="400" y="170" width="72" height="46"/>
+    <rect id="wtc-county-walla-walla" class="wtc-county" data-county="Walla Walla" x="476" y="170" width="72" height="46"/>
+    <rect id="wtc-county-columbia" class="wtc-county" data-county="Columbia" x="552" y="170" width="72" height="46"/>
+    <rect id="wtc-county-garfield" class="wtc-county" data-county="Garfield" x="628" y="170" width="72" height="46"/>
+    <rect id="wtc-county-asotin" class="wtc-county" data-county="Asotin" x="704" y="170" width="72" height="46"/>
+
+    <rect id="wtc-county-grays-harbor" class="wtc-county" data-county="Grays Harbor" x="20" y="220" width="72" height="46"/>
+    <rect id="wtc-county-mason" class="wtc-county" data-county="Mason" x="96" y="220" width="72" height="46"/>
+    <rect id="wtc-county-thurston" class="wtc-county" data-county="Thurston" x="172" y="220" width="72" height="46"/>
+    <rect id="wtc-county-lewis" class="wtc-county" data-county="Lewis" x="248" y="220" width="72" height="46"/>
+    <rect id="wtc-county-klickitat" class="wtc-county" data-county="Klickitat" x="324" y="220" width="72" height="46"/>
+    <rect id="wtc-county-skamania" class="wtc-county" data-county="Skamania" x="400" y="220" width="72" height="46"/>
+
+    <rect id="wtc-county-pacific" class="wtc-county" data-county="Pacific" x="20" y="270" width="72" height="46"/>
+    <rect id="wtc-county-wahkiakum" class="wtc-county" data-county="Wahkiakum" x="96" y="270" width="72" height="46"/>
+    <rect id="wtc-county-cowlitz" class="wtc-county" data-county="Cowlitz" x="172" y="270" width="72" height="46"/>
+    <rect id="wtc-county-clark" class="wtc-county" data-county="Clark" x="248" y="270" width="72" height="46"/>
+  </g>
+</svg>

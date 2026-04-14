@@ -1,0 +1,20 @@
+<svg id="wtc-state-map-me" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 520" role="img" aria-label="Maine county map">
+  <g class="wtc-counties">
+    <path id="wtc-county-york" class="wtc-county" data-county="York" d="M92 398 L158 390 L178 440 L132 486 L86 458 Z"/>
+    <path id="wtc-county-cumberland" class="wtc-county" data-county="Cumberland" d="M160 356 L222 344 L248 410 L182 440 L154 392 Z"/>
+    <path id="wtc-county-androscoggin" class="wtc-county" data-county="Androscoggin" d="M222 320 L274 312 L292 362 L238 380 L214 344 Z"/>
+    <path id="wtc-county-oxford" class="wtc-county" data-county="Oxford" d="M166 252 L250 234 L272 314 L220 322 L158 292 Z"/>
+    <path id="wtc-county-franklin" class="wtc-county" data-county="Franklin" d="M250 196 L322 180 L342 262 L272 314 L252 236 Z"/>
+    <path id="wtc-county-somerset" class="wtc-county" data-county="Somerset" d="M322 130 L408 114 L434 222 L342 262 L324 182 Z"/>
+    <path id="wtc-county-penobscot" class="wtc-county" data-county="Penobscot" d="M408 114 L486 130 L498 228 L434 222 Z"/>
+    <path id="wtc-county-piscataquis" class="wtc-county" data-county="Piscataquis" d="M412 64 L500 74 L490 130 L408 114 Z"/>
+    <path id="wtc-county-aroostook" class="wtc-county" data-county="Aroostook" d="M356 20 L556 26 L584 110 L502 150 L410 64 Z"/>
+    <path id="wtc-county-waldo" class="wtc-county" data-county="Waldo" d="M400 232 L454 236 L458 286 L416 296 L392 262 Z"/>
+    <path id="wtc-county-kennebec" class="wtc-county" data-county="Kennebec" d="M300 262 L368 250 L392 320 L326 338 L286 300 Z"/>
+    <path id="wtc-county-lincoln" class="wtc-county" data-county="Lincoln" d="M336 340 L382 330 L404 392 L360 404 L326 372 Z"/>
+    <path id="wtc-county-sagadahoc" class="wtc-county" data-county="Sagadahoc" d="M282 340 L332 338 L326 374 L286 384 L266 360 Z"/>
+    <path id="wtc-county-knox" class="wtc-county" data-county="Knox" d="M406 300 L448 294 L464 344 L422 352 L396 326 Z"/>
+    <path id="wtc-county-hancock" class="wtc-county" data-county="Hancock" d="M464 232 L528 226 L550 312 L484 336 L456 288 Z"/>
+    <path id="wtc-county-washington" class="wtc-county" data-county="Washington" d="M526 180 L598 174 L604 306 L550 312 L530 224 Z"/>
+  </g>
+</svg>

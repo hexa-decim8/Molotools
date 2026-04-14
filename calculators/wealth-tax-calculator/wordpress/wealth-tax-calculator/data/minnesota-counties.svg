@@ -1,0 +1,24 @@
+<svg id="wtc-state-map-mn" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 460" role="img" aria-label="Minnesota county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-anoka" class="wtc-county" data-county="Anoka" x="20" y="20" width="126" height="52"/>
+    <rect id="wtc-county-blue-earth" class="wtc-county" data-county="Blue Earth" x="156" y="20" width="126" height="52"/>
+    <rect id="wtc-county-carver" class="wtc-county" data-county="Carver" x="292" y="20" width="126" height="52"/>
+    <rect id="wtc-county-clay" class="wtc-county" data-county="Clay" x="428" y="20" width="126" height="52"/>
+    <rect id="wtc-county-dakota" class="wtc-county" data-county="Dakota" x="564" y="20" width="126" height="52"/>
+    <rect id="wtc-county-goodhue" class="wtc-county" data-county="Goodhue" x="700" y="20" width="126" height="52"/>
+    <rect id="wtc-county-hennepin" class="wtc-county" data-county="Hennepin" x="836" y="20" width="126" height="52"/>
+    <rect id="wtc-county-kandiyohi" class="wtc-county" data-county="Kandiyohi" x="972" y="20" width="126" height="52"/>
+
+    <rect id="wtc-county-mcleod" class="wtc-county" data-county="McLeod" x="20" y="82" width="126" height="52"/>
+    <rect id="wtc-county-olmsted" class="wtc-county" data-county="Olmsted" x="156" y="82" width="126" height="52"/>
+    <rect id="wtc-county-otter-tail" class="wtc-county" data-county="Otter Tail" x="292" y="82" width="126" height="52"/>
+    <rect id="wtc-county-ramsey" class="wtc-county" data-county="Ramsey" x="428" y="82" width="126" height="52"/>
+    <rect id="wtc-county-rice" class="wtc-county" data-county="Rice" x="564" y="82" width="126" height="52"/>
+    <rect id="wtc-county-scott" class="wtc-county" data-county="Scott" x="700" y="82" width="126" height="52"/>
+    <rect id="wtc-county-st-louis" class="wtc-county" data-county="St. Louis" x="836" y="82" width="126" height="52"/>
+    <rect id="wtc-county-stearns" class="wtc-county" data-county="Stearns" x="972" y="82" width="126" height="52"/>
+
+    <rect id="wtc-county-washington" class="wtc-county" data-county="Washington" x="20" y="144" width="126" height="52"/>
+    <rect id="wtc-county-wright" class="wtc-county" data-county="Wright" x="156" y="144" width="126" height="52"/>
+  </g>
+</svg>

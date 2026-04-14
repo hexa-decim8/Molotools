@@ -1,0 +1,23 @@
+<svg id="wtc-state-map-ne" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 420" role="img" aria-label="Nebraska county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-adams" class="wtc-county" data-county="Adams" x="20" y="20" width="126" height="52"/>
+    <rect id="wtc-county-buffalo" class="wtc-county" data-county="Buffalo" x="156" y="20" width="126" height="52"/>
+    <rect id="wtc-county-cass" class="wtc-county" data-county="Cass" x="292" y="20" width="126" height="52"/>
+    <rect id="wtc-county-dakota" class="wtc-county" data-county="Dakota" x="428" y="20" width="126" height="52"/>
+    <rect id="wtc-county-dawson" class="wtc-county" data-county="Dawson" x="564" y="20" width="126" height="52"/>
+    <rect id="wtc-county-dodge" class="wtc-county" data-county="Dodge" x="700" y="20" width="126" height="52"/>
+    <rect id="wtc-county-douglas" class="wtc-county" data-county="Douglas" x="836" y="20" width="126" height="52"/>
+    <rect id="wtc-county-hall" class="wtc-county" data-county="Hall" x="972" y="20" width="126" height="52"/>
+
+    <rect id="wtc-county-hamilton" class="wtc-county" data-county="Hamilton" x="20" y="82" width="126" height="52"/>
+    <rect id="wtc-county-lancaster" class="wtc-county" data-county="Lancaster" x="156" y="82" width="126" height="52"/>
+    <rect id="wtc-county-lincoln" class="wtc-county" data-county="Lincoln" x="292" y="82" width="126" height="52"/>
+    <rect id="wtc-county-madison" class="wtc-county" data-county="Madison" x="428" y="82" width="126" height="52"/>
+    <rect id="wtc-county-otoe" class="wtc-county" data-county="Otoe" x="564" y="82" width="126" height="52"/>
+    <rect id="wtc-county-platte" class="wtc-county" data-county="Platte" x="700" y="82" width="126" height="52"/>
+    <rect id="wtc-county-sarpy" class="wtc-county" data-county="Sarpy" x="836" y="82" width="126" height="52"/>
+    <rect id="wtc-county-saunders" class="wtc-county" data-county="Saunders" x="972" y="82" width="126" height="52"/>
+
+    <rect id="wtc-county-scotts-bluff" class="wtc-county" data-county="Scotts Bluff" x="20" y="144" width="126" height="52"/>
+  </g>
+</svg>

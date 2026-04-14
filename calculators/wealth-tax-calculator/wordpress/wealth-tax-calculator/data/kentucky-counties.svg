@@ -1,0 +1,25 @@
+<svg id="wtc-state-map-ky" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 420" role="img" aria-label="Kentucky county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-boone" class="wtc-county" data-county="Boone" x="20" y="20" width="126" height="52"/>
+    <rect id="wtc-county-boyd" class="wtc-county" data-county="Boyd" x="156" y="20" width="126" height="52"/>
+    <rect id="wtc-county-bullitt" class="wtc-county" data-county="Bullitt" x="292" y="20" width="126" height="52"/>
+    <rect id="wtc-county-campbell" class="wtc-county" data-county="Campbell" x="428" y="20" width="126" height="52"/>
+    <rect id="wtc-county-christian" class="wtc-county" data-county="Christian" x="564" y="20" width="126" height="52"/>
+    <rect id="wtc-county-clark" class="wtc-county" data-county="Clark" x="700" y="20" width="126" height="52"/>
+    <rect id="wtc-county-daviess" class="wtc-county" data-county="Daviess" x="836" y="20" width="126" height="52"/>
+    <rect id="wtc-county-fayette" class="wtc-county" data-county="Fayette" x="972" y="20" width="126" height="52"/>
+
+    <rect id="wtc-county-franklin" class="wtc-county" data-county="Franklin" x="20" y="82" width="126" height="52"/>
+    <rect id="wtc-county-hardin" class="wtc-county" data-county="Hardin" x="156" y="82" width="126" height="52"/>
+    <rect id="wtc-county-henderson" class="wtc-county" data-county="Henderson" x="292" y="82" width="126" height="52"/>
+    <rect id="wtc-county-jefferson" class="wtc-county" data-county="Jefferson" x="428" y="82" width="126" height="52"/>
+    <rect id="wtc-county-jessamine" class="wtc-county" data-county="Jessamine" x="564" y="82" width="126" height="52"/>
+    <rect id="wtc-county-kenton" class="wtc-county" data-county="Kenton" x="700" y="82" width="126" height="52"/>
+    <rect id="wtc-county-madison" class="wtc-county" data-county="Madison" x="836" y="82" width="126" height="52"/>
+    <rect id="wtc-county-oldham" class="wtc-county" data-county="Oldham" x="972" y="82" width="126" height="52"/>
+
+    <rect id="wtc-county-pulaski" class="wtc-county" data-county="Pulaski" x="20" y="144" width="126" height="52"/>
+    <rect id="wtc-county-scott" class="wtc-county" data-county="Scott" x="156" y="144" width="126" height="52"/>
+    <rect id="wtc-county-warren" class="wtc-county" data-county="Warren" x="292" y="144" width="126" height="52"/>
+  </g>
+</svg>

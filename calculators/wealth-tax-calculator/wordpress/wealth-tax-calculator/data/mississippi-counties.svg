@@ -1,0 +1,23 @@
+<svg id="wtc-state-map-ms" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 1120" role="img" aria-label="Mississippi county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-adams" class="wtc-county" data-county="Adams" x="20" y="20" width="160" height="44"/>
+    <rect id="wtc-county-bolivar" class="wtc-county" data-county="Bolivar" x="20" y="72" width="160" height="44"/>
+    <rect id="wtc-county-claiborne" class="wtc-county" data-county="Claiborne" x="20" y="124" width="160" height="44"/>
+    <rect id="wtc-county-clay" class="wtc-county" data-county="Clay" x="20" y="176" width="160" height="44"/>
+    <rect id="wtc-county-coahoma" class="wtc-county" data-county="Coahoma" x="20" y="228" width="160" height="44"/>
+    <rect id="wtc-county-desoto" class="wtc-county" data-county="DeSoto" x="20" y="280" width="160" height="44"/>
+    <rect id="wtc-county-forrest" class="wtc-county" data-county="Forrest" x="20" y="332" width="160" height="44"/>
+    <rect id="wtc-county-hancock" class="wtc-county" data-county="Hancock" x="20" y="384" width="160" height="44"/>
+    <rect id="wtc-county-harrison" class="wtc-county" data-county="Harrison" x="20" y="436" width="160" height="44"/>
+    <rect id="wtc-county-hinds" class="wtc-county" data-county="Hinds" x="20" y="488" width="160" height="44"/>
+    <rect id="wtc-county-jackson" class="wtc-county" data-county="Jackson" x="20" y="540" width="160" height="44"/>
+    <rect id="wtc-county-jones" class="wtc-county" data-county="Jones" x="20" y="592" width="160" height="44"/>
+    <rect id="wtc-county-lafayette" class="wtc-county" data-county="Lafayette" x="20" y="644" width="160" height="44"/>
+    <rect id="wtc-county-lauderdale" class="wtc-county" data-county="Lauderdale" x="20" y="696" width="160" height="44"/>
+    <rect id="wtc-county-lee" class="wtc-county" data-county="Lee" x="20" y="748" width="160" height="44"/>
+    <rect id="wtc-county-lowndes" class="wtc-county" data-county="Lowndes" x="20" y="800" width="160" height="44"/>
+    <rect id="wtc-county-madison" class="wtc-county" data-county="Madison" x="20" y="852" width="160" height="44"/>
+    <rect id="wtc-county-rankin" class="wtc-county" data-county="Rankin" x="20" y="904" width="160" height="44"/>
+    <rect id="wtc-county-washington" class="wtc-county" data-county="Washington" x="20" y="956" width="160" height="44"/>
+  </g>
+</svg>

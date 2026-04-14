@@ -1,0 +1,24 @@
+<svg id="wtc-state-map-mo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 460" role="img" aria-label="Missouri county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-boone" class="wtc-county" data-county="Boone" x="20" y="20" width="126" height="52"/>
+    <rect id="wtc-county-buchanan" class="wtc-county" data-county="Buchanan" x="156" y="20" width="126" height="52"/>
+    <rect id="wtc-county-cape-girardeau" class="wtc-county" data-county="Cape Girardeau" x="292" y="20" width="126" height="52"/>
+    <rect id="wtc-county-cass" class="wtc-county" data-county="Cass" x="428" y="20" width="126" height="52"/>
+    <rect id="wtc-county-clay" class="wtc-county" data-county="Clay" x="564" y="20" width="126" height="52"/>
+    <rect id="wtc-county-greene" class="wtc-county" data-county="Greene" x="700" y="20" width="126" height="52"/>
+    <rect id="wtc-county-jackson" class="wtc-county" data-county="Jackson" x="836" y="20" width="126" height="52"/>
+    <rect id="wtc-county-jefferson" class="wtc-county" data-county="Jefferson" x="972" y="20" width="126" height="52"/>
+
+    <rect id="wtc-county-jasper" class="wtc-county" data-county="Jasper" x="20" y="82" width="126" height="52"/>
+    <rect id="wtc-county-st-charles" class="wtc-county" data-county="St. Charles" x="156" y="82" width="126" height="52"/>
+    <rect id="wtc-county-st-louis" class="wtc-county" data-county="St. Louis" x="292" y="82" width="126" height="52"/>
+    <rect id="wtc-county-st-louis-city" class="wtc-county" data-county="St. Louis city" x="428" y="82" width="126" height="52"/>
+    <rect id="wtc-county-franklin" class="wtc-county" data-county="Franklin" x="564" y="82" width="126" height="52"/>
+    <rect id="wtc-county-christian" class="wtc-county" data-county="Christian" x="700" y="82" width="126" height="52"/>
+    <rect id="wtc-county-cole" class="wtc-county" data-county="Cole" x="836" y="82" width="126" height="52"/>
+    <rect id="wtc-county-callaway" class="wtc-county" data-county="Callaway" x="972" y="82" width="126" height="52"/>
+
+    <rect id="wtc-county-camden" class="wtc-county" data-county="Camden" x="20" y="144" width="126" height="52"/>
+    <rect id="wtc-county-platte" class="wtc-county" data-county="Platte" x="156" y="144" width="126" height="52"/>
+  </g>
+</svg>

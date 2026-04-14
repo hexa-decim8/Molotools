@@ -1,0 +1,61 @@
+<svg id="wtc-state-map-nd" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 420" role="img" aria-label="North Dakota county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-adams" class="wtc-county" data-county="Adams" x="20" y="20" width="96" height="42"/>
+    <rect id="wtc-county-barnes" class="wtc-county" data-county="Barnes" x="124" y="20" width="96" height="42"/>
+    <rect id="wtc-county-benson" class="wtc-county" data-county="Benson" x="228" y="20" width="96" height="42"/>
+    <rect id="wtc-county-billings" class="wtc-county" data-county="Billings" x="332" y="20" width="96" height="42"/>
+    <rect id="wtc-county-bottineau" class="wtc-county" data-county="Bottineau" x="436" y="20" width="96" height="42"/>
+    <rect id="wtc-county-bowman" class="wtc-county" data-county="Bowman" x="540" y="20" width="96" height="42"/>
+    <rect id="wtc-county-burke" class="wtc-county" data-county="Burke" x="644" y="20" width="96" height="42"/>
+    <rect id="wtc-county-burleigh" class="wtc-county" data-county="Burleigh" x="748" y="20" width="96" height="42"/>
+    <rect id="wtc-county-cass" class="wtc-county" data-county="Cass" x="852" y="20" width="96" height="42"/>
+    <rect id="wtc-county-cavalier" class="wtc-county" data-county="Cavalier" x="956" y="20" width="96" height="42"/>
+
+    <rect id="wtc-county-dickey" class="wtc-county" data-county="Dickey" x="20" y="70" width="96" height="42"/>
+    <rect id="wtc-county-divide" class="wtc-county" data-county="Divide" x="124" y="70" width="96" height="42"/>
+    <rect id="wtc-county-dunn" class="wtc-county" data-county="Dunn" x="228" y="70" width="96" height="42"/>
+    <rect id="wtc-county-eddy" class="wtc-county" data-county="Eddy" x="332" y="70" width="96" height="42"/>
+    <rect id="wtc-county-emmons" class="wtc-county" data-county="Emmons" x="436" y="70" width="96" height="42"/>
+    <rect id="wtc-county-foster" class="wtc-county" data-county="Foster" x="540" y="70" width="96" height="42"/>
+    <rect id="wtc-county-golden-valley" class="wtc-county" data-county="Golden Valley" x="644" y="70" width="96" height="42"/>
+    <rect id="wtc-county-grand-forks" class="wtc-county" data-county="Grand Forks" x="748" y="70" width="96" height="42"/>
+    <rect id="wtc-county-grant" class="wtc-county" data-county="Grant" x="852" y="70" width="96" height="42"/>
+    <rect id="wtc-county-griggs" class="wtc-county" data-county="Griggs" x="956" y="70" width="96" height="42"/>
+
+    <rect id="wtc-county-hettinger" class="wtc-county" data-county="Hettinger" x="20" y="120" width="96" height="42"/>
+    <rect id="wtc-county-kidder" class="wtc-county" data-county="Kidder" x="124" y="120" width="96" height="42"/>
+    <rect id="wtc-county-lamoure" class="wtc-county" data-county="LaMoure" x="228" y="120" width="96" height="42"/>
+    <rect id="wtc-county-logan" class="wtc-county" data-county="Logan" x="332" y="120" width="96" height="42"/>
+    <rect id="wtc-county-mchenry" class="wtc-county" data-county="McHenry" x="436" y="120" width="96" height="42"/>
+    <rect id="wtc-county-mcintosh" class="wtc-county" data-county="McIntosh" x="540" y="120" width="96" height="42"/>
+    <rect id="wtc-county-mckenzie" class="wtc-county" data-county="McKenzie" x="644" y="120" width="96" height="42"/>
+    <rect id="wtc-county-mclean" class="wtc-county" data-county="McLean" x="748" y="120" width="96" height="42"/>
+    <rect id="wtc-county-mercer" class="wtc-county" data-county="Mercer" x="852" y="120" width="96" height="42"/>
+    <rect id="wtc-county-morton" class="wtc-county" data-county="Morton" x="956" y="120" width="96" height="42"/>
+
+    <rect id="wtc-county-mountrail" class="wtc-county" data-county="Mountrail" x="20" y="170" width="96" height="42"/>
+    <rect id="wtc-county-nelson" class="wtc-county" data-county="Nelson" x="124" y="170" width="96" height="42"/>
+    <rect id="wtc-county-oliver" class="wtc-county" data-county="Oliver" x="228" y="170" width="96" height="42"/>
+    <rect id="wtc-county-pembina" class="wtc-county" data-county="Pembina" x="332" y="170" width="96" height="42"/>
+    <rect id="wtc-county-pierce" class="wtc-county" data-county="Pierce" x="436" y="170" width="96" height="42"/>
+    <rect id="wtc-county-ramsey" class="wtc-county" data-county="Ramsey" x="540" y="170" width="96" height="42"/>
+    <rect id="wtc-county-ransom" class="wtc-county" data-county="Ransom" x="644" y="170" width="96" height="42"/>
+    <rect id="wtc-county-renville" class="wtc-county" data-county="Renville" x="748" y="170" width="96" height="42"/>
+    <rect id="wtc-county-richland" class="wtc-county" data-county="Richland" x="852" y="170" width="96" height="42"/>
+    <rect id="wtc-county-rolette" class="wtc-county" data-county="Rolette" x="956" y="170" width="96" height="42"/>
+
+    <rect id="wtc-county-sargent" class="wtc-county" data-county="Sargent" x="20" y="220" width="96" height="42"/>
+    <rect id="wtc-county-sheridan" class="wtc-county" data-county="Sheridan" x="124" y="220" width="96" height="42"/>
+    <rect id="wtc-county-sioux" class="wtc-county" data-county="Sioux" x="228" y="220" width="96" height="42"/>
+    <rect id="wtc-county-slope" class="wtc-county" data-county="Slope" x="332" y="220" width="96" height="42"/>
+    <rect id="wtc-county-stark" class="wtc-county" data-county="Stark" x="436" y="220" width="96" height="42"/>
+    <rect id="wtc-county-steele" class="wtc-county" data-county="Steele" x="540" y="220" width="96" height="42"/>
+    <rect id="wtc-county-stutsman" class="wtc-county" data-county="Stutsman" x="644" y="220" width="96" height="42"/>
+    <rect id="wtc-county-traill" class="wtc-county" data-county="Traill" x="748" y="220" width="96" height="42"/>
+    <rect id="wtc-county-walsh" class="wtc-county" data-county="Walsh" x="852" y="220" width="96" height="42"/>
+    <rect id="wtc-county-ward" class="wtc-county" data-county="Ward" x="956" y="220" width="96" height="42"/>
+
+    <rect id="wtc-county-wells" class="wtc-county" data-county="Wells" x="20" y="270" width="96" height="42"/>
+    <rect id="wtc-county-williams" class="wtc-county" data-county="Williams" x="124" y="270" width="96" height="42"/>
+  </g>
+</svg>

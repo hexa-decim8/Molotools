@@ -1,0 +1,45 @@
+<svg id="wtc-state-map-ga" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 520" role="img" aria-label="Georgia county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-bibb" class="wtc-county" data-county="Bibb" x="20" y="20" width="126" height="52"/>
+    <rect id="wtc-county-bulloch" class="wtc-county" data-county="Bulloch" x="156" y="20" width="126" height="52"/>
+    <rect id="wtc-county-burke" class="wtc-county" data-county="Burke" x="292" y="20" width="126" height="52"/>
+    <rect id="wtc-county-carroll" class="wtc-county" data-county="Carroll" x="428" y="20" width="126" height="52"/>
+    <rect id="wtc-county-chatham" class="wtc-county" data-county="Chatham" x="564" y="20" width="126" height="52"/>
+    <rect id="wtc-county-cherokee" class="wtc-county" data-county="Cherokee" x="700" y="20" width="126" height="52"/>
+    <rect id="wtc-county-clarke" class="wtc-county" data-county="Clarke" x="836" y="20" width="126" height="52"/>
+    <rect id="wtc-county-clayton" class="wtc-county" data-county="Clayton" x="972" y="20" width="126" height="52"/>
+
+    <rect id="wtc-county-cobb" class="wtc-county" data-county="Cobb" x="20" y="82" width="126" height="52"/>
+    <rect id="wtc-county-columbia" class="wtc-county" data-county="Columbia" x="156" y="82" width="126" height="52"/>
+    <rect id="wtc-county-coweta" class="wtc-county" data-county="Coweta" x="292" y="82" width="126" height="52"/>
+    <rect id="wtc-county-dekalb" class="wtc-county" data-county="DeKalb" x="428" y="82" width="126" height="52"/>
+    <rect id="wtc-county-dougherty" class="wtc-county" data-county="Dougherty" x="564" y="82" width="126" height="52"/>
+    <rect id="wtc-county-douglas" class="wtc-county" data-county="Douglas" x="700" y="82" width="126" height="52"/>
+    <rect id="wtc-county-effingham" class="wtc-county" data-county="Effingham" x="836" y="82" width="126" height="52"/>
+    <rect id="wtc-county-fayette" class="wtc-county" data-county="Fayette" x="972" y="82" width="126" height="52"/>
+
+    <rect id="wtc-county-floyd" class="wtc-county" data-county="Floyd" x="20" y="144" width="126" height="52"/>
+    <rect id="wtc-county-forsyth" class="wtc-county" data-county="Forsyth" x="156" y="144" width="126" height="52"/>
+    <rect id="wtc-county-fulton" class="wtc-county" data-county="Fulton" x="292" y="144" width="126" height="52"/>
+    <rect id="wtc-county-glynn" class="wtc-county" data-county="Glynn" x="428" y="144" width="126" height="52"/>
+    <rect id="wtc-county-gwinnett" class="wtc-county" data-county="Gwinnett" x="564" y="144" width="126" height="52"/>
+    <rect id="wtc-county-hall" class="wtc-county" data-county="Hall" x="700" y="144" width="126" height="52"/>
+    <rect id="wtc-county-henry" class="wtc-county" data-county="Henry" x="836" y="144" width="126" height="52"/>
+    <rect id="wtc-county-houston" class="wtc-county" data-county="Houston" x="972" y="144" width="126" height="52"/>
+
+    <rect id="wtc-county-liberty" class="wtc-county" data-county="Liberty" x="20" y="206" width="126" height="52"/>
+    <rect id="wtc-county-lowndes" class="wtc-county" data-county="Lowndes" x="156" y="206" width="126" height="52"/>
+    <rect id="wtc-county-muscogee" class="wtc-county" data-county="Muscogee" x="292" y="206" width="126" height="52"/>
+    <rect id="wtc-county-newton" class="wtc-county" data-county="Newton" x="428" y="206" width="126" height="52"/>
+    <rect id="wtc-county-paulding" class="wtc-county" data-county="Paulding" x="564" y="206" width="126" height="52"/>
+    <rect id="wtc-county-richmond" class="wtc-county" data-county="Richmond" x="700" y="206" width="126" height="52"/>
+    <rect id="wtc-county-spalding" class="wtc-county" data-county="Spalding" x="836" y="206" width="126" height="52"/>
+    <rect id="wtc-county-thomas" class="wtc-county" data-county="Thomas" x="972" y="206" width="126" height="52"/>
+
+    <rect id="wtc-county-tift" class="wtc-county" data-county="Tift" x="20" y="268" width="126" height="52"/>
+    <rect id="wtc-county-toombs" class="wtc-county" data-county="Toombs" x="156" y="268" width="126" height="52"/>
+    <rect id="wtc-county-troup" class="wtc-county" data-county="Troup" x="292" y="268" width="126" height="52"/>
+    <rect id="wtc-county-walton" class="wtc-county" data-county="Walton" x="428" y="268" width="126" height="52"/>
+    <rect id="wtc-county-whitfield" class="wtc-county" data-county="Whitfield" x="564" y="268" width="126" height="52"/>
+  </g>
+</svg>

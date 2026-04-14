@@ -1,0 +1,67 @@
+<svg id="wtc-state-map-ca" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 620" role="img" aria-label="California county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-alameda" class="wtc-county" data-county="Alameda" x="20" y="20" width="96" height="42"/>
+    <rect id="wtc-county-alpine" class="wtc-county" data-county="Alpine" x="124" y="20" width="96" height="42"/>
+    <rect id="wtc-county-amador" class="wtc-county" data-county="Amador" x="228" y="20" width="96" height="42"/>
+    <rect id="wtc-county-butte" class="wtc-county" data-county="Butte" x="332" y="20" width="96" height="42"/>
+    <rect id="wtc-county-calaveras" class="wtc-county" data-county="Calaveras" x="436" y="20" width="96" height="42"/>
+    <rect id="wtc-county-colusa" class="wtc-county" data-county="Colusa" x="540" y="20" width="96" height="42"/>
+    <rect id="wtc-county-contra-costa" class="wtc-county" data-county="Contra Costa" x="644" y="20" width="96" height="42"/>
+    <rect id="wtc-county-del-norte" class="wtc-county" data-county="Del Norte" x="748" y="20" width="96" height="42"/>
+    <rect id="wtc-county-el-dorado" class="wtc-county" data-county="El Dorado" x="852" y="20" width="96" height="42"/>
+    <rect id="wtc-county-fresno" class="wtc-county" data-county="Fresno" x="956" y="20" width="96" height="42"/>
+
+    <rect id="wtc-county-glenn" class="wtc-county" data-county="Glenn" x="20" y="70" width="96" height="42"/>
+    <rect id="wtc-county-humboldt" class="wtc-county" data-county="Humboldt" x="124" y="70" width="96" height="42"/>
+    <rect id="wtc-county-imperial" class="wtc-county" data-county="Imperial" x="228" y="70" width="96" height="42"/>
+    <rect id="wtc-county-inyo" class="wtc-county" data-county="Inyo" x="332" y="70" width="96" height="42"/>
+    <rect id="wtc-county-kern" class="wtc-county" data-county="Kern" x="436" y="70" width="96" height="42"/>
+    <rect id="wtc-county-kings" class="wtc-county" data-county="Kings" x="540" y="70" width="96" height="42"/>
+    <rect id="wtc-county-lake" class="wtc-county" data-county="Lake" x="644" y="70" width="96" height="42"/>
+    <rect id="wtc-county-lassen" class="wtc-county" data-county="Lassen" x="748" y="70" width="96" height="42"/>
+    <rect id="wtc-county-los-angeles" class="wtc-county" data-county="Los Angeles" x="852" y="70" width="96" height="42"/>
+    <rect id="wtc-county-madera" class="wtc-county" data-county="Madera" x="956" y="70" width="96" height="42"/>
+
+    <rect id="wtc-county-marin" class="wtc-county" data-county="Marin" x="20" y="120" width="96" height="42"/>
+    <rect id="wtc-county-mariposa" class="wtc-county" data-county="Mariposa" x="124" y="120" width="96" height="42"/>
+    <rect id="wtc-county-mendocino" class="wtc-county" data-county="Mendocino" x="228" y="120" width="96" height="42"/>
+    <rect id="wtc-county-merced" class="wtc-county" data-county="Merced" x="332" y="120" width="96" height="42"/>
+    <rect id="wtc-county-modoc" class="wtc-county" data-county="Modoc" x="436" y="120" width="96" height="42"/>
+    <rect id="wtc-county-mono" class="wtc-county" data-county="Mono" x="540" y="120" width="96" height="42"/>
+    <rect id="wtc-county-monterey" class="wtc-county" data-county="Monterey" x="644" y="120" width="96" height="42"/>
+    <rect id="wtc-county-napa" class="wtc-county" data-county="Napa" x="748" y="120" width="96" height="42"/>
+    <rect id="wtc-county-nevada" class="wtc-county" data-county="Nevada" x="852" y="120" width="96" height="42"/>
+    <rect id="wtc-county-orange" class="wtc-county" data-county="Orange" x="956" y="120" width="96" height="42"/>
+
+    <rect id="wtc-county-placer" class="wtc-county" data-county="Placer" x="20" y="170" width="96" height="42"/>
+    <rect id="wtc-county-plumas" class="wtc-county" data-county="Plumas" x="124" y="170" width="96" height="42"/>
+    <rect id="wtc-county-riverside" class="wtc-county" data-county="Riverside" x="228" y="170" width="96" height="42"/>
+    <rect id="wtc-county-sacramento" class="wtc-county" data-county="Sacramento" x="332" y="170" width="96" height="42"/>
+    <rect id="wtc-county-san-benito" class="wtc-county" data-county="San Benito" x="436" y="170" width="96" height="42"/>
+    <rect id="wtc-county-san-bernardino" class="wtc-county" data-county="San Bernardino" x="540" y="170" width="96" height="42"/>
+    <rect id="wtc-county-san-diego" class="wtc-county" data-county="San Diego" x="644" y="170" width="96" height="42"/>
+    <rect id="wtc-county-san-francisco" class="wtc-county" data-county="San Francisco" x="748" y="170" width="96" height="42"/>
+    <rect id="wtc-county-san-joaquin" class="wtc-county" data-county="San Joaquin" x="852" y="170" width="96" height="42"/>
+    <rect id="wtc-county-san-luis-obispo" class="wtc-county" data-county="San Luis Obispo" x="956" y="170" width="96" height="42"/>
+
+    <rect id="wtc-county-san-mateo" class="wtc-county" data-county="San Mateo" x="20" y="220" width="96" height="42"/>
+    <rect id="wtc-county-santa-barbara" class="wtc-county" data-county="Santa Barbara" x="124" y="220" width="96" height="42"/>
+    <rect id="wtc-county-santa-clara" class="wtc-county" data-county="Santa Clara" x="228" y="220" width="96" height="42"/>
+    <rect id="wtc-county-santa-cruz" class="wtc-county" data-county="Santa Cruz" x="332" y="220" width="96" height="42"/>
+    <rect id="wtc-county-shasta" class="wtc-county" data-county="Shasta" x="436" y="220" width="96" height="42"/>
+    <rect id="wtc-county-sierra" class="wtc-county" data-county="Sierra" x="540" y="220" width="96" height="42"/>
+    <rect id="wtc-county-siskiyou" class="wtc-county" data-county="Siskiyou" x="644" y="220" width="96" height="42"/>
+    <rect id="wtc-county-solano" class="wtc-county" data-county="Solano" x="748" y="220" width="96" height="42"/>
+    <rect id="wtc-county-sonoma" class="wtc-county" data-county="Sonoma" x="852" y="220" width="96" height="42"/>
+    <rect id="wtc-county-stanislaus" class="wtc-county" data-county="Stanislaus" x="956" y="220" width="96" height="42"/>
+
+    <rect id="wtc-county-sutter" class="wtc-county" data-county="Sutter" x="20" y="270" width="96" height="42"/>
+    <rect id="wtc-county-tehama" class="wtc-county" data-county="Tehama" x="124" y="270" width="96" height="42"/>
+    <rect id="wtc-county-trinity" class="wtc-county" data-county="Trinity" x="228" y="270" width="96" height="42"/>
+    <rect id="wtc-county-tulare" class="wtc-county" data-county="Tulare" x="332" y="270" width="96" height="42"/>
+    <rect id="wtc-county-tuolumne" class="wtc-county" data-county="Tuolumne" x="436" y="270" width="96" height="42"/>
+    <rect id="wtc-county-ventura" class="wtc-county" data-county="Ventura" x="540" y="270" width="96" height="42"/>
+    <rect id="wtc-county-yolo" class="wtc-county" data-county="Yolo" x="644" y="270" width="96" height="42"/>
+    <rect id="wtc-county-yuba" class="wtc-county" data-county="Yuba" x="748" y="270" width="96" height="42"/>
+  </g>
+</svg>

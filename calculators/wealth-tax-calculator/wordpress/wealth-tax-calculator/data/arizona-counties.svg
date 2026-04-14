@@ -1,0 +1,19 @@
+<svg id="wtc-state-map-az" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 460" role="img" aria-label="Arizona county map">
+  <g class="wtc-counties">
+    <path id="wtc-county-mohave" class="wtc-county" data-county="Mohave" d="M34 74 L176 62 L206 186 L110 210 L40 170 Z"/>
+    <path id="wtc-county-coconino" class="wtc-county" data-county="Coconino" d="M178 58 L350 48 L366 184 L208 186 Z"/>
+    <path id="wtc-county-navajo" class="wtc-county" data-county="Navajo" d="M350 48 L474 58 L470 186 L366 184 Z"/>
+    <path id="wtc-county-apache" class="wtc-county" data-county="Apache" d="M474 58 L596 72 L592 198 L470 186 Z"/>
+    <path id="wtc-county-yavapai" class="wtc-county" data-county="Yavapai" d="M178 188 L304 186 L300 276 L184 286 L150 236 Z"/>
+    <path id="wtc-county-gila" class="wtc-county" data-county="Gila" d="M304 186 L406 188 L416 274 L300 276 Z"/>
+    <path id="wtc-county-greenlee" class="wtc-county" data-county="Greenlee" d="M494 196 L542 198 L546 262 L500 278 L486 236 Z"/>
+    <path id="wtc-county-graham" class="wtc-county" data-county="Graham" d="M438 196 L494 196 L500 278 L440 288 L420 238 Z"/>
+    <path id="wtc-county-la-paz" class="wtc-county" data-county="La Paz" d="M110 210 L182 286 L166 350 L98 344 L72 266 Z"/>
+    <path id="wtc-county-maricopa" class="wtc-county" data-county="Maricopa" d="M182 286 L300 276 L296 364 L196 390 L164 350 Z"/>
+    <path id="wtc-county-pinal" class="wtc-county" data-county="Pinal" d="M300 276 L416 274 L408 364 L296 364 Z"/>
+    <path id="wtc-county-yuma" class="wtc-county" data-county="Yuma" d="M36 300 L98 344 L92 412 L24 420 L14 344 Z"/>
+    <path id="wtc-county-pima" class="wtc-county" data-county="Pima" d="M196 390 L304 366 L298 434 L176 438 L126 410 Z"/>
+    <path id="wtc-county-santa-cruz" class="wtc-county" data-county="Santa Cruz" d="M304 366 L350 364 L352 428 L306 430 Z"/>
+    <path id="wtc-county-cochise" class="wtc-county" data-county="Cochise" d="M350 364 L472 352 L504 426 L352 428 Z"/>
+  </g>
+</svg>

@@ -1,0 +1,32 @@
+<svg id="wtc-state-map-tn" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 420" role="img" aria-label="Tennessee county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-anderson" class="wtc-county" data-county="Anderson" x="20" y="20" width="126" height="52"/>
+    <rect id="wtc-county-blount" class="wtc-county" data-county="Blount" x="156" y="20" width="126" height="52"/>
+    <rect id="wtc-county-bradley" class="wtc-county" data-county="Bradley" x="292" y="20" width="126" height="52"/>
+    <rect id="wtc-county-campbell" class="wtc-county" data-county="Campbell" x="428" y="20" width="126" height="52"/>
+    <rect id="wtc-county-carroll" class="wtc-county" data-county="Carroll" x="564" y="20" width="126" height="52"/>
+    <rect id="wtc-county-cheatham" class="wtc-county" data-county="Cheatham" x="700" y="20" width="126" height="52"/>
+    <rect id="wtc-county-davidson" class="wtc-county" data-county="Davidson" x="836" y="20" width="126" height="52"/>
+    <rect id="wtc-county-dyer" class="wtc-county" data-county="Dyer" x="972" y="20" width="126" height="52"/>
+
+    <rect id="wtc-county-gibson" class="wtc-county" data-county="Gibson" x="20" y="82" width="126" height="52"/>
+    <rect id="wtc-county-greene" class="wtc-county" data-county="Greene" x="156" y="82" width="126" height="52"/>
+    <rect id="wtc-county-hamilton" class="wtc-county" data-county="Hamilton" x="292" y="82" width="126" height="52"/>
+    <rect id="wtc-county-jefferson" class="wtc-county" data-county="Jefferson" x="428" y="82" width="126" height="52"/>
+    <rect id="wtc-county-knox" class="wtc-county" data-county="Knox" x="564" y="82" width="126" height="52"/>
+    <rect id="wtc-county-madison" class="wtc-county" data-county="Madison" x="700" y="82" width="126" height="52"/>
+    <rect id="wtc-county-maury" class="wtc-county" data-county="Maury" x="836" y="82" width="126" height="52"/>
+    <rect id="wtc-county-montgomery" class="wtc-county" data-county="Montgomery" x="972" y="82" width="126" height="52"/>
+
+    <rect id="wtc-county-putnam" class="wtc-county" data-county="Putnam" x="20" y="144" width="126" height="52"/>
+    <rect id="wtc-county-rutherford" class="wtc-county" data-county="Rutherford" x="156" y="144" width="126" height="52"/>
+    <rect id="wtc-county-sevier" class="wtc-county" data-county="Sevier" x="292" y="144" width="126" height="52"/>
+    <rect id="wtc-county-shelby" class="wtc-county" data-county="Shelby" x="428" y="144" width="126" height="52"/>
+    <rect id="wtc-county-sullivan" class="wtc-county" data-county="Sullivan" x="564" y="144" width="126" height="52"/>
+    <rect id="wtc-county-sumner" class="wtc-county" data-county="Sumner" x="700" y="144" width="126" height="52"/>
+    <rect id="wtc-county-washington" class="wtc-county" data-county="Washington" x="836" y="144" width="126" height="52"/>
+    <rect id="wtc-county-williamson" class="wtc-county" data-county="Williamson" x="972" y="144" width="126" height="52"/>
+
+    <rect id="wtc-county-wilson" class="wtc-county" data-county="Wilson" x="20" y="206" width="126" height="52"/>
+  </g>
+</svg>

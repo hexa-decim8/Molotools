@@ -1,0 +1,32 @@
+<svg id="wtc-state-map-il" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 420" role="img" aria-label="Illinois county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-adams" class="wtc-county" data-county="Adams" x="20" y="20" width="126" height="52"/>
+    <rect id="wtc-county-champaign" class="wtc-county" data-county="Champaign" x="156" y="20" width="126" height="52"/>
+    <rect id="wtc-county-christian" class="wtc-county" data-county="Christian" x="292" y="20" width="126" height="52"/>
+    <rect id="wtc-county-clinton" class="wtc-county" data-county="Clinton" x="428" y="20" width="126" height="52"/>
+    <rect id="wtc-county-cook" class="wtc-county" data-county="Cook" x="564" y="20" width="126" height="52"/>
+    <rect id="wtc-county-dupage" class="wtc-county" data-county="DuPage" x="700" y="20" width="126" height="52"/>
+    <rect id="wtc-county-fulton" class="wtc-county" data-county="Fulton" x="836" y="20" width="126" height="52"/>
+    <rect id="wtc-county-henry" class="wtc-county" data-county="Henry" x="972" y="20" width="126" height="52"/>
+
+    <rect id="wtc-county-kane" class="wtc-county" data-county="Kane" x="20" y="82" width="126" height="52"/>
+    <rect id="wtc-county-kankakee" class="wtc-county" data-county="Kankakee" x="156" y="82" width="126" height="52"/>
+    <rect id="wtc-county-kendall" class="wtc-county" data-county="Kendall" x="292" y="82" width="126" height="52"/>
+    <rect id="wtc-county-knox" class="wtc-county" data-county="Knox" x="428" y="82" width="126" height="52"/>
+    <rect id="wtc-county-lake" class="wtc-county" data-county="Lake" x="564" y="82" width="126" height="52"/>
+    <rect id="wtc-county-lasalle" class="wtc-county" data-county="LaSalle" x="700" y="82" width="126" height="52"/>
+    <rect id="wtc-county-madison" class="wtc-county" data-county="Madison" x="836" y="82" width="126" height="52"/>
+    <rect id="wtc-county-mchenry" class="wtc-county" data-county="McHenry" x="972" y="82" width="126" height="52"/>
+
+    <rect id="wtc-county-mclean" class="wtc-county" data-county="McLean" x="20" y="144" width="126" height="52"/>
+    <rect id="wtc-county-macon" class="wtc-county" data-county="Macon" x="156" y="144" width="126" height="52"/>
+    <rect id="wtc-county-peoria" class="wtc-county" data-county="Peoria" x="292" y="144" width="126" height="52"/>
+    <rect id="wtc-county-rock-island" class="wtc-county" data-county="Rock Island" x="428" y="144" width="126" height="52"/>
+    <rect id="wtc-county-sangamon" class="wtc-county" data-county="Sangamon" x="564" y="144" width="126" height="52"/>
+    <rect id="wtc-county-st-clair" class="wtc-county" data-county="St. Clair" x="700" y="144" width="126" height="52"/>
+    <rect id="wtc-county-vermilion" class="wtc-county" data-county="Vermilion" x="836" y="144" width="126" height="52"/>
+    <rect id="wtc-county-will" class="wtc-county" data-county="Will" x="972" y="144" width="126" height="52"/>
+
+    <rect id="wtc-county-winnebago" class="wtc-county" data-county="Winnebago" x="20" y="206" width="126" height="52"/>
+  </g>
+</svg>

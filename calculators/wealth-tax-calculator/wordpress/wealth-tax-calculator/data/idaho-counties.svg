@@ -1,0 +1,53 @@
+<svg id="wtc-state-map-id" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 620" role="img" aria-label="Idaho county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-boundary" class="wtc-county" data-county="Boundary" x="20" y="20" width="72" height="44"/>
+    <rect id="wtc-county-bonner" class="wtc-county" data-county="Bonner" x="96" y="20" width="72" height="44"/>
+    <rect id="wtc-county-kootenai" class="wtc-county" data-county="Kootenai" x="172" y="20" width="72" height="44"/>
+    <rect id="wtc-county-benewah" class="wtc-county" data-county="Benewah" x="248" y="20" width="72" height="44"/>
+    <rect id="wtc-county-shoshone" class="wtc-county" data-county="Shoshone" x="324" y="20" width="72" height="44"/>
+
+    <rect id="wtc-county-clearwater" class="wtc-county" data-county="Clearwater" x="20" y="68" width="72" height="44"/>
+    <rect id="wtc-county-lewis" class="wtc-county" data-county="Lewis" x="96" y="68" width="72" height="44"/>
+    <rect id="wtc-county-idaho" class="wtc-county" data-county="Idaho" x="172" y="68" width="72" height="44"/>
+    <rect id="wtc-county-lemhi" class="wtc-county" data-county="Lemhi" x="248" y="68" width="72" height="44"/>
+
+    <rect id="wtc-county-latah" class="wtc-county" data-county="Latah" x="20" y="116" width="72" height="44"/>
+    <rect id="wtc-county-nez-perce" class="wtc-county" data-county="Nez Perce" x="96" y="116" width="72" height="44"/>
+    <rect id="wtc-county-adams" class="wtc-county" data-county="Adams" x="172" y="116" width="72" height="44"/>
+    <rect id="wtc-county-valley" class="wtc-county" data-county="Valley" x="248" y="116" width="72" height="44"/>
+    <rect id="wtc-county-boise" class="wtc-county" data-county="Boise" x="324" y="116" width="72" height="44"/>
+    <rect id="wtc-county-custer" class="wtc-county" data-county="Custer" x="400" y="116" width="72" height="44"/>
+    <rect id="wtc-county-clark" class="wtc-county" data-county="Clark" x="476" y="116" width="72" height="44"/>
+    <rect id="wtc-county-fremont" class="wtc-county" data-county="Fremont" x="552" y="116" width="72" height="44"/>
+    <rect id="wtc-county-teton" class="wtc-county" data-county="Teton" x="628" y="116" width="72" height="44"/>
+
+    <rect id="wtc-county-washington" class="wtc-county" data-county="Washington" x="20" y="164" width="72" height="44"/>
+    <rect id="wtc-county-gem" class="wtc-county" data-county="Gem" x="96" y="164" width="72" height="44"/>
+    <rect id="wtc-county-canyon" class="wtc-county" data-county="Canyon" x="172" y="164" width="72" height="44"/>
+    <rect id="wtc-county-ada" class="wtc-county" data-county="Ada" x="248" y="164" width="72" height="44"/>
+    <rect id="wtc-county-elmore" class="wtc-county" data-county="Elmore" x="324" y="164" width="72" height="44"/>
+    <rect id="wtc-county-blaine" class="wtc-county" data-county="Blaine" x="400" y="164" width="72" height="44"/>
+    <rect id="wtc-county-butte" class="wtc-county" data-county="Butte" x="476" y="164" width="72" height="44"/>
+    <rect id="wtc-county-jefferson" class="wtc-county" data-county="Jefferson" x="552" y="164" width="72" height="44"/>
+    <rect id="wtc-county-madison" class="wtc-county" data-county="Madison" x="628" y="164" width="72" height="44"/>
+
+    <rect id="wtc-county-payette" class="wtc-county" data-county="Payette" x="20" y="212" width="72" height="44"/>
+    <rect id="wtc-county-owyhee" class="wtc-county" data-county="Owyhee" x="96" y="212" width="72" height="44"/>
+    <rect id="wtc-county-camas" class="wtc-county" data-county="Camas" x="172" y="212" width="72" height="44"/>
+    <rect id="wtc-county-lincoln" class="wtc-county" data-county="Lincoln" x="248" y="212" width="72" height="44"/>
+    <rect id="wtc-county-gooding" class="wtc-county" data-county="Gooding" x="324" y="212" width="72" height="44"/>
+    <rect id="wtc-county-minidoka" class="wtc-county" data-county="Minidoka" x="400" y="212" width="72" height="44"/>
+    <rect id="wtc-county-bingham" class="wtc-county" data-county="Bingham" x="476" y="212" width="72" height="44"/>
+    <rect id="wtc-county-bonneville" class="wtc-county" data-county="Bonneville" x="552" y="212" width="72" height="44"/>
+
+    <rect id="wtc-county-twin-falls" class="wtc-county" data-county="Twin Falls" x="172" y="260" width="72" height="44"/>
+    <rect id="wtc-county-jerome" class="wtc-county" data-county="Jerome" x="248" y="260" width="72" height="44"/>
+    <rect id="wtc-county-cassia" class="wtc-county" data-county="Cassia" x="324" y="260" width="72" height="44"/>
+    <rect id="wtc-county-power" class="wtc-county" data-county="Power" x="400" y="260" width="72" height="44"/>
+    <rect id="wtc-county-bannock" class="wtc-county" data-county="Bannock" x="476" y="260" width="72" height="44"/>
+    <rect id="wtc-county-caribou" class="wtc-county" data-county="Caribou" x="552" y="260" width="72" height="44"/>
+    <rect id="wtc-county-bear-lake" class="wtc-county" data-county="Bear Lake" x="628" y="260" width="72" height="44"/>
+    <rect id="wtc-county-franklin" class="wtc-county" data-county="Franklin" x="704" y="260" width="72" height="44"/>
+    <rect id="wtc-county-oneida" class="wtc-county" data-county="Oneida" x="780" y="260" width="72" height="44"/>
+  </g>
+</svg>

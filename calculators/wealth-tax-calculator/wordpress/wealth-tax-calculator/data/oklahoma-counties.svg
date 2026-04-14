@@ -1,0 +1,27 @@
+<svg id="wtc-state-map-ok" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 420" role="img" aria-label="Oklahoma county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-canadian" class="wtc-county" data-county="Canadian" x="20" y="20" width="126" height="52"/>
+    <rect id="wtc-county-cleveland" class="wtc-county" data-county="Cleveland" x="156" y="20" width="126" height="52"/>
+    <rect id="wtc-county-comanche" class="wtc-county" data-county="Comanche" x="292" y="20" width="126" height="52"/>
+    <rect id="wtc-county-creek" class="wtc-county" data-county="Creek" x="428" y="20" width="126" height="52"/>
+    <rect id="wtc-county-garfield" class="wtc-county" data-county="Garfield" x="564" y="20" width="126" height="52"/>
+    <rect id="wtc-county-grady" class="wtc-county" data-county="Grady" x="700" y="20" width="126" height="52"/>
+    <rect id="wtc-county-kay" class="wtc-county" data-county="Kay" x="836" y="20" width="126" height="52"/>
+    <rect id="wtc-county-le-flore" class="wtc-county" data-county="Le Flore" x="972" y="20" width="126" height="52"/>
+
+    <rect id="wtc-county-lincoln" class="wtc-county" data-county="Lincoln" x="20" y="82" width="126" height="52"/>
+    <rect id="wtc-county-logan" class="wtc-county" data-county="Logan" x="156" y="82" width="126" height="52"/>
+    <rect id="wtc-county-mcclain" class="wtc-county" data-county="McClain" x="292" y="82" width="126" height="52"/>
+    <rect id="wtc-county-muskogee" class="wtc-county" data-county="Muskogee" x="428" y="82" width="126" height="52"/>
+    <rect id="wtc-county-oklahoma" class="wtc-county" data-county="Oklahoma" x="564" y="82" width="126" height="52"/>
+    <rect id="wtc-county-osage" class="wtc-county" data-county="Osage" x="700" y="82" width="126" height="52"/>
+    <rect id="wtc-county-ottawa" class="wtc-county" data-county="Ottawa" x="836" y="82" width="126" height="52"/>
+    <rect id="wtc-county-payne" class="wtc-county" data-county="Payne" x="972" y="82" width="126" height="52"/>
+
+    <rect id="wtc-county-pottawatomie" class="wtc-county" data-county="Pottawatomie" x="20" y="144" width="126" height="52"/>
+    <rect id="wtc-county-rogers" class="wtc-county" data-county="Rogers" x="156" y="144" width="126" height="52"/>
+    <rect id="wtc-county-sequoyah" class="wtc-county" data-county="Sequoyah" x="292" y="144" width="126" height="52"/>
+    <rect id="wtc-county-tulsa" class="wtc-county" data-county="Tulsa" x="428" y="144" width="126" height="52"/>
+    <rect id="wtc-county-wagoner" class="wtc-county" data-county="Wagoner" x="564" y="144" width="126" height="52"/>
+  </g>
+</svg>

@@ -1,0 +1,18 @@
+<svg id="wtc-state-map-ma" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 280" role="img" aria-label="Massachusetts county map">
+  <g class="wtc-counties">
+    <path id="wtc-county-berkshire" class="wtc-county" data-county="Berkshire" d="M22 70 L96 62 L114 148 L48 176 L16 120 Z"/>
+    <path id="wtc-county-franklin" class="wtc-county" data-county="Franklin" d="M98 56 L178 52 L194 112 L126 132 Z"/>
+    <path id="wtc-county-hampshire" class="wtc-county" data-county="Hampshire" d="M96 132 L172 122 L180 178 L112 196 L88 154 Z"/>
+    <path id="wtc-county-hampden" class="wtc-county" data-county="Hampden" d="M94 196 L154 186 L166 246 L104 258 L76 220 Z"/>
+    <path id="wtc-county-worcester" class="wtc-county" data-county="Worcester" d="M178 92 L308 80 L326 176 L198 198 L172 126 Z"/>
+    <path id="wtc-county-middlesex" class="wtc-county" data-county="Middlesex" d="M310 70 L414 62 L434 116 L342 136 Z"/>
+    <path id="wtc-county-essex" class="wtc-county" data-county="Essex" d="M414 58 L520 52 L548 94 L500 132 L434 114 Z"/>
+    <path id="wtc-county-suffolk" class="wtc-county" data-county="Suffolk" d="M438 126 L470 122 L476 146 L446 158 Z"/>
+    <path id="wtc-county-norfolk" class="wtc-county" data-county="Norfolk" d="M392 130 L438 126 L448 176 L396 190 L372 154 Z"/>
+    <path id="wtc-county-bristol" class="wtc-county" data-county="Bristol" d="M334 178 L398 188 L412 246 L342 258 L314 220 Z"/>
+    <path id="wtc-county-plymouth" class="wtc-county" data-county="Plymouth" d="M414 172 L482 160 L500 238 L432 252 L404 202 Z"/>
+    <path id="wtc-county-barnstable" class="wtc-county" data-county="Barnstable" d="M504 206 L600 214 L596 244 L502 236 Z"/>
+    <path id="wtc-county-dukes" class="wtc-county" data-county="Dukes" d="M520 250 L560 252 L556 272 L518 270 Z"/>
+    <path id="wtc-county-nantucket" class="wtc-county" data-county="Nantucket" d="M586 252 L608 256 L604 274 L582 270 Z"/>
+  </g>
+</svg>

@@ -1,0 +1,23 @@
+<svg id="wtc-state-map-ar" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 420" role="img" aria-label="Arkansas county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-baxter" class="wtc-county" data-county="Baxter" x="20" y="20" width="126" height="52"/>
+    <rect id="wtc-county-benton" class="wtc-county" data-county="Benton" x="156" y="20" width="126" height="52"/>
+    <rect id="wtc-county-boone" class="wtc-county" data-county="Boone" x="292" y="20" width="126" height="52"/>
+    <rect id="wtc-county-carroll" class="wtc-county" data-county="Carroll" x="428" y="20" width="126" height="52"/>
+    <rect id="wtc-county-craighead" class="wtc-county" data-county="Craighead" x="564" y="20" width="126" height="52"/>
+    <rect id="wtc-county-crittenden" class="wtc-county" data-county="Crittenden" x="700" y="20" width="126" height="52"/>
+    <rect id="wtc-county-faulkner" class="wtc-county" data-county="Faulkner" x="836" y="20" width="126" height="52"/>
+    <rect id="wtc-county-garland" class="wtc-county" data-county="Garland" x="972" y="20" width="126" height="52"/>
+
+    <rect id="wtc-county-jefferson" class="wtc-county" data-county="Jefferson" x="20" y="82" width="126" height="52"/>
+    <rect id="wtc-county-lonoke" class="wtc-county" data-county="Lonoke" x="156" y="82" width="126" height="52"/>
+    <rect id="wtc-county-miller" class="wtc-county" data-county="Miller" x="292" y="82" width="126" height="52"/>
+    <rect id="wtc-county-mississippi" class="wtc-county" data-county="Mississippi" x="428" y="82" width="126" height="52"/>
+    <rect id="wtc-county-pulaski" class="wtc-county" data-county="Pulaski" x="564" y="82" width="126" height="52"/>
+    <rect id="wtc-county-saline" class="wtc-county" data-county="Saline" x="700" y="82" width="126" height="52"/>
+    <rect id="wtc-county-sebastian" class="wtc-county" data-county="Sebastian" x="836" y="82" width="126" height="52"/>
+    <rect id="wtc-county-washington" class="wtc-county" data-county="Washington" x="972" y="82" width="126" height="52"/>
+
+    <rect id="wtc-county-white" class="wtc-county" data-county="White" x="20" y="144" width="126" height="52"/>
+  </g>
+</svg>

@@ -1,0 +1,23 @@
+<svg id="wtc-state-map-ks" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 420" role="img" aria-label="Kansas county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-barton" class="wtc-county" data-county="Barton" x="20" y="20" width="126" height="52"/>
+    <rect id="wtc-county-butler" class="wtc-county" data-county="Butler" x="156" y="20" width="126" height="52"/>
+    <rect id="wtc-county-crawford" class="wtc-county" data-county="Crawford" x="292" y="20" width="126" height="52"/>
+    <rect id="wtc-county-douglas" class="wtc-county" data-county="Douglas" x="428" y="20" width="126" height="52"/>
+    <rect id="wtc-county-finney" class="wtc-county" data-county="Finney" x="564" y="20" width="126" height="52"/>
+    <rect id="wtc-county-ford" class="wtc-county" data-county="Ford" x="700" y="20" width="126" height="52"/>
+    <rect id="wtc-county-geary" class="wtc-county" data-county="Geary" x="836" y="20" width="126" height="52"/>
+    <rect id="wtc-county-johnson" class="wtc-county" data-county="Johnson" x="972" y="20" width="126" height="52"/>
+
+    <rect id="wtc-county-leavenworth" class="wtc-county" data-county="Leavenworth" x="20" y="82" width="126" height="52"/>
+    <rect id="wtc-county-lyon" class="wtc-county" data-county="Lyon" x="156" y="82" width="126" height="52"/>
+    <rect id="wtc-county-miami" class="wtc-county" data-county="Miami" x="292" y="82" width="126" height="52"/>
+    <rect id="wtc-county-riley" class="wtc-county" data-county="Riley" x="428" y="82" width="126" height="52"/>
+    <rect id="wtc-county-saline" class="wtc-county" data-county="Saline" x="564" y="82" width="126" height="52"/>
+    <rect id="wtc-county-sedgwick" class="wtc-county" data-county="Sedgwick" x="700" y="82" width="126" height="52"/>
+    <rect id="wtc-county-shawnee" class="wtc-county" data-county="Shawnee" x="836" y="82" width="126" height="52"/>
+    <rect id="wtc-county-sumner" class="wtc-county" data-county="Sumner" x="972" y="82" width="126" height="52"/>
+
+    <rect id="wtc-county-wyandotte" class="wtc-county" data-county="Wyandotte" x="20" y="144" width="126" height="52"/>
+  </g>
+</svg>

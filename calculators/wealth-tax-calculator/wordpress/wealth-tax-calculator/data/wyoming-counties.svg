@@ -1,0 +1,30 @@
+<svg id="wtc-state-map-wy" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 420" role="img" aria-label="Wyoming county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-park" class="wtc-county" data-county="Park" x="20" y="20" width="90" height="54"/>
+    <rect id="wtc-county-big-horn" class="wtc-county" data-county="Big Horn" x="114" y="20" width="90" height="54"/>
+    <rect id="wtc-county-sheridan" class="wtc-county" data-county="Sheridan" x="208" y="20" width="90" height="54"/>
+    <rect id="wtc-county-crook" class="wtc-county" data-county="Crook" x="302" y="20" width="90" height="54"/>
+    <rect id="wtc-county-weston" class="wtc-county" data-county="Weston" x="396" y="20" width="90" height="54"/>
+    <rect id="wtc-county-campbell" class="wtc-county" data-county="Campbell" x="490" y="20" width="90" height="54"/>
+
+    <rect id="wtc-county-teton" class="wtc-county" data-county="Teton" x="20" y="78" width="90" height="54"/>
+    <rect id="wtc-county-hot-springs" class="wtc-county" data-county="Hot Springs" x="114" y="78" width="90" height="54"/>
+    <rect id="wtc-county-johnson" class="wtc-county" data-county="Johnson" x="208" y="78" width="90" height="54"/>
+    <rect id="wtc-county-washakie" class="wtc-county" data-county="Washakie" x="302" y="78" width="90" height="54"/>
+    <rect id="wtc-county-natrona" class="wtc-county" data-county="Natrona" x="396" y="78" width="90" height="54"/>
+    <rect id="wtc-county-converse" class="wtc-county" data-county="Converse" x="490" y="78" width="90" height="54"/>
+    <rect id="wtc-county-niobrara" class="wtc-county" data-county="Niobrara" x="584" y="78" width="90" height="54"/>
+
+    <rect id="wtc-county-lincoln" class="wtc-county" data-county="Lincoln" x="20" y="136" width="90" height="54"/>
+    <rect id="wtc-county-fremont" class="wtc-county" data-county="Fremont" x="114" y="136" width="90" height="54"/>
+    <rect id="wtc-county-sublette" class="wtc-county" data-county="Sublette" x="208" y="136" width="90" height="54"/>
+    <rect id="wtc-county-sweetwater" class="wtc-county" data-county="Sweetwater" x="302" y="136" width="90" height="54"/>
+    <rect id="wtc-county-carbon" class="wtc-county" data-county="Carbon" x="396" y="136" width="90" height="54"/>
+    <rect id="wtc-county-albany" class="wtc-county" data-county="Albany" x="490" y="136" width="90" height="54"/>
+
+    <rect id="wtc-county-uinta" class="wtc-county" data-county="Uinta" x="20" y="194" width="90" height="54"/>
+    <rect id="wtc-county-goshen" class="wtc-county" data-county="Goshen" x="584" y="136" width="90" height="54"/>
+    <rect id="wtc-county-platte" class="wtc-county" data-county="Platte" x="584" y="194" width="90" height="54"/>
+    <rect id="wtc-county-laramie" class="wtc-county" data-county="Laramie" x="490" y="194" width="90" height="54"/>
+  </g>
+</svg>

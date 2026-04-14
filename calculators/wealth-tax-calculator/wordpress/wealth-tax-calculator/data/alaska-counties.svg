@@ -1,0 +1,31 @@
+<svg id="wtc-state-map-ak" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 420" role="img" aria-label="Alaska county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-aleutians-east" class="wtc-county" data-county="Aleutians East" x="20" y="20" width="126" height="52"/>
+    <rect id="wtc-county-aleutians-west" class="wtc-county" data-county="Aleutians West" x="156" y="20" width="126" height="52"/>
+    <rect id="wtc-county-anchorage" class="wtc-county" data-county="Anchorage" x="292" y="20" width="126" height="52"/>
+    <rect id="wtc-county-bethel" class="wtc-county" data-county="Bethel" x="428" y="20" width="126" height="52"/>
+    <rect id="wtc-county-bristol-bay" class="wtc-county" data-county="Bristol Bay" x="564" y="20" width="126" height="52"/>
+    <rect id="wtc-county-denali" class="wtc-county" data-county="Denali" x="700" y="20" width="126" height="52"/>
+    <rect id="wtc-county-dillingham" class="wtc-county" data-county="Dillingham" x="836" y="20" width="126" height="52"/>
+    <rect id="wtc-county-fairbanks-north-star" class="wtc-county" data-county="Fairbanks North Star" x="972" y="20" width="126" height="52"/>
+
+    <rect id="wtc-county-haines" class="wtc-county" data-county="Haines" x="20" y="82" width="126" height="52"/>
+    <rect id="wtc-county-juneau" class="wtc-county" data-county="Juneau" x="156" y="82" width="126" height="52"/>
+    <rect id="wtc-county-kenai-peninsula" class="wtc-county" data-county="Kenai Peninsula" x="292" y="82" width="126" height="52"/>
+    <rect id="wtc-county-ketchikan-gateway" class="wtc-county" data-county="Ketchikan Gateway" x="428" y="82" width="126" height="52"/>
+    <rect id="wtc-county-kodiak-island" class="wtc-county" data-county="Kodiak Island" x="564" y="82" width="126" height="52"/>
+    <rect id="wtc-county-kusilvak" class="wtc-county" data-county="Kusilvak" x="700" y="82" width="126" height="52"/>
+    <rect id="wtc-county-matanuska-susitna" class="wtc-county" data-county="Matanuska-Susitna" x="836" y="82" width="126" height="52"/>
+    <rect id="wtc-county-nome" class="wtc-county" data-county="Nome" x="972" y="82" width="126" height="52"/>
+
+    <rect id="wtc-county-north-slope" class="wtc-county" data-county="North Slope" x="20" y="144" width="126" height="52"/>
+    <rect id="wtc-county-northwest-arctic" class="wtc-county" data-county="Northwest Arctic" x="156" y="144" width="126" height="52"/>
+    <rect id="wtc-county-sitka" class="wtc-county" data-county="Sitka" x="292" y="144" width="126" height="52"/>
+    <rect id="wtc-county-skagway" class="wtc-county" data-county="Skagway" x="428" y="144" width="126" height="52"/>
+    <rect id="wtc-county-southeast-fairbanks" class="wtc-county" data-county="Southeast Fairbanks" x="564" y="144" width="126" height="52"/>
+    <rect id="wtc-county-valdez-cordova" class="wtc-county" data-county="Valdez-Cordova" x="700" y="144" width="126" height="52"/>
+    <rect id="wtc-county-wrangell" class="wtc-county" data-county="Wrangell" x="836" y="144" width="126" height="52"/>
+    <rect id="wtc-county-yakutat" class="wtc-county" data-county="Yakutat" x="972" y="144" width="126" height="52"/>
+    <rect id="wtc-county-yukon-koyukuk" class="wtc-county" data-county="Yukon-Koyukuk" x="20" y="206" width="126" height="52"/>
+  </g>
+</svg>

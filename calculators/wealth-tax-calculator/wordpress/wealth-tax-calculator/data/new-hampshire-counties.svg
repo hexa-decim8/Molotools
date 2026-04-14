@@ -1,0 +1,14 @@
+<svg id="wtc-state-map-nh" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 520" role="img" aria-label="New Hampshire county map">
+  <g class="wtc-counties">
+    <path id="wtc-county-coos" class="wtc-county" data-county="Coos" d="M96 26 L242 30 L276 112 L234 162 L132 150 L86 84 Z"/>
+    <path id="wtc-county-grafton" class="wtc-county" data-county="Grafton" d="M60 158 L148 148 L182 216 L152 286 L88 280 L48 220 Z"/>
+    <path id="wtc-county-carroll" class="wtc-county" data-county="Carroll" d="M170 156 L242 164 L266 226 L226 258 L182 216 Z"/>
+    <path id="wtc-county-belknap" class="wtc-county" data-county="Belknap" d="M158 230 L212 238 L214 286 L166 300 L146 270 Z"/>
+    <path id="wtc-county-strafford" class="wtc-county" data-county="Strafford" d="M214 242 L262 248 L272 304 L228 332 L208 296 Z"/>
+    <path id="wtc-county-sullivan" class="wtc-county" data-county="Sullivan" d="M46 278 L104 286 L102 350 L58 362 L34 318 Z"/>
+    <path id="wtc-county-merrimack" class="wtc-county" data-county="Merrimack" d="M108 286 L168 302 L166 370 L106 388 L88 336 Z"/>
+    <path id="wtc-county-rockingham" class="wtc-county" data-county="Rockingham" d="M228 334 L278 306 L310 382 L284 444 L224 442 L206 378 Z"/>
+    <path id="wtc-county-hillsborough" class="wtc-county" data-county="Hillsborough" d="M110 390 L170 372 L208 388 L210 454 L142 478 L102 448 Z"/>
+    <path id="wtc-county-cheshire" class="wtc-county" data-county="Cheshire" d="M36 366 L104 352 L102 448 L40 468 L24 414 Z"/>
+  </g>
+</svg>

@@ -1,0 +1,33 @@
+<svg id="wtc-state-map-ut" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 620" role="img" aria-label="Utah county map">
+  <g class="wtc-counties">
+    <path id="wtc-county-box-elder" class="wtc-county" data-county="Box Elder" d="M24 20 L170 18 L178 108 L32 110 Z"/>
+    <path id="wtc-county-cache" class="wtc-county" data-county="Cache" d="M170 18 L256 20 L254 108 L178 108 Z"/>
+    <path id="wtc-county-rich" class="wtc-county" data-county="Rich" d="M256 20 L322 22 L320 106 L254 108 Z"/>
+    <path id="wtc-county-daggett" class="wtc-county" data-county="Daggett" d="M322 22 L392 24 L390 106 L320 106 Z"/>
+    <path id="wtc-county-weber" class="wtc-county" data-county="Weber" d="M98 110 L170 110 L170 176 L104 178 Z"/>
+    <path id="wtc-county-davis" class="wtc-county" data-county="Davis" d="M170 108 L232 108 L230 176 L170 176 Z"/>
+    <path id="wtc-county-morgan" class="wtc-county" data-county="Morgan" d="M232 108 L288 108 L286 176 L230 176 Z"/>
+    <path id="wtc-county-summit" class="wtc-county" data-county="Summit" d="M288 108 L360 108 L360 182 L286 176 Z"/>
+    <path id="wtc-county-tooele" class="wtc-county" data-county="Tooele" d="M24 110 L98 110 L104 230 L28 230 Z"/>
+    <path id="wtc-county-salt-lake" class="wtc-county" data-county="Salt Lake" d="M104 178 L178 176 L178 246 L106 248 Z"/>
+    <path id="wtc-county-wasatch" class="wtc-county" data-county="Wasatch" d="M178 176 L252 176 L252 252 L178 246 Z"/>
+    <path id="wtc-county-utah" class="wtc-county" data-county="Utah" d="M106 248 L188 246 L188 324 L106 326 Z"/>
+    <path id="wtc-county-juab" class="wtc-county" data-county="Juab" d="M106 326 L188 324 L188 400 L106 402 Z"/>
+    <path id="wtc-county-millard" class="wtc-county" data-county="Millard" d="M30 230 L106 230 L106 402 L30 404 Z"/>
+    <path id="wtc-county-beaver" class="wtc-county" data-county="Beaver" d="M106 402 L188 400 L188 468 L108 470 Z"/>
+    <path id="wtc-county-iron" class="wtc-county" data-county="Iron" d="M108 470 L188 468 L188 552 L106 554 Z"/>
+    <path id="wtc-county-washington" class="wtc-county" data-county="Washington" d="M30 500 L106 500 L106 584 L26 586 Z"/>
+    <path id="wtc-county-kane" class="wtc-county" data-county="Kane" d="M188 468 L286 468 L286 554 L188 552 Z"/>
+    <path id="wtc-county-garfield" class="wtc-county" data-county="Garfield" d="M188 390 L286 390 L286 468 L188 468 Z"/>
+    <path id="wtc-county-piute" class="wtc-county" data-county="Piute" d="M188 354 L246 354 L246 390 L188 390 Z"/>
+    <path id="wtc-county-sevier" class="wtc-county" data-county="Sevier" d="M246 326 L314 326 L314 390 L246 390 Z"/>
+    <path id="wtc-county-sanpete" class="wtc-county" data-county="Sanpete" d="M188 252 L272 252 L272 326 L188 326 Z"/>
+    <path id="wtc-county-carbon" class="wtc-county" data-county="Carbon" d="M272 252 L352 252 L352 326 L272 326 Z"/>
+    <path id="wtc-county-duchesne" class="wtc-county" data-county="Duchesne" d="M360 182 L448 184 L448 258 L352 258 Z"/>
+    <path id="wtc-county-uintah" class="wtc-county" data-county="Uintah" d="M448 182 L552 184 L550 264 L448 258 Z"/>
+    <path id="wtc-county-emery" class="wtc-county" data-county="Emery" d="M352 258 L438 258 L438 336 L352 336 Z"/>
+    <path id="wtc-county-grand" class="wtc-county" data-county="Grand" d="M438 258 L520 264 L520 340 L438 336 Z"/>
+    <path id="wtc-county-wayne" class="wtc-county" data-county="Wayne" d="M314 336 L392 336 L392 420 L314 420 Z"/>
+    <path id="wtc-county-san-juan" class="wtc-county" data-county="San Juan" d="M392 336 L586 342 L586 542 L392 536 Z"/>
+  </g>
+</svg>

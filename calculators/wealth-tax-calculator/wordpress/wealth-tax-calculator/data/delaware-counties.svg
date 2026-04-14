@@ -1,0 +1,7 @@
+<svg id="wtc-state-map-de" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 420" role="img" aria-label="Delaware county map">
+  <g class="wtc-counties">
+    <path id="wtc-county-new-castle" class="wtc-county" data-county="New Castle" d="M88 28 L185 28 L206 92 L180 124 L138 132 L96 120 L76 82 Z"/>
+    <path id="wtc-county-kent" class="wtc-county" data-county="Kent" d="M96 120 L138 132 L180 124 L198 188 L186 248 L126 262 L90 226 L86 172 Z"/>
+    <path id="wtc-county-sussex" class="wtc-county" data-county="Sussex" d="M90 226 L126 262 L186 248 L212 320 L194 392 L138 404 L82 368 L70 286 Z"/>
+  </g>
+</svg>

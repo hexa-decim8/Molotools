@@ -1,0 +1,34 @@
+<svg id="wtc-state-map-pa" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 420" role="img" aria-label="Pennsylvania county map">
+  <g class="wtc-counties">
+    <rect id="wtc-county-allegheny" class="wtc-county" data-county="Allegheny" x="20" y="20" width="126" height="52"/>
+    <rect id="wtc-county-beaver" class="wtc-county" data-county="Beaver" x="156" y="20" width="126" height="52"/>
+    <rect id="wtc-county-berks" class="wtc-county" data-county="Berks" x="292" y="20" width="126" height="52"/>
+    <rect id="wtc-county-blair" class="wtc-county" data-county="Blair" x="428" y="20" width="126" height="52"/>
+    <rect id="wtc-county-bucks" class="wtc-county" data-county="Bucks" x="564" y="20" width="126" height="52"/>
+    <rect id="wtc-county-cambria" class="wtc-county" data-county="Cambria" x="700" y="20" width="126" height="52"/>
+    <rect id="wtc-county-centre" class="wtc-county" data-county="Centre" x="836" y="20" width="126" height="52"/>
+    <rect id="wtc-county-chester" class="wtc-county" data-county="Chester" x="972" y="20" width="126" height="52"/>
+
+    <rect id="wtc-county-cumberland" class="wtc-county" data-county="Cumberland" x="20" y="82" width="126" height="52"/>
+    <rect id="wtc-county-dauphin" class="wtc-county" data-county="Dauphin" x="156" y="82" width="126" height="52"/>
+    <rect id="wtc-county-delaware" class="wtc-county" data-county="Delaware" x="292" y="82" width="126" height="52"/>
+    <rect id="wtc-county-erie" class="wtc-county" data-county="Erie" x="428" y="82" width="126" height="52"/>
+    <rect id="wtc-county-fayette" class="wtc-county" data-county="Fayette" x="564" y="82" width="126" height="52"/>
+    <rect id="wtc-county-franklin" class="wtc-county" data-county="Franklin" x="700" y="82" width="126" height="52"/>
+    <rect id="wtc-county-lackawanna" class="wtc-county" data-county="Lackawanna" x="836" y="82" width="126" height="52"/>
+    <rect id="wtc-county-lancaster" class="wtc-county" data-county="Lancaster" x="972" y="82" width="126" height="52"/>
+
+    <rect id="wtc-county-lehigh" class="wtc-county" data-county="Lehigh" x="20" y="144" width="126" height="52"/>
+    <rect id="wtc-county-luzerne" class="wtc-county" data-county="Luzerne" x="156" y="144" width="126" height="52"/>
+    <rect id="wtc-county-lycoming" class="wtc-county" data-county="Lycoming" x="292" y="144" width="126" height="52"/>
+    <rect id="wtc-county-mercer" class="wtc-county" data-county="Mercer" x="428" y="144" width="126" height="52"/>
+    <rect id="wtc-county-monroe" class="wtc-county" data-county="Monroe" x="564" y="144" width="126" height="52"/>
+    <rect id="wtc-county-montgomery" class="wtc-county" data-county="Montgomery" x="700" y="144" width="126" height="52"/>
+    <rect id="wtc-county-northampton" class="wtc-county" data-county="Northampton" x="836" y="144" width="126" height="52"/>
+    <rect id="wtc-county-philadelphia" class="wtc-county" data-county="Philadelphia" x="972" y="144" width="126" height="52"/>
+
+    <rect id="wtc-county-washington" class="wtc-county" data-county="Washington" x="20" y="206" width="126" height="52"/>
+    <rect id="wtc-county-westmoreland" class="wtc-county" data-county="Westmoreland" x="156" y="206" width="126" height="52"/>
+    <rect id="wtc-county-york" class="wtc-county" data-county="York" x="292" y="206" width="126" height="52"/>
+  </g>
+</svg>
