@@ -638,6 +638,27 @@ class WTC_Policy_Analytics {
         return max( 7, min( 365, $days ) );
     }
 
+    public function get_frontend_popularity_summary() {
+        if ( ! $this->is_enabled() ) {
+            return array(
+                'enabled_rows'  => array(),
+                'top_rank_rows' => array(),
+            );
+        }
+
+        $analytics_data = get_option( WTC_ANALYTICS_OPTION_KEY, array() );
+        if ( ! is_array( $analytics_data ) ) {
+            $analytics_data = array();
+        }
+
+        $summary = $this->build_summary( $analytics_data );
+
+        return array(
+            'enabled_rows'  => isset( $summary['enabled_rows'] ) && is_array( $summary['enabled_rows'] ) ? $summary['enabled_rows'] : array(),
+            'top_rank_rows' => isset( $summary['top_rank_rows'] ) && is_array( $summary['top_rank_rows'] ) ? $summary['top_rank_rows'] : array(),
+        );
+    }
+
     public function register_settings() {
         register_setting( 'wtc_analytics_settings', WTC_ANALYTICS_ENABLED_OPTION, array( $this, 'sanitize_checkbox_flag' ) );
         register_setting( 'wtc_analytics_settings', WTC_ANALYTICS_GEO_OPTION, array( $this, 'sanitize_checkbox_flag' ) );
@@ -1766,6 +1787,7 @@ class Billionaire_Wealth_Tax_Calculator {
      */
     public function enqueue_assets() {
         global $post;
+        global $wtc_policy_analytics;
 
         if ( ! is_a( $post, 'WP_Post' ) || ! has_shortcode( $post->post_content, 'billionaire_wealth_tax' ) ) {
             return;
@@ -1806,6 +1828,15 @@ class Billionaire_Wealth_Tax_Calculator {
         );
 
         // Inject configuration and data into JavaScript
+        $frontend_popularity = array(
+            'enabled_rows'  => array(),
+            'top_rank_rows' => array(),
+        );
+
+        if ( isset( $wtc_policy_analytics ) && is_object( $wtc_policy_analytics ) && method_exists( $wtc_policy_analytics, 'get_frontend_popularity_summary' ) ) {
+            $frontend_popularity = $wtc_policy_analytics->get_frontend_popularity_summary();
+        }
+
         wp_localize_script(
             'wealth-tax-calculator-script',
             'wealthTaxConfig',
@@ -1813,6 +1844,7 @@ class Billionaire_Wealth_Tax_Calculator {
                 'billionaireWealth' => WTC_BILLIONAIRE_WEALTH,
                 'comparisons'       => $this->get_comparisons_data(),
                 'version'           => WTC_VERSION,
+                'popularity'        => $frontend_popularity,
                 'analytics'         => array(
                     'enabled'  => get_option( WTC_ANALYTICS_ENABLED_OPTION, '0' ) === '1',
                     'endpoint' => admin_url( 'admin-ajax.php' ),
