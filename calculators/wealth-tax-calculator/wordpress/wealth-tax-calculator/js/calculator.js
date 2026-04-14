@@ -32,6 +32,12 @@
         columns: [],
         initialized: false
     };
+    var analyticsController = {
+        enabled: false,
+        endpoint: '',
+        nonce: '',
+        sessionId: ''
+    };
     var requestFrame = typeof window.requestAnimationFrame === 'function'
         ? function (callback) { return window.requestAnimationFrame(callback); }
         : function (callback) { return window.setTimeout(callback, 16); };
@@ -233,6 +239,90 @@
         return Object.prototype.hasOwnProperty.call(selectedPolicyOptions, key)
             ? selectedPolicyOptions[key].amount
             : 0;
+    }
+
+    function initAnalyticsController() {
+        var config = (typeof wealthTaxConfig !== 'undefined' && wealthTaxConfig.analytics)
+            ? wealthTaxConfig.analytics
+            : null;
+
+        if (!config || !config.enabled || !config.endpoint || !config.nonce) {
+            analyticsController.enabled = false;
+            return;
+        }
+
+        analyticsController.enabled = true;
+        analyticsController.endpoint = String(config.endpoint);
+        analyticsController.nonce = String(config.nonce);
+        analyticsController.sessionId = 'wtc_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
+    }
+
+    function buildAnalyticsParams(eventType, policyKey, payload) {
+        var params = [
+            'action=wtc_track_policy_event',
+            'nonce=' + encodeURIComponent(analyticsController.nonce),
+            'event_type=' + encodeURIComponent(eventType),
+            'policy_key=' + encodeURIComponent(policyKey),
+            'mode=' + encodeURIComponent(currentMode),
+            'session=' + encodeURIComponent(analyticsController.sessionId),
+            'tax_rate=' + encodeURIComponent(getCurrentTaxRate().toFixed(1))
+        ];
+
+        if (payload && typeof payload.enabled !== 'undefined') {
+            params.push('enabled=' + encodeURIComponent(payload.enabled ? '1' : '0'));
+        }
+
+        if (payload && typeof payload.rank === 'number' && payload.rank > 0) {
+            params.push('rank=' + encodeURIComponent(String(Math.round(payload.rank))));
+        }
+
+        if (payload && payload.order && payload.order.length) {
+            params.push('order=' + encodeURIComponent(JSON.stringify(payload.order)));
+        }
+
+        return params.join('&');
+    }
+
+    function sendAnalyticsEvent(eventType, policyKey, payload) {
+        if (!analyticsController.enabled) {
+            return;
+        }
+
+        if (!policyKey || !/^[a-zA-Z]+:\d+$/.test(policyKey)) {
+            return;
+        }
+
+        var body = buildAnalyticsParams(eventType, policyKey, payload);
+
+        if (typeof window.fetch === 'function') {
+            window.fetch(analyticsController.endpoint, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+                },
+                body: body,
+                keepalive: true
+            }).catch(function () {
+                // Analytics should never break the calculator UX.
+            });
+            return;
+        }
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', analyticsController.endpoint, true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+        xhr.send(body);
+    }
+
+    function getActivePolicyKeysInOrder() {
+        var active = [];
+        for (var i = 0; i < selectedPoliciesOrder.length; i++) {
+            if (Object.prototype.hasOwnProperty.call(selectedPolicyOptions, selectedPoliciesOrder[i])) {
+                active.push(selectedPoliciesOrder[i]);
+            }
+        }
+        return active;
     }
 
 
@@ -1281,6 +1371,10 @@
         }
         selectedPoliciesOrder.splice(srcIdx, 1);
         selectedPoliciesOrder.splice(tgtIdx, 0, dragPolicyKey);
+        sendAnalyticsEvent('policy_reorder', dragPolicyKey, {
+            rank: tgtIdx + 1,
+            order: getActivePolicyKeysInOrder()
+        });
         syncSelectedPoliciesBox();
     }
 
@@ -1613,16 +1707,26 @@
         if (!item) return;
 
         var optionInputEl = row.querySelector('.policy-option-input');
+        var policyKey = getPolicyOptionKey(policy, index);
+        var isEnabledNow;
 
         if (isOptionEnabled(policy, index)) {
             disableOption(policy, index);
             row.classList.remove('is-enabled');
             if (optionInputEl) optionInputEl.checked = false;
+            isEnabledNow = false;
         } else {
             enableOption(policy, index, item);
             row.classList.add('is-enabled');
             if (optionInputEl) optionInputEl.checked = true;
+            isEnabledNow = true;
         }
+
+        sendAnalyticsEvent('policy_toggle', policyKey, {
+            enabled: isEnabledNow,
+            rank: isEnabledNow ? (selectedPoliciesOrder.indexOf(policyKey) + 1) : 0,
+            order: getActivePolicyKeysInOrder()
+        });
 
         updateAllocationSummary();
     }
@@ -1641,14 +1745,23 @@
         var policyExamples = POLICY_EXAMPLES[policy] || [];
         var item = policyExamples[parseInt(index, 10)];
         if (!item) return;
+        var policyKey = getPolicyOptionKey(policy, index);
+        var isEnabledNow = false;
 
         if (inputEl.checked) {
             enableOption(policy, index, item);
             row.classList.add('is-enabled');
+            isEnabledNow = true;
         } else {
             disableOption(policy, index);
             row.classList.remove('is-enabled');
         }
+
+        sendAnalyticsEvent('policy_toggle', policyKey, {
+            enabled: isEnabledNow,
+            rank: isEnabledNow ? (selectedPoliciesOrder.indexOf(policyKey) + 1) : 0,
+            order: getActivePolicyKeysInOrder()
+        });
 
         updateAllocationSummary();
     }
@@ -1927,6 +2040,7 @@
         var slider = getTaxRateInput();
         if (!slider) return; // Shortcode not present on this page.
 
+        initAnalyticsController();
         applyCompatibilityClasses();
         ensureMoneyPile();
         initTaxRateSlider();

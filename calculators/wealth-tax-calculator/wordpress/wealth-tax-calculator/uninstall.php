@@ -20,11 +20,16 @@ global $wpdb;
 $wpdb->query(
     "DELETE FROM {$wpdb->options} 
     WHERE option_name LIKE '_transient_wtc_comparisons_data_%' 
-    OR option_name LIKE '_transient_timeout_wtc_comparisons_data_%'"
+    OR option_name LIKE '_transient_timeout_wtc_comparisons_data_%'
+    OR option_name LIKE '_transient_wtc_geo_bucket_%'
+    OR option_name LIKE '_transient_timeout_wtc_geo_bucket_%'"
 );
 
-// Delete any plugin options if we add them in the future
-// delete_option( 'wtc_plugin_settings' );
+// Delete analytics options
+delete_option( 'wtc_policy_analytics_daily' );
+delete_option( 'wtc_analytics_enabled' );
+delete_option( 'wtc_analytics_geo_enabled' );
+delete_option( 'wtc_analytics_retention_days' );
 
 // Clear any cached data
 wp_cache_flush();

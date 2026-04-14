@@ -36,6 +36,10 @@ define( 'WTC_UPDATE_ERROR_TTL', 5 * MINUTE_IN_SECONDS );
 define( 'WTC_UPDATE_CRON_HOOK', 'wtc_run_scheduled_update_check' );
 define( 'WTC_UPDATE_CRON_SCHEDULE', 'wtc_every_five_minutes' );
 define( 'WTC_AUTO_INSTALL_LOCK_TTL', 5 * MINUTE_IN_SECONDS );
+define( 'WTC_ANALYTICS_OPTION_KEY', 'wtc_policy_analytics_daily' );
+define( 'WTC_ANALYTICS_ENABLED_OPTION', 'wtc_analytics_enabled' );
+define( 'WTC_ANALYTICS_GEO_OPTION', 'wtc_analytics_geo_enabled' );
+define( 'WTC_ANALYTICS_RETENTION_OPTION', 'wtc_analytics_retention_days' );
 
 // ---------------------------------------------------------------------------
 // Self-contained GitHub update checker — no extra plugins required.
@@ -570,6 +574,449 @@ if ( is_admin() ) {
     new WTC_Admin_Settings( $wtc_updater );
 }
 
+class WTC_Policy_Analytics {
+
+    public function __construct() {
+        add_action( 'admin_init', array( $this, 'register_settings' ) );
+        add_action( 'admin_menu', array( $this, 'add_analytics_submenu' ) );
+        add_action( 'admin_post_wtc_reset_analytics', array( $this, 'handle_reset_analytics' ) );
+        add_action( 'wp_ajax_wtc_track_policy_event', array( $this, 'track_policy_event' ) );
+        add_action( 'wp_ajax_nopriv_wtc_track_policy_event', array( $this, 'track_policy_event' ) );
+        add_action( WTC_UPDATE_CRON_HOOK, array( $this, 'prune_old_analytics_data' ) );
+    }
+
+    public function is_enabled() {
+        return get_option( WTC_ANALYTICS_ENABLED_OPTION, '0' ) === '1';
+    }
+
+    public function geo_enabled() {
+        return get_option( WTC_ANALYTICS_GEO_OPTION, '0' ) === '1';
+    }
+
+    public function get_retention_days() {
+        $days = (int) get_option( WTC_ANALYTICS_RETENTION_OPTION, 90 );
+        return max( 7, min( 365, $days ) );
+    }
+
+    public function register_settings() {
+        register_setting( 'wtc_analytics_settings', WTC_ANALYTICS_ENABLED_OPTION, array( $this, 'sanitize_checkbox_flag' ) );
+        register_setting( 'wtc_analytics_settings', WTC_ANALYTICS_GEO_OPTION, array( $this, 'sanitize_checkbox_flag' ) );
+        register_setting( 'wtc_analytics_settings', WTC_ANALYTICS_RETENTION_OPTION, array( $this, 'sanitize_retention_days' ) );
+    }
+
+    public function sanitize_checkbox_flag( $value ) {
+        return (string) $value === '1' ? '1' : '0';
+    }
+
+    public function sanitize_retention_days( $value ) {
+        $days = (int) $value;
+        if ( $days < 7 ) {
+            return 7;
+        }
+        if ( $days > 365 ) {
+            return 365;
+        }
+        return $days;
+    }
+
+    public function add_analytics_submenu() {
+        add_submenu_page(
+            'options-general.php',
+            __( 'Wealth Tax Analytics', 'wealth-tax-calculator' ),
+            __( 'Wealth Tax Analytics', 'wealth-tax-calculator' ),
+            'manage_options',
+            'wealth-tax-calculator-analytics',
+            array( $this, 'render_analytics_page' )
+        );
+    }
+
+    public function render_analytics_page() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+
+        $analytics_data = get_option( WTC_ANALYTICS_OPTION_KEY, array() );
+        if ( ! is_array( $analytics_data ) ) {
+            $analytics_data = array();
+        }
+
+        $summary = $this->build_summary( $analytics_data );
+        ?>
+        <div class="wrap">
+            <h1><?php esc_html_e( 'Wealth Tax Calculator Analytics', 'wealth-tax-calculator' ); ?></h1>
+
+            <div class="card" style="max-width: 920px; margin-top: 20px;">
+                <h2><?php esc_html_e( 'Tracking Settings', 'wealth-tax-calculator' ); ?></h2>
+                <form method="post" action="options.php">
+                    <?php settings_fields( 'wtc_analytics_settings' ); ?>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row"><?php esc_html_e( 'Enable Analytics', 'wealth-tax-calculator' ); ?></th>
+                            <td>
+                                <label>
+                                    <input type="hidden" name="<?php echo esc_attr( WTC_ANALYTICS_ENABLED_OPTION ); ?>" value="0" />
+                                    <input type="checkbox" name="<?php echo esc_attr( WTC_ANALYTICS_ENABLED_OPTION ); ?>" value="1" <?php checked( $this->is_enabled(), true ); ?> />
+                                    <?php esc_html_e( 'Track anonymous aggregate policy interactions', 'wealth-tax-calculator' ); ?>
+                                </label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><?php esc_html_e( 'Location Tracking', 'wealth-tax-calculator' ); ?></th>
+                            <td>
+                                <label>
+                                    <input type="hidden" name="<?php echo esc_attr( WTC_ANALYTICS_GEO_OPTION ); ?>" value="0" />
+                                    <input type="checkbox" name="<?php echo esc_attr( WTC_ANALYTICS_GEO_OPTION ); ?>" value="1" <?php checked( $this->geo_enabled(), true ); ?> />
+                                    <?php esc_html_e( 'Enable coarse IP-based Michigan region bucketing', 'wealth-tax-calculator' ); ?>
+                                </label>
+                                <p class="description"><?php esc_html_e( 'Turn this off to disable location tracking entirely. No raw IP is stored in analytics records.', 'wealth-tax-calculator' ); ?></p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><?php esc_html_e( 'Retention (days)', 'wealth-tax-calculator' ); ?></th>
+                            <td>
+                                <input type="number" min="7" max="365" name="<?php echo esc_attr( WTC_ANALYTICS_RETENTION_OPTION ); ?>" value="<?php echo esc_attr( $this->get_retention_days() ); ?>" />
+                            </td>
+                        </tr>
+                    </table>
+                    <?php submit_button( __( 'Save Analytics Settings', 'wealth-tax-calculator' ) ); ?>
+                </form>
+            </div>
+
+            <div class="card" style="max-width: 920px; margin-top: 20px;">
+                <h2><?php esc_html_e( 'Summary', 'wealth-tax-calculator' ); ?></h2>
+                <p><strong><?php esc_html_e( 'Tracked interactions:', 'wealth-tax-calculator' ); ?></strong> <?php echo esc_html( number_format_i18n( $summary['total_events'] ) ); ?></p>
+                <p><strong><?php esc_html_e( 'Days stored:', 'wealth-tax-calculator' ); ?></strong> <?php echo esc_html( number_format_i18n( $summary['days_count'] ) ); ?></p>
+            </div>
+
+            <div class="card" style="max-width: 920px; margin-top: 20px;">
+                <h2><?php esc_html_e( 'Most Selected Sub-Policies', 'wealth-tax-calculator' ); ?></h2>
+                <?php $this->render_simple_count_table( $summary['enabled_counts'], __( 'Sub-policy', 'wealth-tax-calculator' ), __( 'Enabled count', 'wealth-tax-calculator' ) ); ?>
+            </div>
+
+            <div class="card" style="max-width: 920px; margin-top: 20px;">
+                <h2><?php esc_html_e( 'Most Prioritized (Rank #1)', 'wealth-tax-calculator' ); ?></h2>
+                <?php $this->render_simple_count_table( $summary['top_rank_counts'], __( 'Sub-policy', 'wealth-tax-calculator' ), __( 'Times ranked #1', 'wealth-tax-calculator' ) ); ?>
+            </div>
+
+            <?php if ( $this->geo_enabled() ) : ?>
+                <div class="card" style="max-width: 920px; margin-top: 20px;">
+                    <h2><?php esc_html_e( 'Region Buckets', 'wealth-tax-calculator' ); ?></h2>
+                    <?php $this->render_simple_count_table( $summary['region_counts'], __( 'Region bucket', 'wealth-tax-calculator' ), __( 'Interactions', 'wealth-tax-calculator' ) ); ?>
+                </div>
+            <?php endif; ?>
+
+            <div class="card" style="max-width: 920px; margin-top: 20px;">
+                <h2><?php esc_html_e( 'Data Management', 'wealth-tax-calculator' ); ?></h2>
+                <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+                    <input type="hidden" name="action" value="wtc_reset_analytics" />
+                    <?php wp_nonce_field( 'wtc_reset_analytics' ); ?>
+                    <?php submit_button( __( 'Reset Analytics Data', 'wealth-tax-calculator' ), 'delete' ); ?>
+                </form>
+            </div>
+        </div>
+        <?php
+    }
+
+    private function render_simple_count_table( $counts, $col_one, $col_two ) {
+        if ( empty( $counts ) ) {
+            echo '<p>' . esc_html__( 'No data yet.', 'wealth-tax-calculator' ) . '</p>';
+            return;
+        }
+
+        $limit = 15;
+        $rows  = 0;
+
+        echo '<table class="widefat striped">';
+        echo '<thead><tr><th>' . esc_html( $col_one ) . '</th><th>' . esc_html( $col_two ) . '</th></tr></thead>';
+        echo '<tbody>';
+
+        foreach ( $counts as $key => $value ) {
+            if ( $rows >= $limit ) {
+                break;
+            }
+
+            echo '<tr>';
+            echo '<td>' . esc_html( $key ) . '</td>';
+            echo '<td>' . esc_html( number_format_i18n( (int) $value ) ) . '</td>';
+            echo '</tr>';
+            $rows++;
+        }
+
+        echo '</tbody>';
+        echo '</table>';
+    }
+
+    private function build_summary( $analytics_data ) {
+        $enabled_counts  = array();
+        $top_rank_counts = array();
+        $region_counts   = array();
+        $total_events    = 0;
+
+        foreach ( $analytics_data as $day ) {
+            if ( ! is_array( $day ) ) {
+                continue;
+            }
+
+            $total_events += isset( $day['event_total'] ) ? (int) $day['event_total'] : 0;
+
+            if ( ! empty( $day['policy_enabled'] ) && is_array( $day['policy_enabled'] ) ) {
+                foreach ( $day['policy_enabled'] as $policy_key => $count ) {
+                    if ( ! isset( $enabled_counts[ $policy_key ] ) ) {
+                        $enabled_counts[ $policy_key ] = 0;
+                    }
+                    $enabled_counts[ $policy_key ] += (int) $count;
+                }
+            }
+
+            if ( ! empty( $day['priority_rank_counts']['1'] ) && is_array( $day['priority_rank_counts']['1'] ) ) {
+                foreach ( $day['priority_rank_counts']['1'] as $policy_key => $count ) {
+                    if ( ! isset( $top_rank_counts[ $policy_key ] ) ) {
+                        $top_rank_counts[ $policy_key ] = 0;
+                    }
+                    $top_rank_counts[ $policy_key ] += (int) $count;
+                }
+            }
+
+            if ( ! empty( $day['regions'] ) && is_array( $day['regions'] ) ) {
+                foreach ( $day['regions'] as $bucket => $count ) {
+                    if ( ! isset( $region_counts[ $bucket ] ) ) {
+                        $region_counts[ $bucket ] = 0;
+                    }
+                    $region_counts[ $bucket ] += (int) $count;
+                }
+            }
+        }
+
+        arsort( $enabled_counts );
+        arsort( $top_rank_counts );
+        arsort( $region_counts );
+
+        return array(
+            'enabled_counts'  => $enabled_counts,
+            'top_rank_counts' => $top_rank_counts,
+            'region_counts'   => $region_counts,
+            'days_count'      => count( $analytics_data ),
+            'total_events'    => $total_events,
+        );
+    }
+
+    public function handle_reset_analytics() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( 'Unauthorized access' );
+        }
+
+        check_admin_referer( 'wtc_reset_analytics' );
+        delete_option( WTC_ANALYTICS_OPTION_KEY );
+
+        wp_redirect( add_query_arg(
+            array(
+                'page' => 'wealth-tax-calculator-analytics',
+                'reset' => '1',
+            ),
+            admin_url( 'options-general.php' )
+        ) );
+        exit;
+    }
+
+    public function track_policy_event() {
+        if ( ! $this->is_enabled() ) {
+            wp_send_json_error( array( 'message' => 'analytics-disabled' ), 403 );
+        }
+
+        $nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
+        if ( ! wp_verify_nonce( $nonce, 'wtc_track_policy_event' ) ) {
+            wp_send_json_error( array( 'message' => 'invalid-nonce' ), 403 );
+        }
+
+        $event_type = isset( $_POST['event_type'] ) ? sanitize_key( wp_unslash( $_POST['event_type'] ) ) : '';
+        $policy_key = isset( $_POST['policy_key'] ) ? sanitize_text_field( wp_unslash( $_POST['policy_key'] ) ) : '';
+        $mode       = isset( $_POST['mode'] ) ? sanitize_key( wp_unslash( $_POST['mode'] ) ) : 'advanced';
+        $enabled    = isset( $_POST['enabled'] ) ? sanitize_text_field( wp_unslash( $_POST['enabled'] ) ) : '';
+        $rank       = isset( $_POST['rank'] ) ? (int) $_POST['rank'] : 0;
+        $order_raw  = isset( $_POST['order'] ) ? wp_unslash( $_POST['order'] ) : '[]';
+
+        if ( ! in_array( $event_type, array( 'policy_toggle', 'policy_reorder' ), true ) ) {
+            wp_send_json_error( array( 'message' => 'invalid-event-type' ), 400 );
+        }
+
+        if ( ! preg_match( '/^[a-zA-Z]+:[0-9]+$/', $policy_key ) ) {
+            wp_send_json_error( array( 'message' => 'invalid-policy-key' ), 400 );
+        }
+
+        if ( ! in_array( $mode, array( 'basic', 'advanced' ), true ) ) {
+            $mode = 'advanced';
+        }
+
+        $order = json_decode( $order_raw, true );
+        if ( ! is_array( $order ) ) {
+            $order = array();
+        }
+
+        $today = gmdate( 'Y-m-d' );
+        $data  = get_option( WTC_ANALYTICS_OPTION_KEY, array() );
+        if ( ! is_array( $data ) ) {
+            $data = array();
+        }
+
+        if ( ! isset( $data[ $today ] ) || ! is_array( $data[ $today ] ) ) {
+            $data[ $today ] = array(
+                'event_total'           => 0,
+                'policy_enabled'        => array(),
+                'policy_disabled'       => array(),
+                'priority_rank_counts'  => array(),
+                'mode_counts'           => array(),
+                'regions'               => array(),
+            );
+        }
+
+        $day =& $data[ $today ];
+        $day['event_total'] = isset( $day['event_total'] ) ? (int) $day['event_total'] + 1 : 1;
+
+        if ( ! isset( $day['mode_counts'][ $mode ] ) ) {
+            $day['mode_counts'][ $mode ] = 0;
+        }
+        $day['mode_counts'][ $mode ] += 1;
+
+        if ( $event_type === 'policy_toggle' ) {
+            $is_enabled = $enabled === '1';
+            $target_key = $is_enabled ? 'policy_enabled' : 'policy_disabled';
+            if ( ! isset( $day[ $target_key ][ $policy_key ] ) ) {
+                $day[ $target_key ][ $policy_key ] = 0;
+            }
+            $day[ $target_key ][ $policy_key ] += 1;
+        }
+
+        if ( $event_type === 'policy_reorder' ) {
+            for ( $i = 0; $i < count( $order ); $i++ ) {
+                $rank_key = (string) ( $i + 1 );
+                $item_key = sanitize_text_field( $order[ $i ] );
+
+                if ( ! preg_match( '/^[a-zA-Z]+:[0-9]+$/', $item_key ) ) {
+                    continue;
+                }
+
+                if ( ! isset( $day['priority_rank_counts'][ $rank_key ] ) ) {
+                    $day['priority_rank_counts'][ $rank_key ] = array();
+                }
+                if ( ! isset( $day['priority_rank_counts'][ $rank_key ][ $item_key ] ) ) {
+                    $day['priority_rank_counts'][ $rank_key ][ $item_key ] = 0;
+                }
+                $day['priority_rank_counts'][ $rank_key ][ $item_key ] += 1;
+            }
+
+            if ( $rank > 0 ) {
+                $rank_key = (string) $rank;
+                if ( ! isset( $day['priority_rank_counts'][ $rank_key ] ) ) {
+                    $day['priority_rank_counts'][ $rank_key ] = array();
+                }
+                if ( ! isset( $day['priority_rank_counts'][ $rank_key ][ $policy_key ] ) ) {
+                    $day['priority_rank_counts'][ $rank_key ][ $policy_key ] = 0;
+                }
+                $day['priority_rank_counts'][ $rank_key ][ $policy_key ] += 1;
+            }
+        }
+
+        if ( $this->geo_enabled() ) {
+            $bucket = $this->get_region_bucket();
+            if ( ! isset( $day['regions'][ $bucket ] ) ) {
+                $day['regions'][ $bucket ] = 0;
+            }
+            $day['regions'][ $bucket ] += 1;
+        }
+
+        update_option( WTC_ANALYTICS_OPTION_KEY, $data, false );
+        wp_send_json_success( array( 'ok' => true ) );
+    }
+
+    private function get_client_ip() {
+        $candidates = array(
+            isset( $_SERVER['HTTP_CF_CONNECTING_IP'] ) ? $_SERVER['HTTP_CF_CONNECTING_IP'] : '',
+            isset( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : '',
+            isset( $_SERVER['REMOTE_ADDR'] ) ? $_SERVER['REMOTE_ADDR'] : '',
+        );
+
+        foreach ( $candidates as $candidate ) {
+            if ( ! $candidate ) {
+                continue;
+            }
+
+            $parts = explode( ',', $candidate );
+            $ip    = trim( $parts[0] );
+
+            if ( filter_var( $ip, FILTER_VALIDATE_IP ) ) {
+                return $ip;
+            }
+        }
+
+        return '';
+    }
+
+    private function get_region_bucket() {
+        $ip = $this->get_client_ip();
+        if ( ! $ip ) {
+            return 'unknown';
+        }
+
+        $cache_key = 'wtc_geo_bucket_' . md5( $ip );
+        $cached    = get_transient( $cache_key );
+        if ( false !== $cached ) {
+            return $cached;
+        }
+
+        $url      = 'https://ipapi.co/' . rawurlencode( $ip ) . '/json/';
+        $response = wp_remote_get(
+            $url,
+            array(
+                'timeout' => 2,
+                'headers' => array(
+                    'User-Agent' => 'WordPress/' . get_bloginfo( 'version' ),
+                ),
+            )
+        );
+
+        if ( is_wp_error( $response ) || wp_remote_retrieve_response_code( $response ) !== 200 ) {
+            set_transient( $cache_key, 'unknown', 12 * HOUR_IN_SECONDS );
+            return 'unknown';
+        }
+
+        $body = json_decode( wp_remote_retrieve_body( $response ), true );
+        if ( ! is_array( $body ) ) {
+            set_transient( $cache_key, 'unknown', 12 * HOUR_IN_SECONDS );
+            return 'unknown';
+        }
+
+        $country = isset( $body['country_code'] ) ? strtoupper( sanitize_text_field( $body['country_code'] ) ) : '';
+        $region  = isset( $body['region_code'] ) ? strtoupper( sanitize_text_field( $body['region_code'] ) ) : '';
+        $city    = isset( $body['city'] ) ? sanitize_title( sanitize_text_field( $body['city'] ) ) : '';
+
+        $bucket = 'outside_michigan';
+        if ( $country === 'US' && $region === 'MI' ) {
+            $bucket = $city ? 'mi_' . $city : 'mi_unknown';
+        }
+
+        set_transient( $cache_key, $bucket, 24 * HOUR_IN_SECONDS );
+        return $bucket;
+    }
+
+    public function prune_old_analytics_data() {
+        $data = get_option( WTC_ANALYTICS_OPTION_KEY, array() );
+        if ( ! is_array( $data ) || empty( $data ) ) {
+            return;
+        }
+
+        $cutoff = gmdate( 'Y-m-d', strtotime( '-' . $this->get_retention_days() . ' days' ) );
+        foreach ( $data as $date => $day_data ) {
+            if ( $date < $cutoff ) {
+                unset( $data[ $date ] );
+            }
+        }
+
+        update_option( WTC_ANALYTICS_OPTION_KEY, $data, false );
+    }
+}
+
+$wtc_policy_analytics = new WTC_Policy_Analytics();
+
 /**
  * Register the plugin's 5-minute WP-Cron schedule.
  */
@@ -721,6 +1168,11 @@ class Billionaire_Wealth_Tax_Calculator {
                 'billionaireWealth' => WTC_BILLIONAIRE_WEALTH,
                 'comparisons'       => $this->get_comparisons_data(),
                 'version'           => WTC_VERSION,
+                'analytics'         => array(
+                    'enabled'  => get_option( WTC_ANALYTICS_ENABLED_OPTION, '0' ) === '1',
+                    'endpoint' => admin_url( 'admin-ajax.php' ),
+                    'nonce'    => wp_create_nonce( 'wtc_track_policy_event' ),
+                ),
             )
         );
     }
@@ -863,6 +1315,8 @@ class Billionaire_Wealth_Tax_Calculator {
                             <span>10%</span>
                         </div>
                     </div>
+
+                    <div id="wtc-allocationTotalsBox" class="allocation-totals-box"></div>
 
                     <h3 class="wtc-step-heading">Step 2: Select Your Policies</h3>
                     <div class="policy-allocation-section">
