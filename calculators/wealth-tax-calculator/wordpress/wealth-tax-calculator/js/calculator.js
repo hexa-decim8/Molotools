@@ -1071,7 +1071,6 @@
     function updatePolicyAllocation() {
         var allocationResults = el('wtc-allocationResults');
         if (!allocationResults) return;
-        ensureAllocationTotalsBetweenSliderAndPolicy();
 
         if (selectedPolicies.length === 0) {
             selectedPolicyOptions = {};
