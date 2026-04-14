@@ -813,6 +813,13 @@ class WTC_Policy_Analytics {
                 </form>
             </div>
 
+            <div class="wtc-analytics-section-toggle" role="tablist" aria-label="<?php esc_attr_e( 'Analytics section scope', 'wealth-tax-calculator' ); ?>">
+                <button type="button" class="wtc-analytics-toggle-btn is-active" data-wtc-section-target="all" role="tab" aria-selected="true"><?php esc_html_e( 'All Responses', 'wealth-tax-calculator' ); ?></button>
+                <button type="button" class="wtc-analytics-toggle-btn" data-wtc-section-target="michigan" role="tab" aria-selected="false"><?php esc_html_e( 'Michigan Only', 'wealth-tax-calculator' ); ?></button>
+            </div>
+
+            <div class="wtc-analytics-section-panel is-active" data-wtc-section-panel="all">
+
             <div class="card wtc-analytics-card" style="max-width: 920px; margin-top: 20px;">
                 <h2><?php esc_html_e( 'Visual Summary', 'wealth-tax-calculator' ); ?></h2>
 
@@ -965,6 +972,8 @@ class WTC_Policy_Analytics {
                 <?php $this->render_cross_session_changes_table( isset( $summary['cross_session_changes'] ) ? $summary['cross_session_changes'] : array() ); ?>
             </div>
             <?php endif; ?>
+
+            </div>
 
             <div class="wtc-analytics-section-panel" data-wtc-section-panel="michigan" hidden>
 
