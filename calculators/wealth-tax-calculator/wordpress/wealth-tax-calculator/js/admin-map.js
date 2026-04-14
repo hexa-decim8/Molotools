@@ -4,6 +4,53 @@
 (function () {
     'use strict';
 
+    function initAnalyticsCharts() {
+        var toggleGroups = document.querySelectorAll('.wtc-analytics-chart-toggle');
+        if (!toggleGroups.length) {
+            return;
+        }
+
+        for (var i = 0; i < toggleGroups.length; i++) {
+            (function (toggleGroup) {
+                var chartCard = toggleGroup.closest('.wtc-analytics-chart-card');
+                if (!chartCard) {
+                    return;
+                }
+
+                var buttons = toggleGroup.querySelectorAll('.wtc-analytics-toggle-btn');
+                var panels = chartCard.querySelectorAll('.wtc-analytics-popularity-panel');
+                if (!buttons.length || !panels.length) {
+                    return;
+                }
+
+                function showPanel(target) {
+                    for (var p = 0; p < panels.length; p++) {
+                        var panel = panels[p];
+                        var isTarget = panel.getAttribute('data-wtc-panel') === target;
+                        panel.hidden = !isTarget;
+                        panel.classList.toggle('is-active', isTarget);
+                    }
+
+                    for (var b = 0; b < buttons.length; b++) {
+                        var button = buttons[b];
+                        var isActive = button.getAttribute('data-wtc-target') === target;
+                        button.classList.toggle('is-active', isActive);
+                        button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                    }
+                }
+
+                for (var b = 0; b < buttons.length; b++) {
+                    buttons[b].addEventListener('click', function () {
+                        var target = this.getAttribute('data-wtc-target');
+                        if (target) {
+                            showPanel(target);
+                        }
+                    });
+                }
+            }(toggleGroups[i]));
+        }
+    }
+
     var WTC_MI_CITIES = {
         'detroit': {x:463.6, y:491.1, label:'Detroit'},
         'grand-rapids': {x:305.1, y:440.2, label:'Grand Rapids'},
@@ -195,6 +242,8 @@
     var SVG_NS = 'http://www.w3.org/2000/svg';
 
     function init() {
+        initAnalyticsCharts();
+
         if (typeof window.wtcMichiganMap === 'undefined') {
             return;
         }

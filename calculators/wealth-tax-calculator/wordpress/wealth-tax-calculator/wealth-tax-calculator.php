@@ -3,7 +3,7 @@
  * Plugin Name: Billionaire Wealth Tax Calculator
  * Plugin URI:  https://github.com/hexa-decim8/Molotools
  * Description: Interactive calculator showing estimated 10-year tax revenue from billionaire wealth at rates of 1%–10%, based on the 2026 Forbes estimate of $8.2 trillion. Embed with [billionaire_wealth_tax].
- * Version:     1.3.20
+ * Version:     1.3.26
  * Author:      Molotools
  * License:     GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin version constant - update this when releasing new versions
-define( 'WTC_VERSION', '1.3.20' );
+define( 'WTC_VERSION', '1.3.26' );
 
 // Plugin constants
 define( 'WTC_PLUGIN_BASENAME', 'wealth-tax-calculator/wealth-tax-calculator.php' );
@@ -702,6 +702,9 @@ class WTC_Policy_Analytics {
         }
 
         $summary = $this->build_summary( $analytics_data );
+        $submitted_sessions = isset( $summary['total_events'] ) ? (int) $summary['total_events'] : 0;
+        $unique_sessions    = isset( $summary['unique_sessions'] ) ? (int) $summary['unique_sessions'] : 0;
+        $days_stored        = isset( $summary['days_count'] ) ? (int) $summary['days_count'] : 0;
         ?>
         <div class="wrap">
             <h1><?php esc_html_e( 'Wealth Tax Calculator Analytics', 'wealth-tax-calculator' ); ?></h1>
@@ -743,11 +746,100 @@ class WTC_Policy_Analytics {
                 </form>
             </div>
 
-            <div class="card" style="max-width: 920px; margin-top: 20px;">
-                <h2><?php esc_html_e( 'Summary', 'wealth-tax-calculator' ); ?></h2>
-                <p><strong><?php esc_html_e( 'Submitted sessions:', 'wealth-tax-calculator' ); ?></strong> <?php echo esc_html( number_format_i18n( $summary['total_events'] ) ); ?></p>
-                <p><strong><?php esc_html_e( 'Unique sessions:', 'wealth-tax-calculator' ); ?></strong> <?php echo esc_html( number_format_i18n( $summary['unique_sessions'] ) ); ?></p>
-                <p><strong><?php esc_html_e( 'Days stored:', 'wealth-tax-calculator' ); ?></strong> <?php echo esc_html( number_format_i18n( $summary['days_count'] ) ); ?></p>
+            <div class="card wtc-analytics-card" style="max-width: 920px; margin-top: 20px;">
+                <h2><?php esc_html_e( 'Visual Summary', 'wealth-tax-calculator' ); ?></h2>
+
+                <div class="wtc-analytics-stats" role="list" aria-label="<?php esc_attr_e( 'Analytics summary metrics', 'wealth-tax-calculator' ); ?>">
+                    <div class="wtc-analytics-stat" role="listitem">
+                        <span class="wtc-analytics-stat-label"><?php esc_html_e( 'Submitted Sessions', 'wealth-tax-calculator' ); ?></span>
+                        <span class="wtc-analytics-stat-value"><?php echo esc_html( number_format_i18n( $submitted_sessions ) ); ?></span>
+                    </div>
+                    <div class="wtc-analytics-stat" role="listitem">
+                        <span class="wtc-analytics-stat-label"><?php esc_html_e( 'Unique Sessions', 'wealth-tax-calculator' ); ?></span>
+                        <span class="wtc-analytics-stat-value"><?php echo esc_html( number_format_i18n( $unique_sessions ) ); ?></span>
+                    </div>
+                    <div class="wtc-analytics-stat" role="listitem">
+                        <span class="wtc-analytics-stat-label"><?php esc_html_e( 'Days Stored', 'wealth-tax-calculator' ); ?></span>
+                        <span class="wtc-analytics-stat-value"><?php echo esc_html( number_format_i18n( $days_stored ) ); ?></span>
+                    </div>
+                </div>
+
+                <div class="wtc-analytics-chart-panel">
+                    <section class="wtc-analytics-chart-card">
+                        <h3 class="wtc-analytics-chart-title"><?php esc_html_e( 'Category Allocation Mix', 'wealth-tax-calculator' ); ?></h3>
+                        <?php if ( ! empty( $summary['policy_group_rows'] ) && is_array( $summary['policy_group_rows'] ) ) : ?>
+                            <?php
+                            $group_total = 0;
+                            foreach ( $summary['policy_group_rows'] as $group_row ) {
+                                if ( ! is_array( $group_row ) ) {
+                                    continue;
+                                }
+                                $group_total += isset( $group_row['selected_amount'] ) ? (int) $group_row['selected_amount'] : 0;
+                            }
+                            ?>
+                            <div class="wtc-analytics-stacked-bar" role="img" aria-label="<?php esc_attr_e( 'Category allocation mix', 'wealth-tax-calculator' ); ?>">
+                                <?php foreach ( $summary['policy_group_rows'] as $group_row ) : ?>
+                                    <?php
+                                    if ( ! is_array( $group_row ) ) {
+                                        continue;
+                                    }
+
+                                    $selected_amount = isset( $group_row['selected_amount'] ) ? (int) $group_row['selected_amount'] : 0;
+                                    if ( $selected_amount <= 0 || $group_total <= 0 ) {
+                                        continue;
+                                    }
+
+                                    $segment_width = max( 2, round( ( $selected_amount / $group_total ) * 100, 2 ) );
+                                    $segment_title = sprintf(
+                                        /* translators: 1: policy group label, 2: selected amount */
+                                        __( '%1$s: %2$s selected over 10 years', 'wealth-tax-calculator' ),
+                                        isset( $group_row['label'] ) ? sanitize_text_field( $group_row['label'] ) : __( 'Unknown', 'wealth-tax-calculator' ),
+                                        $this->format_currency( $selected_amount )
+                                    );
+                                    ?>
+                                    <span class="wtc-analytics-stacked-segment" style="width: <?php echo esc_attr( $segment_width ); ?>%; background: <?php echo esc_attr( isset( $group_row['color'] ) ? sanitize_hex_color( $group_row['color'] ) : '#406BBF' ); ?>;" title="<?php echo esc_attr( $segment_title ); ?>"></span>
+                                <?php endforeach; ?>
+                            </div>
+
+                            <div class="wtc-analytics-legend">
+                                <?php foreach ( $summary['policy_group_rows'] as $group_row ) : ?>
+                                    <?php
+                                    if ( ! is_array( $group_row ) ) {
+                                        continue;
+                                    }
+                                    $selected_amount = isset( $group_row['selected_amount'] ) ? (int) $group_row['selected_amount'] : 0;
+                                    if ( $selected_amount <= 0 ) {
+                                        continue;
+                                    }
+                                    ?>
+                                    <div class="wtc-analytics-legend-item">
+                                        <span class="wtc-analytics-legend-swatch" style="background: <?php echo esc_attr( isset( $group_row['color'] ) ? sanitize_hex_color( $group_row['color'] ) : '#406BBF' ); ?>"></span>
+                                        <span class="wtc-analytics-legend-label"><?php echo esc_html( isset( $group_row['label'] ) ? sanitize_text_field( $group_row['label'] ) : __( 'Unknown', 'wealth-tax-calculator' ) ); ?></span>
+                                        <span class="wtc-analytics-legend-value"><?php echo esc_html( $this->format_compact_currency( $selected_amount ) ); ?></span>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php else : ?>
+                            <p class="wtc-analytics-empty"><?php esc_html_e( 'Category mix appears after submissions are recorded.', 'wealth-tax-calculator' ); ?></p>
+                        <?php endif; ?>
+                    </section>
+
+                    <section class="wtc-analytics-chart-card">
+                        <h3 class="wtc-analytics-chart-title"><?php esc_html_e( 'Policy Popularity', 'wealth-tax-calculator' ); ?></h3>
+
+                        <div class="wtc-analytics-chart-toggle" role="tablist" aria-label="<?php esc_attr_e( 'Policy popularity mode', 'wealth-tax-calculator' ); ?>">
+                            <button type="button" class="wtc-analytics-toggle-btn is-active" data-wtc-target="enabled" role="tab" aria-selected="true"><?php esc_html_e( 'Most Selected', 'wealth-tax-calculator' ); ?></button>
+                            <button type="button" class="wtc-analytics-toggle-btn" data-wtc-target="top-rank" role="tab" aria-selected="false"><?php esc_html_e( 'Top Ranked #1', 'wealth-tax-calculator' ); ?></button>
+                        </div>
+
+                        <div class="wtc-analytics-popularity-panel is-active" data-wtc-panel="enabled">
+                            <?php $this->render_analytics_popularity_chart( isset( $summary['enabled_rows'] ) ? $summary['enabled_rows'] : array(), __( 'Popularity data appears after submissions are recorded.', 'wealth-tax-calculator' ) ); ?>
+                        </div>
+                        <div class="wtc-analytics-popularity-panel" data-wtc-panel="top-rank" hidden>
+                            <?php $this->render_analytics_popularity_chart( isset( $summary['top_rank_rows'] ) ? $summary['top_rank_rows'] : array(), __( 'Top-rank data appears after submissions are recorded.', 'wealth-tax-calculator' ) ); ?>
+                        </div>
+                    </section>
+                </div>
             </div>
 
             <?php $this->render_michigan_map( $summary['region_counts'] ); ?>
@@ -838,20 +930,6 @@ class WTC_Policy_Analytics {
 
         if ( $amount >= 1e9 ) {
             return '$' . number_format( $amount / 1e9, 1 ) . 'B';
-        }
-
-        return '$' . number_format_i18n( (int) round( $amount ) );
-    }
-
-    private function format_currency( $amount ) {
-        $amount = (float) $amount;
-
-        if ( $amount >= 1e12 ) {
-            return '$' . number_format_i18n( $amount / 1e12, 2 ) . ' Trillion';
-        }
-
-        if ( $amount >= 1e9 ) {
-            return '$' . number_format_i18n( $amount / 1e9, 1 ) . ' Billion';
         }
 
         return '$' . number_format_i18n( (int) round( $amount ) );
@@ -1287,6 +1365,7 @@ class WTC_Policy_Analytics {
         $enabled_stats      = array();
         $top_rank_stats     = array();
         $rank_stats         = array();
+        $policy_group_stats = array();
         $region_counts      = array();
         $tax_rate_counts    = array();
         $recent_submissions = array();
@@ -1354,6 +1433,32 @@ class WTC_Policy_Analytics {
                             }
                             $top_rank_stats[ $policy_key ]['count'] += 1;
                         }
+
+                        $policy_group = isset( $selected_item['policy_group'] ) ? sanitize_key( $selected_item['policy_group'] ) : '';
+                        if ( $policy_group === '' ) {
+                            $parts        = explode( ':', $policy_key );
+                            $policy_group = isset( $parts[0] ) ? sanitize_key( $parts[0] ) : 'other';
+                        }
+                        if ( $policy_group === '' ) {
+                            $policy_group = 'other';
+                        }
+
+                        if ( ! isset( $policy_group_stats[ $policy_group ] ) ) {
+                            $policy_group_stats[ $policy_group ] = array(
+                                'key'             => $policy_group,
+                                'label'           => $this->get_policy_group_label( $policy_group ),
+                                'color'           => $this->get_policy_group_color( $policy_group ),
+                                'count'           => 0,
+                                'selected_amount' => 0,
+                            );
+                        }
+
+                        $selected_amount = isset( $selected_item['selected_amount'] ) && is_numeric( $selected_item['selected_amount'] )
+                            ? (int) round( (float) $selected_item['selected_amount'] )
+                            : 0;
+
+                        $policy_group_stats[ $policy_group ]['count'] += 1;
+                        $policy_group_stats[ $policy_group ]['selected_amount'] += max( 0, $selected_amount );
                     }
 
                     $recent_submissions[] = array(
@@ -1484,6 +1589,20 @@ class WTC_Policy_Analytics {
                 return ( (int) $left['count'] > (int) $right['count'] ) ? -1 : 1;
             }
         );
+        uasort(
+            $policy_group_stats,
+            function ( $left, $right ) {
+                if ( (int) $left['selected_amount'] === (int) $right['selected_amount'] ) {
+                    if ( (int) $left['count'] === (int) $right['count'] ) {
+                        return strcmp( (string) $left['label'], (string) $right['label'] );
+                    }
+
+                    return ( (int) $left['count'] > (int) $right['count'] ) ? -1 : 1;
+                }
+
+                return ( (int) $left['selected_amount'] > (int) $right['selected_amount'] ) ? -1 : 1;
+            }
+        );
         arsort( $region_counts );
         ksort( $tax_rate_counts );
 
@@ -1501,6 +1620,7 @@ class WTC_Policy_Analytics {
             'enabled_rows'      => array_values( $enabled_stats ),
             'top_rank_rows'     => array_values( $top_rank_stats ),
             'rank_rows'         => array_values( $rank_stats ),
+            'policy_group_rows' => array_values( $policy_group_stats ),
             'region_counts'     => $region_counts,
             'tax_rate_counts'   => $tax_rate_counts,
             'recent_submissions'=> $recent_submissions,

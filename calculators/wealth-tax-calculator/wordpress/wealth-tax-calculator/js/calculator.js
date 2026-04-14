@@ -17,7 +17,6 @@
     var selectedPolicyOptions = {};
     var selectedPoliciesOrder = [];
     var dragPolicyKey = null;
-    var popularityChartMode = 'enabled';
     var collapsedPolicyGroups = [];
     var currentMode = 'advanced'; // 'basic' or 'advanced'
     var TAX_RATE_MIN = 1;
@@ -76,8 +75,6 @@
         housing:      '#7B2CBF',
         childcare:    '#3A86FF'
     };
-
-    var CHART_SWATCHES = ['#D1495B', '#2B59C3', '#2A9D8F', '#F4A261', '#7B2CBF', '#3A86FF', '#EF476F', '#118AB2', '#06D6A0', '#FFD166', '#8338EC', '#8E9AAF'];
 
     var SANDERS_POLICY_SOURCES = [
         {
@@ -1461,35 +1458,6 @@
         };
     }
 
-    function getPopularityRowsByMode(mode) {
-        var config = (typeof wealthTaxConfig !== 'undefined' && wealthTaxConfig.popularity)
-            ? wealthTaxConfig.popularity
-            : null;
-        var rows = [];
-
-        if (config && mode === 'top-rank' && config.top_rank_rows && config.top_rank_rows.length) {
-            rows = config.top_rank_rows;
-        } else if (config && config.enabled_rows && config.enabled_rows.length) {
-            rows = config.enabled_rows;
-        }
-
-        var normalized = [];
-        for (var i = 0; i < rows.length; i++) {
-            var row = rows[i];
-            if (!row || typeof row.count !== 'number' || row.count <= 0) {
-                continue;
-            }
-
-            normalized.push({
-                key: row.policy_key || ('row-' + i),
-                label: row.label || row.policy_key || ('Policy ' + (i + 1)),
-                count: row.count
-            });
-        }
-
-        return normalized;
-    }
-
     function getOrCreateChild(parent, selector, tag, cls) {
         var child = parent.querySelector(selector);
         if (!child) {
@@ -1928,183 +1896,6 @@
         summaryBody.innerHTML = '';
 
         var data = buildFinalSummaryData();
-
-        // Stats bar
-        var statsDiv = document.createElement('div');
-        statsDiv.className = 'wtc-fs-stats';
-
-        var rateStat = document.createElement('div');
-        rateStat.className = 'wtc-fs-stat';
-        var rateLabel = document.createElement('span');
-        rateLabel.className = 'wtc-fs-stat-label';
-        rateLabel.textContent = 'Tax Rate';
-        var rateValue = document.createElement('span');
-        rateValue.className = 'wtc-fs-stat-value';
-        rateValue.textContent = data.taxRate.toFixed(1) + '%';
-        rateStat.appendChild(rateLabel);
-        rateStat.appendChild(rateValue);
-
-        var revenueStat = document.createElement('div');
-        revenueStat.className = 'wtc-fs-stat';
-        var revenueLabel = document.createElement('span');
-        revenueLabel.className = 'wtc-fs-stat-label';
-        revenueLabel.textContent = '10-Year Revenue';
-        var revenueValue = document.createElement('span');
-        revenueValue.className = 'wtc-fs-stat-value';
-        revenueValue.textContent = formatCurrency(data.revenue);
-        var revenueSubValue = document.createElement('span');
-        revenueSubValue.className = 'wtc-fs-stat-subvalue';
-        revenueSubValue.textContent = 'Annual: ' + formatCurrency(data.annualRevenue);
-        revenueStat.appendChild(revenueLabel);
-        revenueStat.appendChild(revenueValue);
-        revenueStat.appendChild(revenueSubValue);
-
-        var selectedStat = document.createElement('div');
-        selectedStat.className = 'wtc-fs-stat';
-        var selectedLabel = document.createElement('span');
-        selectedLabel.className = 'wtc-fs-stat-label';
-        selectedLabel.textContent = 'Selected Cost';
-        var selectedValue = document.createElement('span');
-        selectedValue.className = 'wtc-fs-stat-value';
-        selectedValue.textContent = formatCurrency(data.selectedTotal);
-        var selectedSubValue = document.createElement('span');
-        selectedSubValue.className = 'wtc-fs-stat-subvalue';
-        selectedSubValue.textContent = 'Annual: ' + formatCurrency(data.annualSelectedTotal);
-        selectedStat.appendChild(selectedLabel);
-        selectedStat.appendChild(selectedValue);
-        selectedStat.appendChild(selectedSubValue);
-
-        statsDiv.appendChild(rateStat);
-        statsDiv.appendChild(revenueStat);
-        statsDiv.appendChild(selectedStat);
-        summaryBody.appendChild(statsDiv);
-
-        if (data.overrun > 0) {
-            var overrunAlert = document.createElement('div');
-            overrunAlert.className = 'wtc-fs-alert';
-            overrunAlert.textContent = 'Funding gap: ' + formatCurrency(data.overrun) + ' (Annual gap: ' + formatCurrency(data.overrun / 10) + ')';
-            summaryBody.appendChild(overrunAlert);
-        }
-
-        var chartPanel = document.createElement('div');
-        chartPanel.className = 'wtc-fs-chart-panel';
-
-        var stackedCard = document.createElement('section');
-        stackedCard.className = 'wtc-fs-chart-card';
-        var stackedTitle = document.createElement('h4');
-        stackedTitle.className = 'wtc-fs-chart-title';
-        stackedTitle.textContent = 'Category Allocation Mix';
-        stackedCard.appendChild(stackedTitle);
-
-        var stackedBar = document.createElement('div');
-        stackedBar.className = 'wtc-fs-stacked-bar';
-        if (data.selectedTotal > 0 && data.categoryTotals.length) {
-            for (var c = 0; c < data.categoryTotals.length; c++) {
-                var categoryTotal = data.categoryTotals[c];
-                var segment = document.createElement('span');
-                segment.className = 'wtc-fs-stacked-segment';
-                segment.style.width = ((categoryTotal.selected / data.selectedTotal) * 100).toFixed(2) + '%';
-                segment.style.background = categoryTotal.color;
-                segment.title = categoryTotal.label + ': ' + formatCurrency(categoryTotal.selected);
-                stackedBar.appendChild(segment);
-            }
-        }
-        stackedCard.appendChild(stackedBar);
-
-        var stackedLegend = document.createElement('div');
-        stackedLegend.className = 'wtc-fs-legend';
-        for (var l = 0; l < data.categoryTotals.length; l++) {
-            var category = data.categoryTotals[l];
-            var legendItem = document.createElement('div');
-            legendItem.className = 'wtc-fs-legend-item';
-            legendItem.innerHTML = '<span class="wtc-fs-legend-swatch" style="background:' + category.color + '"></span>' +
-                '<span class="wtc-fs-legend-label">' + category.label + '</span>' +
-                '<span class="wtc-fs-legend-value">' + formatCurrency(category.selected, true) + '</span>';
-            stackedLegend.appendChild(legendItem);
-        }
-        stackedCard.appendChild(stackedLegend);
-        chartPanel.appendChild(stackedCard);
-
-        var pieCard = document.createElement('section');
-        pieCard.className = 'wtc-fs-chart-card';
-        var pieTitle = document.createElement('h4');
-        pieTitle.className = 'wtc-fs-chart-title';
-        pieTitle.textContent = 'Policy Popularity';
-        pieCard.appendChild(pieTitle);
-
-        var toggleRow = document.createElement('div');
-        toggleRow.className = 'wtc-fs-chart-toggle';
-
-        var enabledBtn = document.createElement('button');
-        enabledBtn.type = 'button';
-        enabledBtn.className = 'wtc-fs-toggle-btn' + (popularityChartMode === 'enabled' ? ' is-active' : '');
-        enabledBtn.textContent = 'Most Selected';
-        enabledBtn.addEventListener('click', function () {
-            popularityChartMode = 'enabled';
-            renderFinalSummary();
-        });
-        toggleRow.appendChild(enabledBtn);
-
-        var topRankBtn = document.createElement('button');
-        topRankBtn.type = 'button';
-        topRankBtn.className = 'wtc-fs-toggle-btn' + (popularityChartMode === 'top-rank' ? ' is-active' : '');
-        topRankBtn.textContent = 'Top Ranked #1';
-        topRankBtn.addEventListener('click', function () {
-            popularityChartMode = 'top-rank';
-            renderFinalSummary();
-        });
-        toggleRow.appendChild(topRankBtn);
-        pieCard.appendChild(toggleRow);
-
-        var popularityRows = getPopularityRowsByMode(popularityChartMode);
-        if (!popularityRows.length) {
-            var noPieData = document.createElement('p');
-            noPieData.className = 'wtc-fs-empty';
-            noPieData.textContent = 'Popularity data appears after submissions are recorded.';
-            pieCard.appendChild(noPieData);
-        } else {
-            var totalCount = 0;
-            for (var p = 0; p < popularityRows.length; p++) {
-                totalCount += popularityRows[p].count;
-            }
-
-            var gradientParts = [];
-            var currentAngle = 0;
-            for (var g = 0; g < popularityRows.length; g++) {
-                var row = popularityRows[g];
-                var ratio = row.count / totalCount;
-                var nextAngle = currentAngle + (ratio * 360);
-                var swatchColor = CHART_SWATCHES[g % CHART_SWATCHES.length];
-                row.color = swatchColor;
-                row.percent = Math.round(ratio * 1000) / 10;
-                gradientParts.push(swatchColor + ' ' + currentAngle.toFixed(2) + 'deg ' + nextAngle.toFixed(2) + 'deg');
-                currentAngle = nextAngle;
-            }
-
-            var donut = document.createElement('div');
-            donut.className = 'wtc-fs-donut';
-            donut.style.background = 'conic-gradient(' + gradientParts.join(', ') + ')';
-            donut.setAttribute('role', 'img');
-            donut.setAttribute('aria-label', 'Policy popularity pie chart');
-            pieCard.appendChild(donut);
-
-            var pieLegend = document.createElement('div');
-            pieLegend.className = 'wtc-fs-legend wtc-fs-legend-scroll';
-            for (var r = 0; r < popularityRows.length; r++) {
-                var popularityRow = popularityRows[r];
-                var popularityLegend = document.createElement('div');
-                popularityLegend.className = 'wtc-fs-legend-item';
-                popularityLegend.innerHTML =
-                    '<span class="wtc-fs-legend-swatch" style="background:' + popularityRow.color + '"></span>' +
-                    '<span class="wtc-fs-legend-label">' + popularityRow.label + '</span>' +
-                    '<span class="wtc-fs-legend-value">' + popularityRow.count + ' (' + popularityRow.percent.toFixed(1) + '%)</span>';
-                pieLegend.appendChild(popularityLegend);
-            }
-            pieCard.appendChild(pieLegend);
-        }
-
-        chartPanel.appendChild(pieCard);
-        summaryBody.appendChild(chartPanel);
 
         if (data.items.length === 0) {
             var empty = document.createElement('p');
