@@ -40,6 +40,7 @@ define( 'WTC_ANALYTICS_OPTION_KEY', 'wtc_policy_analytics_daily' );
 define( 'WTC_ANALYTICS_ENABLED_OPTION', 'wtc_analytics_enabled' );
 define( 'WTC_ANALYTICS_GEO_OPTION', 'wtc_analytics_geo_enabled' );
 define( 'WTC_ANALYTICS_RETENTION_OPTION', 'wtc_analytics_retention_days' );
+define( 'WTC_ANALYTICS_FINGERPRINT_OPTION', 'wtc_analytics_fingerprint_enabled' );
 
 // ---------------------------------------------------------------------------
 // Self-contained GitHub update checker — no extra plugins required.
@@ -644,6 +645,10 @@ class WTC_Policy_Analytics {
         return get_option( WTC_ANALYTICS_GEO_OPTION, '0' ) === '1';
     }
 
+    public function fingerprint_enabled() {
+        return get_option( WTC_ANALYTICS_FINGERPRINT_OPTION, '1' ) === '1';
+    }
+
     public function get_retention_days() {
         $days = (int) get_option( WTC_ANALYTICS_RETENTION_OPTION, 90 );
         return max( 7, min( 365, $days ) );
@@ -673,6 +678,7 @@ class WTC_Policy_Analytics {
     public function register_settings() {
         register_setting( 'wtc_analytics_settings', WTC_ANALYTICS_ENABLED_OPTION, array( $this, 'sanitize_checkbox_flag' ) );
         register_setting( 'wtc_analytics_settings', WTC_ANALYTICS_GEO_OPTION, array( $this, 'sanitize_checkbox_flag' ) );
+        register_setting( 'wtc_analytics_settings', WTC_ANALYTICS_FINGERPRINT_OPTION, array( $this, 'sanitize_checkbox_flag' ) );
         register_setting( 'wtc_analytics_settings', WTC_ANALYTICS_RETENTION_OPTION, array( $this, 'sanitize_retention_days' ) );
     }
 
@@ -713,9 +719,11 @@ class WTC_Policy_Analytics {
         }
 
         $summary = $this->build_summary( $analytics_data );
-        $submitted_sessions = isset( $summary['total_events'] ) ? (int) $summary['total_events'] : 0;
-        $unique_sessions    = isset( $summary['unique_sessions'] ) ? (int) $summary['unique_sessions'] : 0;
-        $days_stored        = isset( $summary['days_count'] ) ? (int) $summary['days_count'] : 0;
+        $submitted_sessions  = isset( $summary['total_events'] ) ? (int) $summary['total_events'] : 0;
+        $unique_sessions     = isset( $summary['unique_sessions'] ) ? (int) $summary['unique_sessions'] : 0;
+        $days_stored         = isset( $summary['days_count'] ) ? (int) $summary['days_count'] : 0;
+        $repeat_fingerprints = isset( $summary['repeat_fingerprints'] ) ? (int) $summary['repeat_fingerprints'] : 0;
+        $change_events_total = isset( $summary['change_events_total'] ) ? (int) $summary['change_events_total'] : 0;
         ?>
         <div class="wrap">
             <h1><?php esc_html_e( 'Wealth Tax Calculator Analytics', 'wealth-tax-calculator' ); ?></h1>
@@ -747,6 +755,17 @@ class WTC_Policy_Analytics {
                             </td>
                         </tr>
                         <tr>
+                            <th scope="row"><?php esc_html_e( 'Cross-Session Tracking', 'wealth-tax-calculator' ); ?></th>
+                            <td>
+                                <label>
+                                    <input type="hidden" name="<?php echo esc_attr( WTC_ANALYTICS_FINGERPRINT_OPTION ); ?>" value="0" />
+                                    <input type="checkbox" name="<?php echo esc_attr( WTC_ANALYTICS_FINGERPRINT_OPTION ); ?>" value="1" <?php checked( $this->fingerprint_enabled(), true ); ?> />
+                                    <?php esc_html_e( 'Track how selections change between visits from the same visitor', 'wealth-tax-calculator' ); ?>
+                                </label>
+                                <p class="description"><?php esc_html_e( 'A privacy-safe fingerprint (hashed IP + browser signature, salted and non-reversible) is recorded alongside each submission. This lets the analytics page show when the same visitor returns and changes their tax rate, policy selections, or priority order. No raw IP addresses are stored.', 'wealth-tax-calculator' ); ?></p>
+                            </td>
+                        </tr>
+                        <tr>
                             <th scope="row"><?php esc_html_e( 'Retention (days)', 'wealth-tax-calculator' ); ?></th>
                             <td>
                                 <input type="number" min="7" max="365" name="<?php echo esc_attr( WTC_ANALYTICS_RETENTION_OPTION ); ?>" value="<?php echo esc_attr( $this->get_retention_days() ); ?>" />
@@ -773,6 +792,16 @@ class WTC_Policy_Analytics {
                         <span class="wtc-analytics-stat-label"><?php esc_html_e( 'Days Stored', 'wealth-tax-calculator' ); ?></span>
                         <span class="wtc-analytics-stat-value"><?php echo esc_html( number_format_i18n( $days_stored ) ); ?></span>
                     </div>
+                    <?php if ( $this->fingerprint_enabled() ) : ?>
+                    <div class="wtc-analytics-stat" role="listitem">
+                        <span class="wtc-analytics-stat-label"><?php esc_html_e( 'Repeat Visitors', 'wealth-tax-calculator' ); ?></span>
+                        <span class="wtc-analytics-stat-value"><?php echo esc_html( number_format_i18n( $repeat_fingerprints ) ); ?></span>
+                    </div>
+                    <div class="wtc-analytics-stat" role="listitem">
+                        <span class="wtc-analytics-stat-label"><?php esc_html_e( 'Change Events', 'wealth-tax-calculator' ); ?></span>
+                        <span class="wtc-analytics-stat-value"><?php echo esc_html( number_format_i18n( $change_events_total ) ); ?></span>
+                    </div>
+                    <?php endif; ?>
                 </div>
 
                 <div class="wtc-analytics-chart-panel">
@@ -889,6 +918,13 @@ class WTC_Policy_Analytics {
                 <h2><?php esc_html_e( 'Recent Submission Detail', 'wealth-tax-calculator' ); ?></h2>
                 <?php $this->render_recent_submissions_table( $summary['recent_submissions'] ); ?>
             </div>
+
+            <?php if ( $this->fingerprint_enabled() ) : ?>
+            <div class="card" style="max-width: 920px; margin-top: 20px;">
+                <h2><?php esc_html_e( 'Cross-Session Changes (Same Visitor)', 'wealth-tax-calculator' ); ?></h2>
+                <?php $this->render_cross_session_changes_table( isset( $summary['cross_session_changes'] ) ? $summary['cross_session_changes'] : array() ); ?>
+            </div>
+            <?php endif; ?>
 
             <div class="card" style="max-width: 920px; margin-top: 20px;">
                 <h2><?php esc_html_e( 'Data Management', 'wealth-tax-calculator' ); ?></h2>
@@ -1534,6 +1570,110 @@ class WTC_Policy_Analytics {
         echo '</table>';
     }
 
+    private function render_cross_session_changes_table( $changes ) {
+        if ( empty( $changes ) ) {
+            echo '<p>' . esc_html__( 'No cross-session changes yet. A visitor must submit the calculator more than once for changes to appear here.', 'wealth-tax-calculator' ) . '</p>';
+            return;
+        }
+
+        $transition_count = 0;
+        foreach ( $changes as $change ) {
+            if ( is_array( $change ) && isset( $change['transitions'] ) && is_array( $change['transitions'] ) ) {
+                $transition_count += count( $change['transitions'] );
+            }
+        }
+
+        echo '<p class="description">';
+        printf(
+            /* translators: 1: number of repeat visitors, 2: number of session transitions */
+            esc_html__( '%1$s repeat visitors across %2$s session transitions.', 'wealth-tax-calculator' ),
+            '<strong>' . esc_html( number_format_i18n( count( $changes ) ) ) . '</strong>',
+            '<strong>' . esc_html( number_format_i18n( $transition_count ) ) . '</strong>'
+        );
+        echo '</p>';
+
+        echo '<table class="widefat striped">';
+        echo '<thead><tr>';
+        echo '<th>' . esc_html__( 'Visitor', 'wealth-tax-calculator' ) . '</th>';
+        echo '<th>' . esc_html__( 'Sessions', 'wealth-tax-calculator' ) . '</th>';
+        echo '<th>' . esc_html__( 'From', 'wealth-tax-calculator' ) . '</th>';
+        echo '<th>' . esc_html__( 'To', 'wealth-tax-calculator' ) . '</th>';
+        echo '<th>' . esc_html__( 'Tax Rate', 'wealth-tax-calculator' ) . '</th>';
+        echo '<th>' . esc_html__( 'Policies Added', 'wealth-tax-calculator' ) . '</th>';
+        echo '<th>' . esc_html__( 'Policies Removed', 'wealth-tax-calculator' ) . '</th>';
+        echo '<th>' . esc_html__( 'Order Changed', 'wealth-tax-calculator' ) . '</th>';
+        echo '</tr></thead>';
+        echo '<tbody>';
+
+        $row_limit    = 50;
+        $rows_written = 0;
+
+        foreach ( $changes as $change ) {
+            if ( $rows_written >= $row_limit || ! is_array( $change ) ) {
+                break;
+            }
+
+            $fp_short      = isset( $change['fingerprint_short'] ) ? sanitize_text_field( $change['fingerprint_short'] ) : '—';
+            $session_count = isset( $change['session_count'] ) ? (int) $change['session_count'] : 0;
+            $transitions   = isset( $change['transitions'] ) && is_array( $change['transitions'] ) ? $change['transitions'] : array();
+
+            if ( empty( $transitions ) ) {
+                continue;
+            }
+
+            $first_row      = true;
+            $rowspan        = count( $transitions );
+
+            foreach ( $transitions as $t ) {
+                if ( $rows_written >= $row_limit || ! is_array( $t ) ) {
+                    break;
+                }
+
+                $from_at = isset( $t['from_at'] ) && $t['from_at'] > 0
+                    ? gmdate( 'Y-m-d H:i', (int) $t['from_at'] ) . ' UTC'
+                    : '—';
+                $to_at   = isset( $t['to_at'] ) && $t['to_at'] > 0
+                    ? gmdate( 'Y-m-d H:i', (int) $t['to_at'] ) . ' UTC'
+                    : '—';
+
+                $tax_from = isset( $t['tax_rate_from'] ) && $t['tax_rate_from'] !== ''
+                    ? esc_html( $t['tax_rate_from'] ) . '%'
+                    : '—';
+                $tax_to   = isset( $t['tax_rate_to'] ) && $t['tax_rate_to'] !== ''
+                    ? esc_html( $t['tax_rate_to'] ) . '%'
+                    : '—';
+                $tax_cell = ( isset( $t['tax_changed'] ) && $t['tax_changed'] )
+                    ? $tax_from . ' → ' . $tax_to
+                    : '—';
+
+                $added_keys   = isset( $t['policies_added'] ) && is_array( $t['policies_added'] )
+                    ? array_map( 'sanitize_text_field', $t['policies_added'] )
+                    : array();
+                $removed_keys = isset( $t['policies_removed'] ) && is_array( $t['policies_removed'] )
+                    ? array_map( 'sanitize_text_field', $t['policies_removed'] )
+                    : array();
+
+                echo '<tr>';
+                if ( $first_row ) {
+                    echo '<td rowspan="' . esc_attr( $rowspan ) . '">' . esc_html( $fp_short ) . '</td>';
+                    echo '<td rowspan="' . esc_attr( $rowspan ) . '">' . esc_html( number_format_i18n( $session_count ) ) . '</td>';
+                    $first_row = false;
+                }
+                echo '<td>' . esc_html( $from_at ) . '</td>';
+                echo '<td>' . esc_html( $to_at ) . '</td>';
+                echo '<td>' . esc_html( $tax_cell ) . '</td>';
+                echo '<td>' . esc_html( ! empty( $added_keys ) ? implode( ', ', $added_keys ) : '—' ) . '</td>';
+                echo '<td>' . esc_html( ! empty( $removed_keys ) ? implode( ', ', $removed_keys ) : '—' ) . '</td>';
+                echo '<td>' . esc_html( ( isset( $t['order_changed'] ) && $t['order_changed'] ) ? __( 'Yes', 'wealth-tax-calculator' ) : '—' ) . '</td>';
+                echo '</tr>';
+                $rows_written++;
+            }
+        }
+
+        echo '</tbody>';
+        echo '</table>';
+    }
+
     private function format_policy_submission_label( $policy_item, $fallback_key = '' ) {
         $policy_label = '';
         $description  = '';
@@ -1634,6 +1774,7 @@ class WTC_Policy_Analytics {
         $recent_submissions = array();
         $unique_sessions    = 0;
         $total_events       = 0;
+        $fingerprint_groups = array();
 
         foreach ( $analytics_data as $day ) {
             if ( ! is_array( $day ) ) {
@@ -1760,6 +1901,18 @@ class WTC_Policy_Analytics {
                             $tax_rate_counts[ $rate ] = 0;
                         }
                         $tax_rate_counts[ $rate ] += 1;
+                    }
+
+                    $fp = isset( $submission['visitor_fingerprint'] ) ? sanitize_text_field( $submission['visitor_fingerprint'] ) : '';
+                    if ( $fp !== '' && preg_match( '/^[0-9a-f]{16}$/', $fp ) ) {
+                        if ( ! isset( $fingerprint_groups[ $fp ] ) ) {
+                            $fingerprint_groups[ $fp ] = array();
+                        }
+                        $fingerprint_groups[ $fp ][] = array(
+                            'submitted_at'    => isset( $submission['submitted_at'] ) ? (int) $submission['submitted_at'] : 0,
+                            'tax_rate_bucket' => isset( $submission['tax_rate_bucket'] ) ? sanitize_text_field( $submission['tax_rate_bucket'] ) : '',
+                            'order'           => isset( $submission['order'] ) && is_array( $submission['order'] ) ? $submission['order'] : array(),
+                        );
                     }
                 }
                 continue;
@@ -1907,6 +2060,61 @@ class WTC_Policy_Analytics {
             $recent_submissions = array_slice( $recent_submissions, 0, 20 );
         }
 
+        $cross_session_changes = array();
+        $repeat_fingerprints   = 0;
+        $change_events_total   = 0;
+
+        foreach ( $fingerprint_groups as $fp => $fp_submissions ) {
+            if ( count( $fp_submissions ) < 2 ) {
+                continue;
+            }
+            $repeat_fingerprints++;
+            usort( $fp_submissions, function ( $a, $b ) {
+                return (int) $a['submitted_at'] <=> (int) $b['submitted_at'];
+            } );
+
+            $transitions = array();
+            for ( $i = 1; $i < count( $fp_submissions ); $i++ ) {
+                $prev = $fp_submissions[ $i - 1 ];
+                $curr = $fp_submissions[ $i ];
+
+                $tax_changed   = $prev['tax_rate_bucket'] !== $curr['tax_rate_bucket'];
+                $prev_keys     = $prev['order'];
+                $curr_keys     = $curr['order'];
+                $added         = array_values( array_diff( $curr_keys, $prev_keys ) );
+                $removed       = array_values( array_diff( $prev_keys, $curr_keys ) );
+                $order_changed = ( $prev_keys !== $curr_keys ) && empty( $added ) && empty( $removed );
+
+                if ( $tax_changed || ! empty( $added ) || ! empty( $removed ) || $order_changed ) {
+                    $change_events_total++;
+                }
+
+                $transitions[] = array(
+                    'from_at'          => $prev['submitted_at'],
+                    'to_at'            => $curr['submitted_at'],
+                    'tax_rate_from'    => $prev['tax_rate_bucket'],
+                    'tax_rate_to'      => $curr['tax_rate_bucket'],
+                    'tax_changed'      => $tax_changed,
+                    'policies_added'   => $added,
+                    'policies_removed' => $removed,
+                    'order_changed'    => $order_changed,
+                );
+            }
+
+            $cross_session_changes[] = array(
+                'fingerprint_short' => substr( (string) $fp, 0, 8 ),
+                'session_count'     => count( $fp_submissions ),
+                'transitions'       => $transitions,
+            );
+        }
+
+        usort( $cross_session_changes, function ( $a, $b ) {
+            return (int) $b['session_count'] <=> (int) $a['session_count'];
+        } );
+        if ( count( $cross_session_changes ) > 50 ) {
+            $cross_session_changes = array_slice( $cross_session_changes, 0, 50 );
+        }
+
         return array(
             'enabled_rows'      => array_values( $enabled_stats ),
             'top_rank_rows'     => array_values( $top_rank_stats ),
@@ -1915,10 +2123,13 @@ class WTC_Policy_Analytics {
             'region_counts'     => $region_counts,
             'county_counts'     => $county_counts,
             'tax_rate_counts'   => $tax_rate_counts,
-            'recent_submissions'=> $recent_submissions,
-            'unique_sessions'   => $unique_sessions,
-            'days_count'        => count( $analytics_data ),
-            'total_events'      => $total_events,
+            'recent_submissions'    => $recent_submissions,
+            'unique_sessions'       => $unique_sessions,
+            'days_count'            => count( $analytics_data ),
+            'total_events'          => $total_events,
+            'cross_session_changes' => $cross_session_changes,
+            'repeat_fingerprints'   => $repeat_fingerprints,
+            'change_events_total'   => $change_events_total,
         );
     }
 
@@ -2086,19 +2297,29 @@ class WTC_Policy_Analytics {
             $day['counties'][ $county_bucket ] += 1;
         }
 
+        $visitor_fingerprint = $this->fingerprint_enabled() ? $this->get_visitor_fingerprint() : '';
+
         $day['final_submissions'][ $session_hash ] = array(
-            'policy_key'       => sanitize_text_field( $policy_key ),
-            'order'            => $clean_order,
-            'selected_items'   => $clean_selected_items,
-            'tax_rate_bucket'  => $tax_rate_bucket,
-            'mode'             => $mode,
-            'region_bucket'    => sanitize_text_field( $region_bucket ),
-            'county_bucket'    => $county_bucket,
-            'submitted_at'     => time(),
+            'policy_key'          => sanitize_text_field( $policy_key ),
+            'order'               => $clean_order,
+            'selected_items'      => $clean_selected_items,
+            'tax_rate_bucket'     => $tax_rate_bucket,
+            'mode'                => $mode,
+            'region_bucket'       => sanitize_text_field( $region_bucket ),
+            'county_bucket'       => $county_bucket,
+            'submitted_at'        => time(),
+            'visitor_fingerprint' => $visitor_fingerprint,
         );
 
         update_option( WTC_ANALYTICS_OPTION_KEY, $data, false );
         wp_send_json_success( array( 'ok' => true ) );
+    }
+
+    private function get_visitor_fingerprint() {
+        $ip = $this->get_client_ip();
+        $ua = isset( $_SERVER['HTTP_USER_AGENT'] ) ? (string) $_SERVER['HTTP_USER_AGENT'] : '';
+        $ua = strtolower( trim( $ua ) );
+        return substr( hash_hmac( 'sha256', $ip . '|' . $ua, wp_salt( 'auth' ) ), 0, 16 );
     }
 
     private function get_client_ip() {
