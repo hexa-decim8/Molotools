@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.20] - 2026-04-14
+
+
 ### Changed
 - Expanded policy prioritization analytics to store each submitted sub-policy with its exact rank, human-readable label, description, and funding snapshot instead of only a raw ordered key list.
 - Expanded the WordPress analytics report with full rank breakdowns and recent submission detail so final policy prioritization can be reviewed session by session.
