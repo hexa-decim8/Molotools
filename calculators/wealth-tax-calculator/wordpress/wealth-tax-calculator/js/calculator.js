@@ -1490,6 +1490,62 @@
 
     // ── Final Summary screen ────────────────────────────────────────────────────
 
+    function buildDescendingRecipientPercentTargets(count) {
+        var targets = [];
+        if (count <= 0) {
+            return targets;
+        }
+
+        if (count === 1) {
+            targets.push(10);
+            return targets;
+        }
+
+        var maxPercent = 10;
+        var minPercent = 3;
+        var step = (maxPercent - minPercent) / (count - 1);
+
+        for (var i = 0; i < count; i++) {
+            var nextPercent = maxPercent - (step * i);
+            nextPercent = Math.max(minPercent, nextPercent);
+            targets.push(nextPercent);
+        }
+
+        return targets;
+    }
+
+    function collectBorrowedAmount(items, firstUnfundedIndex, neededAmount, minDonorPercent) {
+        if (neededAmount <= 0 || firstUnfundedIndex <= 0) {
+            return 0;
+        }
+
+        var borrowed = 0;
+
+        for (var i = firstUnfundedIndex - 1; i >= 0; i--) {
+            if (borrowed >= neededAmount) {
+                break;
+            }
+
+            var donor = items[i];
+            if (!donor || donor.cost <= 0 || donor.fundedAmount <= 0) {
+                continue;
+            }
+
+            var donorFloor = donor.cost * (minDonorPercent / 100);
+            donorFloor = Math.min(donorFloor, donor.fundedAmount);
+            var donorCapacity = donor.fundedAmount - donorFloor;
+            if (donorCapacity <= 0) {
+                continue;
+            }
+
+            var takeAmount = Math.min(donorCapacity, neededAmount - borrowed);
+            donor.fundedAmount -= takeAmount;
+            borrowed += takeAmount;
+        }
+
+        return borrowed;
+    }
+
     function buildFinalSummaryData() {
         var taxRate = getCurrentTaxRate();
         var revenue = calculateRevenue(taxRate);
@@ -1513,19 +1569,14 @@
             if (!exampleData) { continue; }
 
             var cost = selectedPolicyOptions[key].amount;
-            var status, fundedPercent;
+            var fundedAmount = 0;
 
             if (remaining >= cost) {
-                status = 'full';
-                fundedPercent = 100;
+                fundedAmount = cost;
                 remaining -= cost;
             } else if (remaining > 0) {
-                fundedPercent = Math.round((remaining / cost) * 100);
-                status = 'partial';
+                fundedAmount = remaining;
                 remaining = 0;
-            } else {
-                status = 'none';
-                fundedPercent = 0;
             }
 
             items.push({
@@ -1534,10 +1585,82 @@
                 idx: idx,
                 exampleData: exampleData,
                 cost: cost,
-                status: status,
-                fundedPercent: fundedPercent
+                fundedAmount: fundedAmount,
+                status: 'none',
+                fundedPercent: 0
             });
         }
+
+        if (currentMode === 'advanced' && items.length > 2) {
+            var unfundedIndexes = [];
+            for (var u = 0; u < items.length; u++) {
+                if (items[u].cost > 0 && items[u].fundedAmount <= 0) {
+                    unfundedIndexes.push(u);
+                }
+            }
+
+            if (unfundedIndexes.length > 0) {
+                var firstUnfundedIndex = unfundedIndexes[0];
+                var recipientTargets = buildDescendingRecipientPercentTargets(unfundedIndexes.length);
+                var recipientTargetAmount = 0;
+
+                for (var t = 0; t < unfundedIndexes.length; t++) {
+                    var recipientItem = items[unfundedIndexes[t]];
+                    recipientTargetAmount += recipientItem.cost * (recipientTargets[t] / 100);
+                }
+
+                if (recipientTargetAmount > 0 && firstUnfundedIndex > 0) {
+                    var borrowedAmount = 0;
+                    // Prefer lighter borrowing first, then widen floors only if needed.
+                    borrowedAmount += collectBorrowedAmount(items, firstUnfundedIndex, recipientTargetAmount - borrowedAmount, 75);
+                    if (borrowedAmount < recipientTargetAmount) {
+                        borrowedAmount += collectBorrowedAmount(items, firstUnfundedIndex, recipientTargetAmount - borrowedAmount, 50);
+                    }
+                    if (borrowedAmount < recipientTargetAmount) {
+                        borrowedAmount += collectBorrowedAmount(items, firstUnfundedIndex, recipientTargetAmount - borrowedAmount, 25);
+                    }
+                    if (borrowedAmount < recipientTargetAmount) {
+                        borrowedAmount += collectBorrowedAmount(items, firstUnfundedIndex, recipientTargetAmount - borrowedAmount, 1);
+                    }
+
+                    if (borrowedAmount > 0) {
+                        var borrowedScale = Math.min(1, borrowedAmount / recipientTargetAmount);
+
+                        for (var r = 0; r < unfundedIndexes.length; r++) {
+                            var targetRecipient = items[unfundedIndexes[r]];
+                            var targetPercent = recipientTargets[r] * borrowedScale;
+                            var recipientAmount = targetRecipient.cost * (targetPercent / 100);
+                            targetRecipient.fundedAmount += recipientAmount;
+                        }
+                    }
+                }
+            }
+        }
+
+        var totalAllocated = 0;
+        for (var a = 0; a < items.length; a++) {
+            var summaryItem = items[a];
+            var safeCost = summaryItem.cost;
+            var allocated = Math.max(0, Math.min(summaryItem.fundedAmount, safeCost));
+            totalAllocated += allocated;
+
+            if (safeCost <= 0 || allocated <= 0) {
+                summaryItem.status = 'none';
+                summaryItem.fundedPercent = 0;
+                continue;
+            }
+
+            if (allocated >= safeCost - 1) {
+                summaryItem.status = 'full';
+                summaryItem.fundedPercent = 100;
+                continue;
+            }
+
+            summaryItem.status = 'partial';
+            summaryItem.fundedPercent = Math.max(1, Math.min(99, Math.round((allocated / safeCost) * 100)));
+        }
+
+        remaining = Math.max(0, revenue - totalAllocated);
 
         return {
             taxRate: taxRate,

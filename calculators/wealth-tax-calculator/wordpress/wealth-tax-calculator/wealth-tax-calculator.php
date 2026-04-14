@@ -666,9 +666,9 @@ class WTC_Policy_Analytics {
                                 <label>
                                     <input type="hidden" name="<?php echo esc_attr( WTC_ANALYTICS_GEO_OPTION ); ?>" value="0" />
                                     <input type="checkbox" name="<?php echo esc_attr( WTC_ANALYTICS_GEO_OPTION ); ?>" value="1" <?php checked( $this->geo_enabled(), true ); ?> />
-                                    <?php esc_html_e( 'Enable coarse IP-based Michigan region bucketing', 'wealth-tax-calculator' ); ?>
+                                    <?php esc_html_e( 'Enable coarse IP-based US region tracking (Michigan city detail)', 'wealth-tax-calculator' ); ?>
                                 </label>
-                                <p class="description"><?php esc_html_e( 'Turn this off to disable location tracking entirely. No raw IP is stored in analytics records.', 'wealth-tax-calculator' ); ?></p>
+                                <p class="description"><?php esc_html_e( 'When enabled, analytics only include US responses. Michigan responses are grouped by city (mi_city), while other US responses are grouped by state (us_state). No raw IP is stored in analytics records.', 'wealth-tax-calculator' ); ?></p>
                             </td>
                         </tr>
                         <tr>
@@ -869,6 +869,15 @@ class WTC_Policy_Analytics {
             );
         }
 
+        $region_bucket = null;
+        if ( $this->geo_enabled() ) {
+            $geo_context = $this->get_geo_context();
+            if ( ! $geo_context['include'] ) {
+                wp_send_json_success( array( 'ok' => true, 'excluded' => 'non-us' ) );
+            }
+            $region_bucket = $geo_context['bucket'];
+        }
+
         $day =& $data[ $today ];
         $day['event_total'] = isset( $day['event_total'] ) ? (int) $day['event_total'] + 1 : 1;
 
@@ -917,11 +926,10 @@ class WTC_Policy_Analytics {
         }
 
         if ( $this->geo_enabled() ) {
-            $bucket = $this->get_region_bucket();
-            if ( ! isset( $day['regions'][ $bucket ] ) ) {
-                $day['regions'][ $bucket ] = 0;
+            if ( ! isset( $day['regions'][ $region_bucket ] ) ) {
+                $day['regions'][ $region_bucket ] = 0;
             }
-            $day['regions'][ $bucket ] += 1;
+            $day['regions'][ $region_bucket ] += 1;
         }
 
         update_option( WTC_ANALYTICS_OPTION_KEY, $data, false );
@@ -951,16 +959,29 @@ class WTC_Policy_Analytics {
         return '';
     }
 
-    private function get_region_bucket() {
+    private function get_geo_context() {
         $ip = $this->get_client_ip();
         if ( ! $ip ) {
-            return 'unknown';
+            return array(
+                'include' => true,
+                'bucket'  => 'unknown',
+            );
         }
 
         $cache_key = 'wtc_geo_bucket_' . md5( $ip );
         $cached    = get_transient( $cache_key );
-        if ( false !== $cached ) {
-            return $cached;
+        if ( is_array( $cached ) && isset( $cached['include'], $cached['bucket'] ) ) {
+            return array(
+                'include' => (bool) $cached['include'],
+                'bucket'  => sanitize_text_field( $cached['bucket'] ),
+            );
+        }
+        if ( false !== $cached && is_string( $cached ) ) {
+            // Backward compatibility for string-only transient values.
+            return array(
+                'include' => $cached !== 'outside_michigan',
+                'bucket'  => sanitize_text_field( $cached ),
+            );
         }
 
         $url      = 'https://ipapi.co/' . rawurlencode( $ip ) . '/json/';
@@ -975,27 +996,49 @@ class WTC_Policy_Analytics {
         );
 
         if ( is_wp_error( $response ) || wp_remote_retrieve_response_code( $response ) !== 200 ) {
-            set_transient( $cache_key, 'unknown', 12 * HOUR_IN_SECONDS );
-            return 'unknown';
+            $unknown = array(
+                'include' => true,
+                'bucket'  => 'unknown',
+            );
+            set_transient( $cache_key, $unknown, 12 * HOUR_IN_SECONDS );
+            return $unknown;
         }
 
         $body = json_decode( wp_remote_retrieve_body( $response ), true );
         if ( ! is_array( $body ) ) {
-            set_transient( $cache_key, 'unknown', 12 * HOUR_IN_SECONDS );
-            return 'unknown';
+            $unknown = array(
+                'include' => true,
+                'bucket'  => 'unknown',
+            );
+            set_transient( $cache_key, $unknown, 12 * HOUR_IN_SECONDS );
+            return $unknown;
         }
 
         $country = isset( $body['country_code'] ) ? strtoupper( sanitize_text_field( $body['country_code'] ) ) : '';
         $region  = isset( $body['region_code'] ) ? strtoupper( sanitize_text_field( $body['region_code'] ) ) : '';
         $city    = isset( $body['city'] ) ? sanitize_title( sanitize_text_field( $body['city'] ) ) : '';
 
-        $bucket = 'outside_michigan';
-        if ( $country === 'US' && $region === 'MI' ) {
+        $include = true;
+        $bucket  = 'unknown';
+
+        if ( $country !== 'US' ) {
+            $include = false;
+            $bucket  = 'non_us';
+        } elseif ( $region === 'MI' ) {
             $bucket = $city ? 'mi_' . $city : 'mi_unknown';
+        } elseif ( $region ) {
+            $bucket = 'us_' . strtolower( $region );
+        } else {
+            $bucket = 'us_unknown';
         }
 
-        set_transient( $cache_key, $bucket, 24 * HOUR_IN_SECONDS );
-        return $bucket;
+        $result = array(
+            'include' => $include,
+            'bucket'  => $bucket,
+        );
+
+        set_transient( $cache_key, $result, 24 * HOUR_IN_SECONDS );
+        return $result;
     }
 
     public function prune_old_analytics_data() {
