@@ -1938,10 +1938,10 @@
 
 .calculator-container .wtc-final-summary-header {
     display: flex;
-    align-items: center;
-    gap: 20px;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
     margin-bottom: 28px;
-    flex-wrap: wrap;
 }
 
 .calculator-container .wtc-fs-back-button {
@@ -1968,7 +1968,7 @@
 
 .calculator-container .wtc-final-summary-title {
     font-family: var(--wtc-font-primary);
-    font-size: 1.6rem;
+    font-size: 2.8rem;
     color: #233071;
     margin: 0;
     font-weight: 700;

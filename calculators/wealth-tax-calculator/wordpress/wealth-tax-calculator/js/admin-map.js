@@ -164,7 +164,7 @@
         }
     }
 
-    function renderCountyBubbles(container, counties) {
+    function renderCountyBubbles(container, counties, stateCode, policyData, policyColors) {
         var maxCount = 0;
         var i;
 
@@ -177,6 +177,10 @@
         if (!counties || !counties.length) {
             return;
         }
+
+        stateCode = stateCode || '';
+        policyData = policyData || {};
+        policyColors = policyColors || {};
 
         for (i = 0; i < counties.length; i++) {
             maxCount = Math.max(maxCount, parseInt(counties[i].count, 10) || 0);
@@ -193,7 +197,30 @@
             bubble.className = 'wtc-state-county-bubble';
             bubble.style.width = size + 'px';
             bubble.style.height = size + 'px';
+            bubble.setAttribute('data-county', county.bucket || county.label);
             bubble.title = county.label + ': ' + formatNumber(count);
+
+            // Get top policy for this county if policy data is available
+            var polygonId = (stateCode + '-' + (county.bucket || county.label)).toLowerCase();
+            var topPolicy = null;
+            var policyDistribution = [];
+
+            if (policyData[county.bucket]) {
+                var policies = policyData[county.bucket];
+                var sortedPolicies = Object.keys(policies).sort(function(a, b) {
+                    return (policies[b] || 0) - (policies[a] || 0);
+                });
+
+                for (var p = 0; p < Math.min(3, sortedPolicies.length); p++) {
+                    topPolicy = sortedPolicies[p];
+                    policyDistribution.push(topPolicy + ' (' + (policies[topPolicy] || 0) + ')');
+                }
+
+                // Color the bubble based on top policy
+                if (topPolicy && policyColors[topPolicy]) {
+                    bubble.style.backgroundColor = policyColors[topPolicy];
+                }
+            }
 
             countEl.className = 'wtc-state-county-bubble-count';
             countEl.textContent = formatNumber(count);
@@ -201,10 +228,112 @@
             labelEl.className = 'wtc-state-county-bubble-label';
             labelEl.textContent = county.label;
 
+            // Add policy info to title if available
+            if (policyDistribution.length > 0) {
+                bubble.title = county.label + ': ' + formatNumber(count) + ' sessions | Policies: ' + policyDistribution.join(', ');
+            }
+
             bubble.appendChild(countEl);
             bubble.appendChild(labelEl);
             container.appendChild(bubble);
         });
+    }
+
+    function renderCountyPolicyDistribution(container, countyPolicies, countyCounts, maxRows) {
+        if (!container || !countyPolicies || Object.keys(countyPolicies).length === 0) {
+            container.innerHTML = '<p>' + 'No policy distribution data available yet.' + '</p>';
+            return;
+        }
+
+        maxRows = maxRows || 20;
+        var html = '<table class="widefat striped"><thead><tr><th>County</th><th>Sessions</th><th>Top 3 Policies</th></tr></thead><tbody>';
+        var rowCount = 0;
+
+        Object.keys(countyPolicies).forEach(function(countyBucket) {
+            if (rowCount >= maxRows) {
+                return;
+            }
+
+            var policies = countyPolicies[countyBucket] || {};
+            var sessionCount = countyCounts && countyCounts[countyBucket] ? parseInt(countyCounts[countyBucket], 10) : 0;
+            var countyLabel = countyBucket.replace(/^[a-z]{2}_county_/, '').replace(/-/g, ' ').charAt(0).toUpperCase() + countyBucket.replace(/^[a-z]{2}_county_/, '').replace(/-/g, ' ').slice(1);
+
+            var policyLines = [];
+            var sortedPolicies = Object.keys(policies).sort(function(a, b) {
+                return (policies[b] || 0) - (policies[a] || 0);
+            });
+
+            for (var i = 0; i < Math.min(3, sortedPolicies.length); i++) {
+                var policyKey = sortedPolicies[i];
+                var count = policies[policyKey] || 0;
+                policyLines.push((i + 1) + '. ' + policyKey + ' (' + count + ')');
+            }
+
+            html += '<tr><td>' + countyLabel + '</td><td>' + formatNumber(sessionCount) + '</td><td>' + policyLines.join(' | ') + '</td></tr>';
+            rowCount++;
+        });
+
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+
+    function renderUrbanRuralTaxAnalysis(container, taxRateSummary, maxRows) {
+        if (!container || !taxRateSummary || Object.keys(taxRateSummary).length === 0) {
+            container.innerHTML = '<p>' + 'No tax rate data available yet.' + '</p>';
+            return;
+        }
+
+        maxRows = maxRows || 30;
+        var urbanRates = [];
+        var suburbanRates = [];
+        var ruralRates = [];
+
+        // Aggregate rates by geography type
+        Object.keys(taxRateSummary).forEach(function(countyBucket) {
+            var countyData = taxRateSummary[countyBucket] || {};
+            if (countyData.urban && !isNaN(parseFloat(countyData.urban))) {
+                urbanRates.push(parseFloat(countyData.urban));
+            }
+            if (countyData.suburban && !isNaN(parseFloat(countyData.suburban))) {
+                suburbanRates.push(parseFloat(countyData.suburban));
+            }
+            if (countyData.rural && !isNaN(parseFloat(countyData.rural))) {
+                ruralRates.push(parseFloat(countyData.rural));
+            }
+        });
+
+        var urbanAvg = urbanRates.length > 0 ? (urbanRates.reduce(function(a, b) { return a + b; }) / urbanRates.length).toFixed(1) : null;
+        var suburbanAvg = suburbanRates.length > 0 ? (suburbanRates.reduce(function(a, b) { return a + b; }) / suburbanRates.length).toFixed(1) : null;
+        var ruralAvg = ruralRates.length > 0 ? (ruralRates.reduce(function(a, b) { return a + b; }) / ruralRates.length).toFixed(1) : null;
+
+        var html = '<table class="widefat striped"><thead><tr><th>Geography Type</th><th>Average Tax Rate (%)</th><th>County Count</th></tr></thead><tbody>';
+        html += '<tr><td>Urban</td><td>' + (urbanAvg !== null ? parseFloat(urbanAvg).toFixed(1) + '%' : '—') + '</td><td>' + urbanRates.length + '</td></tr>';
+        html += '<tr><td>Suburban</td><td>' + (suburbanAvg !== null ? parseFloat(suburbanAvg).toFixed(1) + '%' : '—') + '</td><td>' + suburbanRates.length + '</td></tr>';
+        html += '<tr><td>Rural</td><td>' + (ruralAvg !== null ? parseFloat(ruralAvg).toFixed(1) + '%' : '—') + '</td><td>' + ruralRates.length + '</td></tr>';
+        html += '</tbody></table>';
+
+        // Detailed breakdown
+        var detailedHtml = '<details style="margin-top: 20px;"><summary>Detailed County Breakdown</summary>';
+        detailedHtml += '<table class="widefat striped" style="margin-top: 10px;"><thead><tr><th>County</th><th>Urban Avg</th><th>Suburban Avg</th><th>Rural Avg</th></tr></thead><tbody>';
+
+        var rowCount = 0;
+        Object.keys(taxRateSummary).forEach(function(countyBucket) {
+            if (rowCount >= maxRows) {
+                return;
+            }
+
+            var countyData = taxRateSummary[countyBucket] || {};
+            var countyLabel = countyBucket.replace(/^[a-z]{2}_county_/, '').replace(/-/g, ' ').charAt(0).toUpperCase() + countyBucket.replace(/^[a-z]{2}_county_/, '').replace(/-/g, ' ').slice(1);
+            var urban = countyData.urban && !isNaN(parseFloat(countyData.urban)) ? parseFloat(countyData.urban).toFixed(1) + '%' : '—';
+            var suburban = countyData.suburban && !isNaN(parseFloat(countyData.suburban)) ? parseFloat(countyData.suburban).toFixed(1) + '%' : '—';
+            var rural = countyData.rural && !isNaN(parseFloat(countyData.rural)) ? parseFloat(countyData.rural).toFixed(1) + '%' : '—';
+
+            detailedHtml += '<tr><td>' + countyLabel + '</td><td>' + urban + '</td><td>' + suburban + '</td><td>' + rural + '</td></tr>';
+            rowCount++;
+        });
+
+        detailedHtml += '</tbody></table></details>';
+        container.innerHTML = html + detailedHtml;
     }
 
     function renderCountyTable(tableBody, tableEl, emptyEl, counties) {
@@ -459,12 +588,63 @@
             daysEl.textContent = formatNumber(totals.daysStored);
             avgEl.textContent = formatAverageRate(totals.averageTaxRate);
 
-            renderCountyBubbles(countyBubblesEl, counties);
+            // Pass policy data for all states (extract from state entry)
+            var policyData = stateEntry.countyPolicies || {};
+            var policyColors = stateEntry.policyColors || {};
+            var taxRateSummary = stateEntry.countyTaxRates || {};
+
+            renderCountyBubbles(countyBubblesEl, counties, normalizedCode, policyData, policyColors);
             countyEmptyEl.hidden = counties.length > 0;
 
             renderStateCountyGeometry(normalizedCode, geometryTemplates, countyGeometryEl, countyGeometryEmptyEl, counties);
 
             renderCountyTable(countyTableBodyEl, countyTableEl, countyTableEmptyEl, counties);
+            
+            // Render county policy distribution and tax rate analysis
+            if (counties.length > 0) {
+                // Build county counts map for render functions
+                var countyCounts = {};
+                counties.forEach(function(county) {
+                    countyCounts[county.bucket] = county.count;
+                });
+
+                // Create or get policy distribution container
+                var policyDistSection = document.getElementById('wtc-state-policy-dist-section');
+                if (!policyDistSection) {
+                    policyDistSection = document.createElement('div');
+                    policyDistSection.id = 'wtc-state-policy-dist-section';
+                    policyDistSection.className = 'card wtc-analytics-card';
+                    policyDistSection.style.maxWidth = '920px';
+                    policyDistSection.style.marginTop = '20px';
+                    policyDistSection.innerHTML = '<h2>County-Level Policy Distribution</h2><p class="description">Shows the top 3 ranked policies for each county.</p><div id="wtc-state-policy-distribution-container"></div>';
+                    if (countyTableEl && countyTableEl.parentElement) {
+                        countyTableEl.parentElement.parentElement.insertAdjacentElement('afterend', policyDistSection);
+                    }
+                }
+                var policyDistContainer = document.getElementById('wtc-state-policy-distribution-container');
+                if (policyDistContainer) {
+                    renderCountyPolicyDistribution(policyDistContainer, policyData, countyCounts, 20);
+                }
+
+                // Create or get tax rate analysis container
+                var taxAnalysisSection = document.getElementById('wtc-state-tax-analysis-section');
+                if (!taxAnalysisSection) {
+                    taxAnalysisSection = document.createElement('div');
+                    taxAnalysisSection.id = 'wtc-state-tax-analysis-section';
+                    taxAnalysisSection.className = 'card wtc-analytics-card';
+                    taxAnalysisSection.style.maxWidth = '920px';
+                    taxAnalysisSection.style.marginTop = '20px';
+                    taxAnalysisSection.innerHTML = '<h2>Tax Rate Analysis by Geography</h2><p class="description">Average wealth tax rate by urban/rural classification and county.</p><div id="wtc-state-tax-analysis-container"></div>';
+                    if (policyDistSection && policyDistSection.parentElement) {
+                        policyDistSection.insertAdjacentElement('afterend', taxAnalysisSection);
+                    }
+                }
+                var taxAnalysisContainer = document.getElementById('wtc-state-tax-analysis-container');
+                if (taxAnalysisContainer) {
+                    renderUrbanRuralTaxAnalysis(taxAnalysisContainer, taxRateSummary, 30);
+                }
+            }
+            
             buildStateTileMap(tileMapEl, normalizedCode, states);
         }
 
