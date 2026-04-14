@@ -4,6 +4,8 @@
 (function () {
     'use strict';
 
+    var WTC_ANALYTICS_COLLAPSE_KEY = 'wtcAnalyticsCardStatesV1';
+
     function initAnalyticsCharts() {
         var toggleGroups = document.querySelectorAll('.wtc-analytics-chart-toggle');
         if (!toggleGroups.length) {
@@ -95,6 +97,124 @@
                     });
                 }
             }(tabGroups[i]));
+        }
+    }
+
+    function normalizeSectionKey(text) {
+        return String(text || '')
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '') || 'section';
+    }
+
+    function loadCollapsedSectionState() {
+        var raw;
+        try {
+            raw = window.localStorage.getItem(WTC_ANALYTICS_COLLAPSE_KEY);
+        } catch (error) {
+            return {};
+        }
+
+        if (!raw) {
+            return {};
+        }
+
+        try {
+            return JSON.parse(raw) || {};
+        } catch (error) {
+            return {};
+        }
+    }
+
+    function saveCollapsedSectionState(state) {
+        try {
+            window.localStorage.setItem(WTC_ANALYTICS_COLLAPSE_KEY, JSON.stringify(state));
+        } catch (error) {
+            // Ignore storage failures (e.g. private mode restrictions).
+        }
+    }
+
+    function initCollapsibleAnalyticsSections() {
+        var cards = document.querySelectorAll('.wrap > .card, .wrap > .wtc-analytics-section-panel > .card');
+        var collapsedState = loadCollapsedSectionState();
+        var keyCounts = {};
+
+        if (!cards.length) {
+            return;
+        }
+
+        for (var i = 0; i < cards.length; i++) {
+            (function (card, index) {
+                var heading = card.querySelector(':scope > h2');
+                var body;
+                var button;
+                var icon;
+                var sectionLabel;
+                var baseKey;
+                var collisionCount;
+                var stateKey;
+                var bodyId;
+                var isCollapsed;
+
+                if (!heading) {
+                    return;
+                }
+
+                sectionLabel = heading.textContent ? heading.textContent.trim() : '';
+                if (!sectionLabel) {
+                    return;
+                }
+
+                baseKey = normalizeSectionKey(sectionLabel);
+                collisionCount = keyCounts[baseKey] || 0;
+                keyCounts[baseKey] = collisionCount + 1;
+                stateKey = collisionCount > 0 ? baseKey + '-' + collisionCount : baseKey;
+                bodyId = 'wtc-analytics-section-body-' + String(index + 1);
+
+                card.classList.add('wtc-analytics-collapsible');
+                heading.classList.add('wtc-analytics-section-heading');
+
+                button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'wtc-analytics-section-toggle-btn';
+                button.setAttribute('aria-controls', bodyId);
+
+                button.appendChild(document.createTextNode(sectionLabel));
+
+                icon = document.createElement('span');
+                icon.className = 'wtc-analytics-section-toggle-icon';
+                icon.setAttribute('aria-hidden', 'true');
+                button.appendChild(icon);
+
+                heading.textContent = '';
+                heading.appendChild(button);
+
+                body = document.createElement('div');
+                body.id = bodyId;
+                body.className = 'wtc-analytics-section-body';
+
+                while (heading.nextSibling) {
+                    body.appendChild(heading.nextSibling);
+                }
+
+                card.appendChild(body);
+
+                isCollapsed = collapsedState[stateKey] === true;
+
+                function setCollapsed(nextCollapsed) {
+                    body.hidden = nextCollapsed;
+                    card.classList.toggle('is-collapsed', nextCollapsed);
+                    button.setAttribute('aria-expanded', nextCollapsed ? 'false' : 'true');
+                    collapsedState[stateKey] = nextCollapsed;
+                    saveCollapsedSectionState(collapsedState);
+                }
+
+                setCollapsed(isCollapsed);
+
+                button.addEventListener('click', function () {
+                    setCollapsed(!card.classList.contains('is-collapsed'));
+                });
+            }(cards[i], i));
         }
     }
 
@@ -558,6 +678,8 @@
 
     function init() {
         initAnalyticsCharts();
+        initAnalyticsScopeTabs();
+        initCollapsibleAnalyticsSections();
         initUnitedStatesMap();
         initMichiganMap();
     }

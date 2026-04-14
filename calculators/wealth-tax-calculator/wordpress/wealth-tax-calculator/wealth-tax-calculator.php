@@ -3,7 +3,7 @@
  * Plugin Name: Billionaire Wealth Tax Calculator
  * Plugin URI:  https://github.com/hexa-decim8/Molotools
  * Description: Interactive calculator showing estimated 10-year tax revenue from billionaire wealth at rates of 1%–10%, based on the 2026 Forbes estimate of $8.2 trillion. Embed with [billionaire_wealth_tax].
- * Version:     1.3.31
+ * Version:     1.4.0
  * Author:      Molotools
  * License:     GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin version constant - update this when releasing new versions
-define( 'WTC_VERSION', '1.3.31' );
+define( 'WTC_VERSION', '1.4.0' );
 
 // Plugin constants
 define( 'WTC_PLUGIN_BASENAME', 'wealth-tax-calculator/wealth-tax-calculator.php' );
@@ -965,7 +965,6 @@ class WTC_Policy_Analytics {
                 <?php $this->render_cross_session_changes_table( isset( $summary['cross_session_changes'] ) ? $summary['cross_session_changes'] : array() ); ?>
             </div>
             <?php endif; ?>
-            </div>
 
             <div class="wtc-analytics-section-panel" data-wtc-section-panel="michigan" hidden>
 
@@ -1685,7 +1684,6 @@ class WTC_Policy_Analytics {
                 'policy_enabled'       => array(),
                 'policy_disabled'      => array(),
                 'priority_rank_counts' => array(),
-                'mode_counts'          => array(),
                 'regions'              => array(),
                 'counties'             => array(),
                 'tax_rate_counts'      => array(),
@@ -1709,14 +1707,6 @@ class WTC_Policy_Analytics {
 
                     if ( is_string( $session_hash ) && $session_hash !== '' ) {
                         $filtered_day['sessions'][ $session_hash ] = 1;
-                    }
-
-                    $mode = isset( $submission['mode'] ) ? sanitize_key( $submission['mode'] ) : '';
-                    if ( $mode !== '' ) {
-                        if ( ! isset( $filtered_day['mode_counts'][ $mode ] ) ) {
-                            $filtered_day['mode_counts'][ $mode ] = 0;
-                        }
-                        $filtered_day['mode_counts'][ $mode ] += 1;
                     }
 
                     if ( ! isset( $filtered_day['regions'][ $region_bucket ] ) ) {
@@ -1942,7 +1932,7 @@ class WTC_Policy_Analytics {
         }
 
         echo '<table class="widefat striped">';
-        echo '<thead><tr><th>' . esc_html__( 'Submitted', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Mode', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Tax rate', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Region', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Michigan county', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Prioritized selections', 'wealth-tax-calculator' ) . '</th></tr></thead>';
+        echo '<thead><tr><th>' . esc_html__( 'Submitted', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Tax rate', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Region', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Michigan county', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Prioritized selections', 'wealth-tax-calculator' ) . '</th></tr></thead>';
         echo '<tbody>';
 
         foreach ( $rows as $row ) {
@@ -1951,7 +1941,6 @@ class WTC_Policy_Analytics {
             }
 
             $submitted_at = isset( $row['submitted_at'] ) ? (int) $row['submitted_at'] : 0;
-            $mode         = isset( $row['mode'] ) ? sanitize_key( $row['mode'] ) : '';
             $tax_rate     = isset( $row['tax_rate_bucket'] ) ? sanitize_text_field( $row['tax_rate_bucket'] ) : '';
             $region       = isset( $row['region_bucket'] ) ? sanitize_text_field( $row['region_bucket'] ) : '';
             $county       = isset( $row['county_bucket'] ) ? sanitize_text_field( $row['county_bucket'] ) : '';
@@ -1959,7 +1948,6 @@ class WTC_Policy_Analytics {
 
             echo '<tr>';
             echo '<td>' . esc_html( $submitted_at > 0 ? gmdate( 'Y-m-d H:i:s', $submitted_at ) . ' UTC' : '—' ) . '</td>';
-            echo '<td>' . esc_html( $mode !== '' ? $mode : '—' ) . '</td>';
             echo '<td>' . esc_html( $tax_rate !== '' ? $tax_rate . '%' : '—' ) . '</td>';
             echo '<td>' . esc_html( $region !== '' ? $region : '—' ) . '</td>';
             echo '<td>' . esc_html( $county !== '' ? $this->format_county_bucket_label( $county ) : '—' ) . '</td>';
@@ -2287,7 +2275,6 @@ class WTC_Policy_Analytics {
 
                     $recent_submissions[] = array(
                         'submitted_at'    => isset( $submission['submitted_at'] ) ? (int) $submission['submitted_at'] : 0,
-                        'mode'            => isset( $submission['mode'] ) ? sanitize_key( $submission['mode'] ) : '',
                         'tax_rate_value'  => isset( $submission['tax_rate_value'] ) ? (float) $submission['tax_rate_value'] : null,
                         'tax_rate_bucket' => isset( $submission['tax_rate_bucket'] ) ? sanitize_text_field( $submission['tax_rate_bucket'] ) : '',
                         'region_bucket'   => isset( $submission['region_bucket'] ) ? sanitize_text_field( $submission['region_bucket'] ) : '',
@@ -2528,7 +2515,6 @@ class WTC_Policy_Analytics {
 
         $event_type = isset( $_POST['event_type'] ) ? sanitize_key( wp_unslash( $_POST['event_type'] ) ) : '';
         $policy_key = isset( $_POST['policy_key'] ) ? sanitize_text_field( wp_unslash( $_POST['policy_key'] ) ) : '';
-        $mode       = isset( $_POST['mode'] ) ? sanitize_key( wp_unslash( $_POST['mode'] ) ) : 'advanced';
         $order_raw  = isset( $_POST['order'] ) ? wp_unslash( $_POST['order'] ) : '[]';
         $selected_items_raw = isset( $_POST['selected_items'] ) ? wp_unslash( $_POST['selected_items'] ) : '[]';
 
@@ -2549,10 +2535,6 @@ class WTC_Policy_Analytics {
 
         if ( ! preg_match( '/^[a-zA-Z]+:[0-9]+$/', $policy_key ) ) {
             wp_send_json_error( array( 'message' => 'invalid-policy-key' ), 400 );
-        }
-
-        if ( ! in_array( $mode, array( 'basic', 'advanced' ), true ) ) {
-            $mode = 'advanced';
         }
 
         $order = json_decode( $order_raw, true );
@@ -2577,7 +2559,6 @@ class WTC_Policy_Analytics {
                 'policy_enabled'        => array(),
                 'policy_disabled'       => array(),
                 'priority_rank_counts'  => array(),
-                'mode_counts'           => array(),
                 'regions'               => array(),
                 'counties'              => array(),
                 'tax_rate_counts'       => array(),
@@ -2600,11 +2581,6 @@ class WTC_Policy_Analytics {
         }
 
         $day['event_total'] = isset( $day['event_total'] ) ? (int) $day['event_total'] + 1 : 1;
-
-        if ( ! isset( $day['mode_counts'][ $mode ] ) ) {
-            $day['mode_counts'][ $mode ] = 0;
-        }
-        $day['mode_counts'][ $mode ] += 1;
 
         $clean_order = array();
         for ( $i = 0; $i < count( $order ); $i++ ) {
@@ -2670,7 +2646,6 @@ class WTC_Policy_Analytics {
             'selected_items'   => $clean_selected_items,
             'tax_rate_value'   => ( null !== $tax_rate_val && $tax_rate_val >= WTC_TAX_RATE_MIN && $tax_rate_val <= WTC_TAX_RATE_MAX ) ? round( $tax_rate_val, 1 ) : null,
             'tax_rate_bucket'  => $tax_rate_bucket,
-            'mode'             => $mode,
             'region_bucket'    => sanitize_text_field( $region_bucket ),
             'submitted_at'     => time(),
         );
