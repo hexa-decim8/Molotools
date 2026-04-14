@@ -2090,9 +2090,10 @@
 
 .calculator-container .wtc-fs-slider-shell {
     --wtc-money-progress: 0.25;
-    --wtc-slider-stage-top: 0px;
-    --wtc-slider-stage-height: 164px;
+    --wtc-slider-stage-top: 22px;
+    --wtc-slider-stage-height: 194px;
     position: relative;
+    padding-top: calc(var(--wtc-slider-stage-top) + var(--wtc-slider-stage-height));
     margin-bottom: 10px;
     isolation: isolate;
 }
@@ -2102,7 +2103,7 @@
 }
 
 .calculator-container .wtc-fs-dragdealer {
-    margin-top: 170px;
+    margin-top: 0;
 }
 
 .calculator-container .wtc-fs-range-labels {
@@ -2176,19 +2177,28 @@
 }
 
 .calculator-container .wtc-fs-badge {
-    display: none;
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
 
 .calculator-container .wtc-fs-badge-full {
-    display: none;
+    background: #D4EDDA;
+    color: #1A6630;
 }
 
 .calculator-container .wtc-fs-badge-partial {
-    display: none;
+    background: #FFF3CD;
+    color: #856404;
 }
 
 .calculator-container .wtc-fs-badge-none {
-    display: none;
+    background: #F8D7DA;
+    color: #8B1A22;
 }
 
 .calculator-container .wtc-fs-desc {
@@ -2248,8 +2258,9 @@
 }
 
 @media (max-width: 768px) {
-    .calculator-container .wtc-fs-dragdealer {
-        margin-top: 180px;
+    .calculator-container .wtc-fs-slider-shell {
+        --wtc-slider-stage-top: 26px;
+        --wtc-slider-stage-height: 198px;
     }
 
     .calculator-container .wtc-fs-slider-shell .wtc-infobox {
@@ -2270,11 +2281,19 @@
         padding: 14px;
     }
 
-    .calculator-container .wtc-fs-dragdealer {
-        margin-top: 192px;
+    .calculator-container .wtc-fs-slider-shell {
+        --wtc-slider-stage-top: 30px;
+        --wtc-slider-stage-height: 198px;
     }
 
     .calculator-container .wtc-fs-slider-shell .wtc-infobox {
         width: 206px;
+    }
+}
+
+@media (max-width: 430px) {
+    .calculator-container .wtc-fs-slider-shell {
+        --wtc-slider-stage-top: 34px;
+        --wtc-slider-stage-height: 202px;
     }
 }
