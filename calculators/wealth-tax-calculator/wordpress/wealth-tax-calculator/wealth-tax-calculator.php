@@ -1541,8 +1541,6 @@ class WTC_Policy_Analytics {
         $event_type = isset( $_POST['event_type'] ) ? sanitize_key( wp_unslash( $_POST['event_type'] ) ) : '';
         $policy_key = isset( $_POST['policy_key'] ) ? sanitize_text_field( wp_unslash( $_POST['policy_key'] ) ) : '';
         $mode       = isset( $_POST['mode'] ) ? sanitize_key( wp_unslash( $_POST['mode'] ) ) : 'advanced';
-        $enabled    = isset( $_POST['enabled'] ) ? sanitize_text_field( wp_unslash( $_POST['enabled'] ) ) : '';
-        $rank       = isset( $_POST['rank'] ) ? (int) $_POST['rank'] : 0;
         $order_raw  = isset( $_POST['order'] ) ? wp_unslash( $_POST['order'] ) : '[]';
         $selected_items_raw = isset( $_POST['selected_items'] ) ? wp_unslash( $_POST['selected_items'] ) : '[]';
 
@@ -1557,7 +1555,7 @@ class WTC_Policy_Analytics {
             ? substr( md5( $session_raw ), 0, 12 )
             : '';
 
-        if ( ! in_array( $event_type, array( 'policy_toggle', 'policy_reorder', 'next_step_submit' ), true ) ) {
+        if ( $event_type !== 'next_step_submit' ) {
             wp_send_json_error( array( 'message' => 'invalid-event-type' ), 400 );
         }
 
@@ -1609,11 +1607,6 @@ class WTC_Policy_Analytics {
 
         if ( ! isset( $day['final_submissions'] ) || ! is_array( $day['final_submissions'] ) ) {
             $day['final_submissions'] = array();
-        }
-
-        if ( $event_type !== 'next_step_submit' ) {
-            // Submit-only model: ignore interaction-level events from older clients.
-            wp_send_json_success( array( 'ok' => true, 'ignored' => 'legacy-event' ) );
         }
 
         $day['event_total'] = isset( $day['event_total'] ) ? (int) $day['event_total'] + 1 : 1;
@@ -1819,30 +1812,17 @@ function wtc_register_cron_schedule( $schedules ) {
 add_filter( 'cron_schedules', 'wtc_register_cron_schedule' );
 
 /**
- * Ensure the recurring updater hook exists.
- */
-function wtc_schedule_update_checks() {
-    if ( ! wp_next_scheduled( WTC_UPDATE_CRON_HOOK ) ) {
-        wp_schedule_event( time() + WTC_CACHE_TTL, WTC_UPDATE_CRON_SCHEDULE, WTC_UPDATE_CRON_HOOK );
-    }
-}
-
-/**
  * Activation hook - runs when plugin is activated
  */
 function wtc_activate() {
-    // Clear any existing cached data on activation
-    global $wpdb;
+    global $wpdb, $wtc_updater;
     $wpdb->query(
         "DELETE FROM {$wpdb->options} 
         WHERE option_name LIKE '_transient_wtc_comparisons_data_%' 
         OR option_name LIKE '_transient_timeout_wtc_comparisons_data_%'"
     );
 
-    wtc_schedule_update_checks();
-    
-    // Initialize any default options here if needed in the future
-    // add_option( 'wtc_plugin_settings', array() );
+    $wtc_updater->ensure_schedule();
 }
 register_activation_hook( __FILE__, 'wtc_activate' );
 
@@ -1976,50 +1956,31 @@ class Billionaire_Wealth_Tax_Calculator {
         );
     }
 
-    private function format_currency( $amount ) {
-        if ( $amount >= 1e12 ) {
-            return '$' . number_format( $amount / 1e12, 2 ) . ' Trillion';
-        }
-
-        if ( $amount >= 1e9 ) {
-            return '$' . number_format( $amount / 1e9, 1 ) . ' Billion';
-        }
-
-        return '$' . number_format( round( $amount ) );
-    }
-
-    private function get_initial_policy_funding_total() {
-        return 290e9 + 300e9 + 1.1e12
-            + 152e9
-            + 2.5e12 + 90e9 + 2.125e12
-            + 959e9
-            + 856e9
-            + 700e9;
-    }
-
-    private function get_initial_allocation_summary_markup() {
-        $default_tax_rate = 2;
-        $revenue          = 4.4e12 * ( $default_tax_rate / 5 );
-        $selected_funding = $this->get_initial_policy_funding_total();
-        $overrun_amount   = max( $selected_funding - $revenue, 0 );
-        $remaining_amount = max( $revenue - $selected_funding, 0 );
-        $is_over_budget   = $overrun_amount > 0;
-
-        ob_start();
+    private function render_share_bar( $position ) {
         ?>
-        <div class="allocation-summary<?php echo $is_over_budget ? ' is-over-budget' : ''; ?>">
-            <span class="allocation-available-line"><?php echo esc_html( '10-year tax revenue available: ' . $this->format_currency( $revenue ) ); ?></span>
-            <span class="allocation-selected-line"><?php echo esc_html( 'Selected policy funding: ' . $this->format_currency( $selected_funding ) ); ?></span>
-            <span class="allocation-budget-line<?php echo $is_over_budget ? ' allocation-budget-warning' : ''; ?>">
-                <?php echo esc_html( $is_over_budget ? 'Over budget by: ' . $this->format_currency( $overrun_amount ) : 'Remaining revenue: ' . $this->format_currency( $remaining_amount ) ); ?>
-            </span>
-            <span class="allocation-budget-hint<?php echo $is_over_budget ? ' allocation-overrun-message' : ''; ?>">
-                <?php echo esc_html( $is_over_budget ? 'You need to tax billionaires more! Use the button to raise the rate by 1%.' : 'Selected policy costs are within available revenue.' ); ?>
-            </span>
+        <div class="wtc-share-block wtc-share-block-<?php echo esc_attr( $position ); ?>">
+            <div class="container" aria-label="Share this calculator">
+                <div class="share-window">
+                    <div class="share-bar">
+                        <div class="trigger"><a href="#" data-share-action="facebook" target="_blank" rel="noopener noreferrer" aria-label="Share on Facebook"><i class="fab fa-facebook-f" aria-hidden="true"></i><span class="wtc-sr-only">Facebook</span></a></div>
+                        <div class="trigger"><a href="#" data-share-action="twitter" target="_blank" rel="noopener noreferrer" aria-label="Share on X"><i class="fab fa-x-twitter" aria-hidden="true"></i><span class="wtc-sr-only">X</span></a></div>
+                        <div class="trigger"><a href="#" data-share-action="bluesky" target="_blank" rel="noopener noreferrer" aria-label="Share on Bluesky"><i class="fab fa-bluesky" aria-hidden="true"></i><span class="wtc-sr-only">Bluesky</span></a></div>
+                        <div class="trigger"><a href="#" data-share-action="pinterest" target="_blank" rel="noopener noreferrer" aria-label="Share on Pinterest"><i class="fab fa-pinterest-p" aria-hidden="true"></i><span class="wtc-sr-only">Pinterest</span></a></div>
+                        <div class="trigger"><a href="#" data-share-action="linkedin" target="_blank" rel="noopener noreferrer" aria-label="Share on LinkedIn"><i class="fab fa-linkedin-in" aria-hidden="true"></i><span class="wtc-sr-only">LinkedIn</span></a></div>
+                        <div class="trigger"><a href="#" data-share-action="whatsapp" target="_blank" rel="noopener noreferrer" aria-label="Share on WhatsApp"><i class="fab fa-whatsapp" aria-hidden="true"></i><span class="wtc-sr-only">WhatsApp</span></a></div>
+                        <div class="trigger"><a href="#" data-share-action="email" target="_blank" rel="noopener noreferrer" aria-label="Share by Email"><i class="fas fa-paper-plane" aria-hidden="true"></i><span class="wtc-sr-only">Email</span></a></div>
+                    </div>
+                </div>
+                <div class="share">
+                    <div class="trigger share-btn"><a href="#" data-share-action="copy" aria-label="Copy share link"><i class="fas fa-plus" aria-hidden="true"></i> Share</a></div>
+                </div>
+                <div class="copy-link">
+                    <div class="trigger copy-link-btn"><a href="#" data-share-action="copy" aria-label="Copy link"><i class="fas fa-link" aria-hidden="true"></i> Copy link</a></div>
+                </div>
+            </div>
+            <p class="wtc-share-status" aria-live="polite"></p>
         </div>
         <?php
-
-        return ob_get_clean();
     }
 
     /**
@@ -2031,28 +1992,7 @@ class Billionaire_Wealth_Tax_Calculator {
         ob_start();
         ?>
         <div class="calculator-container wealth-tax-widget mode-advanced">
-            <div class="wtc-share-block wtc-share-block-top">
-                <div class="container" aria-label="Share this calculator">
-                    <div class="share-window">
-                        <div class="share-bar">
-                            <div class="trigger"><a href="#" data-share-action="facebook" target="_blank" rel="noopener noreferrer" aria-label="Share on Facebook"><i class="fab fa-facebook-f" aria-hidden="true"></i><span class="wtc-sr-only">Facebook</span></a></div>
-                            <div class="trigger"><a href="#" data-share-action="twitter" target="_blank" rel="noopener noreferrer" aria-label="Share on X"><i class="fab fa-x-twitter" aria-hidden="true"></i><span class="wtc-sr-only">X</span></a></div>
-                            <div class="trigger"><a href="#" data-share-action="bluesky" target="_blank" rel="noopener noreferrer" aria-label="Share on Bluesky"><i class="fab fa-bluesky" aria-hidden="true"></i><span class="wtc-sr-only">Bluesky</span></a></div>
-                            <div class="trigger"><a href="#" data-share-action="pinterest" target="_blank" rel="noopener noreferrer" aria-label="Share on Pinterest"><i class="fab fa-pinterest-p" aria-hidden="true"></i><span class="wtc-sr-only">Pinterest</span></a></div>
-                            <div class="trigger"><a href="#" data-share-action="linkedin" target="_blank" rel="noopener noreferrer" aria-label="Share on LinkedIn"><i class="fab fa-linkedin-in" aria-hidden="true"></i><span class="wtc-sr-only">LinkedIn</span></a></div>
-                            <div class="trigger"><a href="#" data-share-action="whatsapp" target="_blank" rel="noopener noreferrer" aria-label="Share on WhatsApp"><i class="fab fa-whatsapp" aria-hidden="true"></i><span class="wtc-sr-only">WhatsApp</span></a></div>
-                            <div class="trigger"><a href="#" data-share-action="email" target="_blank" rel="noopener noreferrer" aria-label="Share by Email"><i class="fas fa-paper-plane" aria-hidden="true"></i><span class="wtc-sr-only">Email</span></a></div>
-                        </div>
-                    </div>
-                    <div class="share">
-                        <div class="trigger share-btn"><a href="#" data-share-action="copy" aria-label="Copy share link"><i class="fas fa-plus" aria-hidden="true"></i> Share</a></div>
-                    </div>
-                    <div class="copy-link">
-                        <div class="trigger copy-link-btn"><a href="#" data-share-action="copy" aria-label="Copy link"><i class="fas fa-link" aria-hidden="true"></i> Copy link</a></div>
-                    </div>
-                </div>
-                <p class="wtc-share-status" aria-live="polite"></p>
-            </div>
+            <?php $this->render_share_bar( 'top' ); ?>
 
             <div class="calculator-content">
                 <div class="calculator-inputs">
@@ -2169,28 +2109,7 @@ class Billionaire_Wealth_Tax_Calculator {
                 </div>
             </div>
 
-            <div class="wtc-share-block wtc-share-block-bottom">
-                <div class="container" aria-label="Share this calculator">
-                    <div class="share-window">
-                        <div class="share-bar">
-                            <div class="trigger"><a href="#" data-share-action="facebook" target="_blank" rel="noopener noreferrer" aria-label="Share on Facebook"><i class="fab fa-facebook-f" aria-hidden="true"></i><span class="wtc-sr-only">Facebook</span></a></div>
-                            <div class="trigger"><a href="#" data-share-action="twitter" target="_blank" rel="noopener noreferrer" aria-label="Share on X"><i class="fab fa-x-twitter" aria-hidden="true"></i><span class="wtc-sr-only">X</span></a></div>
-                            <div class="trigger"><a href="#" data-share-action="bluesky" target="_blank" rel="noopener noreferrer" aria-label="Share on Bluesky"><i class="fab fa-bluesky" aria-hidden="true"></i><span class="wtc-sr-only">Bluesky</span></a></div>
-                            <div class="trigger"><a href="#" data-share-action="pinterest" target="_blank" rel="noopener noreferrer" aria-label="Share on Pinterest"><i class="fab fa-pinterest-p" aria-hidden="true"></i><span class="wtc-sr-only">Pinterest</span></a></div>
-                            <div class="trigger"><a href="#" data-share-action="linkedin" target="_blank" rel="noopener noreferrer" aria-label="Share on LinkedIn"><i class="fab fa-linkedin-in" aria-hidden="true"></i><span class="wtc-sr-only">LinkedIn</span></a></div>
-                            <div class="trigger"><a href="#" data-share-action="whatsapp" target="_blank" rel="noopener noreferrer" aria-label="Share on WhatsApp"><i class="fab fa-whatsapp" aria-hidden="true"></i><span class="wtc-sr-only">WhatsApp</span></a></div>
-                            <div class="trigger"><a href="#" data-share-action="email" target="_blank" rel="noopener noreferrer" aria-label="Share by Email"><i class="fas fa-paper-plane" aria-hidden="true"></i><span class="wtc-sr-only">Email</span></a></div>
-                        </div>
-                    </div>
-                    <div class="share">
-                        <div class="trigger share-btn"><a href="#" data-share-action="copy" aria-label="Copy share link"><i class="fas fa-plus" aria-hidden="true"></i> Share</a></div>
-                    </div>
-                    <div class="copy-link">
-                        <div class="trigger copy-link-btn"><a href="#" data-share-action="copy" aria-label="Copy link"><i class="fas fa-link" aria-hidden="true"></i> Copy link</a></div>
-                    </div>
-                </div>
-                <p class="wtc-share-status" aria-live="polite"></p>
-            </div>
+            <?php $this->render_share_bar( 'bottom' ); ?>
 
             <div id="wtc-finalSummary" class="wtc-final-summary" role="region" aria-label="Tax Plan Final Summary" aria-hidden="true">
                 <div class="wtc-final-summary-inner">
