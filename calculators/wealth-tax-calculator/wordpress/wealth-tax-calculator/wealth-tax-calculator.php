@@ -621,6 +621,13 @@ class WTC_Policy_Analytics {
             }
         }
 
+        $mi_counties = array();
+        foreach ( $county_counts as $bucket => $count ) {
+            if ( strncmp( $bucket, 'mi_county_', 10 ) === 0 ) {
+                $mi_counties[ substr( $bucket, 10 ) ] = (int) $count;
+            }
+        }
+
         $us_states = array();
         foreach ( $region_counts as $bucket => $count ) {
             if ( strncmp( $bucket, 'us_', 3 ) !== 0 || 'us_unknown' === $bucket ) {
@@ -740,10 +747,20 @@ class WTC_Policy_Analytics {
         }
 
         $summary = $this->build_summary( $analytics_data );
-        $submitted_sessions = isset( $summary['total_events'] ) ? (int) $summary['total_events'] : 0;
-        $unique_sessions    = isset( $summary['unique_sessions'] ) ? (int) $summary['unique_sessions'] : 0;
-        $days_stored        = isset( $summary['days_count'] ) ? (int) $summary['days_count'] : 0;
-        $average_tax_rate   = isset( $summary['average_tax_rate'] ) ? (float) $summary['average_tax_rate'] : 0.0;
+        $submitted_sessions   = isset( $summary['total_events'] ) ? (int) $summary['total_events'] : 0;
+        $unique_sessions      = isset( $summary['unique_sessions'] ) ? (int) $summary['unique_sessions'] : 0;
+        $days_stored          = isset( $summary['days_count'] ) ? (int) $summary['days_count'] : 0;
+        $average_tax_rate     = isset( $summary['average_tax_rate'] ) ? (float) $summary['average_tax_rate'] : 0.0;
+        $repeat_fingerprints  = isset( $summary['repeat_fingerprints'] ) ? (int) $summary['repeat_fingerprints'] : 0;
+        $change_events_total  = isset( $summary['change_events_total'] ) ? (int) $summary['change_events_total'] : 0;
+
+        $mi_analytics_data       = $this->filter_analytics_data_to_michigan( $analytics_data );
+        $mi_summary              = $this->build_summary( $mi_analytics_data );
+        $mi_submitted_sessions   = isset( $mi_summary['total_events'] ) ? (int) $mi_summary['total_events'] : 0;
+        $mi_unique_sessions      = isset( $mi_summary['unique_sessions'] ) ? (int) $mi_summary['unique_sessions'] : 0;
+        $mi_days_stored          = isset( $mi_summary['days_count'] ) ? (int) $mi_summary['days_count'] : 0;
+        $mi_repeat_fingerprints  = isset( $mi_summary['repeat_fingerprints'] ) ? (int) $mi_summary['repeat_fingerprints'] : 0;
+        $mi_change_events_total  = isset( $mi_summary['change_events_total'] ) ? (int) $mi_summary['change_events_total'] : 0;
         ?>
         <div class="wrap">
             <h1><?php esc_html_e( 'Wealth Tax Calculator Analytics', 'wealth-tax-calculator' ); ?></h1>
