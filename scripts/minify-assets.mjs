@@ -30,7 +30,7 @@ const targets = [
     command: 'npx',
     args: [
       '--yes',
-      'cleancss',
+      'clean-css-cli',
       '-O2',
       '-o',
       'css/styles.min.css',

@@ -710,6 +710,28 @@
     color: #383533;
 }
 
+.calculator-container .wtc-step-heading {
+    margin: 0 0 14px;
+    font-size: 1.08rem;
+    color: #233071;
+    font-weight: 700;
+    font-family: var(--wtc-font-primary);
+}
+
+.calculator-container:not(.mode-advanced) .wtc-step-heading {
+    display: none;
+}
+
+.calculator-container .wtc-step-subheading {
+    margin: -8px 0 14px;
+    font-size: 0.92rem;
+    color: #7b6f66;
+}
+
+.calculator-container:not(.mode-advanced) .wtc-step-subheading {
+    display: none;
+}
+
 /* ── Policy allocation section ────────────────────────────── */
 .calculator-container .policy-allocation-section {
     margin-bottom: 40px;
@@ -1622,29 +1644,6 @@
     font-size: 0.82rem;
     color: #7b6f66;
     margin-top: 2px;
-}
-
-.calculator-container .selected-policy-status {
-    flex-shrink: 0;
-    align-self: flex-start;
-    margin-top: 2px;
-    display: inline-block;
-    padding: 2px 7px;
-    border-radius: 10px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-}
-
-.calculator-container .selected-policy-status.funded {
-    background: #D4EDDA;
-    color: #1A6630;
-}
-
-.calculator-container .selected-policy-status.unfunded {
-    background: #F8D7DA;
-    color: #8B1A22;
 }
 
 /* ── Info box ─────────────────────────────────────────────── */

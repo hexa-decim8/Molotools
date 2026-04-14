@@ -1374,11 +1374,6 @@
 
             entry.appendChild(body);
 
-            var status = document.createElement('span');
-            status.className = 'selected-policy-status ' + (isFunded ? 'funded' : 'unfunded');
-            status.textContent = isFunded ? 'Funded' : 'Unfunded';
-            entry.appendChild(status);
-
             entry.addEventListener('dragstart', handlePolicyEntryDragStart);
             entry.addEventListener('dragover', handlePolicyEntryDragOver);
             entry.addEventListener('dragleave', handlePolicyEntryDragLeave);

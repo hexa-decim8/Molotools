@@ -813,6 +813,7 @@ class Billionaire_Wealth_Tax_Calculator {
                     </div>
 
                     <div class="input-section">
+                        <h3 class="wtc-step-heading">Step 1: Select Billionaire Taxation Rate</h3>
                         <div class="slider-container wtc-slider-shell">
                             <input type="hidden" id="wtc-taxRate" value="2" aria-label="Tax rate percentage">
 
@@ -863,8 +864,7 @@ class Billionaire_Wealth_Tax_Calculator {
                         </div>
                     </div>
 
-                    <div id="wtc-allocationTotalsBox" class="allocation-totals-box"><?php echo $this->get_initial_allocation_summary_markup(); ?></div>
-
+                    <h3 class="wtc-step-heading">Step 2: Select Your Policies</h3>
                     <div class="policy-allocation-section">
                         <h3 class="policy-header">Allocate Revenue to Policies</h3>
                         <p class="policy-description">Use the checkboxes below to include or exclude individual policy options.</p>
@@ -882,6 +882,8 @@ class Billionaire_Wealth_Tax_Calculator {
                             <div class="comparison-text" id="wtc-comparisonText">Loading&hellip;</div>
                         </div>
 
+                        <h3 class="wtc-step-heading">Step 3: Prioritize your policies.</h3>
+                        <p class="wtc-step-subheading">Drag and drop policies from top (highest priority) to bottom (lowest priority).</p>
                         <div id="wtc-selectedPoliciesBox" class="selected-policies-box">
                             <h4>Selected Policies</h4>
                             <div id="wtc-selectedPoliciesList" class="selected-policies-list">
