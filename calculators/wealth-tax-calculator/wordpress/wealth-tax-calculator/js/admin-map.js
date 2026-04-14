@@ -51,6 +51,59 @@
         }
     }
 
+    var WTC_US_STATE_TILES = {
+        'WA': {x:0, y:0, label:'Washington'},
+        'OR': {x:0, y:1, label:'Oregon'},
+        'CA': {x:0, y:2, label:'California'},
+        'AK': {x:0, y:6, label:'Alaska'},
+        'ID': {x:1, y:1, label:'Idaho'},
+        'NV': {x:1, y:2, label:'Nevada'},
+        'HI': {x:1, y:6, label:'Hawaii'},
+        'MT': {x:2, y:0, label:'Montana'},
+        'WY': {x:2, y:1, label:'Wyoming'},
+        'UT': {x:2, y:2, label:'Utah'},
+        'AZ': {x:2, y:3, label:'Arizona'},
+        'CO': {x:3, y:2, label:'Colorado'},
+        'NM': {x:3, y:3, label:'New Mexico'},
+        'ND': {x:4, y:0, label:'North Dakota'},
+        'SD': {x:4, y:1, label:'South Dakota'},
+        'NE': {x:4, y:2, label:'Nebraska'},
+        'KS': {x:4, y:3, label:'Kansas'},
+        'OK': {x:4, y:4, label:'Oklahoma'},
+        'TX': {x:4, y:5, label:'Texas'},
+        'MN': {x:5, y:0, label:'Minnesota'},
+        'IA': {x:5, y:1, label:'Iowa'},
+        'MO': {x:5, y:2, label:'Missouri'},
+        'AR': {x:5, y:3, label:'Arkansas'},
+        'LA': {x:5, y:4, label:'Louisiana'},
+        'WI': {x:6, y:0, label:'Wisconsin'},
+        'IL': {x:6, y:1, label:'Illinois'},
+        'KY': {x:6, y:2, label:'Kentucky'},
+        'TN': {x:6, y:3, label:'Tennessee'},
+        'MS': {x:6, y:4, label:'Mississippi'},
+        'MI': {x:7, y:0, label:'Michigan'},
+        'IN': {x:7, y:1, label:'Indiana'},
+        'OH': {x:8, y:1, label:'Ohio'},
+        'WV': {x:8, y:2, label:'West Virginia'},
+        'AL': {x:7, y:4, label:'Alabama'},
+        'GA': {x:8, y:4, label:'Georgia'},
+        'FL': {x:9, y:5, label:'Florida'},
+        'VA': {x:9, y:2, label:'Virginia'},
+        'NC': {x:9, y:3, label:'North Carolina'},
+        'SC': {x:9, y:4, label:'South Carolina'},
+        'PA': {x:9, y:1, label:'Pennsylvania'},
+        'NY': {x:10, y:0, label:'New York'},
+        'NJ': {x:10, y:1, label:'New Jersey'},
+        'DE': {x:10, y:2, label:'Delaware'},
+        'MD': {x:10, y:3, label:'Maryland'},
+        'VT': {x:11, y:0, label:'Vermont'},
+        'NH': {x:11, y:1, label:'New Hampshire'},
+        'MA': {x:11, y:2, label:'Massachusetts'},
+        'CT': {x:11, y:3, label:'Connecticut'},
+        'RI': {x:12, y:3, label:'Rhode Island'},
+        'ME': {x:12, y:1, label:'Maine'}
+    };
+
     var WTC_MI_CITIES = {
         'detroit': {x:463.6, y:491.1, label:'Detroit'},
         'grand-rapids': {x:305.1, y:440.2, label:'Grand Rapids'},
@@ -241,8 +294,108 @@
     var BUBBLE_MAX = 28;
     var SVG_NS = 'http://www.w3.org/2000/svg';
 
+    function initUsMap() {
+        if (typeof window.wtcUsMap === 'undefined') {
+            return;
+        }
+
+        var mapConfig = window.wtcUsMap;
+        var stateCounts = mapConfig.states || {};
+        var mapEl = document.getElementById('wtc-us-state-map');
+        if (!mapEl) {
+            return;
+        }
+
+        var tooltip = document.getElementById('wtc-us-map-tooltip');
+        var maxCount = 0;
+        Object.keys(WTC_US_STATE_TILES).forEach(function (code) {
+            var count = parseInt(stateCounts[code], 10);
+            if (!isNaN(count) && count > maxCount) {
+                maxCount = count;
+            }
+        });
+        if (maxCount < 1) {
+            maxCount = 1;
+        }
+
+        function showTooltip(e, label, count) {
+            if (!tooltip) {
+                return;
+            }
+            tooltip.textContent = label + ': ' + count + ' session' + (count !== 1 ? 's' : '');
+            tooltip.style.display = 'block';
+
+            var rect = mapEl.getBoundingClientRect();
+            var x = e.clientX - rect.left;
+            var y = e.clientY - rect.top;
+            var left = x + 12;
+            var tooltipWidth = tooltip.offsetWidth;
+            if (left + tooltipWidth > rect.width) {
+                left = x - tooltipWidth - 12;
+            }
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = (y - 30) + 'px';
+        }
+
+        function hideTooltip() {
+            if (tooltip) {
+                tooltip.style.display = 'none';
+            }
+        }
+
+        Object.keys(WTC_US_STATE_TILES).forEach(function (code) {
+            var tile = WTC_US_STATE_TILES[code];
+            var count = parseInt(stateCounts[code], 10);
+            if (isNaN(count) || count < 0) {
+                count = 0;
+            }
+
+            var tileEl = document.createElement('button');
+            tileEl.type = 'button';
+            tileEl.className = 'wtc-us-state-tile';
+            tileEl.style.gridColumn = String(tile.x + 1);
+            tileEl.style.gridRow = String(tile.y + 1);
+
+            var ratio = count > 0 ? Math.log(count + 1) / Math.log(maxCount + 1) : 0;
+            var alpha = count > 0 ? (0.18 + (0.72 * ratio)) : 0.08;
+            tileEl.style.backgroundColor = 'rgba(64, 107, 191, ' + alpha.toFixed(2) + ')';
+            if (count > 0) {
+                tileEl.classList.add('has-data');
+            }
+
+            var codeEl = document.createElement('span');
+            codeEl.className = 'wtc-us-state-code';
+            codeEl.textContent = code;
+
+            var countEl = document.createElement('span');
+            countEl.className = 'wtc-us-state-count';
+            countEl.textContent = String(count);
+
+            tileEl.appendChild(codeEl);
+            tileEl.appendChild(countEl);
+            tileEl.setAttribute('aria-label', tile.label + ': ' + count + ' session' + (count !== 1 ? 's' : ''));
+            tileEl.title = tile.label + ': ' + count + ' session' + (count !== 1 ? 's' : '');
+
+            tileEl.addEventListener('mousemove', function (e) {
+                showTooltip(e, tile.label, count);
+            });
+            tileEl.addEventListener('mouseleave', hideTooltip);
+            tileEl.addEventListener('focus', function (e) {
+                var rect = tileEl.getBoundingClientRect();
+                showTooltip({
+                    clientX: (rect.left + rect.right) / 2,
+                    clientY: rect.top
+                }, tile.label, count);
+            });
+            tileEl.addEventListener('blur', hideTooltip);
+
+            mapEl.appendChild(tileEl);
+        });
+    }
+
     function init() {
         initAnalyticsCharts();
+        initUsMap();
 
         if (typeof window.wtcMichiganMap === 'undefined') {
             return;

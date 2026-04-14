@@ -612,6 +612,7 @@ class WTC_Policy_Analytics {
         $summary       = $this->build_summary( $analytics_data );
         $region_counts = isset( $summary['region_counts'] ) ? $summary['region_counts'] : array();
         $county_counts = isset( $summary['county_counts'] ) ? $summary['county_counts'] : array();
+        $us_states     = $this->aggregate_us_state_counts( $region_counts );
 
         $mi_cities = array();
         foreach ( $region_counts as $bucket => $count ) {
@@ -633,6 +634,14 @@ class WTC_Policy_Analytics {
             array(
                 'cities'   => $mi_cities,
                 'counties' => $mi_counties,
+            )
+        );
+
+        wp_localize_script(
+            'wtc-admin-map',
+            'wtcUsMap',
+            array(
+                'states' => $us_states,
             )
         );
     }
@@ -882,6 +891,8 @@ class WTC_Policy_Analytics {
                 </div>
             </div>
 
+            <?php $this->render_us_state_map( $summary['region_counts'] ); ?>
+
             <?php $this->render_michigan_map( $summary['region_counts'] ); ?>
 
             <div class="card" style="max-width: 920px; margin-top: 20px;">
@@ -901,7 +912,8 @@ class WTC_Policy_Analytics {
 
             <div class="card" style="max-width: 920px; margin-top: 20px;">
                 <h2><?php esc_html_e( 'Region Buckets', 'wealth-tax-calculator' ); ?></h2>
-                <?php $this->render_simple_count_table( $summary['region_counts'], __( 'Region bucket', 'wealth-tax-calculator' ), __( 'Submitted sessions', 'wealth-tax-calculator' ) ); ?>
+                <p class="description"><?php esc_html_e( 'Includes all tracked regions. Michigan uses mi_* buckets; other US states use us_* buckets (for example, us_md for Maryland).', 'wealth-tax-calculator' ); ?></p>
+                <?php $this->render_simple_count_table( $summary['region_counts'], __( 'Region bucket', 'wealth-tax-calculator' ), __( 'Submitted sessions', 'wealth-tax-calculator' ), 100 ); ?>
             </div>
 
             <div class="card" style="max-width: 920px; margin-top: 20px;">
@@ -1046,6 +1058,146 @@ class WTC_Policy_Analytics {
         echo '</div>';
     }
 
+    private function get_us_state_code_map() {
+        return array(
+            'AL' => __( 'Alabama', 'wealth-tax-calculator' ),
+            'AK' => __( 'Alaska', 'wealth-tax-calculator' ),
+            'AZ' => __( 'Arizona', 'wealth-tax-calculator' ),
+            'AR' => __( 'Arkansas', 'wealth-tax-calculator' ),
+            'CA' => __( 'California', 'wealth-tax-calculator' ),
+            'CO' => __( 'Colorado', 'wealth-tax-calculator' ),
+            'CT' => __( 'Connecticut', 'wealth-tax-calculator' ),
+            'DE' => __( 'Delaware', 'wealth-tax-calculator' ),
+            'FL' => __( 'Florida', 'wealth-tax-calculator' ),
+            'GA' => __( 'Georgia', 'wealth-tax-calculator' ),
+            'HI' => __( 'Hawaii', 'wealth-tax-calculator' ),
+            'ID' => __( 'Idaho', 'wealth-tax-calculator' ),
+            'IL' => __( 'Illinois', 'wealth-tax-calculator' ),
+            'IN' => __( 'Indiana', 'wealth-tax-calculator' ),
+            'IA' => __( 'Iowa', 'wealth-tax-calculator' ),
+            'KS' => __( 'Kansas', 'wealth-tax-calculator' ),
+            'KY' => __( 'Kentucky', 'wealth-tax-calculator' ),
+            'LA' => __( 'Louisiana', 'wealth-tax-calculator' ),
+            'ME' => __( 'Maine', 'wealth-tax-calculator' ),
+            'MD' => __( 'Maryland', 'wealth-tax-calculator' ),
+            'MA' => __( 'Massachusetts', 'wealth-tax-calculator' ),
+            'MI' => __( 'Michigan', 'wealth-tax-calculator' ),
+            'MN' => __( 'Minnesota', 'wealth-tax-calculator' ),
+            'MS' => __( 'Mississippi', 'wealth-tax-calculator' ),
+            'MO' => __( 'Missouri', 'wealth-tax-calculator' ),
+            'MT' => __( 'Montana', 'wealth-tax-calculator' ),
+            'NE' => __( 'Nebraska', 'wealth-tax-calculator' ),
+            'NV' => __( 'Nevada', 'wealth-tax-calculator' ),
+            'NH' => __( 'New Hampshire', 'wealth-tax-calculator' ),
+            'NJ' => __( 'New Jersey', 'wealth-tax-calculator' ),
+            'NM' => __( 'New Mexico', 'wealth-tax-calculator' ),
+            'NY' => __( 'New York', 'wealth-tax-calculator' ),
+            'NC' => __( 'North Carolina', 'wealth-tax-calculator' ),
+            'ND' => __( 'North Dakota', 'wealth-tax-calculator' ),
+            'OH' => __( 'Ohio', 'wealth-tax-calculator' ),
+            'OK' => __( 'Oklahoma', 'wealth-tax-calculator' ),
+            'OR' => __( 'Oregon', 'wealth-tax-calculator' ),
+            'PA' => __( 'Pennsylvania', 'wealth-tax-calculator' ),
+            'RI' => __( 'Rhode Island', 'wealth-tax-calculator' ),
+            'SC' => __( 'South Carolina', 'wealth-tax-calculator' ),
+            'SD' => __( 'South Dakota', 'wealth-tax-calculator' ),
+            'TN' => __( 'Tennessee', 'wealth-tax-calculator' ),
+            'TX' => __( 'Texas', 'wealth-tax-calculator' ),
+            'UT' => __( 'Utah', 'wealth-tax-calculator' ),
+            'VT' => __( 'Vermont', 'wealth-tax-calculator' ),
+            'VA' => __( 'Virginia', 'wealth-tax-calculator' ),
+            'WA' => __( 'Washington', 'wealth-tax-calculator' ),
+            'WV' => __( 'West Virginia', 'wealth-tax-calculator' ),
+            'WI' => __( 'Wisconsin', 'wealth-tax-calculator' ),
+            'WY' => __( 'Wyoming', 'wealth-tax-calculator' ),
+        );
+    }
+
+    private function aggregate_us_state_counts( array $region_counts ) {
+        $state_map    = $this->get_us_state_code_map();
+        $state_counts = array();
+        foreach ( $state_map as $code => $label ) {
+            $state_counts[ $code ] = 0;
+        }
+
+        $michigan_total = 0;
+        foreach ( $region_counts as $bucket => $count ) {
+            $bucket = sanitize_text_field( $bucket );
+            $count  = (int) $count;
+            if ( $count <= 0 ) {
+                continue;
+            }
+
+            if ( strncmp( $bucket, 'mi_', 3 ) === 0 ) {
+                $michigan_total += $count;
+                continue;
+            }
+
+            if ( strncmp( $bucket, 'us_', 3 ) !== 0 ) {
+                continue;
+            }
+
+            $state_code = strtoupper( substr( $bucket, 3 ) );
+            if ( isset( $state_counts[ $state_code ] ) ) {
+                $state_counts[ $state_code ] += $count;
+            }
+        }
+
+        $state_counts['MI'] += $michigan_total;
+
+        return $state_counts;
+    }
+
+    private function render_us_state_map( array $region_counts ) {
+        $state_counts = $this->aggregate_us_state_counts( $region_counts );
+        $state_map    = $this->get_us_state_code_map();
+        $has_data     = false;
+        foreach ( $state_counts as $count ) {
+            if ( (int) $count > 0 ) {
+                $has_data = true;
+                break;
+            }
+        }
+        ?>
+        <div class="card wtc-us-map-card" style="max-width: 920px; margin-top: 20px;">
+            <h2><?php esc_html_e( 'US Visitors Map', 'wealth-tax-calculator' ); ?></h2>
+            <p class="description"><?php esc_html_e( 'All 50 states are shown. Tile intensity increases with submitted sessions.', 'wealth-tax-calculator' ); ?></p>
+            <?php if ( ! $has_data ) : ?>
+                <p><?php esc_html_e( 'No US state visitor data yet. Tiles are shown with zero counts until submissions are recorded.', 'wealth-tax-calculator' ); ?></p>
+            <?php endif; ?>
+            <div class="wtc-us-map-wrap">
+                <div id="wtc-us-state-map" role="img" aria-label="<?php esc_attr_e( 'US state visitor heat map', 'wealth-tax-calculator' ); ?>"></div>
+                <div id="wtc-us-map-tooltip"></div>
+            </div>
+            <div class="wtc-us-map-legend" aria-hidden="true">
+                <span class="wtc-us-map-legend-swatch wtc-us-map-legend-low"></span>
+                <span><?php esc_html_e( 'Lower session volume', 'wealth-tax-calculator' ); ?></span>
+                <span class="wtc-us-map-legend-swatch wtc-us-map-legend-high"></span>
+                <span><?php esc_html_e( 'Higher session volume', 'wealth-tax-calculator' ); ?></span>
+            </div>
+            <details class="wtc-us-map-state-summary">
+                <summary><?php esc_html_e( 'State totals', 'wealth-tax-calculator' ); ?></summary>
+                <table class="widefat striped">
+                    <thead>
+                        <tr>
+                            <th><?php esc_html_e( 'State', 'wealth-tax-calculator' ); ?></th>
+                            <th><?php esc_html_e( 'Submitted sessions', 'wealth-tax-calculator' ); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ( $state_map as $code => $label ) : ?>
+                            <tr>
+                                <td><?php echo esc_html( $label . ' (' . $code . ')' ); ?></td>
+                                <td><?php echo esc_html( number_format_i18n( isset( $state_counts[ $code ] ) ? (int) $state_counts[ $code ] : 0 ) ); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </details>
+        </div>
+        <?php
+    }
+
     private function render_michigan_map( array $region_counts ) {
         $mi_cities  = array();
         $mi_unknown = 0;
@@ -1065,6 +1217,7 @@ class WTC_Policy_Analytics {
         ?>
         <div class="card wtc-mi-map-card" style="max-width: 920px; margin-top: 20px;">
             <h2><?php esc_html_e( 'Michigan Visitors Map', 'wealth-tax-calculator' ); ?></h2>
+            <p class="description"><?php esc_html_e( 'This map shows Michigan-only city data. Visitors from other states (for example, Maryland) appear in the Region Buckets table below.', 'wealth-tax-calculator' ); ?></p>
             <?php if ( ! $has_data ) : ?>
                 <p><?php esc_html_e( 'No Michigan visitor data yet.', 'wealth-tax-calculator' ); ?></p>
             <?php else : ?>
@@ -1383,13 +1536,16 @@ class WTC_Policy_Analytics {
         return $bucket;
     }
 
-    private function render_simple_count_table( $counts, $col_one, $col_two ) {
+    private function render_simple_count_table( $counts, $col_one, $col_two, $limit = 15 ) {
         if ( empty( $counts ) ) {
             echo '<p>' . esc_html__( 'No data yet.', 'wealth-tax-calculator' ) . '</p>';
             return;
         }
 
-        $limit = 15;
+        $limit = (int) $limit;
+        if ( $limit < 1 ) {
+            $limit = 15;
+        }
         $rows  = 0;
 
         echo '<table class="widefat striped">';
@@ -2410,6 +2566,9 @@ class WTC_Policy_Analytics {
 
         $country = isset( $body['country_code'] ) ? strtoupper( sanitize_text_field( $body['country_code'] ) ) : '';
         $region  = isset( $body['region_code'] ) ? strtoupper( sanitize_text_field( $body['region_code'] ) ) : '';
+        if ( $region !== '' && ! preg_match( '/^[A-Z]{2}$/', $region ) ) {
+            $region = '';
+        }
         $city    = isset( $body['city'] ) ? sanitize_title( sanitize_text_field( $body['city'] ) ) : '';
         $postal  = isset( $body['postal'] ) ? sanitize_text_field( $body['postal'] ) : '';
 
