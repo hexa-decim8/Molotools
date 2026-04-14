@@ -691,12 +691,17 @@ class WTC_Policy_Analytics {
 
             <div class="card" style="max-width: 920px; margin-top: 20px;">
                 <h2><?php esc_html_e( 'Most Selected Sub-Policies (Final Submissions)', 'wealth-tax-calculator' ); ?></h2>
-                <?php $this->render_simple_count_table( $summary['enabled_counts'], __( 'Sub-policy', 'wealth-tax-calculator' ), __( 'Sessions selected', 'wealth-tax-calculator' ) ); ?>
+                <?php $this->render_policy_count_table( $summary['enabled_rows'], __( 'Sessions selected', 'wealth-tax-calculator' ) ); ?>
             </div>
 
             <div class="card" style="max-width: 920px; margin-top: 20px;">
                 <h2><?php esc_html_e( 'Most Prioritized (Rank #1)', 'wealth-tax-calculator' ); ?></h2>
-                <?php $this->render_simple_count_table( $summary['top_rank_counts'], __( 'Sub-policy', 'wealth-tax-calculator' ), __( 'Times ranked #1', 'wealth-tax-calculator' ) ); ?>
+                <?php $this->render_policy_count_table( $summary['top_rank_rows'], __( 'Times ranked #1', 'wealth-tax-calculator' ) ); ?>
+            </div>
+
+            <div class="card" style="max-width: 920px; margin-top: 20px;">
+                <h2><?php esc_html_e( 'Priority Rank Breakdown', 'wealth-tax-calculator' ); ?></h2>
+                <?php $this->render_rank_breakdown_table( $summary['rank_rows'] ); ?>
             </div>
 
             <div class="card" style="max-width: 920px; margin-top: 20px;">
@@ -707,6 +712,11 @@ class WTC_Policy_Analytics {
             <div class="card" style="max-width: 920px; margin-top: 20px;">
                 <h2><?php esc_html_e( 'Tax Rate Distribution', 'wealth-tax-calculator' ); ?></h2>
                 <?php $this->render_simple_count_table( $summary['tax_rate_counts'], __( 'Tax rate (%)', 'wealth-tax-calculator' ), __( 'Submitted sessions', 'wealth-tax-calculator' ) ); ?>
+            </div>
+
+            <div class="card" style="max-width: 920px; margin-top: 20px;">
+                <h2><?php esc_html_e( 'Recent Submission Detail', 'wealth-tax-calculator' ); ?></h2>
+                <?php $this->render_recent_submissions_table( $summary['recent_submissions'] ); ?>
             </div>
 
             <div class="card" style="max-width: 920px; margin-top: 20px;">
@@ -750,13 +760,231 @@ class WTC_Policy_Analytics {
         echo '</table>';
     }
 
+    private function render_policy_count_table( $rows, $count_header ) {
+        if ( empty( $rows ) ) {
+            echo '<p>' . esc_html__( 'No data yet.', 'wealth-tax-calculator' ) . '</p>';
+            return;
+        }
+
+        $limit = 15;
+        $count = 0;
+
+        echo '<table class="widefat striped">';
+        echo '<thead><tr><th>' . esc_html__( 'Sub-policy', 'wealth-tax-calculator' ) . '</th><th>' . esc_html( $count_header ) . '</th></tr></thead>';
+        echo '<tbody>';
+
+        foreach ( $rows as $row ) {
+            if ( $count >= $limit || ! is_array( $row ) ) {
+                break;
+            }
+
+            $label      = isset( $row['label'] ) ? sanitize_text_field( $row['label'] ) : '';
+            $policy_key = isset( $row['policy_key'] ) ? sanitize_text_field( $row['policy_key'] ) : '';
+            $cell_text  = $label !== '' ? $label : $policy_key;
+
+            if ( $policy_key !== '' && $policy_key !== $cell_text ) {
+                $cell_text .= ' (' . $policy_key . ')';
+            }
+
+            echo '<tr>';
+            echo '<td>' . esc_html( $cell_text ) . '</td>';
+            echo '<td>' . esc_html( number_format_i18n( (int) $row['count'] ) ) . '</td>';
+            echo '</tr>';
+            $count++;
+        }
+
+        echo '</tbody>';
+        echo '</table>';
+    }
+
+    private function render_rank_breakdown_table( $rows ) {
+        if ( empty( $rows ) ) {
+            echo '<p>' . esc_html__( 'No data yet.', 'wealth-tax-calculator' ) . '</p>';
+            return;
+        }
+
+        $limit = 25;
+        $count = 0;
+
+        echo '<table class="widefat striped">';
+        echo '<thead><tr><th>' . esc_html__( 'Rank', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Sub-policy', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Submitted sessions', 'wealth-tax-calculator' ) . '</th></tr></thead>';
+        echo '<tbody>';
+
+        foreach ( $rows as $row ) {
+            if ( $count >= $limit || ! is_array( $row ) ) {
+                break;
+            }
+
+            $label      = isset( $row['label'] ) ? sanitize_text_field( $row['label'] ) : '';
+            $policy_key = isset( $row['policy_key'] ) ? sanitize_text_field( $row['policy_key'] ) : '';
+            $cell_text  = $label !== '' ? $label : $policy_key;
+
+            if ( $policy_key !== '' && $policy_key !== $cell_text ) {
+                $cell_text .= ' (' . $policy_key . ')';
+            }
+
+            echo '<tr>';
+            echo '<td>' . esc_html( '#' . (int) $row['rank'] ) . '</td>';
+            echo '<td>' . esc_html( $cell_text ) . '</td>';
+            echo '<td>' . esc_html( number_format_i18n( (int) $row['count'] ) ) . '</td>';
+            echo '</tr>';
+            $count++;
+        }
+
+        echo '</tbody>';
+        echo '</table>';
+    }
+
+    private function render_recent_submissions_table( $rows ) {
+        if ( empty( $rows ) ) {
+            echo '<p>' . esc_html__( 'No data yet.', 'wealth-tax-calculator' ) . '</p>';
+            return;
+        }
+
+        echo '<table class="widefat striped">';
+        echo '<thead><tr><th>' . esc_html__( 'Submitted', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Mode', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Tax rate', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Region', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Prioritized selections', 'wealth-tax-calculator' ) . '</th></tr></thead>';
+        echo '<tbody>';
+
+        foreach ( $rows as $row ) {
+            if ( ! is_array( $row ) ) {
+                continue;
+            }
+
+            $submitted_at = isset( $row['submitted_at'] ) ? (int) $row['submitted_at'] : 0;
+            $mode         = isset( $row['mode'] ) ? sanitize_key( $row['mode'] ) : '';
+            $tax_rate     = isset( $row['tax_rate_bucket'] ) ? sanitize_text_field( $row['tax_rate_bucket'] ) : '';
+            $region       = isset( $row['region_bucket'] ) ? sanitize_text_field( $row['region_bucket'] ) : '';
+            $items        = isset( $row['selected_items'] ) && is_array( $row['selected_items'] ) ? $row['selected_items'] : array();
+
+            echo '<tr>';
+            echo '<td>' . esc_html( $submitted_at > 0 ? gmdate( 'Y-m-d H:i:s', $submitted_at ) . ' UTC' : '—' ) . '</td>';
+            echo '<td>' . esc_html( $mode !== '' ? $mode : '—' ) . '</td>';
+            echo '<td>' . esc_html( $tax_rate !== '' ? $tax_rate . '%' : '—' ) . '</td>';
+            echo '<td>' . esc_html( $region !== '' ? $region : '—' ) . '</td>';
+            echo '<td>';
+
+            if ( empty( $items ) ) {
+                echo esc_html__( 'No policy details stored.', 'wealth-tax-calculator' );
+            } else {
+                echo '<ol style="margin:0; padding-left: 20px;">';
+                foreach ( $items as $item ) {
+                    if ( ! is_array( $item ) ) {
+                        continue;
+                    }
+
+                    $policy_key = isset( $item['policy_key'] ) ? sanitize_text_field( $item['policy_key'] ) : '';
+                    $label      = $this->format_policy_submission_label( $item, $policy_key );
+                    echo '<li>' . esc_html( $label ) . '</li>';
+                }
+                echo '</ol>';
+            }
+
+            echo '</td>';
+            echo '</tr>';
+        }
+
+        echo '</tbody>';
+        echo '</table>';
+    }
+
+    private function format_policy_submission_label( $policy_item, $fallback_key = '' ) {
+        $policy_label = '';
+        $description  = '';
+
+        if ( is_array( $policy_item ) ) {
+            $policy_label = isset( $policy_item['policy_label'] ) ? sanitize_text_field( $policy_item['policy_label'] ) : '';
+            $description  = isset( $policy_item['description'] ) ? sanitize_text_field( $policy_item['description'] ) : '';
+        }
+
+        if ( $policy_label !== '' && $description !== '' ) {
+            return $policy_label . ': ' . $description;
+        }
+
+        if ( $description !== '' ) {
+            return $description;
+        }
+
+        if ( $policy_label !== '' ) {
+            return $policy_label;
+        }
+
+        $fallback_key = sanitize_text_field( $fallback_key );
+        return $fallback_key !== '' ? $fallback_key : __( 'Unknown policy', 'wealth-tax-calculator' );
+    }
+
+    private function sanitize_selected_items_payload( $selected_items, $order ) {
+        $items_by_key = array();
+
+        if ( is_array( $selected_items ) ) {
+            foreach ( $selected_items as $selected_item ) {
+                if ( ! is_array( $selected_item ) ) {
+                    continue;
+                }
+
+                $policy_key = isset( $selected_item['policy_key'] ) ? sanitize_text_field( $selected_item['policy_key'] ) : '';
+                if ( ! preg_match( '/^[a-zA-Z]+:[0-9]+$/', $policy_key ) ) {
+                    continue;
+                }
+
+                $items_by_key[ $policy_key ] = $selected_item;
+            }
+        }
+
+        $normalized_items = array();
+        foreach ( $order as $index => $policy_key ) {
+            $source_item = isset( $items_by_key[ $policy_key ] ) && is_array( $items_by_key[ $policy_key ] )
+                ? $items_by_key[ $policy_key ]
+                : array();
+
+            $policy_group = isset( $source_item['policy_group'] ) ? sanitize_key( $source_item['policy_group'] ) : '';
+            if ( $policy_group === '' ) {
+                $parts        = explode( ':', $policy_key );
+                $policy_group = sanitize_key( $parts[0] );
+            }
+
+            $funding_status = isset( $source_item['funding_status'] ) ? sanitize_key( $source_item['funding_status'] ) : '';
+            if ( ! in_array( $funding_status, array( 'full', 'partial', 'none' ), true ) ) {
+                $funding_status = '';
+            }
+
+            $normalized_items[] = array(
+                'policy_key'      => $policy_key,
+                'policy_group'    => $policy_group,
+                'policy_label'    => isset( $source_item['policy_label'] ) ? sanitize_text_field( $source_item['policy_label'] ) : '',
+                'description'     => isset( $source_item['description'] ) ? sanitize_text_field( $source_item['description'] ) : '',
+                'cost_label'      => isset( $source_item['cost_label'] ) ? sanitize_text_field( $source_item['cost_label'] ) : '',
+                'selected_amount' => isset( $source_item['selected_amount'] ) && is_numeric( $source_item['selected_amount'] ) ? (int) round( (float) $source_item['selected_amount'] ) : 0,
+                'funded_amount'   => isset( $source_item['funded_amount'] ) && is_numeric( $source_item['funded_amount'] ) ? (int) round( (float) $source_item['funded_amount'] ) : 0,
+                'funded_percent'  => isset( $source_item['funded_percent'] ) && is_numeric( $source_item['funded_percent'] ) ? max( 0, min( 100, (int) round( (float) $source_item['funded_percent'] ) ) ) : 0,
+                'funding_status'  => $funding_status,
+                'rank'            => (int) $index + 1,
+            );
+        }
+
+        return $normalized_items;
+    }
+
+    private function normalize_submission_selected_items( $submission ) {
+        $order = isset( $submission['order'] ) && is_array( $submission['order'] )
+            ? $submission['order']
+            : array();
+
+        $selected_items = isset( $submission['selected_items'] ) && is_array( $submission['selected_items'] )
+            ? $submission['selected_items']
+            : array();
+
+        return $this->sanitize_selected_items_payload( $selected_items, $order );
+    }
+
     private function build_summary( $analytics_data ) {
-        $enabled_counts  = array();
-        $top_rank_counts = array();
-        $region_counts   = array();
-        $tax_rate_counts = array();
-        $unique_sessions = 0;
-        $total_events    = 0;
+        $enabled_stats      = array();
+        $top_rank_stats     = array();
+        $rank_stats         = array();
+        $region_counts      = array();
+        $tax_rate_counts    = array();
+        $recent_submissions = array();
+        $unique_sessions    = 0;
+        $total_events       = 0;
 
         foreach ( $analytics_data as $day ) {
             if ( ! is_array( $day ) ) {
@@ -776,28 +1004,58 @@ class WTC_Policy_Analytics {
                     $order = isset( $submission['order'] ) && is_array( $submission['order'] )
                         ? $submission['order']
                         : array();
+                    $selected_items = $this->normalize_submission_selected_items( $submission );
 
-                    for ( $i = 0; $i < count( $order ); $i++ ) {
-                        $policy_key = sanitize_text_field( $order[ $i ] );
-                        if ( ! preg_match( '/^[a-zA-Z]+:[0-9]+$/', $policy_key ) ) {
+                    for ( $i = 0; $i < count( $selected_items ); $i++ ) {
+                        $selected_item = $selected_items[ $i ];
+                        $policy_key    = isset( $selected_item['policy_key'] ) ? sanitize_text_field( $selected_item['policy_key'] ) : '';
+                        if ( $policy_key === '' || ! preg_match( '/^[a-zA-Z]+:[0-9]+$/', $policy_key ) ) {
                             continue;
                         }
 
-                        if ( ! isset( $enabled_counts[ $policy_key ] ) ) {
-                            $enabled_counts[ $policy_key ] = 0;
+                        $label = $this->format_policy_submission_label( $selected_item, $policy_key );
+
+                        if ( ! isset( $enabled_stats[ $policy_key ] ) ) {
+                            $enabled_stats[ $policy_key ] = array(
+                                'policy_key' => $policy_key,
+                                'label'      => $label,
+                                'count'      => 0,
+                            );
                         }
-                        $enabled_counts[ $policy_key ] += 1;
+                        $enabled_stats[ $policy_key ]['count'] += 1;
+
+                        $rank     = isset( $selected_item['rank'] ) ? max( 1, (int) $selected_item['rank'] ) : ( $i + 1 );
+                        $rank_key = $rank . '|' . $policy_key;
+
+                        if ( ! isset( $rank_stats[ $rank_key ] ) ) {
+                            $rank_stats[ $rank_key ] = array(
+                                'rank'       => $rank,
+                                'policy_key' => $policy_key,
+                                'label'      => $label,
+                                'count'      => 0,
+                            );
+                        }
+                        $rank_stats[ $rank_key ]['count'] += 1;
+
+                        if ( $rank === 1 ) {
+                            if ( ! isset( $top_rank_stats[ $policy_key ] ) ) {
+                                $top_rank_stats[ $policy_key ] = array(
+                                    'policy_key' => $policy_key,
+                                    'label'      => $label,
+                                    'count'      => 0,
+                                );
+                            }
+                            $top_rank_stats[ $policy_key ]['count'] += 1;
+                        }
                     }
 
-                    if ( ! empty( $order ) ) {
-                        $rank_one = sanitize_text_field( $order[0] );
-                        if ( preg_match( '/^[a-zA-Z]+:[0-9]+$/', $rank_one ) ) {
-                            if ( ! isset( $top_rank_counts[ $rank_one ] ) ) {
-                                $top_rank_counts[ $rank_one ] = 0;
-                            }
-                            $top_rank_counts[ $rank_one ] += 1;
-                        }
-                    }
+                    $recent_submissions[] = array(
+                        'submitted_at'    => isset( $submission['submitted_at'] ) ? (int) $submission['submitted_at'] : 0,
+                        'mode'            => isset( $submission['mode'] ) ? sanitize_key( $submission['mode'] ) : '',
+                        'tax_rate_bucket' => isset( $submission['tax_rate_bucket'] ) ? sanitize_text_field( $submission['tax_rate_bucket'] ) : '',
+                        'region_bucket'   => isset( $submission['region_bucket'] ) ? sanitize_text_field( $submission['region_bucket'] ) : '',
+                        'selected_items'  => $selected_items,
+                    );
 
                     $bucket = isset( $submission['region_bucket'] ) ? sanitize_text_field( $submission['region_bucket'] ) : 'unknown';
                     if ( $bucket === '' ) {
@@ -824,19 +1082,41 @@ class WTC_Policy_Analytics {
 
             if ( ! empty( $day['policy_enabled'] ) && is_array( $day['policy_enabled'] ) ) {
                 foreach ( $day['policy_enabled'] as $policy_key => $count ) {
-                    if ( ! isset( $enabled_counts[ $policy_key ] ) ) {
-                        $enabled_counts[ $policy_key ] = 0;
+                    $policy_key = sanitize_text_field( $policy_key );
+                    if ( ! isset( $enabled_stats[ $policy_key ] ) ) {
+                        $enabled_stats[ $policy_key ] = array(
+                            'policy_key' => $policy_key,
+                            'label'      => $this->format_policy_submission_label( array(), $policy_key ),
+                            'count'      => 0,
+                        );
                     }
-                    $enabled_counts[ $policy_key ] += (int) $count;
+                    $enabled_stats[ $policy_key ]['count'] += (int) $count;
                 }
             }
 
             if ( ! empty( $day['priority_rank_counts']['1'] ) && is_array( $day['priority_rank_counts']['1'] ) ) {
                 foreach ( $day['priority_rank_counts']['1'] as $policy_key => $count ) {
-                    if ( ! isset( $top_rank_counts[ $policy_key ] ) ) {
-                        $top_rank_counts[ $policy_key ] = 0;
+                    $policy_key = sanitize_text_field( $policy_key );
+
+                    if ( ! isset( $top_rank_stats[ $policy_key ] ) ) {
+                        $top_rank_stats[ $policy_key ] = array(
+                            'policy_key' => $policy_key,
+                            'label'      => $this->format_policy_submission_label( array(), $policy_key ),
+                            'count'      => 0,
+                        );
                     }
-                    $top_rank_counts[ $policy_key ] += (int) $count;
+                    $top_rank_stats[ $policy_key ]['count'] += (int) $count;
+
+                    $rank_key = '1|' . $policy_key;
+                    if ( ! isset( $rank_stats[ $rank_key ] ) ) {
+                        $rank_stats[ $rank_key ] = array(
+                            'rank'       => 1,
+                            'policy_key' => $policy_key,
+                            'label'      => $this->format_policy_submission_label( array(), $policy_key ),
+                            'count'      => 0,
+                        );
+                    }
+                    $rank_stats[ $rank_key ]['count'] += (int) $count;
                 }
             }
 
@@ -863,19 +1143,63 @@ class WTC_Policy_Analytics {
             }
         }
 
-        arsort( $enabled_counts );
-        arsort( $top_rank_counts );
+        uasort(
+            $enabled_stats,
+            function ( $left, $right ) {
+                if ( (int) $left['count'] === (int) $right['count'] ) {
+                    return strcmp( (string) $left['label'], (string) $right['label'] );
+                }
+
+                return ( (int) $left['count'] > (int) $right['count'] ) ? -1 : 1;
+            }
+        );
+        uasort(
+            $top_rank_stats,
+            function ( $left, $right ) {
+                if ( (int) $left['count'] === (int) $right['count'] ) {
+                    return strcmp( (string) $left['label'], (string) $right['label'] );
+                }
+
+                return ( (int) $left['count'] > (int) $right['count'] ) ? -1 : 1;
+            }
+        );
+        uasort(
+            $rank_stats,
+            function ( $left, $right ) {
+                if ( (int) $left['count'] === (int) $right['count'] ) {
+                    if ( (int) $left['rank'] === (int) $right['rank'] ) {
+                        return strcmp( (string) $left['label'], (string) $right['label'] );
+                    }
+
+                    return ( (int) $left['rank'] < (int) $right['rank'] ) ? -1 : 1;
+                }
+
+                return ( (int) $left['count'] > (int) $right['count'] ) ? -1 : 1;
+            }
+        );
         arsort( $region_counts );
         ksort( $tax_rate_counts );
 
+        usort(
+            $recent_submissions,
+            function ( $left, $right ) {
+                return (int) $right['submitted_at'] <=> (int) $left['submitted_at'];
+            }
+        );
+        if ( count( $recent_submissions ) > 20 ) {
+            $recent_submissions = array_slice( $recent_submissions, 0, 20 );
+        }
+
         return array(
-            'enabled_counts'  => $enabled_counts,
-            'top_rank_counts' => $top_rank_counts,
-            'region_counts'   => $region_counts,
-            'tax_rate_counts' => $tax_rate_counts,
-            'unique_sessions' => $unique_sessions,
-            'days_count'      => count( $analytics_data ),
-            'total_events'    => $total_events,
+            'enabled_rows'      => array_values( $enabled_stats ),
+            'top_rank_rows'     => array_values( $top_rank_stats ),
+            'rank_rows'         => array_values( $rank_stats ),
+            'region_counts'     => $region_counts,
+            'tax_rate_counts'   => $tax_rate_counts,
+            'recent_submissions'=> $recent_submissions,
+            'unique_sessions'   => $unique_sessions,
+            'days_count'        => count( $analytics_data ),
+            'total_events'      => $total_events,
         );
     }
 
@@ -913,6 +1237,7 @@ class WTC_Policy_Analytics {
         $enabled    = isset( $_POST['enabled'] ) ? sanitize_text_field( wp_unslash( $_POST['enabled'] ) ) : '';
         $rank       = isset( $_POST['rank'] ) ? (int) $_POST['rank'] : 0;
         $order_raw  = isset( $_POST['order'] ) ? wp_unslash( $_POST['order'] ) : '[]';
+        $selected_items_raw = isset( $_POST['selected_items'] ) ? wp_unslash( $_POST['selected_items'] ) : '[]';
 
         $tax_rate_raw    = isset( $_POST['tax_rate'] ) ? sanitize_text_field( wp_unslash( $_POST['tax_rate'] ) ) : '';
         $tax_rate_val    = strlen( $tax_rate_raw ) ? (float) $tax_rate_raw : null;
@@ -940,6 +1265,11 @@ class WTC_Policy_Analytics {
         $order = json_decode( $order_raw, true );
         if ( ! is_array( $order ) ) {
             $order = array();
+        }
+
+        $selected_items = json_decode( $selected_items_raw, true );
+        if ( ! is_array( $selected_items ) ) {
+            $selected_items = array();
         }
 
         $today = gmdate( 'Y-m-d' );
@@ -1006,6 +1336,8 @@ class WTC_Policy_Analytics {
             wp_send_json_error( array( 'message' => 'invalid-session' ), 400 );
         }
 
+        $clean_selected_items = $this->sanitize_selected_items_payload( $selected_items, $clean_order );
+
         if ( $tax_rate_bucket !== '' ) {
             if ( ! isset( $day['tax_rate_counts'] ) ) {
                 $day['tax_rate_counts'] = array();
@@ -1031,6 +1363,7 @@ class WTC_Policy_Analytics {
         $day['final_submissions'][ $session_hash ] = array(
             'policy_key'       => sanitize_text_field( $policy_key ),
             'order'            => $clean_order,
+            'selected_items'   => $clean_selected_items,
             'tax_rate_bucket'  => $tax_rate_bucket,
             'mode'             => $mode,
             'region_bucket'    => sanitize_text_field( $region_bucket ),

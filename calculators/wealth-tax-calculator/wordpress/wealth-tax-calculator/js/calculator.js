@@ -285,6 +285,10 @@
             params.push('order=' + encodeURIComponent(JSON.stringify(payload.order)));
         }
 
+        if (payload && payload.selectedItems && payload.selectedItems.length) {
+            params.push('selected_items=' + encodeURIComponent(JSON.stringify(payload.selectedItems)));
+        }
+
         return params.join('&');
     }
 
@@ -328,6 +332,36 @@
             }
         }
         return active;
+    }
+
+    function buildPrioritizationAnalyticsSnapshot() {
+        var summaryData = buildFinalSummaryData();
+        var selectedItems = [];
+        var order = [];
+
+        for (var i = 0; i < summaryData.items.length; i++) {
+            var item = summaryData.items[i];
+            var fundedAmount = Math.max(0, Math.min(item.fundedAmount, item.cost));
+
+            order.push(item.key);
+            selectedItems.push({
+                policy_key: item.key,
+                policy_group: item.policy,
+                policy_label: POLICY_LABELS[item.policy] || item.policy,
+                description: item.exampleData.description,
+                cost_label: formatCostLabel(item.exampleData),
+                selected_amount: Math.round(item.cost),
+                funded_amount: Math.round(fundedAmount),
+                funded_percent: item.fundedPercent,
+                funding_status: item.status,
+                rank: i + 1
+            });
+        }
+
+        return {
+            order: order,
+            selectedItems: selectedItems
+        };
     }
 
 
@@ -595,9 +629,9 @@
         return Math.max(min, Math.min(max, value));
     }
 
-    function keepSliderInfoboxVisible() {
-        var sliderWrapper = el('wtc-pr-slider');
-        var sliderInfoBox = el('wtc-sliderInfobox');
+    function keepInfoboxVisible(sliderId, infoboxId) {
+        var sliderWrapper = el(sliderId);
+        var sliderInfoBox = el(infoboxId);
 
         if (!sliderWrapper || !sliderInfoBox) {
             return;
@@ -615,19 +649,20 @@
             sliderInfoBox.style.marginLeft = '0px';
         }
 
-        var sliderRect = sliderWrapper.getBoundingClientRect();
+        var boundaryElement = sliderWrapper.closest('.wtc-slider-shell') || sliderWrapper.closest('.wtc-fs-slider-shell') || sliderWrapper;
+        var boundaryRect = boundaryElement.getBoundingClientRect();
         var handleRect = handleWrapper.getBoundingClientRect();
         var infoBoxWidth = sliderInfoBox.offsetWidth;
 
-        if (!infoBoxWidth || sliderRect.width <= 0) {
+        if (!infoBoxWidth || boundaryRect.width <= 0) {
             return;
         }
 
         var gutter = 8;
         var handleCenter = handleRect.left + (handleRect.width / 2);
         var desiredLeft = handleCenter - (infoBoxWidth / 2);
-        var minLeft = sliderRect.left + gutter;
-        var maxLeft = sliderRect.right - gutter - infoBoxWidth;
+        var minLeft = boundaryRect.left + gutter;
+        var maxLeft = boundaryRect.right - gutter - infoBoxWidth;
         var boundedLeft = clampNumber(desiredLeft, minLeft, maxLeft);
         var offset = boundedLeft - desiredLeft;
 
@@ -643,52 +678,12 @@
         }
     }
 
+    function keepSliderInfoboxVisible() {
+        keepInfoboxVisible('wtc-pr-slider', 'wtc-sliderInfobox');
+    }
+
     function keepSummarySliderInfoboxVisible() {
-        var sliderWrapper = el('wtc-fs-pr-slider');
-        var sliderInfoBox = el('wtc-fs-sliderInfobox');
-
-        if (!sliderWrapper || !sliderInfoBox) {
-            return;
-        }
-
-        var handleWrapper = sliderInfoBox.parentElement;
-        if (!handleWrapper) {
-            return;
-        }
-
-        if (supportsCssVariables) {
-            sliderInfoBox.style.setProperty('--wtc-infobox-offset', '0px');
-            sliderInfoBox.style.setProperty('--wtc-infobox-pointer-offset', '0px');
-        } else {
-            sliderInfoBox.style.marginLeft = '0px';
-        }
-
-        var sliderRect = sliderWrapper.getBoundingClientRect();
-        var handleRect = handleWrapper.getBoundingClientRect();
-        var infoBoxWidth = sliderInfoBox.offsetWidth;
-
-        if (!infoBoxWidth || sliderRect.width <= 0) {
-            return;
-        }
-
-        var gutter = 8;
-        var handleCenter = handleRect.left + (handleRect.width / 2);
-        var desiredLeft = handleCenter - (infoBoxWidth / 2);
-        var minLeft = sliderRect.left + gutter;
-        var maxLeft = sliderRect.right - gutter - infoBoxWidth;
-        var boundedLeft = clampNumber(desiredLeft, minLeft, maxLeft);
-        var offset = boundedLeft - desiredLeft;
-
-        var pointerLimit = (infoBoxWidth / 2) - 20;
-        var pointerOffset = clampNumber(-offset, -pointerLimit, pointerLimit);
-
-        if (supportsCssVariables) {
-            sliderInfoBox.style.setProperty('--wtc-infobox-offset', offset.toFixed(2) + 'px');
-            sliderInfoBox.style.setProperty('--wtc-infobox-pointer-offset', pointerOffset.toFixed(2) + 'px');
-        } else {
-            sliderInfoBox.style.left = '50%';
-            sliderInfoBox.style.marginLeft = offset.toFixed(2) + 'px';
-        }
+        keepInfoboxVisible('wtc-fs-pr-slider', 'wtc-fs-sliderInfobox');
     }
 
     function ensureMoneyPile() {
@@ -866,9 +861,34 @@
             return;
         }
 
+        // Skip setValue while the user is actively dragging — the drag loop already
+        // updates value.current every frame, so calling setValue here would fight the
+        // drag and cause the handle to snap back to the quantized position each tick,
+        // making the slider appear locked.  The display decorations are still updated
+        // via syncSummarySliderDecor even when this is skipped.
+        if (summarySliderController.instance.dragging) {
+            return;
+        }
+
         summarySliderController.suppressCallback = true;
         summarySliderController.instance.setValue(rateToRatio(taxRate), 0, true);
         summarySliderController.suppressCallback = false;
+    }
+
+    function refreshSummaryTaxRateSlider() {
+        var taxRate = getCurrentTaxRate();
+        var revenue = calculateRevenue(taxRate);
+
+        if (!summarySliderController.instance) {
+            initSummaryTaxRateSlider();
+        }
+
+        if (summarySliderController.instance && typeof summarySliderController.instance.reflow === 'function') {
+            summarySliderController.instance.reflow();
+        }
+
+        syncSummaryDragdealerPosition(taxRate);
+        syncSummarySliderDecor(taxRate, revenue);
     }
 
     function setTaxRate(taxRate, syncHandlePosition) {
@@ -1031,6 +1051,10 @@
         var sliderHandle = el('wtc-fs-sliderHandle');
         var taxRateInput = getTaxRateInput();
 
+        if (summarySliderController.instance) {
+            return summarySliderController.instance;
+        }
+
         if (!sliderWrapper || !sliderHandle || !taxRateInput || typeof Dragdealer === 'undefined') {
             return;
         }
@@ -1072,6 +1096,8 @@
 
         window.addEventListener('resize', handleViewportChange);
         window.addEventListener('orientationchange', handleViewportChange);
+
+        return summarySliderController.instance;
     }
 
     function getComparisonMatchCost(item) {
@@ -1983,6 +2009,9 @@
         if (!container || !summaryPanel) { return; }
         container.classList.add('is-showing-summary');
         summaryPanel.removeAttribute('aria-hidden');
+        requestFrame(function () {
+            refreshSummaryTaxRateSlider();
+        });
         summaryPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
@@ -1995,15 +2024,16 @@
     }
 
     function trackNextStepPrioritizationSnapshot() {
-        var activeKeys = getActivePolicyKeysInOrder();
-        if (!activeKeys.length) {
+        var snapshot = buildPrioritizationAnalyticsSnapshot();
+        if (!snapshot.order.length) {
             return;
         }
 
         // Submit one authoritative snapshot for this session.
         sendAnalyticsEvent('next_step_submit', 'submit:0', {
             rank: 1,
-            order: activeKeys
+            order: snapshot.order,
+            selectedItems: snapshot.selectedItems
         });
     }
 
@@ -2359,7 +2389,6 @@
         applyCompatibilityClasses();
         ensureMoneyPile();
         initTaxRateSlider();
-        initSummaryTaxRateSlider();
 
         // Apply advanced-mode class to container since we default to advanced
         var calculatorContainer = document.querySelector('.calculator-container');
