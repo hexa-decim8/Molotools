@@ -40,9 +40,7 @@
         nonce: '',
         sessionId: ''
     };
-    var requestFrame = typeof window.requestAnimationFrame === 'function'
-        ? function (callback) { return window.requestAnimationFrame(callback); }
-        : function (callback) { return window.setTimeout(callback, 16); };
+    var requestFrame = window.requestAnimationFrame || function (callback) { return window.setTimeout(callback, 16); };
     var supportsCssVariables = !!(window.CSS && window.CSS.supports && window.CSS.supports('--wtc-test', '0'));
     var MONEY_PILE_PROFILES = [0.26, 0.4, 0.58, 0.82, 1, 0.92, 0.72, 0.5, 0.34];
     var MONEY_PILE_MAX_BUNDLES = 14;
@@ -333,16 +331,6 @@
         xhr.send(body);
     }
 
-    function getActivePolicyKeysInOrder() {
-        var active = [];
-        for (var i = 0; i < selectedPoliciesOrder.length; i++) {
-            if (Object.prototype.hasOwnProperty.call(selectedPolicyOptions, selectedPoliciesOrder[i])) {
-                active.push(selectedPoliciesOrder[i]);
-            }
-        }
-        return active;
-    }
-
     function buildPrioritizationAnalyticsSnapshot() {
         var summaryData = buildFinalSummaryData();
         var selectedItems = [];
@@ -446,12 +434,12 @@
         return String(rounded).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     }
 
-    function formatCurrency(amount) {
+    function formatCurrency(amount, compact) {
         if (amount >= 1e12) {
-            return '$' + (amount / 1e12).toFixed(2) + ' Trillion';
+            return compact ? '$' + (amount / 1e12).toFixed(2) + 'T' : '$' + (amount / 1e12).toFixed(2) + ' Trillion';
         }
         if (amount >= 1e9) {
-            return '$' + (amount / 1e9).toFixed(1) + ' Billion';
+            return compact ? '$' + (amount / 1e9).toFixed(1) + 'B' : '$' + (amount / 1e9).toFixed(1) + ' Billion';
         }
         return '$' + formatWholeNumber(amount);
     }
@@ -1059,31 +1047,7 @@
         keepSummarySliderInfoboxVisible();
     }
 
-    function handleSummarySliderKeydown(event) {
-        var key = event.key;
-        var step = currentMode === 'basic' ? 1 : 0.1;
-        var currentValue = getCurrentTaxRate();
-        var nextValue = currentValue;
-
-        if (key === 'ArrowLeft' || key === 'ArrowDown') {
-            nextValue = currentValue - step;
-        } else if (key === 'ArrowRight' || key === 'ArrowUp') {
-            nextValue = currentValue + step;
-        } else if (key === 'PageDown') {
-            nextValue = currentValue - 1;
-        } else if (key === 'PageUp') {
-            nextValue = currentValue + 1;
-        } else if (key === 'Home') {
-            nextValue = TAX_RATE_MIN;
-        } else if (key === 'End') {
-            nextValue = TAX_RATE_MAX;
-        } else {
-            return;
-        }
-
-        event.preventDefault();
-        setTaxRate(nextValue, true);
-    }
+    var handleSummarySliderKeydown = handleSliderKeydown;
 
     function initSummaryTaxRateSlider() {
         var sliderWrapper = el('wtc-fs-pr-slider');
@@ -1534,76 +1498,6 @@
             card.querySelector('[data-slot="balanceLabel"]').textContent = snapshotData.isOverBudget ? 'Funding Gap' : 'Remaining Budget';
             card.querySelector('[data-slot="balance"]').textContent = formatCurrency(snapshotData.isOverBudget ? snapshotData.overrun : snapshotData.remaining);
             card.querySelector('[data-slot="balanceAnnual"]').textContent = 'Annual: ' + formatCurrency(snapshotData.isOverBudget ? snapshotData.annualOverrun : snapshotData.annualRemaining);
-        }
-
-        if (currentMode === 'advanced') {
-            syncSelectedPoliciesBox();
-        }
-    }
-
-    function DEPRECATED_updateAllocationSummary_fullLogic() {
-        var totalsBox = el('wtc-allocationTotalsBox');
-        if (!totalsBox) return;
-
-        var taxRate = parseFloat(el('wtc-taxRate').value);
-        var revenue = calculateRevenue(taxRate);
-        var selectedPolicyFunding = calculateSelectedPolicyFunding();
-
-        var overrunAmount = Math.max(selectedPolicyFunding - revenue, 0);
-        var remainingRevenue = Math.max(revenue - selectedPolicyFunding, 0);
-        var isOverBudget = overrunAmount > 0;
-
-        var summary = getOrCreateChild(totalsBox, '.allocation-summary', 'div', 'allocation-summary');
-        summary.classList.toggle('is-over-budget', isOverBudget);
-
-        var availableLine = getOrCreateChild(summary, '.allocation-available-line', 'span', 'allocation-available-line');
-        availableLine.textContent = '10-year tax revenue available: ' + formatCurrency(revenue);
-
-        var selectedLine = getOrCreateChild(summary, '.allocation-selected-line', 'span', 'allocation-selected-line');
-        selectedLine.textContent = 'Selected policy funding: ' + formatCurrency(selectedPolicyFunding);
-
-        var budgetLine = getOrCreateChild(summary, '.allocation-budget-line', 'span', 'allocation-budget-line');
-        budgetLine.classList.toggle('allocation-budget-warning', isOverBudget);
-        if (isOverBudget) {
-            budgetLine.textContent = 'Over budget by: ' + formatCurrency(overrunAmount);
-        } else {
-            budgetLine.textContent = 'Remaining revenue: ' + formatCurrency(remainingRevenue);
-        }
-
-        var budgetHint = getOrCreateChild(summary, '.allocation-budget-hint', 'span', 'allocation-budget-hint');
-        budgetHint.classList.toggle('allocation-overrun-message', isOverBudget);
-        if (isOverBudget) {
-            budgetHint.textContent = 'You need to tax billionaires more! Use the button to raise the rate by 1%.';
-        } else {
-            budgetHint.textContent = 'Selected policy costs are within available revenue.';
-        }
-
-        var existingPinataEl = summary.querySelector('.allocation-pinata-drop');
-
-        if (isOverBudget) {
-            if (!existingPinataEl) {
-                var pinataEl = createOverBudgetPinata(getCurrentTaxRate() >= TAX_RATE_MAX);
-                var pinataBtn = pinataEl.querySelector('.allocation-pinata-button');
-                if (pinataBtn) {
-                    pinataBtn.addEventListener('click', handleOverBudgetPinataClick);
-                }
-                summary.insertBefore(pinataEl, budgetHint);
-            } else {
-                var existingPinataButton = existingPinataEl.querySelector('.allocation-pinata-button');
-                if (existingPinataButton) {
-                    var isAtMaxRate = getCurrentTaxRate() >= TAX_RATE_MAX;
-                    existingPinataButton.disabled = isAtMaxRate;
-                    if (isAtMaxRate) {
-                        existingPinataButton.setAttribute('aria-label', 'Maximum tax rate reached');
-                        existingPinataButton.classList.add('is-maxed');
-                    } else {
-                        existingPinataButton.setAttribute('aria-label', 'Increase tax rate by 1 percent');
-                        existingPinataButton.classList.remove('is-maxed');
-                    }
-                }
-            }
-        } else if (existingPinataEl) {
-            existingPinataEl.parentNode.removeChild(existingPinataEl);
         }
 
         if (currentMode === 'advanced') {
@@ -2170,19 +2064,15 @@
         if (!item) return;
 
         var optionInputEl = row.querySelector('.policy-option-input');
-        var policyKey = getPolicyOptionKey(policy, index);
-        var isEnabledNow;
 
         if (isOptionEnabled(policy, index)) {
             disableOption(policy, index);
             row.classList.remove('is-enabled');
             if (optionInputEl) optionInputEl.checked = false;
-            isEnabledNow = false;
         } else {
             enableOption(policy, index, item);
             row.classList.add('is-enabled');
             if (optionInputEl) optionInputEl.checked = true;
-            isEnabledNow = true;
         }
 
         updateAllocationSummary();
@@ -2202,13 +2092,10 @@
         var policyExamples = POLICY_EXAMPLES[policy] || [];
         var item = policyExamples[parseInt(index, 10)];
         if (!item) return;
-        var policyKey = getPolicyOptionKey(policy, index);
-        var isEnabledNow = false;
 
         if (inputEl.checked) {
             enableOption(policy, index, item);
             row.classList.add('is-enabled');
-            isEnabledNow = true;
         } else {
             disableOption(policy, index);
             row.classList.remove('is-enabled');
@@ -2381,7 +2268,7 @@
             return 'https://www.linkedin.com/sharing/share-offsite/?url=' + encodedUrl;
         }
 
-        if (action === 'twitter' || action === 'x') {
+        if (action === 'twitter') {
             return 'https://twitter.com/intent/tweet?url=' + encodedUrl + '&text=' + encodedText;
         }
 
@@ -2445,7 +2332,6 @@
         for (var b = 0; b < shareBlocks.length; b++) {
             var shareBlock = shareBlocks[b];
             var shareButtons = shareBlock.querySelectorAll('[data-share-action]');
-            var likeLinks = shareBlock.querySelectorAll('.like-btn a');
             var statusEl = shareBlock.querySelector('.wtc-share-status');
 
             for (var i = 0; i < shareButtons.length; i++) {
@@ -2474,11 +2360,6 @@
                 }(statusEl)));
             }
 
-            for (var l = 0; l < likeLinks.length; l++) {
-                likeLinks[l].addEventListener('click', function (event) {
-                    event.preventDefault();
-                });
-            }
         }
     }
 

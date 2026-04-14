@@ -242,27 +242,27 @@
 }
 
 .calculator-container .wtc-share-block .share-bar .trigger:nth-child(2) {
-    left: 41px;
+    left: var(--wtc-share-icon-width);
 }
 
 .calculator-container .wtc-share-block .share-bar .trigger:nth-child(3) {
-    left: 82px;
+    left: calc(var(--wtc-share-icon-width) * 2);
 }
 
 .calculator-container .wtc-share-block .share-bar .trigger:nth-child(4) {
-    left: 123px;
+    left: calc(var(--wtc-share-icon-width) * 3);
 }
 
 .calculator-container .wtc-share-block .share-bar .trigger:nth-child(5) {
-    left: 164px;
+    left: calc(var(--wtc-share-icon-width) * 4);
 }
 
 .calculator-container .wtc-share-block .share-bar .trigger:nth-child(6) {
-    left: 205px;
+    left: calc(var(--wtc-share-icon-width) * 5);
 }
 
 .calculator-container .wtc-share-block .share-bar .trigger:nth-child(7) {
-    left: 246px;
+    left: calc(var(--wtc-share-icon-width) * 6);
 }
 
 .calculator-container .wtc-share-block-top {
@@ -772,49 +772,6 @@
     margin: 0 0 20px;
 }
 
-.calculator-container .policy-categories {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-.calculator-container .policy-checkbox {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    padding: 12px 18px;
-    background: #FBF0E4;
-    border: 2px solid #E1B682;
-    border-radius: 6px;
-    transition: all 0.2s;
-    user-select: none;
-}
-
-.calculator-container .policy-checkbox:hover {
-    border-color: #406BBF;
-    background: #F5E8D8;
-}
-
-.calculator-container .policy-checkbox input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
-    margin-right: 10px;
-    cursor: pointer;
-    accent-color: #406BBF;
-}
-
-.calculator-container .policy-checkbox input[type="checkbox"]:checked + .checkbox-label {
-    color: #233071;
-    font-weight: 600;
-}
-
-.calculator-container .checkbox-label {
-    font-size: 1rem;
-    color: #131110;
-    transition: all 0.2s;
-}
-
 .calculator-container .allocation-results {
     min-height: 60px;
     padding: 20px;
@@ -924,10 +881,6 @@
     font-size: 1.1rem;
     color: #FBF0E4 !important;
     font-weight: 500;
-}
-
-.calculator-container .allocation-amount {
-    display: none;
 }
 
 .calculator-container .allocation-example {
@@ -1109,30 +1062,12 @@
     --name-icon-a: unchecked-icon-50;
 }
 
-@-webkit-keyframes checked-icon-50 {
-    from {
-        transform: translateZ(12px);
-    }
-    to {
-        transform: translateX(16px) rotateY(90deg) translateZ(12px);
-    }
-}
-
 @keyframes checked-icon-50 {
     from {
         transform: translateZ(12px);
     }
     to {
         transform: translateX(16px) rotateY(90deg) translateZ(12px);
-    }
-}
-
-@-webkit-keyframes unchecked-icon-50 {
-    from {
-        transform: translateX(-16px) rotateY(-90deg) translateZ(12px);
-    }
-    to {
-        transform: translateZ(12px);
     }
 }
 
@@ -1145,17 +1080,6 @@
     }
 }
 
-@-webkit-keyframes checked-50 {
-    from {
-        background-image: radial-gradient(ellipse at center, var(--primary) 0%, var(--primary) 25%, var(--secondary) 25.1%, var(--secondary) 100%);
-        background-position: 100% 50%;
-    }
-    to {
-        background-image: radial-gradient(ellipse at center, var(--primary) 0%, var(--primary) 25%, var(--secondary) 25.1%, var(--secondary) 100%);
-        background-position: 50% 50%;
-    }
-}
-
 @keyframes checked-50 {
     from {
         background-image: radial-gradient(ellipse at center, var(--primary) 0%, var(--primary) 25%, var(--secondary) 25.1%, var(--secondary) 100%);
@@ -1163,17 +1087,6 @@
     }
     to {
         background-image: radial-gradient(ellipse at center, var(--primary) 0%, var(--primary) 25%, var(--secondary) 25.1%, var(--secondary) 100%);
-        background-position: 50% 50%;
-    }
-}
-
-@-webkit-keyframes unchecked-50 {
-    from {
-        background-image: radial-gradient(ellipse at center, var(--secondary) 0%, var(--secondary) 25%, var(--primary) 25.1%, var(--primary) 100%);
-        background-position: 100% 50%;
-    }
-    to {
-        background-image: radial-gradient(ellipse at center, var(--secondary) 0%, var(--secondary) 25%, var(--primary) 25.1%, var(--primary) 100%);
         background-position: 50% 50%;
     }
 }
@@ -1785,16 +1698,6 @@
     .calculator-container .calculator-content {
         padding: 26px 20px;
         gap: 6px;
-    }
-
-    .calculator-container .policy-categories {
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .calculator-container .policy-checkbox {
-        width: 100%;
-        padding: 10px 14px;
     }
 
     .calculator-container .policy-option-meta {
