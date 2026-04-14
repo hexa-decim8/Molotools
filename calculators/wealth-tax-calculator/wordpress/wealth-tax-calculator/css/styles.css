@@ -983,8 +983,12 @@
 }
 
 .calculator-container.mode-advanced .allocation-example-row {
-    background: #ffffff;
+    background: #F5D4D4;
     --fill-color: #E74C3C;
+}
+
+.calculator-container.mode-advanced .allocation-example-row.is-enabled {
+    background: #D4EDD4;
 }
 
 .calculator-container .allocation-row-fill {
@@ -994,14 +998,14 @@
     height: 100%;
     width: 100%;
     background: var(--fill-color, #888);
-    opacity: 0.2;
+    opacity: 0;
     pointer-events: none;
     transition: opacity 0.15s ease;
 }
 
 .calculator-container .allocation-example-row.is-enabled .allocation-row-fill {
     background: var(--fill-color, #6BAA75);
-    opacity: 0.34;
+    opacity: 0;
 }
 
 .calculator-container .allocation-row-content {
