@@ -38,6 +38,7 @@
         nonce: '',
         sessionId: ''
     };
+    var hasTrackedNextStepPrioritization = false;
     var requestFrame = typeof window.requestAnimationFrame === 'function'
         ? function (callback) { return window.requestAnimationFrame(callback); }
         : function (callback) { return window.setTimeout(callback, 16); };
@@ -1233,25 +1234,6 @@
         return total;
     }
 
-    function ensureAllocationTotalsBetweenSliderAndPolicy() {
-        var calculatorInputs = document.querySelector('.calculator-inputs');
-        var inputSection = calculatorInputs ? calculatorInputs.querySelector('.input-section') : null;
-        var policySection = calculatorInputs ? calculatorInputs.querySelector('.policy-allocation-section') : null;
-        var totalsBox = el('wtc-allocationTotalsBox');
-
-        if (!calculatorInputs || !inputSection || !policySection || !totalsBox) {
-            return;
-        }
-
-        var isInExpectedSpot = totalsBox.parentNode === calculatorInputs
-            && totalsBox.previousElementSibling === inputSection
-            && totalsBox.nextElementSibling === policySection;
-
-        if (!isInExpectedSpot) {
-            calculatorInputs.insertBefore(totalsBox, policySection);
-        }
-    }
-
     function getOrCreateChild(parent, selector, tag, cls) {
         var child = parent.querySelector(selector);
         if (!child) {
@@ -1263,8 +1245,13 @@
     }
 
     function updateAllocationSummary() {
-        ensureAllocationTotalsBetweenSliderAndPolicy();
+        // Allocation totals box has been removed - this function now only syncs selected policies
+        if (currentMode === 'advanced') {
+            syncSelectedPoliciesBox();
+        }
+    }
 
+    function DEPRECATED_updateAllocationSummary_fullLogic() {
         var totalsBox = el('wtc-allocationTotalsBox');
         if (!totalsBox) return;
 
@@ -1435,7 +1422,7 @@
             var isFunded = cumulativeCost <= revenue;
 
             var entry = document.createElement('div');
-            entry.className = 'selected-policy-entry' + (isFunded ? '' : ' is-unfunded');
+            entry.className = 'selected-policy-entry';
             entry.setAttribute('draggable', 'true');
             entry.setAttribute('data-key', key);
 
@@ -1801,7 +1788,36 @@
         summaryPanel.setAttribute('aria-hidden', 'true');
     }
 
+    function trackNextStepPrioritizationSnapshot() {
+        if (hasTrackedNextStepPrioritization || !analyticsController.enabled) {
+            return;
+        }
+
+        var activeKeys = getActivePolicyKeysInOrder();
+        if (!activeKeys.length) {
+            return;
+        }
+
+        // Record the selected sub-policies at the moment the user advances.
+        for (var i = 0; i < activeKeys.length; i++) {
+            sendAnalyticsEvent('policy_toggle', activeKeys[i], {
+                enabled: true,
+                rank: i + 1,
+                order: activeKeys
+            });
+        }
+
+        // Record the full priority ordering in one event.
+        sendAnalyticsEvent('policy_reorder', activeKeys[0], {
+            rank: 1,
+            order: activeKeys
+        });
+
+        hasTrackedNextStepPrioritization = true;
+    }
+
     function handleNextStepClick() {
+        trackNextStepPrioritizationSnapshot();
         showFinalSummary();
     }
 
@@ -1903,20 +1919,11 @@
         }
 
         var policySection = document.querySelector('.policy-allocation-section');
-        var totalsBox = el('wtc-allocationTotalsBox');
         if (policySection) {
             if (mode === 'basic') {
                 policySection.classList.add('hidden');
             } else {
                 policySection.classList.remove('hidden');
-            }
-        }
-
-        if (totalsBox) {
-            if (mode === 'basic') {
-                totalsBox.classList.add('hidden');
-            } else {
-                totalsBox.classList.remove('hidden');
             }
         }
 

@@ -1359,8 +1359,6 @@ class Billionaire_Wealth_Tax_Calculator {
                         </div>
                     </div>
 
-                    <div id="wtc-allocationTotalsBox" class="allocation-totals-box"></div>
-
                     <h3 class="wtc-step-heading">Step 2: Select Your Policies</h3>
                     <div class="policy-allocation-section">
                         <h3 class="policy-header">Allocate Revenue to Policies</h3>
