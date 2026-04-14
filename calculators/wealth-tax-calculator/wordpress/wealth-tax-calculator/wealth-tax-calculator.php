@@ -582,6 +582,8 @@ class WTC_Policy_Analytics {
         add_action( 'admin_menu', array( $this, 'add_analytics_submenu' ) );
         add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_map_assets' ) );
         add_action( 'admin_post_wtc_reset_analytics', array( $this, 'handle_reset_analytics' ) );
+        add_action( 'admin_post_wtc_export_analytics_csv', array( $this, 'handle_export_analytics_csv' ) );
+        add_action( 'admin_post_wtc_export_analytics_pdf', array( $this, 'handle_export_analytics_pdf' ) );
         add_action( 'wp_ajax_wtc_track_policy_event', array( $this, 'track_policy_event' ) );
         add_action( 'wp_ajax_nopriv_wtc_track_policy_event', array( $this, 'track_policy_event' ) );
         add_action( WTC_UPDATE_CRON_HOOK, array( $this, 'prune_old_analytics_data' ) );
@@ -1191,6 +1193,16 @@ class WTC_Policy_Analytics {
 
             <div class="card" style="max-width: 920px; margin-top: 20px;">
                 <h2><?php esc_html_e( 'Data Management', 'wealth-tax-calculator' ); ?></h2>
+                <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-bottom: 12px;">
+                    <input type="hidden" name="action" value="wtc_export_analytics_csv" />
+                    <?php wp_nonce_field( 'wtc_export_analytics_csv' ); ?>
+                    <?php submit_button( __( 'Export Collected Data (CSV)', 'wealth-tax-calculator' ), 'secondary', 'submit', false ); ?>
+                </form>
+                <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" target="_blank" style="margin-bottom: 12px;">
+                    <input type="hidden" name="action" value="wtc_export_analytics_pdf" />
+                    <?php wp_nonce_field( 'wtc_export_analytics_pdf' ); ?>
+                    <?php submit_button( __( 'Export Pretty PDF Report', 'wealth-tax-calculator' ), 'secondary', 'submit', false ); ?>
+                </form>
                 <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
                     <input type="hidden" name="action" value="wtc_reset_analytics" />
                     <?php wp_nonce_field( 'wtc_reset_analytics' ); ?>
@@ -1366,56 +1378,56 @@ class WTC_Policy_Analytics {
 
     private function get_state_county_geometry_asset_map() {
         return array(
-            'MI' => 'michigan-counties.svg',
-            'AK' => 'alaska-counties.svg',
-            'CA' => 'california-counties.svg',
-            'CO' => 'colorado-counties.svg',
-            'MT' => 'montana-counties.svg',
-            'ND' => 'north-dakota-counties.svg',
-            'NY' => 'new-york-counties.svg',
-            'PA' => 'pennsylvania-counties.svg',
-            'OH' => 'ohio-counties.svg',
-            'IL' => 'illinois-counties.svg',
-            'IN' => 'indiana-counties.svg',
-            'WI' => 'wisconsin-counties.svg',
-            'GA' => 'georgia-counties.svg',
-            'NC' => 'north-carolina-counties.svg',
-            'SC' => 'south-carolina-counties.svg',
-            'FL' => 'florida-counties.svg',
-            'TN' => 'tennessee-counties.svg',
-            'VA' => 'virginia-counties.svg',
-            'TX' => 'texas-counties.svg',
-            'LA' => 'louisiana-counties.svg',
-            'AL' => 'alabama-counties.svg',
-            'KS' => 'kansas-counties.svg',
-            'NE' => 'nebraska-counties.svg',
-            'SD' => 'south-dakota-counties.svg',
-            'MN' => 'minnesota-counties.svg',
-            'IA' => 'iowa-counties.svg',
-            'MO' => 'missouri-counties.svg',
-            'OK' => 'oklahoma-counties.svg',
-            'AR' => 'arkansas-counties.svg',
-            'KY' => 'kentucky-counties.svg',
-            'MS' => 'mississippi-counties.svg',
-            'WV' => 'west-virginia-counties.svg',
-            'DE' => 'delaware-counties.svg',
-            'RI' => 'rhode-island-counties.svg',
-            'CT' => 'connecticut-counties.svg',
-            'HI' => 'hawaii-counties.svg',
-            'NH' => 'new-hampshire-counties.svg',
-            'VT' => 'vermont-counties.svg',
-            'MA' => 'massachusetts-counties.svg',
-            'ME' => 'maine-counties.svg',
-            'AZ' => 'arizona-counties.svg',
-            'NV' => 'nevada-counties.svg',
-            'NM' => 'new-mexico-counties.svg',
-            'UT' => 'utah-counties.svg',
-            'NJ' => 'new-jersey-counties.svg',
-            'MD' => 'maryland-counties.svg',
-            'WY' => 'wyoming-counties.svg',
-            'OR' => 'oregon-counties.svg',
-            'WA' => 'washington-counties.svg',
-            'ID' => 'idaho-counties.svg',
+            'MI' => 'states/michigan/michigan-counties.svg',
+            'AK' => 'states/alaska/alaska-counties.svg',
+            'CA' => 'states/california/california-counties.svg',
+            'CO' => 'states/colorado/colorado-counties.svg',
+            'MT' => 'states/montana/montana-counties.svg',
+            'ND' => 'states/north-dakota/north-dakota-counties.svg',
+            'NY' => 'states/new-york/new-york-counties.svg',
+            'PA' => 'states/pennsylvania/pennsylvania-counties.svg',
+            'OH' => 'states/ohio/ohio-counties.svg',
+            'IL' => 'states/illinois/illinois-counties.svg',
+            'IN' => 'states/indiana/indiana-counties.svg',
+            'WI' => 'states/wisconsin/wisconsin-counties.svg',
+            'GA' => 'states/georgia/georgia-counties.svg',
+            'NC' => 'states/north-carolina/north-carolina-counties.svg',
+            'SC' => 'states/south-carolina/south-carolina-counties.svg',
+            'FL' => 'states/florida/florida-counties.svg',
+            'TN' => 'states/tennessee/tennessee-counties.svg',
+            'VA' => 'states/virginia/virginia-counties.svg',
+            'TX' => 'states/texas/texas-counties.svg',
+            'LA' => 'states/louisiana/louisiana-counties.svg',
+            'AL' => 'states/alabama/alabama-counties.svg',
+            'KS' => 'states/kansas/kansas-counties.svg',
+            'NE' => 'states/nebraska/nebraska-counties.svg',
+            'SD' => 'states/south-dakota/south-dakota-counties.svg',
+            'MN' => 'states/minnesota/minnesota-counties.svg',
+            'IA' => 'states/iowa/iowa-counties.svg',
+            'MO' => 'states/missouri/missouri-counties.svg',
+            'OK' => 'states/oklahoma/oklahoma-counties.svg',
+            'AR' => 'states/arkansas/arkansas-counties.svg',
+            'KY' => 'states/kentucky/kentucky-counties.svg',
+            'MS' => 'states/mississippi/mississippi-counties.svg',
+            'WV' => 'states/west-virginia/west-virginia-counties.svg',
+            'DE' => 'states/delaware/delaware-counties.svg',
+            'RI' => 'states/rhode-island/rhode-island-counties.svg',
+            'CT' => 'states/connecticut/connecticut-counties.svg',
+            'HI' => 'states/hawaii/hawaii-counties.svg',
+            'NH' => 'states/new-hampshire/new-hampshire-counties.svg',
+            'VT' => 'states/vermont/vermont-counties.svg',
+            'MA' => 'states/massachusetts/massachusetts-counties.svg',
+            'ME' => 'states/maine/maine-counties.svg',
+            'AZ' => 'states/arizona/arizona-counties.svg',
+            'NV' => 'states/nevada/nevada-counties.svg',
+            'NM' => 'states/new-mexico/new-mexico-counties.svg',
+            'UT' => 'states/utah/utah-counties.svg',
+            'NJ' => 'states/new-jersey/new-jersey-counties.svg',
+            'MD' => 'states/maryland/maryland-counties.svg',
+            'WY' => 'states/wyoming/wyoming-counties.svg',
+            'OR' => 'states/oregon/oregon-counties.svg',
+            'WA' => 'states/washington/washington-counties.svg',
+            'ID' => 'states/idaho/idaho-counties.svg',
         );
     }
 
@@ -1518,7 +1530,7 @@ class WTC_Policy_Analytics {
             }
         }
 
-        $svg_path = plugin_dir_path( __FILE__ ) . 'data/michigan-counties.svg';
+        $svg_path = plugin_dir_path( __FILE__ ) . 'data/states/michigan/michigan-counties.svg';
         $has_data = ! empty( $mi_cities ) || $mi_unknown > 0;
         ?>
         <div class="card wtc-mi-map-card" style="max-width: 920px; margin-top: 20px;">
@@ -1606,7 +1618,7 @@ class WTC_Policy_Analytics {
             $us_states[ $state_code ] = (int) $count;
         }
 
-        $svg_path = plugin_dir_path( __FILE__ ) . 'data/us-states-tile-map.svg';
+        $svg_path = plugin_dir_path( __FILE__ ) . 'data/states/us-map/us-states-tile-map.svg';
         $has_data = ! empty( $us_states );
         ?>
         <div class="card wtc-us-map-card" style="max-width: 920px; margin-top: 20px;">
@@ -2910,6 +2922,495 @@ class WTC_Policy_Analytics {
             'average_tax_rate'  => $average_tax_rate,
             'total_events'      => $total_events,
         );
+    }
+
+    private function get_export_submission_rows( $analytics_data ) {
+        if ( ! is_array( $analytics_data ) ) {
+            return array();
+        }
+
+        $rows = array();
+
+        foreach ( $analytics_data as $day_key => $day ) {
+            if ( ! is_array( $day ) || empty( $day['final_submissions'] ) || ! is_array( $day['final_submissions'] ) ) {
+                continue;
+            }
+
+            foreach ( $day['final_submissions'] as $session_hash => $submission ) {
+                if ( ! is_array( $submission ) ) {
+                    continue;
+                }
+
+                $submitted_at = isset( $submission['submitted_at'] ) ? (int) $submission['submitted_at'] : 0;
+                $region_bucket = isset( $submission['region_bucket'] ) ? sanitize_text_field( $submission['region_bucket'] ) : '';
+                $county_bucket = isset( $submission['county_bucket'] ) ? sanitize_text_field( $submission['county_bucket'] ) : '';
+
+                $selected_items = $this->normalize_submission_selected_items( $submission );
+                $policy_keys    = array();
+                $policy_labels  = array();
+
+                foreach ( $selected_items as $item ) {
+                    if ( ! is_array( $item ) ) {
+                        continue;
+                    }
+
+                    $policy_key = isset( $item['policy_key'] ) ? sanitize_text_field( $item['policy_key'] ) : '';
+                    if ( $policy_key !== '' ) {
+                        $policy_keys[] = $policy_key;
+                    }
+
+                    $policy_labels[] = $this->format_policy_submission_label( $item, $policy_key );
+                }
+
+                $rows[] = array(
+                    'submitted_at_unix'       => $submitted_at,
+                    'submitted_at_utc'        => $submitted_at > 0 ? gmdate( 'Y-m-d H:i:s', $submitted_at ) . ' UTC' : '',
+                    'stored_day'              => sanitize_text_field( $day_key ),
+                    'session_hash'            => sanitize_text_field( (string) $session_hash ),
+                    'tax_rate_value'          => isset( $submission['tax_rate_value'] ) && is_numeric( $submission['tax_rate_value'] ) ? (float) $submission['tax_rate_value'] : '',
+                    'tax_rate_bucket'         => isset( $submission['tax_rate_bucket'] ) ? sanitize_text_field( $submission['tax_rate_bucket'] ) : '',
+                    'region_bucket'           => $region_bucket,
+                    'county_bucket'           => $county_bucket,
+                    'county_label'            => $county_bucket !== '' ? $this->format_county_bucket_label( $county_bucket ) : '',
+                    'selected_policy_count'   => count( $selected_items ),
+                    'selected_policy_keys'    => implode( ' | ', $policy_keys ),
+                    'prioritized_selections'  => implode( ' | ', $policy_labels ),
+                );
+            }
+        }
+
+        usort(
+            $rows,
+            function ( $left, $right ) {
+                return (int) $right['submitted_at_unix'] <=> (int) $left['submitted_at_unix'];
+            }
+        );
+
+        return $rows;
+    }
+
+    public function handle_export_analytics_csv() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( 'Unauthorized access' );
+        }
+
+        check_admin_referer( 'wtc_export_analytics_csv' );
+
+        $analytics_data = get_option( WTC_ANALYTICS_OPTION_KEY, array() );
+        if ( ! is_array( $analytics_data ) ) {
+            $analytics_data = array();
+        }
+
+        $rows = $this->get_export_submission_rows( $analytics_data );
+
+        $filename = 'wealth-tax-analytics-' . gmdate( 'Y-m-d-His' ) . '.csv';
+        nocache_headers();
+        header( 'Content-Type: text/csv; charset=utf-8' );
+        header( 'Content-Disposition: attachment; filename="' . $filename . '"' );
+
+        $output = fopen( 'php://output', 'w' );
+        if ( false === $output ) {
+            wp_die( esc_html__( 'Unable to generate CSV export.', 'wealth-tax-calculator' ) );
+        }
+
+        fputcsv(
+            $output,
+            array(
+                'submitted_at_utc',
+                'stored_day',
+                'session_hash',
+                'tax_rate_value',
+                'tax_rate_bucket',
+                'region_bucket',
+                'county_bucket',
+                'county_label',
+                'selected_policy_count',
+                'selected_policy_keys',
+                'prioritized_selections',
+            )
+        );
+
+        foreach ( $rows as $row ) {
+            if ( ! is_array( $row ) ) {
+                continue;
+            }
+
+            fputcsv(
+                $output,
+                array(
+                    isset( $row['submitted_at_utc'] ) ? $row['submitted_at_utc'] : '',
+                    isset( $row['stored_day'] ) ? $row['stored_day'] : '',
+                    isset( $row['session_hash'] ) ? $row['session_hash'] : '',
+                    isset( $row['tax_rate_value'] ) ? $row['tax_rate_value'] : '',
+                    isset( $row['tax_rate_bucket'] ) ? $row['tax_rate_bucket'] : '',
+                    isset( $row['region_bucket'] ) ? $row['region_bucket'] : '',
+                    isset( $row['county_bucket'] ) ? $row['county_bucket'] : '',
+                    isset( $row['county_label'] ) ? $row['county_label'] : '',
+                    isset( $row['selected_policy_count'] ) ? $row['selected_policy_count'] : 0,
+                    isset( $row['selected_policy_keys'] ) ? $row['selected_policy_keys'] : '',
+                    isset( $row['prioritized_selections'] ) ? $row['prioritized_selections'] : '',
+                )
+            );
+        }
+
+        fclose( $output );
+        exit;
+    }
+
+    private function get_michigan_county_top_policy_rows( $analytics_data, $max_counties = 25, $top_policies = 5 ) {
+        if ( ! is_array( $analytics_data ) ) {
+            return array();
+        }
+
+        $county_stats = array();
+
+        foreach ( $analytics_data as $day ) {
+            if ( ! is_array( $day ) || empty( $day['final_submissions'] ) || ! is_array( $day['final_submissions'] ) ) {
+                continue;
+            }
+
+            foreach ( $day['final_submissions'] as $submission ) {
+                if ( ! is_array( $submission ) ) {
+                    continue;
+                }
+
+                $region_bucket = isset( $submission['region_bucket'] ) ? sanitize_text_field( $submission['region_bucket'] ) : '';
+                if ( ! $this->is_michigan_region_bucket( $region_bucket ) ) {
+                    continue;
+                }
+
+                $county_bucket = isset( $submission['county_bucket'] ) ? sanitize_text_field( $submission['county_bucket'] ) : '';
+                $city_slug     = strncmp( $region_bucket, 'mi_', 3 ) === 0 ? substr( $region_bucket, 3 ) : '';
+                $county_bucket = $this->normalize_michigan_county_bucket( $county_bucket, $city_slug );
+
+                if ( $county_bucket === '' ) {
+                    continue;
+                }
+
+                if ( ! isset( $county_stats[ $county_bucket ] ) ) {
+                    $county_stats[ $county_bucket ] = array(
+                        'county_bucket' => $county_bucket,
+                        'county_label'  => $this->format_county_bucket_label( $county_bucket ),
+                        'submissions'   => 0,
+                        'policy_counts' => array(),
+                    );
+                }
+
+                $county_stats[ $county_bucket ]['submissions'] += 1;
+
+                $selected_items = $this->normalize_submission_selected_items( $submission );
+                foreach ( $selected_items as $item ) {
+                    if ( ! is_array( $item ) ) {
+                        continue;
+                    }
+
+                    $policy_key = isset( $item['policy_key'] ) ? sanitize_text_field( $item['policy_key'] ) : '';
+                    if ( $policy_key === '' ) {
+                        continue;
+                    }
+
+                    if ( ! isset( $county_stats[ $county_bucket ]['policy_counts'][ $policy_key ] ) ) {
+                        $county_stats[ $county_bucket ]['policy_counts'][ $policy_key ] = array(
+                            'policy_key' => $policy_key,
+                            'label'      => $this->format_policy_submission_label( $item, $policy_key ),
+                            'count'      => 0,
+                        );
+                    }
+
+                    $county_stats[ $county_bucket ]['policy_counts'][ $policy_key ]['count'] += 1;
+                }
+            }
+        }
+
+        foreach ( $county_stats as $county_bucket => $county_row ) {
+            if ( empty( $county_row['policy_counts'] ) || ! is_array( $county_row['policy_counts'] ) ) {
+                $county_stats[ $county_bucket ]['top_policies'] = array();
+                continue;
+            }
+
+            uasort(
+                $county_row['policy_counts'],
+                function ( $left, $right ) {
+                    if ( (int) $left['count'] === (int) $right['count'] ) {
+                        return strcmp( (string) $left['label'], (string) $right['label'] );
+                    }
+
+                    return ( (int) $left['count'] > (int) $right['count'] ) ? -1 : 1;
+                }
+            );
+
+            $county_stats[ $county_bucket ]['top_policies'] = array_slice( array_values( $county_row['policy_counts'] ), 0, max( 1, (int) $top_policies ) );
+            unset( $county_stats[ $county_bucket ]['policy_counts'] );
+        }
+
+        uasort(
+            $county_stats,
+            function ( $left, $right ) {
+                if ( (int) $left['submissions'] === (int) $right['submissions'] ) {
+                    return strcmp( (string) $left['county_label'], (string) $right['county_label'] );
+                }
+
+                return ( (int) $left['submissions'] > (int) $right['submissions'] ) ? -1 : 1;
+            }
+        );
+
+        return array_slice( array_values( $county_stats ), 0, max( 1, (int) $max_counties ) );
+    }
+
+    private function render_pdf_report_bar_chart( $rows, $value_key, $label_key, $empty_message, $max_rows = 8 ) {
+        if ( empty( $rows ) || ! is_array( $rows ) ) {
+            echo '<p class="wtc-report-muted">' . esc_html( $empty_message ) . '</p>';
+            return;
+        }
+
+        $max_rows = max( 1, (int) $max_rows );
+        $rows     = array_slice( $rows, 0, $max_rows );
+        $max_val  = 0;
+
+        foreach ( $rows as $row ) {
+            if ( ! is_array( $row ) ) {
+                continue;
+            }
+            $value = isset( $row[ $value_key ] ) ? (int) $row[ $value_key ] : 0;
+            if ( $value > $max_val ) {
+                $max_val = $value;
+            }
+        }
+
+        if ( $max_val <= 0 ) {
+            echo '<p class="wtc-report-muted">' . esc_html( $empty_message ) . '</p>';
+            return;
+        }
+
+        echo '<div class="wtc-report-bars">';
+        foreach ( $rows as $row ) {
+            if ( ! is_array( $row ) ) {
+                continue;
+            }
+
+            $label = isset( $row[ $label_key ] ) ? sanitize_text_field( $row[ $label_key ] ) : __( 'Unknown', 'wealth-tax-calculator' );
+            $value = isset( $row[ $value_key ] ) ? (int) $row[ $value_key ] : 0;
+            $pct   = $max_val > 0 ? max( 2, round( ( $value / $max_val ) * 100, 1 ) ) : 0;
+
+            echo '<div class="wtc-report-bar-row">';
+            echo '<div class="wtc-report-bar-label">' . esc_html( $label ) . '</div>';
+            echo '<div class="wtc-report-bar-track"><span class="wtc-report-bar-fill" style="width:' . esc_attr( $pct ) . '%"></span></div>';
+            echo '<div class="wtc-report-bar-value">' . esc_html( number_format_i18n( $value ) ) . '</div>';
+            echo '</div>';
+        }
+        echo '</div>';
+    }
+
+    private function render_analytics_pdf_report( $analytics_data ) {
+        $analytics_data     = is_array( $analytics_data ) ? $analytics_data : array();
+        $summary            = $this->build_summary( $analytics_data );
+        $mi_analytics_data  = $this->filter_analytics_data_to_michigan( $analytics_data );
+        $mi_summary         = $this->build_summary( $mi_analytics_data );
+        $county_top_rows    = $this->get_michigan_county_top_policy_rows( $analytics_data );
+
+        $report_generated_at = gmdate( 'Y-m-d H:i:s' ) . ' UTC';
+        $submitted_sessions  = isset( $summary['total_events'] ) ? (int) $summary['total_events'] : 0;
+        $unique_sessions     = isset( $summary['unique_sessions'] ) ? (int) $summary['unique_sessions'] : 0;
+        $average_tax_rate    = isset( $summary['average_tax_rate'] ) ? (float) $summary['average_tax_rate'] : 0;
+        $michigan_sessions   = isset( $mi_summary['total_events'] ) ? (int) $mi_summary['total_events'] : 0;
+        $michigan_unique     = isset( $mi_summary['unique_sessions'] ) ? (int) $mi_summary['unique_sessions'] : 0;
+
+        ?>
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title><?php esc_html_e( 'Wealth Tax Analytics Report', 'wealth-tax-calculator' ); ?></title>
+    <style>
+        :root { --ink:#0f172a; --muted:#475569; --line:#cbd5e1; --bg:#f8fafc; --card:#ffffff; --bar:#2563eb; --bar-soft:#dbeafe; --accent:#0f766e; }
+        * { box-sizing:border-box; }
+        body { margin:0; padding:28px; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; color:var(--ink); background:var(--bg); }
+        .wtc-report { max-width:1000px; margin:0 auto; }
+        .wtc-report-header { display:flex; justify-content:space-between; align-items:flex-start; gap:20px; margin-bottom:20px; }
+        .wtc-report-title { margin:0 0 6px; font-size:30px; line-height:1.15; }
+        .wtc-report-subtitle { margin:0; color:var(--muted); }
+        .wtc-report-print-btn { appearance:none; border:1px solid var(--line); background:#fff; color:var(--ink); border-radius:8px; padding:8px 12px; cursor:pointer; font-size:13px; }
+        .wtc-report-grid { display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); gap:12px; margin-bottom:16px; }
+        .wtc-report-stat { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px; }
+        .wtc-report-stat-label { font-size:12px; text-transform:uppercase; color:var(--muted); letter-spacing:.04em; }
+        .wtc-report-stat-value { display:block; margin-top:8px; font-weight:700; font-size:24px; line-height:1; }
+        .wtc-report-section { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; margin-bottom:14px; page-break-inside:avoid; }
+        .wtc-report-section h2 { margin:0 0 12px; font-size:18px; }
+        .wtc-report-two-col { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+        .wtc-report-bars { display:flex; flex-direction:column; gap:9px; }
+        .wtc-report-bar-row { display:grid; grid-template-columns:minmax(170px, 1fr) 2.2fr 72px; gap:8px; align-items:center; }
+        .wtc-report-bar-label { font-size:12px; line-height:1.3; }
+        .wtc-report-bar-track { background:var(--bar-soft); border-radius:999px; height:11px; overflow:hidden; }
+        .wtc-report-bar-fill { display:block; height:100%; background:linear-gradient(90deg, var(--bar), #1d4ed8); }
+        .wtc-report-bar-value { text-align:right; font-size:12px; font-weight:700; }
+        .wtc-report-muted { color:var(--muted); font-size:13px; margin:0; }
+        .wtc-report-county-table { width:100%; border-collapse:collapse; font-size:12px; }
+        .wtc-report-county-table th, .wtc-report-county-table td { border:1px solid var(--line); padding:8px; vertical-align:top; }
+        .wtc-report-county-table th { background:#e2e8f0; text-align:left; font-size:11px; letter-spacing:.04em; text-transform:uppercase; }
+        .wtc-report-policy-list { margin:0; padding-left:18px; }
+        .wtc-report-policy-list li { margin-bottom:4px; }
+        .wtc-report-footer { margin-top:8px; font-size:11px; color:var(--muted); }
+
+        @media print {
+            body { background:#fff; padding:14px; }
+            .wtc-report-print-btn { display:none; }
+            .wtc-report-section { break-inside:avoid; border-color:#c9d2de; }
+        }
+
+        @media (max-width: 900px) {
+            .wtc-report-grid { grid-template-columns:1fr 1fr; }
+            .wtc-report-two-col { grid-template-columns:1fr; }
+            .wtc-report-bar-row { grid-template-columns:1fr; gap:6px; }
+            .wtc-report-bar-value { text-align:left; }
+        }
+    </style>
+</head>
+<body>
+<div class="wtc-report">
+    <header class="wtc-report-header">
+        <div>
+            <h1 class="wtc-report-title"><?php esc_html_e( 'Wealth Tax Analytics Report', 'wealth-tax-calculator' ); ?></h1>
+            <p class="wtc-report-subtitle"><?php echo esc_html( sprintf( __( 'Generated %s', 'wealth-tax-calculator' ), $report_generated_at ) ); ?></p>
+        </div>
+        <button type="button" class="wtc-report-print-btn" onclick="window.print()">
+            <?php esc_html_e( 'Print / Save as PDF', 'wealth-tax-calculator' ); ?>
+        </button>
+    </header>
+
+    <section class="wtc-report-grid">
+        <div class="wtc-report-stat"><span class="wtc-report-stat-label"><?php esc_html_e( 'Submitted Sessions', 'wealth-tax-calculator' ); ?></span><span class="wtc-report-stat-value"><?php echo esc_html( number_format_i18n( $submitted_sessions ) ); ?></span></div>
+        <div class="wtc-report-stat"><span class="wtc-report-stat-label"><?php esc_html_e( 'Unique Sessions', 'wealth-tax-calculator' ); ?></span><span class="wtc-report-stat-value"><?php echo esc_html( number_format_i18n( $unique_sessions ) ); ?></span></div>
+        <div class="wtc-report-stat"><span class="wtc-report-stat-label"><?php esc_html_e( 'Average Tax Rate', 'wealth-tax-calculator' ); ?></span><span class="wtc-report-stat-value"><?php echo esc_html( $average_tax_rate > 0 ? number_format_i18n( $average_tax_rate, 1 ) . '%' : '—' ); ?></span></div>
+        <div class="wtc-report-stat"><span class="wtc-report-stat-label"><?php esc_html_e( 'Michigan Sessions', 'wealth-tax-calculator' ); ?></span><span class="wtc-report-stat-value"><?php echo esc_html( number_format_i18n( $michigan_sessions ) ); ?></span></div>
+        <div class="wtc-report-stat"><span class="wtc-report-stat-label"><?php esc_html_e( 'Michigan Unique', 'wealth-tax-calculator' ); ?></span><span class="wtc-report-stat-value"><?php echo esc_html( number_format_i18n( $michigan_unique ) ); ?></span></div>
+    </section>
+
+    <section class="wtc-report-section">
+        <h2><?php esc_html_e( 'Charts Snapshot', 'wealth-tax-calculator' ); ?></h2>
+        <div class="wtc-report-two-col">
+            <div>
+                <h3><?php esc_html_e( 'Most Selected Policies', 'wealth-tax-calculator' ); ?></h3>
+                <?php $this->render_pdf_report_bar_chart( isset( $summary['enabled_rows'] ) ? $summary['enabled_rows'] : array(), 'count', 'label', __( 'No policy popularity data yet.', 'wealth-tax-calculator' ) ); ?>
+            </div>
+            <div>
+                <h3><?php esc_html_e( 'Michigan Top Ranked (#1)', 'wealth-tax-calculator' ); ?></h3>
+                <?php $this->render_pdf_report_bar_chart( isset( $mi_summary['top_rank_rows'] ) ? $mi_summary['top_rank_rows'] : array(), 'count', 'label', __( 'No Michigan top-rank data yet.', 'wealth-tax-calculator' ) ); ?>
+            </div>
+        </div>
+    </section>
+
+    <section class="wtc-report-section">
+        <h2><?php esc_html_e( 'Top Policy Selections by Michigan County', 'wealth-tax-calculator' ); ?></h2>
+        <?php if ( empty( $county_top_rows ) ) : ?>
+            <p class="wtc-report-muted"><?php esc_html_e( 'No Michigan county-level submissions are available yet.', 'wealth-tax-calculator' ); ?></p>
+        <?php else : ?>
+            <table class="wtc-report-county-table">
+                <thead>
+                    <tr>
+                        <th><?php esc_html_e( 'County', 'wealth-tax-calculator' ); ?></th>
+                        <th><?php esc_html_e( 'Submitted Sessions', 'wealth-tax-calculator' ); ?></th>
+                        <th><?php esc_html_e( 'Top Policies', 'wealth-tax-calculator' ); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ( $county_top_rows as $county_row ) : ?>
+                        <?php
+                        if ( ! is_array( $county_row ) ) {
+                            continue;
+                        }
+                        $top_policies = isset( $county_row['top_policies'] ) && is_array( $county_row['top_policies'] ) ? $county_row['top_policies'] : array();
+                        ?>
+                        <tr>
+                            <td><?php echo esc_html( isset( $county_row['county_label'] ) ? $county_row['county_label'] : __( 'Unknown county', 'wealth-tax-calculator' ) ); ?></td>
+                            <td><?php echo esc_html( number_format_i18n( isset( $county_row['submissions'] ) ? (int) $county_row['submissions'] : 0 ) ); ?></td>
+                            <td>
+                                <?php if ( empty( $top_policies ) ) : ?>
+                                    <span class="wtc-report-muted"><?php esc_html_e( 'No policy details stored.', 'wealth-tax-calculator' ); ?></span>
+                                <?php else : ?>
+                                    <ol class="wtc-report-policy-list">
+                                        <?php foreach ( $top_policies as $policy_row ) : ?>
+                                            <?php if ( ! is_array( $policy_row ) ) { continue; } ?>
+                                            <li>
+                                                <?php echo esc_html( isset( $policy_row['label'] ) ? sanitize_text_field( $policy_row['label'] ) : __( 'Unknown policy', 'wealth-tax-calculator' ) ); ?>
+                                                (<?php echo esc_html( number_format_i18n( isset( $policy_row['count'] ) ? (int) $policy_row['count'] : 0 ) ); ?>)
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ol>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+    </section>
+
+    <p class="wtc-report-footer">
+        <?php esc_html_e( 'Tip: use the Print / Save as PDF button above, then choose Save as PDF in your browser print dialog.', 'wealth-tax-calculator' ); ?>
+    </p>
+</div>
+</body>
+</html>
+        <?php
+    }
+
+    private function load_pdf_library() {
+        if ( class_exists( '\\Dompdf\\Dompdf' ) ) {
+            return true;
+        }
+
+        $autoload_path = plugin_dir_path( __FILE__ ) . 'vendor/autoload.php';
+        if ( file_exists( $autoload_path ) ) {
+            require_once $autoload_path;
+        }
+
+        return class_exists( '\\Dompdf\\Dompdf' );
+    }
+
+    public function handle_export_analytics_pdf() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( 'Unauthorized access' );
+        }
+
+        check_admin_referer( 'wtc_export_analytics_pdf' );
+
+        $analytics_data = get_option( WTC_ANALYTICS_OPTION_KEY, array() );
+        if ( ! is_array( $analytics_data ) ) {
+            $analytics_data = array();
+        }
+
+        ob_start();
+        $this->render_analytics_pdf_report( $analytics_data );
+        $report_html = (string) ob_get_clean();
+
+        if ( $this->load_pdf_library() ) {
+            $filename = 'wealth-tax-analytics-report-' . gmdate( 'Y-m-d-His' ) . '.pdf';
+
+            $options = new \Dompdf\Options();
+            $options->set( 'isHtml5ParserEnabled', true );
+            $options->set( 'isRemoteEnabled', false );
+
+            $dompdf = new \Dompdf\Dompdf( $options );
+            $dompdf->setPaper( 'letter', 'portrait' );
+            $dompdf->loadHtml( $report_html, 'UTF-8' );
+            $dompdf->render();
+
+            nocache_headers();
+            header( 'Content-Type: application/pdf' );
+            header( 'Content-Disposition: attachment; filename="' . $filename . '"' );
+            echo $dompdf->output();
+            exit;
+        }
+
+        nocache_headers();
+        header( 'Content-Type: text/html; charset=utf-8' );
+        echo '<div style="font-family:Arial,sans-serif;max-width:900px;margin:18px auto;padding:12px 14px;border:1px solid #e5e7eb;background:#f8fafc;color:#0f172a">';
+        echo esc_html__( 'PDF library not installed yet. Showing the print-friendly report instead.', 'wealth-tax-calculator' );
+        echo '</div>';
+
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        echo $report_html;
+        exit;
     }
 
     public function handle_reset_analytics() {
