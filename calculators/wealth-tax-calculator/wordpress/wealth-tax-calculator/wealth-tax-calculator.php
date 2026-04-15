@@ -575,6 +575,38 @@ if ( is_admin() ) {
     new WTC_Admin_Settings( $wtc_updater );
 }
 
+/**
+ * Analytics data-scoping rules for the three admin views.
+ *
+ * These rules govern which events are included in each analytics panel.
+ * Every filter method, call site, and JS visualisation MUST respect the rule
+ * that corresponds to the view it serves.
+ *
+ * ┌─────────────────┬──────────────────────────────────────────────────────────┐
+ * │ View            │ Rule                                                     │
+ * ├─────────────────┼──────────────────────────────────────────────────────────┤
+ * │ Nationwide tab  │ NATIONWIDE — Includes ALL US-originated events           │
+ * │                 │ cumulatively: any region_bucket starting with "mi_"      │
+ * │                 │ (Michigan city slugs) OR matching "us_{XX}" (any other   │
+ * │                 │ US state). "unknown" and "non_us" buckets are excluded.  │
+ * │                 │ All charts, statistics, and the US heat map on this tab  │
+ * │                 │ must reflect this full cumulative US dataset.            │
+ * ├─────────────────┼──────────────────────────────────────────────────────────┤
+ * │ Michigan tab    │ MICHIGAN-ONLY — Includes exclusively events whose        │
+ * │                 │ region_bucket starts with "mi_". No other state's data   │
+ * │                 │ may appear in Michigan-tab charts or statistics.         │
+ * ├─────────────────┼──────────────────────────────────────────────────────────┤
+ * │ By State tab    │ STATE-EXCLUSIVE — Includes exclusively events from the   │
+ * │                 │ selected state: "mi_*" for Michigan, "us_{XX}" (exact)   │
+ * │                 │ for all other states. Every chart, statistic, county     │
+ * │                 │ table, and tax-rate analysis shown for a state reflects  │
+ * │                 │ only that state's submissions — never a mix.             │
+ * └─────────────────┴──────────────────────────────────────────────────────────┘
+ *
+ * Enforced by: is_nationwide_region_bucket(), is_michigan_region_bucket(),
+ *              is_state_region_bucket(), and the filter_analytics_data_to_*()
+ *              family of methods.
+ */
 class WTC_Policy_Analytics {
 
     public function __construct() {
@@ -645,22 +677,15 @@ class WTC_Policy_Analytics {
             }
         }
 
-        $us_states = array();
-        foreach ( $region_counts as $bucket => $count ) {
-            if ( strncmp( $bucket, 'us_', 3 ) !== 0 || 'us_unknown' === $bucket ) {
-                continue;
-            }
-
-            $state_code = strtoupper( substr( $bucket, 3 ) );
-            if ( 'MI' === $state_code || ! preg_match( '/^[A-Z]{2}$/', $state_code ) ) {
-                continue;
-            }
-
-            $us_states[ $state_code ] = (int) $count;
-        }
+        // Rule: NATIONWIDE — the US heat map must include ALL 50 states, Michigan included.
+        // $state_totals is already computed by aggregate_us_state_counts(), which merges all
+        // mi_* city buckets into the MI slot and maps each us_{XX} bucket to its state code.
+        // Using it directly satisfies the nationwide rule and fixes the prior omission of Michigan.
+        $us_states = $state_totals;
 
         $state_payload = array();
         foreach ( $state_map as $state_code => $state_label ) {
+            // Rule: STATE-EXCLUSIVE — only events from $state_code; feeds that state's panel in wtcStateAnalytics.
             $state_data    = $this->filter_analytics_data_to_state( $analytics_data, $state_code );
             $state_summary = $this->build_summary( $state_data );
             $county_rows   = isset( $state_summary['county_counts'] ) && is_array( $state_summary['county_counts'] ) ? $state_summary['county_counts'] : array();
@@ -870,6 +895,7 @@ class WTC_Policy_Analytics {
             $analytics_data = array();
         }
 
+        // Rule: NATIONWIDE — all US submissions (mi_* + us_*) cumulatively; feeds the Nationwide tab.
         $nationwide_analytics_data = $this->filter_analytics_data_to_nationwide( $analytics_data );
         $nationwide_summary        = $this->build_summary( $nationwide_analytics_data );
         $nationwide_submitted_sessions = isset( $nationwide_summary['total_events'] ) ? (int) $nationwide_summary['total_events'] : 0;
@@ -877,6 +903,7 @@ class WTC_Policy_Analytics {
         $nationwide_days_stored        = isset( $nationwide_summary['days_count'] ) ? (int) $nationwide_summary['days_count'] : 0;
         $nationwide_average_tax_rate   = isset( $nationwide_summary['average_tax_rate'] ) ? (float) $nationwide_summary['average_tax_rate'] : 0.0;
 
+        // Rule: MICHIGAN-ONLY — exclusively mi_* events; feeds the Michigan tab stats block.
         $mi_analytics_data       = $this->filter_analytics_data_to_michigan( $analytics_data );
         $mi_summary              = $this->build_summary( $mi_analytics_data );
         $mi_submitted_sessions   = isset( $mi_summary['total_events'] ) ? (int) $mi_summary['total_events'] : 0;
@@ -889,6 +916,7 @@ class WTC_Policy_Analytics {
         $state_map            = $this->get_us_state_code_map();
         $state_totals         = $this->aggregate_us_state_counts( isset( $nationwide_summary['region_counts'] ) && is_array( $nationwide_summary['region_counts'] ) ? $nationwide_summary['region_counts'] : array() );
         $default_state_code   = 'MI';
+        // Rule: STATE-EXCLUSIVE — only events from $default_state_code; feeds the By State tab initial render.
         $default_state_data   = $this->filter_analytics_data_to_state( $analytics_data, $default_state_code );
         $default_state_summary = $this->build_summary( $default_state_data );
         $default_state_label  = isset( $state_map[ $default_state_code ] ) ? $state_map[ $default_state_code ] : $default_state_code;
@@ -2004,6 +2032,11 @@ class WTC_Policy_Analytics {
         return '';
     }
 
+    /**
+     * @rule STATE-EXCLUSIVE: Returns true only for events that belong to the given state.
+     * Michigan (MI) matches any mi_* bucket; all other states match the exact us_{XX} bucket.
+     * Used to enforce that each By State panel contains only that state's data.
+     */
     private function is_state_region_bucket( $bucket, $state_code ) {
         $bucket     = sanitize_text_field( $bucket );
         $state_code = strtoupper( sanitize_text_field( $state_code ) );
@@ -2018,6 +2051,11 @@ class WTC_Policy_Analytics {
         return $bucket === 'us_' . strtolower( $state_code );
     }
 
+    /**
+     * @rule STATE-EXCLUSIVE: Filters raw analytics data to events from a single state only.
+     * Output feeds the By State tab and the Michigan tab. Every chart, statistic, county
+     * table, and visualisation built from this output reflects exclusively the given state.
+     */
     private function filter_analytics_data_to_state( $analytics_data, $state_code ) {
         if ( ! is_array( $analytics_data ) ) {
             return array();
@@ -2129,11 +2167,21 @@ class WTC_Policy_Analytics {
         return $filtered_data;
     }
 
+    /**
+     * @rule MICHIGAN-ONLY: Returns true only for Michigan city-level region buckets (mi_*).
+     * Used to enforce that the Michigan tab contains exclusively Michigan data.
+     */
     private function is_michigan_region_bucket( $bucket ) {
         $bucket = sanitize_text_field( $bucket );
         return strncmp( $bucket, 'mi_', 3 ) === 0;
     }
 
+    /**
+     * @rule NATIONWIDE: Returns true for any US-originated region bucket.
+     * Includes Michigan city slugs (mi_*) and all other US state buckets (us_{XX}).
+     * Excludes 'unknown' and 'non_us'. Used to enforce that the Nationwide tab
+     * contains all US submissions cumulatively.
+     */
     private function is_nationwide_region_bucket( $bucket ) {
         $bucket = sanitize_text_field( $bucket );
 
@@ -2148,6 +2196,12 @@ class WTC_Policy_Analytics {
         return false;
     }
 
+    /**
+     * @rule NATIONWIDE: Filters raw analytics data to all US-originated events.
+     * Includes Michigan (mi_*) and every other US state (us_{XX}) cumulatively.
+     * Excludes 'unknown' and 'non_us' buckets. Output feeds all charts, statistics,
+     * and visualisations on the Nationwide tab.
+     */
     private function filter_analytics_data_to_nationwide( $analytics_data ) {
         if ( ! is_array( $analytics_data ) ) {
             return array();
@@ -2260,6 +2314,11 @@ class WTC_Policy_Analytics {
         return $filtered_data;
     }
 
+    /**
+     * @rule MICHIGAN-ONLY: Filters raw analytics data to Michigan events (mi_*) only.
+     * Used for the standalone Michigan summary computed in render_analytics_page.
+     * Every statistic derived from this output is Michigan-exclusive.
+     */
     private function filter_analytics_data_to_michigan( $analytics_data ) {
         if ( ! is_array( $analytics_data ) ) {
             return array();

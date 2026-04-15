@@ -823,6 +823,13 @@
         clearStateCountyGeometry(hostEl, emptyEl);
     }
 
+    /**
+     * Rule: STATE-EXCLUSIVE / MICHIGAN-ONLY
+     * Each panel instance (Michigan tab and By State tab) renders charts, statistics,
+     * county tables, and tax-rate analyses using data scoped exclusively to the
+     * selected state. No data from other states may appear in any visualisation
+     * rendered by this function or its inner updateStatePanel().
+     */
     function initStateAnalyticsPanel() {
         if (typeof window.wtcStateAnalytics === 'undefined') {
             return;
@@ -883,6 +890,8 @@
                 return;
             }
 
+            // Rule: STATE-EXCLUSIVE — all data rendered below (stats, charts, tables)
+            // reflects exclusively the selected state's submissions.
             function updateStatePanel(stateCode) {
                 var normalizedCode = String(stateCode || '').toUpperCase();
                 var stateEntry = states[normalizedCode] || states[getFirstStateWithData(config.defaultState)];
@@ -1362,6 +1371,12 @@
         });
     }
 
+    /**
+     * Rule: NATIONWIDE
+     * Renders the US state heat map using cumulative data from all 50 US states,
+     * including Michigan. Every state's count in wtcUnitedStatesMap.states reflects
+     * all US-originated submissions for that state — no state is excluded.
+     */
     function initUnitedStatesMap() {
         if (typeof window.wtcUnitedStatesMap === 'undefined') {
             return;
