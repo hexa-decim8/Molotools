@@ -611,6 +611,20 @@ class WTC_Policy_Analytics {
         if ( ! is_array( $analytics_data ) ) {
             $analytics_data = array();
         }
+
+        // Avoid 50+ redundant full-dataset scans per page load by caching the JS payload.
+        // The cache is keyed on a version counter incremented by track_policy_event().
+        $analytics_version = (int) get_option( 'wtc_analytics_version', 0 );
+        $map_cache_key     = 'wtc_map_payload_v' . $analytics_version;
+        $cached_payload    = get_transient( $map_cache_key );
+
+        if ( is_array( $cached_payload ) && isset( $cached_payload['michigan'], $cached_payload['us_map'], $cached_payload['state_analytics'] ) ) {
+            wp_localize_script( 'wtc-admin-map', 'wtcMichiganMap', $cached_payload['michigan'] );
+            wp_localize_script( 'wtc-admin-map', 'wtcUnitedStatesMap', $cached_payload['us_map'] );
+            wp_localize_script( 'wtc-admin-map', 'wtcStateAnalytics', $cached_payload['state_analytics'] );
+            return;
+        }
+
         $summary       = $this->build_summary( $analytics_data );
         $region_counts = isset( $summary['region_counts'] ) ? $summary['region_counts'] : array();
         $county_counts = isset( $summary['county_counts'] ) ? $summary['county_counts'] : array();
@@ -742,31 +756,31 @@ class WTC_Policy_Analytics {
             }
         }
 
-        wp_localize_script(
-            'wtc-admin-map',
-            'wtcMichiganMap',
-            array(
-                'cities'       => $mi_cities,
-                'counties'     => $mi_counties,
-                'cityToCounty' => $this->get_michigan_city_to_county_map(),
-            )
+        $michigan_payload        = array(
+            'cities'       => $mi_cities,
+            'counties'     => $mi_counties,
+            'cityToCounty' => $this->get_michigan_city_to_county_map(),
+        );
+        $us_map_payload          = array( 'states' => $us_states );
+        $state_analytics_payload = array(
+            'states'            => $state_payload,
+            'defaultState'      => 'MI',
+            'geometryTemplates' => $geometry_templates,
         );
 
-        wp_localize_script(
-            'wtc-admin-map',
-            'wtcUnitedStatesMap',
-            array( 'states' => $us_states )
+        set_transient(
+            $map_cache_key,
+            array(
+                'michigan'        => $michigan_payload,
+                'us_map'          => $us_map_payload,
+                'state_analytics' => $state_analytics_payload,
+            ),
+            15 * MINUTE_IN_SECONDS
         );
 
-        wp_localize_script(
-            'wtc-admin-map',
-            'wtcStateAnalytics',
-            array(
-                'states' => $state_payload,
-                'defaultState' => 'MI',
-                'geometryTemplates' => $geometry_templates,
-            )
-        );
+        wp_localize_script( 'wtc-admin-map', 'wtcMichiganMap', $michigan_payload );
+        wp_localize_script( 'wtc-admin-map', 'wtcUnitedStatesMap', $us_map_payload );
+        wp_localize_script( 'wtc-admin-map', 'wtcStateAnalytics', $state_analytics_payload );
     }
 
     public function is_enabled() {
@@ -2769,6 +2783,9 @@ class WTC_Policy_Analytics {
         $total_events       = 0;
         $tax_rate_total     = 0.0;
         $tax_rate_samples   = 0;
+        $tax_rate_values    = array();
+        $seen_fingerprints  = array();
+        $repeat_fingerprints = 0;
 
         foreach ( $analytics_data as $day ) {
             if ( ! is_array( $day ) ) {
@@ -2897,6 +2914,14 @@ class WTC_Policy_Analytics {
                         'selected_items'  => $selected_items,
                     );
 
+                    $fingerprint = isset( $submission['fingerprint'] ) ? (string) $submission['fingerprint'] : '';
+                    if ( $fingerprint !== '' ) {
+                        if ( isset( $seen_fingerprints[ $fingerprint ] ) ) {
+                            $repeat_fingerprints++;
+                        }
+                        $seen_fingerprints[ $fingerprint ] = true;
+                    }
+
                     if ( ! isset( $region_counts[ $bucket ] ) ) {
                         $region_counts[ $bucket ] = 0;
                     }
@@ -2919,8 +2944,9 @@ class WTC_Policy_Analytics {
 
                     $tax_rate_value = isset( $submission['tax_rate_value'] ) ? (float) $submission['tax_rate_value'] : null;
                     if ( null !== $tax_rate_value && $tax_rate_value >= WTC_TAX_RATE_MIN && $tax_rate_value <= WTC_TAX_RATE_MAX ) {
-                        $tax_rate_total += $tax_rate_value;
+                        $tax_rate_total   += $tax_rate_value;
                         $tax_rate_samples += 1;
+                        $tax_rate_values[] = $tax_rate_value;
 
                         if ( $county_bucket !== '' ) {
                             if ( ! isset( $county_tax_rate_totals[ $county_bucket ] ) ) {
@@ -3100,22 +3126,36 @@ class WTC_Policy_Analytics {
 
         $average_tax_rate = $tax_rate_samples > 0 ? round( $tax_rate_total / $tax_rate_samples, 1 ) : 0.0;
 
+        sort( $tax_rate_values );
+        $rate_count      = count( $tax_rate_values );
+        $median_tax_rate = 0.0;
+        if ( $rate_count > 0 ) {
+            $mid             = (int) floor( $rate_count / 2 );
+            $median_tax_rate = ( $rate_count % 2 === 0 )
+                ? round( ( $tax_rate_values[ $mid - 1 ] + $tax_rate_values[ $mid ] ) / 2, 1 )
+                : round( $tax_rate_values[ $mid ], 1 );
+        }
+        $return_visitor_rate = $unique_sessions > 0 ? round( $repeat_fingerprints / $unique_sessions * 100, 1 ) : 0.0;
+
         return array(
-            'enabled_rows'      => array_values( $enabled_stats ),
-            'top_rank_rows'     => array_values( $top_rank_stats ),
-            'rank_rows'         => array_values( $rank_stats ),
-            'policy_group_rows' => array_values( $policy_group_stats ),
+            'enabled_rows'        => array_values( $enabled_stats ),
+            'top_rank_rows'       => array_values( $top_rank_stats ),
+            'rank_rows'           => array_values( $rank_stats ),
+            'policy_group_rows'   => array_values( $policy_group_stats ),
             'county_policy_counts' => $county_policy_counts,
             'county_tax_rate_rows' => $county_tax_rate_rows,
-            'policy_color_map'  => $policy_color_map,
-            'region_counts'     => $region_counts,
-            'county_counts'     => $county_counts,
-            'tax_rate_counts'   => $tax_rate_counts,
-            'recent_submissions'=> $recent_submissions,
-            'unique_sessions'   => $unique_sessions,
-            'days_count'        => count( $analytics_data ),
-            'average_tax_rate'  => $average_tax_rate,
-            'total_events'      => $total_events,
+            'policy_color_map'    => $policy_color_map,
+            'region_counts'       => $region_counts,
+            'county_counts'       => $county_counts,
+            'tax_rate_counts'     => $tax_rate_counts,
+            'recent_submissions'  => $recent_submissions,
+            'unique_sessions'     => $unique_sessions,
+            'days_count'          => count( $analytics_data ),
+            'average_tax_rate'    => $average_tax_rate,
+            'median_tax_rate'     => $median_tax_rate,
+            'repeat_fingerprints' => $repeat_fingerprints,
+            'return_visitor_rate' => $return_visitor_rate,
+            'total_events'        => $total_events,
         );
     }
 
@@ -4007,10 +4047,12 @@ class WTC_Policy_Analytics {
             'tax_rate_bucket'  => $tax_rate_bucket,
             'region_bucket'    => sanitize_text_field( $region_bucket ),
             'county_bucket'    => $county_bucket,
+            'fingerprint'      => $visitor_fingerprint,
             'submitted_at'     => time(),
         );
 
         update_option( WTC_ANALYTICS_OPTION_KEY, $data, false );
+        update_option( 'wtc_analytics_version', (int) get_option( 'wtc_analytics_version', 0 ) + 1, false );
         wp_send_json_success( array( 'ok' => true ) );
     }
 
@@ -4022,13 +4064,21 @@ class WTC_Policy_Analytics {
     }
 
     private function get_client_ip() {
-        $candidates = array(
-            isset( $_SERVER['HTTP_CF_CONNECTING_IP'] ) ? $_SERVER['HTTP_CF_CONNECTING_IP'] : '',
-            isset( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : '',
-            isset( $_SERVER['REMOTE_ADDR'] ) ? $_SERVER['REMOTE_ADDR'] : '',
+        $remote_addr = isset( $_SERVER['REMOTE_ADDR'] ) ? trim( (string) $_SERVER['REMOTE_ADDR'] ) : '';
+
+        // If REMOTE_ADDR is a valid public IP it cannot be spoofed by the client, so prefer it.
+        if ( filter_var( $remote_addr, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) {
+            return $remote_addr;
+        }
+
+        // REMOTE_ADDR is private or loopback — the server is behind a proxy.
+        // Only fall back to forwarded headers in this case.
+        $forwarded_candidates = array(
+            isset( $_SERVER['HTTP_CF_CONNECTING_IP'] ) ? (string) $_SERVER['HTTP_CF_CONNECTING_IP'] : '',
+            isset( $_SERVER['HTTP_X_FORWARDED_FOR'] )  ? (string) $_SERVER['HTTP_X_FORWARDED_FOR']  : '',
         );
 
-        foreach ( $candidates as $candidate ) {
+        foreach ( $forwarded_candidates as $candidate ) {
             if ( ! $candidate ) {
                 continue;
             }
@@ -4039,6 +4089,11 @@ class WTC_Policy_Analytics {
             if ( filter_var( $ip, FILTER_VALIDATE_IP ) ) {
                 return $ip;
             }
+        }
+
+        // Last resort: return REMOTE_ADDR even if private.
+        if ( filter_var( $remote_addr, FILTER_VALIDATE_IP ) ) {
+            return $remote_addr;
         }
 
         return '';

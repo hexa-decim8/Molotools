@@ -293,7 +293,21 @@
         analyticsController.enabled = true;
         analyticsController.endpoint = String(config.endpoint);
         analyticsController.nonce = String(config.nonce);
-        analyticsController.sessionId = 'wtc_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
+
+        // Use crypto.getRandomValues() for higher entropy session IDs when available.
+        var sessionSuffix;
+        if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
+            var buf = new Uint8Array(8);
+            window.crypto.getRandomValues(buf);
+            sessionSuffix = '';
+            for (var i = 0; i < buf.length; i++) {
+                var hex = buf[i].toString(16);
+                sessionSuffix += hex.length === 1 ? '0' + hex : hex;
+            }
+        } else {
+            sessionSuffix = Math.random().toString(36).slice(2, 10);
+        }
+        analyticsController.sessionId = 'wtc_' + Date.now() + '_' + sessionSuffix.slice(0, 16);
     }
 
     function buildAnalyticsParams(eventType, policyKey, payload) {
