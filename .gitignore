@@ -6,6 +6,7 @@ build/
 # TIGER/Line temporary data (not version-controlled)
 scripts/tiger-geojson/
 scripts/tiger-shapefiles/
+tiger-download.log
 
 # OS files
 .DS_Store
