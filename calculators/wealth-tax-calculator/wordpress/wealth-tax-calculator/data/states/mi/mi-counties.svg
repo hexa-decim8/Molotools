@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 462" id="wtc-state-map-MI" role="img" aria-label="mi county map">
+  <title>mi Counties</title>
+  <g class="wtc-counties">
+    <path class="wtc-county" id="wtc-county-alcona" data-county="Alcona County" d="M50.0,50.0L71.3,50.0L71.3,71.3L50.0,71.3L50.0,50.0Z"/>
+    <path class="wtc-county" id="wtc-county-alger" data-county="Alger County" d="M156.4,50.0L177.7,50.0L177.7,71.3L156.4,71.3L156.4,50.0Z"/>
+    <path class="wtc-county" id="wtc-county-allegan" data-county="Allegan County" d="M262.8,50.0L284.0,50.0L284.0,71.3L262.8,71.3L262.8,50.0Z"/>
+    <path class="wtc-county" id="wtc-county-alpena" data-county="Alpena County" d="M369.1,50.0L390.4,50.0L390.4,71.3L369.1,71.3L369.1,50.0Z"/>
+    <path class="wtc-county" id="wtc-county-antrim" data-county="Antrim County" d="M475.5,50.0L496.8,50.0L496.8,71.3L475.5,71.3L475.5,50.0Z"/>
+    <path class="wtc-county" id="wtc-county-arenac" data-county="Arenac County" d="M50.0,92.6L71.3,92.6L71.3,113.8L50.0,113.8L50.0,92.6Z"/>
+    <path class="wtc-county" id="wtc-county-argyle" data-county="Argyle County" d="M156.4,92.6L177.7,92.6L177.7,113.8L156.4,113.8L156.4,92.6Z"/>
+    <path class="wtc-county" id="wtc-county-barry" data-county="Barry County" d="M262.8,92.6L284.0,92.6L284.0,113.8L262.8,113.8L262.8,92.6Z"/>
+    <path class="wtc-county" id="wtc-county-bay" data-county="Bay County" d="M369.1,92.6L390.4,92.6L390.4,113.8L369.1,113.8L369.1,92.6Z"/>
+    <path class="wtc-county" id="wtc-county-benzie" data-county="Benzie County" d="M475.5,92.6L496.8,92.6L496.8,113.8L475.5,113.8L475.5,92.6Z"/>
+    <path class="wtc-county" id="wtc-county-berrien" data-county="Berrien County" d="M50.0,135.1L71.3,135.1L71.3,156.4L50.0,156.4L50.0,135.1Z"/>
+    <path class="wtc-county" id="wtc-county-branch" data-county="Branch County" d="M156.4,135.1L177.7,135.1L177.7,156.4L156.4,156.4L156.4,135.1Z"/>
+    <path class="wtc-county" id="wtc-county-calhoun" data-county="Calhoun County" d="M262.8,135.1L284.0,135.1L284.0,156.4L262.8,156.4L262.8,135.1Z"/>
+    <path class="wtc-county" id="wtc-county-cass" data-county="Cass County" d="M369.1,135.1L390.4,135.1L390.4,156.4L369.1,156.4L369.1,135.1Z"/>
+    <path class="wtc-county" id="wtc-county-charlevoix" data-county="Charlevoix County" d="M475.5,135.1L496.8,135.1L496.8,156.4L475.5,156.4L475.5,135.1Z"/>
+    <path class="wtc-county" id="wtc-county-cheboygan" data-county="Cheboygan County" d="M50.0,177.7L71.3,177.7L71.3,198.9L50.0,198.9L50.0,177.7Z"/>
+    <path class="wtc-county" id="wtc-county-chippewa" data-county="Chippewa County" d="M156.4,177.7L177.7,177.7L177.7,198.9L156.4,198.9L156.4,177.7Z"/>
+    <path class="wtc-county" id="wtc-county-clare" data-county="Clare County" d="M262.8,177.7L284.0,177.7L284.0,198.9L262.8,198.9L262.8,177.7Z"/>
+    <path class="wtc-county" id="wtc-county-clinton" data-county="Clinton County" d="M369.1,177.7L390.4,177.7L390.4,198.9L369.1,198.9L369.1,177.7Z"/>
+    <path class="wtc-county" id="wtc-county-crawford" data-county="Crawford County" d="M475.5,177.7L496.8,177.7L496.8,198.9L475.5,198.9L475.5,177.7Z"/>
+    <path class="wtc-county" id="wtc-county-delta" data-county="Delta County" d="M50.0,220.2L71.3,220.2L71.3,241.5L50.0,241.5L50.0,220.2Z"/>
+    <path class="wtc-county" id="wtc-county-dickinson" data-county="Dickinson County" d="M156.4,220.2L177.7,220.2L177.7,241.5L156.4,241.5L156.4,220.2Z"/>
+    <path class="wtc-county" id="wtc-county-eaton" data-county="Eaton County" d="M262.8,220.2L284.0,220.2L284.0,241.5L262.8,241.5L262.8,220.2Z"/>
+    <path class="wtc-county" id="wtc-county-emmet" data-county="Emmet County" d="M369.1,220.2L390.4,220.2L390.4,241.5L369.1,241.5L369.1,220.2Z"/>
+    <path class="wtc-county" id="wtc-county-genesee" data-county="Genesee County" d="M475.5,220.2L496.8,220.2L496.8,241.5L475.5,241.5L475.5,220.2Z"/>
+    <path class="wtc-county" id="wtc-county-gladwin" data-county="Gladwin County" d="M50.0,262.8L71.3,262.8L71.3,284.0L50.0,284.0L50.0,262.8Z"/>
+    <path class="wtc-county" id="wtc-county-gogebic" data-county="Gogebic County" d="M156.4,262.8L177.7,262.8L177.7,284.0L156.4,284.0L156.4,262.8Z"/>
+    <path class="wtc-county" id="wtc-county-grand-traverse" data-county="Grand Traverse County" d="M262.8,262.8L284.0,262.8L284.0,284.0L262.8,284.0L262.8,262.8Z"/>
+    <path class="wtc-county" id="wtc-county-gratiot" data-county="Gratiot County" d="M369.1,262.8L390.4,262.8L390.4,284.0L369.1,284.0L369.1,262.8Z"/>
+    <path class="wtc-county" id="wtc-county-great-lakes" data-county="Great Lakes County" d="M475.5,262.8L496.8,262.8L496.8,284.0L475.5,284.0L475.5,262.8Z"/>
+    <path class="wtc-county" id="wtc-county-greenville" data-county="Greenville County" d="M50.0,305.3L71.3,305.3L71.3,326.6L50.0,326.6L50.0,305.3Z"/>
+    <path class="wtc-county" id="wtc-county-hillsdale" data-county="Hillsdale County" d="M156.4,305.3L177.7,305.3L177.7,326.6L156.4,326.6L156.4,305.3Z"/>
+    <path class="wtc-county" id="wtc-county-houghton" data-county="Houghton County" d="M262.8,305.3L284.0,305.3L284.0,326.6L262.8,326.6L262.8,305.3Z"/>
+    <path class="wtc-county" id="wtc-county-huron" data-county="Huron County" d="M369.1,305.3L390.4,305.3L390.4,326.6L369.1,326.6L369.1,305.3Z"/>
+    <path class="wtc-county" id="wtc-county-ingham" data-county="Ingham County" d="M475.5,305.3L496.8,305.3L496.8,326.6L475.5,326.6L475.5,305.3Z"/>
+    <path class="wtc-county" id="wtc-county-ionia" data-county="Ionia County" d="M50.0,347.9L71.3,347.9L71.3,369.1L50.0,369.1L50.0,347.9Z"/>
+    <path class="wtc-county" id="wtc-county-iosco" data-county="Iosco County" d="M156.4,347.9L177.7,347.9L177.7,369.1L156.4,369.1L156.4,347.9Z"/>
+    <path class="wtc-county" id="wtc-county-iron" data-county="Iron County" d="M262.8,347.9L284.0,347.9L284.0,369.1L262.8,369.1L262.8,347.9Z"/>
+    <path class="wtc-county" id="wtc-county-isabella" data-county="Isabella County" d="M369.1,347.9L390.4,347.9L390.4,369.1L369.1,369.1L369.1,347.9Z"/>
+    <path class="wtc-county" id="wtc-county-jackson" data-county="Jackson County" d="M475.5,347.9L496.8,347.9L496.8,369.1L475.5,369.1L475.5,347.9Z"/>
+    <path class="wtc-county" id="wtc-county-kalamazoo" data-county="Kalamazoo County" d="M50.0,390.4L71.3,390.4L71.3,411.7L50.0,411.7L50.0,390.4Z"/>
+    <path class="wtc-county" id="wtc-county-kalkaska" data-county="Kalkaska County" d="M156.4,390.4L177.7,390.4L177.7,411.7L156.4,411.7L156.4,390.4Z"/>
+  </g>
+</svg>

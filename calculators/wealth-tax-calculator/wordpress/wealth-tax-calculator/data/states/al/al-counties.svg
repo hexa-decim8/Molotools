@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 377" id="wtc-state-map-AL" role="img" aria-label="al county map">
+  <title>al Counties</title>
+  <g class="wtc-counties">
+    <path class="wtc-county" id="wtc-county-autauga" data-county="Autauga County" d="M50.0,50.0L71.3,50.0L71.3,71.3L50.0,71.3L50.0,50.0Z"/>
+    <path class="wtc-county" id="wtc-county-baldwin" data-county="Baldwin County" d="M156.4,50.0L177.7,50.0L177.7,71.3L156.4,71.3L156.4,50.0Z"/>
+    <path class="wtc-county" id="wtc-county-barbour" data-county="Barbour County" d="M262.8,50.0L284.0,50.0L284.0,71.3L262.8,71.3L262.8,50.0Z"/>
+    <path class="wtc-county" id="wtc-county-bibb" data-county="Bibb County" d="M369.1,50.0L390.4,50.0L390.4,71.3L369.1,71.3L369.1,50.0Z"/>
+    <path class="wtc-county" id="wtc-county-blount" data-county="Blount County" d="M475.5,50.0L496.8,50.0L496.8,71.3L475.5,71.3L475.5,50.0Z"/>
+    <path class="wtc-county" id="wtc-county-bullock" data-county="Bullock County" d="M50.0,92.6L71.3,92.6L71.3,113.8L50.0,113.8L50.0,92.6Z"/>
+    <path class="wtc-county" id="wtc-county-butler" data-county="Butler County" d="M156.4,92.6L177.7,92.6L177.7,113.8L156.4,113.8L156.4,92.6Z"/>
+    <path class="wtc-county" id="wtc-county-calhoun" data-county="Calhoun County" d="M262.8,92.6L284.0,92.6L284.0,113.8L262.8,113.8L262.8,92.6Z"/>
+    <path class="wtc-county" id="wtc-county-chambers" data-county="Chambers County" d="M369.1,92.6L390.4,92.6L390.4,113.8L369.1,113.8L369.1,92.6Z"/>
+    <path class="wtc-county" id="wtc-county-cherokee" data-county="Cherokee County" d="M475.5,92.6L496.8,92.6L496.8,113.8L475.5,113.8L475.5,92.6Z"/>
+    <path class="wtc-county" id="wtc-county-chilton" data-county="Chilton County" d="M50.0,135.1L71.3,135.1L71.3,156.4L50.0,156.4L50.0,135.1Z"/>
+    <path class="wtc-county" id="wtc-county-choctaw" data-county="Choctaw County" d="M156.4,135.1L177.7,135.1L177.7,156.4L156.4,156.4L156.4,135.1Z"/>
+    <path class="wtc-county" id="wtc-county-clarke" data-county="Clarke County" d="M262.8,135.1L284.0,135.1L284.0,156.4L262.8,156.4L262.8,135.1Z"/>
+    <path class="wtc-county" id="wtc-county-clay" data-county="Clay County" d="M369.1,135.1L390.4,135.1L390.4,156.4L369.1,156.4L369.1,135.1Z"/>
+    <path class="wtc-county" id="wtc-county-cleburne" data-county="Cleburne County" d="M475.5,135.1L496.8,135.1L496.8,156.4L475.5,156.4L475.5,135.1Z"/>
+    <path class="wtc-county" id="wtc-county-coffee" data-county="Coffee County" d="M50.0,177.7L71.3,177.7L71.3,198.9L50.0,198.9L50.0,177.7Z"/>
+    <path class="wtc-county" id="wtc-county-colbert" data-county="Colbert County" d="M156.4,177.7L177.7,177.7L177.7,198.9L156.4,198.9L156.4,177.7Z"/>
+    <path class="wtc-county" id="wtc-county-conecuh" data-county="Conecuh County" d="M262.8,177.7L284.0,177.7L284.0,198.9L262.8,198.9L262.8,177.7Z"/>
+    <path class="wtc-county" id="wtc-county-coosa" data-county="Coosa County" d="M369.1,177.7L390.4,177.7L390.4,198.9L369.1,198.9L369.1,177.7Z"/>
+    <path class="wtc-county" id="wtc-county-covington" data-county="Covington County" d="M475.5,177.7L496.8,177.7L496.8,198.9L475.5,198.9L475.5,177.7Z"/>
+    <path class="wtc-county" id="wtc-county-crenshaw" data-county="Crenshaw County" d="M50.0,220.2L71.3,220.2L71.3,241.5L50.0,241.5L50.0,220.2Z"/>
+    <path class="wtc-county" id="wtc-county-cullman" data-county="Cullman County" d="M156.4,220.2L177.7,220.2L177.7,241.5L156.4,241.5L156.4,220.2Z"/>
+    <path class="wtc-county" id="wtc-county-dale" data-county="Dale County" d="M262.8,220.2L284.0,220.2L284.0,241.5L262.8,241.5L262.8,220.2Z"/>
+    <path class="wtc-county" id="wtc-county-dallas" data-county="Dallas County" d="M369.1,220.2L390.4,220.2L390.4,241.5L369.1,241.5L369.1,220.2Z"/>
+    <path class="wtc-county" id="wtc-county-de-kalb" data-county="De Kalb County" d="M475.5,220.2L496.8,220.2L496.8,241.5L475.5,241.5L475.5,220.2Z"/>
+    <path class="wtc-county" id="wtc-county-elmore" data-county="Elmore County" d="M50.0,262.8L71.3,262.8L71.3,284.0L50.0,284.0L50.0,262.8Z"/>
+    <path class="wtc-county" id="wtc-county-escambia" data-county="Escambia County" d="M156.4,262.8L177.7,262.8L177.7,284.0L156.4,284.0L156.4,262.8Z"/>
+    <path class="wtc-county" id="wtc-county-etowah" data-county="Etowah County" d="M262.8,262.8L284.0,262.8L284.0,284.0L262.8,284.0L262.8,262.8Z"/>
+    <path class="wtc-county" id="wtc-county-fayette" data-county="Fayette County" d="M369.1,262.8L390.4,262.8L390.4,284.0L369.1,284.0L369.1,262.8Z"/>
+    <path class="wtc-county" id="wtc-county-franklin" data-county="Franklin County" d="M475.5,262.8L496.8,262.8L496.8,284.0L475.5,284.0L475.5,262.8Z"/>
+    <path class="wtc-county" id="wtc-county-geneva" data-county="Geneva County" d="M50.0,305.3L71.3,305.3L71.3,326.6L50.0,326.6L50.0,305.3Z"/>
+    <path class="wtc-county" id="wtc-county-greene" data-county="Greene County" d="M156.4,305.3L177.7,305.3L177.7,326.6L156.4,326.6L156.4,305.3Z"/>
+    <path class="wtc-county" id="wtc-county-grundy" data-county="Grundy County" d="M262.8,305.3L284.0,305.3L284.0,326.6L262.8,326.6L262.8,305.3Z"/>
+    <path class="wtc-county" id="wtc-county-hale" data-county="Hale County" d="M369.1,305.3L390.4,305.3L390.4,326.6L369.1,326.6L369.1,305.3Z"/>
+  </g>
+</svg>

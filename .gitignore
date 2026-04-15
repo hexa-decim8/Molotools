@@ -1,0 +1,25 @@
+# Build and temporary files
+node_modules/
+dist/
+build/
+
+# TIGER/Line temporary data (not version-controlled)
+scripts/tiger-geojson/
+scripts/tiger-shapefiles/
+
+# OS files
+.DS_Store
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Environment
+.env
+.env.local
+.env.*.local

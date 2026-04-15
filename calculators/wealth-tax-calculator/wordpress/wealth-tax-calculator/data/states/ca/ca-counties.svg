@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 334" id="wtc-state-map-CA" role="img" aria-label="ca county map">
+  <title>ca Counties</title>
+  <g class="wtc-counties">
+    <path class="wtc-county" id="wtc-county-alameda" data-county="Alameda County" d="M50.0,50.0L71.3,50.0L71.3,71.3L50.0,71.3L50.0,50.0Z"/>
+    <path class="wtc-county" id="wtc-county-alpine" data-county="Alpine County" d="M156.4,50.0L177.7,50.0L177.7,71.3L156.4,71.3L156.4,50.0Z"/>
+    <path class="wtc-county" id="wtc-county-amador" data-county="Amador County" d="M262.8,50.0L284.0,50.0L284.0,71.3L262.8,71.3L262.8,50.0Z"/>
+    <path class="wtc-county" id="wtc-county-butte" data-county="Butte County" d="M369.1,50.0L390.4,50.0L390.4,71.3L369.1,71.3L369.1,50.0Z"/>
+    <path class="wtc-county" id="wtc-county-calaveras" data-county="Calaveras County" d="M475.5,50.0L496.8,50.0L496.8,71.3L475.5,71.3L475.5,50.0Z"/>
+    <path class="wtc-county" id="wtc-county-colusa" data-county="Colusa County" d="M50.0,92.6L71.3,92.6L71.3,113.8L50.0,113.8L50.0,92.6Z"/>
+    <path class="wtc-county" id="wtc-county-contra-costa" data-county="Contra Costa County" d="M156.4,92.6L177.7,92.6L177.7,113.8L156.4,113.8L156.4,92.6Z"/>
+    <path class="wtc-county" id="wtc-county-del-norte" data-county="Del Norte County" d="M262.8,92.6L284.0,92.6L284.0,113.8L262.8,113.8L262.8,92.6Z"/>
+    <path class="wtc-county" id="wtc-county-el-dorado" data-county="El Dorado County" d="M369.1,92.6L390.4,92.6L390.4,113.8L369.1,113.8L369.1,92.6Z"/>
+    <path class="wtc-county" id="wtc-county-fresno" data-county="Fresno County" d="M475.5,92.6L496.8,92.6L496.8,113.8L475.5,113.8L475.5,92.6Z"/>
+    <path class="wtc-county" id="wtc-county-glenn" data-county="Glenn County" d="M50.0,135.1L71.3,135.1L71.3,156.4L50.0,156.4L50.0,135.1Z"/>
+    <path class="wtc-county" id="wtc-county-humboldt" data-county="Humboldt County" d="M156.4,135.1L177.7,135.1L177.7,156.4L156.4,156.4L156.4,135.1Z"/>
+    <path class="wtc-county" id="wtc-county-imperial" data-county="Imperial County" d="M262.8,135.1L284.0,135.1L284.0,156.4L262.8,156.4L262.8,135.1Z"/>
+    <path class="wtc-county" id="wtc-county-inyo" data-county="Inyo County" d="M369.1,135.1L390.4,135.1L390.4,156.4L369.1,156.4L369.1,135.1Z"/>
+    <path class="wtc-county" id="wtc-county-kern" data-county="Kern County" d="M475.5,135.1L496.8,135.1L496.8,156.4L475.5,156.4L475.5,135.1Z"/>
+    <path class="wtc-county" id="wtc-county-kings" data-county="Kings County" d="M50.0,177.7L71.3,177.7L71.3,198.9L50.0,198.9L50.0,177.7Z"/>
+    <path class="wtc-county" id="wtc-county-lake" data-county="Lake County" d="M156.4,177.7L177.7,177.7L177.7,198.9L156.4,198.9L156.4,177.7Z"/>
+    <path class="wtc-county" id="wtc-county-lassen" data-county="Lassen County" d="M262.8,177.7L284.0,177.7L284.0,198.9L262.8,198.9L262.8,177.7Z"/>
+    <path class="wtc-county" id="wtc-county-los-angeles" data-county="Los Angeles County" d="M369.1,177.7L390.4,177.7L390.4,198.9L369.1,198.9L369.1,177.7Z"/>
+    <path class="wtc-county" id="wtc-county-madera" data-county="Madera County" d="M475.5,177.7L496.8,177.7L496.8,198.9L475.5,198.9L475.5,177.7Z"/>
+    <path class="wtc-county" id="wtc-county-marin" data-county="Marin County" d="M50.0,220.2L71.3,220.2L71.3,241.5L50.0,241.5L50.0,220.2Z"/>
+    <path class="wtc-county" id="wtc-county-mariposa" data-county="Mariposa County" d="M156.4,220.2L177.7,220.2L177.7,241.5L156.4,241.5L156.4,220.2Z"/>
+    <path class="wtc-county" id="wtc-county-mendocino" data-county="Mendocino County" d="M262.8,220.2L284.0,220.2L284.0,241.5L262.8,241.5L262.8,220.2Z"/>
+    <path class="wtc-county" id="wtc-county-merced" data-county="Merced County" d="M369.1,220.2L390.4,220.2L390.4,241.5L369.1,241.5L369.1,220.2Z"/>
+    <path class="wtc-county" id="wtc-county-modoc" data-county="Modoc County" d="M475.5,220.2L496.8,220.2L496.8,241.5L475.5,241.5L475.5,220.2Z"/>
+    <path class="wtc-county" id="wtc-county-mono" data-county="Mono County" d="M50.0,262.8L71.3,262.8L71.3,284.0L50.0,284.0L50.0,262.8Z"/>
+    <path class="wtc-county" id="wtc-county-monterey" data-county="Monterey County" d="M156.4,262.8L177.7,262.8L177.7,284.0L156.4,284.0L156.4,262.8Z"/>
+    <path class="wtc-county" id="wtc-county-napa" data-county="Napa County" d="M262.8,262.8L284.0,262.8L284.0,284.0L262.8,284.0L262.8,262.8Z"/>
+    <path class="wtc-county" id="wtc-county-nevada" data-county="Nevada County" d="M369.1,262.8L390.4,262.8L390.4,284.0L369.1,284.0L369.1,262.8Z"/>
+  </g>
+</svg>
