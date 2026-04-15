@@ -1541,7 +1541,45 @@
 
 
 .calculator-container .selected-policy-rank {
-    display: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 800;
+    color: var(--wtc-rank-badge-text, #fff);
+    background: var(--wtc-rank-badge-color, var(--wtc-policy-color, #406BBF));
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.16);
+    box-shadow: 0 4px 10px rgba(35, 48, 113, 0.2);
+    letter-spacing: 0.01em;
+}
+
+.calculator-container .selected-policies-list .selected-policy-entry:nth-of-type(6n + 1) {
+    --wtc-rank-badge-color: #D1495B;
+}
+
+.calculator-container .selected-policies-list .selected-policy-entry:nth-of-type(6n + 2) {
+    --wtc-rank-badge-color: #2B59C3;
+}
+
+.calculator-container .selected-policies-list .selected-policy-entry:nth-of-type(6n + 3) {
+    --wtc-rank-badge-color: #2A9D8F;
+}
+
+.calculator-container .selected-policies-list .selected-policy-entry:nth-of-type(6n + 4) {
+    --wtc-rank-badge-color: #F4A261;
+    --wtc-rank-badge-text: #3C2815;
+}
+
+.calculator-container .selected-policies-list .selected-policy-entry:nth-of-type(6n + 5) {
+    --wtc-rank-badge-color: #7B2CBF;
+}
+
+.calculator-container .selected-policies-list .selected-policy-entry:nth-of-type(6n + 6) {
+    --wtc-rank-badge-color: #3A86FF;
 }
 
 .calculator-container .selected-policy-drag-handle {
@@ -1912,6 +1950,13 @@
         align-items: flex-start;
         gap: 4px;
     }
+
+    .calculator-container .selected-policy-rank,
+    .calculator-container .wtc-fs-rank {
+        width: 26px;
+        height: 26px;
+        font-size: 0.68rem;
+    }
 }
 
 @media (max-width: 430px) {
@@ -1946,6 +1991,13 @@
 
     .calculator-container .wtc-innerbox {
         padding: 10px;
+    }
+
+    .calculator-container .selected-policy-rank,
+    .calculator-container .wtc-fs-rank {
+        width: 24px;
+        height: 24px;
+        font-size: 0.64rem;
     }
 
 }
@@ -1985,12 +2037,30 @@
     letter-spacing: 0.01em;
 }
 
+.calculator-container .wtc-next-step-button:disabled,
+.calculator-container .wtc-next-step-button[aria-disabled="true"] {
+    background: #98A2BF;
+    color: rgba(255, 255, 255, 0.88);
+    cursor: not-allowed;
+    opacity: 1;
+}
+
 .calculator-container .wtc-next-step-button:hover {
     background: #1a2558;
 }
 
+.calculator-container .wtc-next-step-button:disabled:hover,
+.calculator-container .wtc-next-step-button[aria-disabled="true"]:hover {
+    background: #98A2BF;
+}
+
 .calculator-container .wtc-next-step-button:active {
     background: #111a40;
+}
+
+.calculator-container .wtc-next-step-button:disabled:active,
+.calculator-container .wtc-next-step-button[aria-disabled="true"]:active {
+    background: #98A2BF;
 }
 
 /* ── Final Summary screen ─────────────────────────────────── */
@@ -2133,7 +2203,45 @@
 }
 
 .calculator-container .wtc-fs-rank {
-    display: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 800;
+    color: var(--wtc-rank-badge-text, #fff);
+    background: var(--wtc-rank-badge-color, var(--wtc-policy-color, #406BBF));
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.16);
+    box-shadow: 0 4px 10px rgba(35, 48, 113, 0.2);
+    letter-spacing: 0.01em;
+}
+
+.calculator-container .wtc-fs-list .wtc-fs-entry:nth-of-type(6n + 1) {
+    --wtc-rank-badge-color: #D1495B;
+}
+
+.calculator-container .wtc-fs-list .wtc-fs-entry:nth-of-type(6n + 2) {
+    --wtc-rank-badge-color: #2B59C3;
+}
+
+.calculator-container .wtc-fs-list .wtc-fs-entry:nth-of-type(6n + 3) {
+    --wtc-rank-badge-color: #2A9D8F;
+}
+
+.calculator-container .wtc-fs-list .wtc-fs-entry:nth-of-type(6n + 4) {
+    --wtc-rank-badge-color: #F4A261;
+    --wtc-rank-badge-text: #3C2815;
+}
+
+.calculator-container .wtc-fs-list .wtc-fs-entry:nth-of-type(6n + 5) {
+    --wtc-rank-badge-color: #7B2CBF;
+}
+
+.calculator-container .wtc-fs-list .wtc-fs-entry:nth-of-type(6n + 6) {
+    --wtc-rank-badge-color: #3A86FF;
 }
 
 .calculator-container .wtc-fs-label {

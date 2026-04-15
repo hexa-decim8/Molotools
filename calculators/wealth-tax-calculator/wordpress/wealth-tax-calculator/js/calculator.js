@@ -260,6 +260,27 @@
             : 0;
     }
 
+    function getActiveSelectedPolicyKeys() {
+        var activeKeys = [];
+        for (var i = 0; i < selectedPoliciesOrder.length; i++) {
+            if (Object.prototype.hasOwnProperty.call(selectedPolicyOptions, selectedPoliciesOrder[i])) {
+                activeKeys.push(selectedPoliciesOrder[i]);
+            }
+        }
+        return activeKeys;
+    }
+
+    function updateNextStepButtonState() {
+        var nextStepBtn = el('wtc-nextStepButton');
+        if (!nextStepBtn) {
+            return;
+        }
+
+        var hasSelections = getActiveSelectedPolicyKeys().length > 0;
+        nextStepBtn.disabled = !hasSelections;
+        nextStepBtn.setAttribute('aria-disabled', hasSelections ? 'false' : 'true');
+    }
+
     function initAnalyticsController() {
         var config = (typeof wealthTaxConfig !== 'undefined' && wealthTaxConfig.analytics)
             ? wealthTaxConfig.analytics
@@ -1516,6 +1537,8 @@
         if (currentMode === 'advanced') {
             syncSelectedPoliciesBox();
         }
+
+        updateNextStepButtonState();
     }
 
     // ── Selected Policies Box ──────────────────────────────────────────────────
@@ -1783,12 +1806,7 @@
         var taxRate = getCurrentTaxRate();
         var revenue = calculateRevenue(taxRate);
 
-        var activeKeys = [];
-        for (var o = 0; o < selectedPoliciesOrder.length; o++) {
-            if (Object.prototype.hasOwnProperty.call(selectedPolicyOptions, selectedPoliciesOrder[o])) {
-                activeKeys.push(selectedPoliciesOrder[o]);
-            }
-        }
+        var activeKeys = getActiveSelectedPolicyKeys();
 
         list.innerHTML = '';
         list.classList.remove('is-mobile-drag-ready');
@@ -1941,12 +1959,7 @@
         var revenue = calculateRevenue(taxRate);
         var remaining = revenue;
 
-        var activeKeys = [];
-        for (var o = 0; o < selectedPoliciesOrder.length; o++) {
-            if (Object.prototype.hasOwnProperty.call(selectedPolicyOptions, selectedPoliciesOrder[o])) {
-                activeKeys.push(selectedPoliciesOrder[o]);
-            }
-        }
+        var activeKeys = getActiveSelectedPolicyKeys();
 
         var items = [];
         var categoryTotalsByKey = {};
@@ -2243,6 +2256,11 @@
     }
 
     function handleNextStepClick() {
+        if (!getActiveSelectedPolicyKeys().length) {
+            updateNextStepButtonState();
+            return;
+        }
+
         trackNextStepPrioritizationSnapshot();
         showFinalSummary();
     }
@@ -2549,6 +2567,7 @@
 
         initShareActions();
         updateDisplay();
+        updateNextStepButtonState();
 
         var nextStepBtn = el('wtc-nextStepButton');
         if (nextStepBtn) {

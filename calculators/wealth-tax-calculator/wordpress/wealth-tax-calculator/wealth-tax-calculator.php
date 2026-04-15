@@ -3,7 +3,7 @@
  * Plugin Name: Billionaire Wealth Tax Calculator
  * Plugin URI:  https://github.com/hexa-decim8/Molotools
  * Description: Interactive calculator showing estimated 10-year tax revenue from billionaire wealth at rates of 1%–10%, based on the 2026 Forbes estimate of $8.2 trillion. Embed with [billionaire_wealth_tax].
- * Version:     1.4.12
+ * Version:     1.5.0
  * Author:      Molotools
  * License:     GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin version constant - update this when releasing new versions
-define( 'WTC_VERSION', '1.4.12' );
+define( 'WTC_VERSION', '1.5.0' );
 
 // Plugin constants
 define( 'WTC_PLUGIN_BASENAME', 'wealth-tax-calculator/wealth-tax-calculator.php' );
@@ -4606,7 +4606,7 @@ class Billionaire_Wealth_Tax_Calculator {
                         </div>
 
                         <div id="wtc-nextStepWrapper" class="wtc-next-step-wrapper">
-                            <button type="button" id="wtc-nextStepButton" class="wtc-next-step-button">
+                            <button type="button" id="wtc-nextStepButton" class="wtc-next-step-button" disabled aria-disabled="true">
                                 Find Out What You Funded <span aria-hidden="true">&rarr;</span>
                             </button>
                         </div>

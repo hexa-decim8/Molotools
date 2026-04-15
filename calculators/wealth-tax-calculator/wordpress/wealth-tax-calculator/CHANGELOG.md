@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-04-15
+
+- Disabled and grayed out the "Find Out What You Funded" button until at least one policy has been added to the prioritization list.
+- Added a JavaScript guard so the final summary cannot open from an empty prioritization state even if the button state falls out of sync.
+
 ## [1.4.12] - 2026-04-15
 
 
