@@ -2221,6 +2221,22 @@
         if (!container || !summaryPanel) { return; }
         container.classList.remove('is-showing-summary');
         summaryPanel.setAttribute('aria-hidden', 'true');
+
+        // After the main slider becomes visible again its Dragdealer handle position
+        // may be stale — either because the tax rate was changed on the summary screen
+        // (which updates the fill width but not the handle pixel offset) or because a
+        // resize fired while .calculator-content was hidden (offsetWidth was 0, so
+        // Dragdealer's reflow() stored a corrupt availWidth).  Reflow then resync both
+        // the handle and the fill so they agree on the current rate.
+        requestFrame(function () {
+            var taxRate = getCurrentTaxRate();
+            var revenue = calculateRevenue(taxRate);
+            if (sliderController.instance && typeof sliderController.instance.reflow === 'function') {
+                sliderController.instance.reflow();
+            }
+            syncDragdealerPosition(taxRate);
+            syncSliderDecor(taxRate, revenue);
+        });
     }
 
     function trackNextStepPrioritizationSnapshot() {
@@ -2524,6 +2540,24 @@
         if (backBtn) {
             backBtn.addEventListener('click', handleFinalSummaryBackClick);
         }
+
+        // Restore correct slider state when the browser serves the page from the
+        // bfcache (e.g. the user navigated away then pressed the Back button).
+        // In that case DOMContentLoaded does not fire again, so the Dragdealer
+        // bounds and the fill width may be out of sync with the live layout.
+        window.addEventListener('pageshow', function (event) {
+            if (!event.persisted) { return; }
+            var taxRate = getCurrentTaxRate();
+            var revenue = calculateRevenue(taxRate);
+            if (sliderController.instance && typeof sliderController.instance.reflow === 'function') {
+                sliderController.instance.reflow();
+            }
+            syncDragdealerPosition(taxRate);
+            syncSliderDecor(taxRate, revenue);
+            if (isFinalSummaryVisible()) {
+                refreshSummaryTaxRateSlider();
+            }
+        });
     }
 
     if (document.readyState === 'loading') {
