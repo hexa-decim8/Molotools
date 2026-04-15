@@ -1459,6 +1459,170 @@
         buildStateTileMap(mapEl, '', stateAnalyticsPayload.states, false);
     }
 
+    function initStateSearchCombobox() {
+        var wrap      = document.querySelector('.wtc-state-combobox-wrap');
+        var input     = document.getElementById('wtc-state-search-input');
+        var list      = document.getElementById('wtc-state-search-list');
+        var hidden    = document.getElementById('wtc-state-analytics-select');
+        var stateBtn  = document.querySelector('[data-wtc-section-target="state"]');
+
+        if (!wrap || !input || !list || !hidden) {
+            return;
+        }
+
+        var allOptions = Array.prototype.slice.call(list.querySelectorAll('.wtc-state-search-option'));
+        var focusedIndex = -1;
+
+        function openList() {
+            list.hidden = false;
+            wrap.setAttribute('aria-expanded', 'true');
+            wrap.classList.add('is-open');
+        }
+
+        function closeList() {
+            list.hidden = true;
+            wrap.setAttribute('aria-expanded', 'false');
+            wrap.classList.remove('is-open');
+            focusedIndex = -1;
+            clearFocus();
+        }
+
+        function clearFocus() {
+            allOptions.forEach(function (opt) {
+                opt.classList.remove('is-focused');
+            });
+        }
+
+        function getVisibleOptions() {
+            return allOptions.filter(function (opt) { return !opt.hidden; });
+        }
+
+        function filterOptions(query) {
+            var q = query.trim().toLowerCase();
+            var hasMatch = false;
+
+            allOptions.forEach(function (opt) {
+                var label = (opt.getAttribute('data-state-label') || '').toLowerCase();
+                var code  = (opt.getAttribute('data-state-code') || '').toLowerCase();
+                var match = !q || label.indexOf(q) !== -1 || code.indexOf(q) !== -1;
+                opt.hidden = !match;
+                if (match) { hasMatch = true; }
+            });
+
+            // Remove stale no-results message if present
+            var noResults = list.querySelector('.wtc-state-search-no-results');
+            if (!hasMatch) {
+                if (!noResults) {
+                    noResults = document.createElement('li');
+                    noResults.className = 'wtc-state-search-no-results';
+                    noResults.textContent = 'No states found';
+                    list.appendChild(noResults);
+                }
+            } else if (noResults) {
+                noResults.parentNode.removeChild(noResults);
+            }
+        }
+
+        function selectState(stateCode, stateLabel) {
+            hidden.value = stateCode;
+            input.value  = stateLabel + ' (' + stateCode + ')';
+
+            // Mark selected in list
+            allOptions.forEach(function (opt) {
+                opt.setAttribute('aria-selected', opt.getAttribute('data-state-code') === stateCode ? 'true' : 'false');
+            });
+
+            // Update PDF form's hidden state input (same bridge as before)
+            var changeEvent = document.createEvent('Event');
+            changeEvent.initEvent('change', true, true);
+            hidden.dispatchEvent(changeEvent);
+
+            // Activate the "By State" panel via the hidden tab button
+            wrap.classList.add('is-active');
+            wrap.classList.remove('is-open');
+            input.blur();
+
+            if (stateBtn) {
+                stateBtn.click();
+            }
+
+            closeList();
+        }
+
+        // Deactivate combobox styling when other tabs are clicked
+        var otherTabBtns = document.querySelectorAll('[data-wtc-section-target="all"], [data-wtc-section-target="michigan"]');
+        otherTabBtns.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                wrap.classList.remove('is-active');
+            });
+        });
+
+        // Open on focus / input
+        input.addEventListener('focus', function () {
+            filterOptions(input.value);
+            openList();
+        });
+
+        input.addEventListener('input', function () {
+            filterOptions(input.value);
+            openList();
+            focusedIndex = -1;
+            clearFocus();
+        });
+
+        // Keyboard navigation
+        input.addEventListener('keydown', function (e) {
+            var visible = getVisibleOptions();
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (list.hidden) { openList(); }
+                focusedIndex = Math.min(focusedIndex + 1, visible.length - 1);
+                clearFocus();
+                if (visible[focusedIndex]) {
+                    visible[focusedIndex].classList.add('is-focused');
+                    visible[focusedIndex].scrollIntoView({ block: 'nearest' });
+                }
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                focusedIndex = Math.max(focusedIndex - 1, 0);
+                clearFocus();
+                if (visible[focusedIndex]) {
+                    visible[focusedIndex].classList.add('is-focused');
+                    visible[focusedIndex].scrollIntoView({ block: 'nearest' });
+                }
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (focusedIndex >= 0 && visible[focusedIndex]) {
+                    var opt = visible[focusedIndex];
+                    selectState(opt.getAttribute('data-state-code'), opt.getAttribute('data-state-label'));
+                }
+            } else if (e.key === 'Escape') {
+                closeList();
+                input.blur();
+            }
+        });
+
+        // Click on option
+        list.addEventListener('click', function (e) {
+            var opt = e.target;
+            while (opt && opt !== list) {
+                if (opt.classList.contains('wtc-state-search-option')) {
+                    selectState(opt.getAttribute('data-state-code'), opt.getAttribute('data-state-label'));
+                    return;
+                }
+                opt = opt.parentNode;
+            }
+        });
+
+        // Close when clicking outside
+        document.addEventListener('mousedown', function (e) {
+            if (!wrap.contains(e.target)) {
+                closeList();
+            }
+        });
+    }
+
     function init() {
         initAnalyticsCharts();
         initAnalyticsScopeTabs();
@@ -1467,6 +1631,7 @@
         initCollapsibleAnalyticsSections();
         initUnitedStatesMap();
         initMichiganMap();
+        initStateSearchCombobox();
     }
 
     if (document.readyState === 'loading') {

@@ -977,26 +977,40 @@ class WTC_Policy_Analytics {
             <div class="wtc-analytics-section-toggle" role="tablist" aria-label="<?php esc_attr_e( 'Analytics section scope', 'wealth-tax-calculator' ); ?>">
                 <button type="button" class="wtc-analytics-toggle-btn" data-wtc-section-target="all" role="tab" aria-selected="false"><?php esc_html_e( 'Nationwide', 'wealth-tax-calculator' ); ?></button>
                 <button type="button" class="wtc-analytics-toggle-btn is-active" data-wtc-section-target="michigan" role="tab" aria-selected="true"><?php esc_html_e( 'Michigan Only', 'wealth-tax-calculator' ); ?></button>
-                <button type="button" class="wtc-analytics-toggle-btn" data-wtc-section-target="state" role="tab" aria-selected="false"><?php esc_html_e( 'By State', 'wealth-tax-calculator' ); ?></button>
-                <div class="wtc-analytics-state-picker-wrap">
-                    <label for="wtc-state-analytics-select" class="wtc-analytics-state-picker-label"><?php esc_html_e( 'Select state', 'wealth-tax-calculator' ); ?></label>
-                    <select id="wtc-state-analytics-select" class="wtc-analytics-state-picker" aria-label="<?php esc_attr_e( 'Select a state for analytics details', 'wealth-tax-calculator' ); ?>">
+                <button type="button" class="wtc-analytics-toggle-btn" data-wtc-section-target="state" role="tab" aria-selected="false" hidden><?php esc_html_e( 'By State', 'wealth-tax-calculator' ); ?></button>
+                <div class="wtc-state-combobox-wrap" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-owns="wtc-state-search-list">
+                    <input
+                        type="text"
+                        id="wtc-state-search-input"
+                        class="wtc-state-search-input"
+                        placeholder="<?php esc_attr_e( 'By State', 'wealth-tax-calculator' ); ?>"
+                        autocomplete="off"
+                        aria-label="<?php esc_attr_e( 'Search for a state', 'wealth-tax-calculator' ); ?>"
+                        aria-controls="wtc-state-search-list"
+                        aria-autocomplete="list"
+                        role="combobox"
+                    />
+                    <ul id="wtc-state-search-list" class="wtc-state-search-list" role="listbox" hidden aria-label="<?php esc_attr_e( 'States', 'wealth-tax-calculator' ); ?>">
                         <?php foreach ( $state_map as $state_code => $state_label ) : ?>
-                            <?php $state_total = isset( $state_totals[ $state_code ] ) ? (int) $state_totals[ $state_code ] : 0; ?>
-                            <option value="<?php echo esc_attr( $state_code ); ?>" <?php selected( $state_code, $default_state_code ); ?> <?php disabled( $state_total <= 0 ); ?>>
-                                <?php echo esc_html( $state_label . ' (' . $state_code . ')' ); ?>
-                            </option>
+                            <li
+                                role="option"
+                                class="wtc-state-search-option"
+                                data-state-code="<?php echo esc_attr( $state_code ); ?>"
+                                data-state-label="<?php echo esc_attr( $state_label ); ?>"
+                                aria-selected="false"
+                            ><?php echo esc_html( $state_label . ' (' . $state_code . ')' ); ?></li>
                         <?php endforeach; ?>
-                    </select>
+                    </ul>
+                    <input type="hidden" id="wtc-state-analytics-select" value="<?php echo esc_attr( $default_state_code ); ?>" />
                 </div>
                 <script>
                 (function() {
-                    var stateSelect = document.getElementById('wtc-state-analytics-select');
-                    var pdfExportForm = document.querySelector('input[name="action"][value="wtc_export_analytics_pdf"]')?.closest('form');
+                    var hiddenInput = document.getElementById('wtc-state-analytics-select');
+                    var pdfExportForm = document.querySelector('input[name="action"][value="wtc_export_analytics_pdf"]') ? document.querySelector('input[name="action"][value="wtc_export_analytics_pdf"]').closest('form') : null;
                     var stateInput = pdfExportForm ? pdfExportForm.querySelector('input[name="state"]') : null;
-                    
-                    if (stateSelect && stateInput) {
-                        stateSelect.addEventListener('change', function() {
+
+                    if (hiddenInput && stateInput) {
+                        hiddenInput.addEventListener('change', function() {
                             stateInput.value = this.value;
                         });
                     }
