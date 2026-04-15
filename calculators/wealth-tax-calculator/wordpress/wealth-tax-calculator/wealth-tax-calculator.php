@@ -790,6 +790,9 @@ class WTC_Policy_Analytics {
 
     public function get_retention_days() {
         $days = (int) get_option( WTC_ANALYTICS_RETENTION_OPTION, 90 );
+        if ( $days <= 0 ) {
+            return 0;
+        }
         return max( 7, min( 365, $days ) );
     }
 
@@ -827,6 +830,9 @@ class WTC_Policy_Analytics {
 
     public function sanitize_retention_days( $value ) {
         $days = (int) $value;
+        if ( $days <= 0 ) {
+            return 0;
+        }
         if ( $days < 7 ) {
             return 7;
         }
@@ -924,7 +930,8 @@ class WTC_Policy_Analytics {
                         <tr>
                             <th scope="row"><?php esc_html_e( 'Retention (days)', 'wealth-tax-calculator' ); ?></th>
                             <td>
-                                <input type="number" min="7" max="365" name="<?php echo esc_attr( WTC_ANALYTICS_RETENTION_OPTION ); ?>" value="<?php echo esc_attr( $this->get_retention_days() ); ?>" />
+                                <input type="number" min="0" max="365" name="<?php echo esc_attr( WTC_ANALYTICS_RETENTION_OPTION ); ?>" value="<?php echo esc_attr( $this->get_retention_days() ); ?>" />
+                                <p class="description"><?php esc_html_e( 'Set to 0 to keep analytics data permanently.', 'wealth-tax-calculator' ); ?></p>
                             </td>
                         </tr>
                     </table>
@@ -4315,7 +4322,12 @@ class WTC_Policy_Analytics {
             return;
         }
 
-        $cutoff = gmdate( 'Y-m-d', strtotime( '-' . $this->get_retention_days() . ' days' ) );
+        $retention_days = $this->get_retention_days();
+        if ( $retention_days <= 0 ) {
+            return;
+        }
+
+        $cutoff = gmdate( 'Y-m-d', strtotime( '-' . $retention_days . ' days' ) );
         foreach ( $data as $date => $day_data ) {
             if ( $date < $cutoff ) {
                 unset( $data[ $date ] );
