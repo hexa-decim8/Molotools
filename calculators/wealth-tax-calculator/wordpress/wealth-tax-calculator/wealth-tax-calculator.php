@@ -670,8 +670,35 @@ class WTC_Policy_Analytics {
                     'daysStored'        => isset( $state_summary['days_count'] ) ? (int) $state_summary['days_count'] : 0,
                     'averageTaxRate'    => isset( $state_summary['average_tax_rate'] ) ? (float) $state_summary['average_tax_rate'] : 0,
                 ),
-                'counties'     => $counties,
+                'counties'      => $counties,
                 'stateSessions' => isset( $state_totals[ $state_code ] ) ? (int) $state_totals[ $state_code ] : 0,
+                'enabledRows'   => array_values(
+                    array_slice(
+                        array_map(
+                            function ( $row ) {
+                                return array(
+                                    'label' => isset( $row['label'] ) ? sanitize_text_field( $row['label'] ) : '',
+                                    'count' => isset( $row['count'] ) ? (int) $row['count'] : 0,
+                                );
+                            },
+                            isset( $state_summary['enabled_rows'] ) && is_array( $state_summary['enabled_rows'] ) ? $state_summary['enabled_rows'] : array()
+                        ),
+                        0,
+                        12
+                    )
+                ),
+                'taxRateRows'   => array_values(
+                    array_map(
+                        function ( $rate, $count ) {
+                            return array(
+                                'label' => sanitize_text_field( $rate ) . '%',
+                                'count' => (int) $count,
+                            );
+                        },
+                        array_keys( isset( $state_summary['tax_rate_counts'] ) && is_array( $state_summary['tax_rate_counts'] ) ? $state_summary['tax_rate_counts'] : array() ),
+                        array_values( isset( $state_summary['tax_rate_counts'] ) && is_array( $state_summary['tax_rate_counts'] ) ? $state_summary['tax_rate_counts'] : array() )
+                    )
+                ),
             );
         }
 
@@ -926,6 +953,33 @@ class WTC_Policy_Analytics {
 
             <?php $this->render_us_map( $summary['region_counts'] ); ?>
 
+            <div class="card wtc-analytics-card wtc-no-collapse" style="max-width: 920px; margin-top: 20px;">
+                <h2><?php esc_html_e( 'Charts', 'wealth-tax-calculator' ); ?></h2>
+
+                <div class="wtc-analytics-chart-panel">
+                    <section class="wtc-analytics-chart-card">
+                        <h3 class="wtc-analytics-chart-title"><?php esc_html_e( 'Policy Selection', 'wealth-tax-calculator' ); ?></h3>
+
+                        <div class="wtc-analytics-chart-toggle" role="tablist" aria-label="<?php esc_attr_e( 'Policy popularity mode', 'wealth-tax-calculator' ); ?>">
+                            <button type="button" class="wtc-analytics-toggle-btn is-active" data-wtc-target="enabled" role="tab" aria-selected="true"><?php esc_html_e( 'Most Selected', 'wealth-tax-calculator' ); ?></button>
+                            <button type="button" class="wtc-analytics-toggle-btn" data-wtc-target="top-rank" role="tab" aria-selected="false"><?php esc_html_e( 'Top Ranked #1', 'wealth-tax-calculator' ); ?></button>
+                        </div>
+
+                        <div class="wtc-analytics-popularity-panel is-active" data-wtc-panel="enabled">
+                            <?php $this->render_analytics_popularity_chart( isset( $summary['enabled_rows'] ) ? $summary['enabled_rows'] : array(), __( 'Popularity data appears after submissions are recorded.', 'wealth-tax-calculator' ) ); ?>
+                        </div>
+                        <div class="wtc-analytics-popularity-panel" data-wtc-panel="top-rank" hidden>
+                            <?php $this->render_analytics_popularity_chart( isset( $summary['top_rank_rows'] ) ? $summary['top_rank_rows'] : array(), __( 'Top-rank data appears after submissions are recorded.', 'wealth-tax-calculator' ) ); ?>
+                        </div>
+                    </section>
+
+                    <section class="wtc-analytics-chart-card">
+                        <h3 class="wtc-analytics-chart-title"><?php esc_html_e( 'Tax Rate Selection', 'wealth-tax-calculator' ); ?></h3>
+                        <?php $this->render_analytics_tax_donut( isset( $summary['tax_rate_counts'] ) ? $summary['tax_rate_counts'] : array(), __( 'Tax rate data appears after submissions are recorded.', 'wealth-tax-calculator' ) ); ?>
+                    </section>
+                </div>
+            </div>
+
             <div class="card wtc-no-collapse" style="max-width: 920px; margin-top: 20px;">
                 <h2><?php esc_html_e( 'Most Selected Sub-Policies (Final Submissions)', 'wealth-tax-calculator' ); ?></h2>
                 <?php $this->render_policy_count_table( $summary['enabled_rows'], __( 'Sessions selected', 'wealth-tax-calculator' ) ); ?>
@@ -1088,6 +1142,11 @@ class WTC_Policy_Analytics {
                                 <?php $this->render_analytics_popularity_chart( isset( $mi_summary['top_rank_rows'] ) ? $mi_summary['top_rank_rows'] : array(), __( 'Top-rank data appears after Michigan submissions are recorded.', 'wealth-tax-calculator' ) ); ?>
                             </div>
                         </section>
+
+                        <section class="wtc-analytics-chart-card">
+                            <h3 class="wtc-analytics-chart-title"><?php esc_html_e( 'Tax Rate Selection', 'wealth-tax-calculator' ); ?></h3>
+                            <?php $this->render_analytics_tax_donut( isset( $mi_summary['tax_rate_counts'] ) ? $mi_summary['tax_rate_counts'] : array(), __( 'Tax rate data appears after Michigan submissions are recorded.', 'wealth-tax-calculator' ) ); ?>
+                        </section>
                     </div>
                 </div>
 
@@ -1137,6 +1196,22 @@ class WTC_Policy_Analytics {
                         <span class="wtc-analytics-stat-label"><?php esc_html_e( 'Average Tax Rate', 'wealth-tax-calculator' ); ?></span>
                         <span class="wtc-analytics-stat-value" id="wtc-state-average-rate"><?php echo esc_html( isset( $default_state_summary['average_tax_rate'] ) && (float) $default_state_summary['average_tax_rate'] > 0 ? number_format_i18n( (float) $default_state_summary['average_tax_rate'], 1 ) . '%' : '—' ); ?></span>
                     </div>
+                </div>
+            </div>
+
+            <div class="card wtc-analytics-card wtc-no-collapse" id="wtc-state-charts-card" style="max-width: 920px; margin-top: 20px;">
+                <h2><?php esc_html_e( 'Charts', 'wealth-tax-calculator' ); ?></h2>
+
+                <div class="wtc-analytics-chart-panel">
+                    <section class="wtc-analytics-chart-card">
+                        <h3 class="wtc-analytics-chart-title"><?php esc_html_e( 'Policy Selection', 'wealth-tax-calculator' ); ?></h3>
+                        <div id="wtc-state-policy-chart"></div>
+                    </section>
+
+                    <section class="wtc-analytics-chart-card">
+                        <h3 class="wtc-analytics-chart-title"><?php esc_html_e( 'Tax Rate Selection', 'wealth-tax-calculator' ); ?></h3>
+                        <div id="wtc-state-tax-chart"></div>
+                    </section>
                 </div>
             </div>
 
@@ -1273,6 +1348,31 @@ class WTC_Policy_Analytics {
         }
 
         return '$' . number_format_i18n( (int) round( $amount ) );
+    }
+
+    private function render_analytics_tax_donut( $tax_rate_counts, $empty_text ) {
+        $tax_rate_counts = is_array( $tax_rate_counts ) ? $tax_rate_counts : array();
+        $rows            = array();
+
+        foreach ( $tax_rate_counts as $rate => $count ) {
+            $count = (int) $count;
+            if ( $count <= 0 ) {
+                continue;
+            }
+            $rows[] = array(
+                'label' => sanitize_text_field( $rate ) . '%',
+                'count' => $count,
+            );
+        }
+
+        usort(
+            $rows,
+            function ( $a, $b ) {
+                return $b['count'] - $a['count'];
+            }
+        );
+
+        $this->render_analytics_popularity_chart( $rows, $empty_text );
     }
 
     private function render_analytics_popularity_chart( $rows, $empty_text ) {

@@ -150,6 +150,68 @@
         return number.toFixed(1) + '%';
     }
 
+    var WTC_DONUT_SWATCHES = ['#D1495B', '#2B59C3', '#2A9D8F', '#F4A261', '#7B2CBF', '#3A86FF', '#EF476F', '#118AB2', '#06D6A0', '#FFD166', '#8338EC', '#8E9AAF'];
+
+    function buildDonutRows(rows) {
+        var total = 0;
+        var i;
+        for (i = 0; i < rows.length; i++) {
+            total += parseInt(rows[i].count, 10) || 0;
+        }
+        if (!total) {
+            return null;
+        }
+
+        var current = 0;
+        var parts = [];
+        var legend = [];
+
+        for (i = 0; i < rows.length; i++) {
+            var count = parseInt(rows[i].count, 10) || 0;
+            if (!count) {
+                continue;
+            }
+            var ratio = count / total;
+            var next = current + ratio * 360;
+            var color = WTC_DONUT_SWATCHES[i % WTC_DONUT_SWATCHES.length];
+            parts.push(color + ' ' + current.toFixed(2) + 'deg ' + next.toFixed(2) + 'deg');
+            legend.push({ label: rows[i].label, count: count, percent: (ratio * 100).toFixed(1), color: color });
+            current = next;
+        }
+
+        return { gradient: parts.join(', '), legend: legend };
+    }
+
+    function renderDonutChart(container, rows, emptyText) {
+        if (!container) {
+            return;
+        }
+
+        if (!rows || !rows.length) {
+            container.innerHTML = '<p class="wtc-analytics-empty">' + emptyText + '</p>';
+            return;
+        }
+
+        var data = buildDonutRows(rows);
+        if (!data) {
+            container.innerHTML = '<p class="wtc-analytics-empty">' + emptyText + '</p>';
+            return;
+        }
+
+        var html = '<div class="wtc-analytics-donut" role="img" aria-label="' + emptyText + '" style="background: conic-gradient(' + data.gradient + ');"></div>';
+        html += '<div class="wtc-analytics-legend wtc-analytics-legend-scroll">';
+        for (var i = 0; i < data.legend.length; i++) {
+            var row = data.legend[i];
+            html += '<div class="wtc-analytics-legend-item">';
+            html += '<span class="wtc-analytics-legend-swatch" style="background:' + row.color + '"></span>';
+            html += '<span class="wtc-analytics-legend-label">' + row.label + '</span>';
+            html += '<span class="wtc-analytics-legend-value">' + row.count.toLocaleString() + ' (' + row.percent + '%)</span>';
+            html += '</div>';
+        }
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
     function buildStateTileMap(container, selectedStateCode, stateAnalytics) {
         var tileKeys;
         var maxCount = 0;
@@ -631,6 +693,21 @@
             uniqueEl.textContent = formatNumber(totals.uniqueSessions);
             daysEl.textContent = formatNumber(totals.daysStored);
             avgEl.textContent = formatAverageRate(totals.averageTaxRate);
+
+            // Render donut charts for policy selection and tax rate selection
+            var policyChartEl = document.getElementById('wtc-state-policy-chart');
+            var taxChartEl = document.getElementById('wtc-state-tax-chart');
+            var stateLabel = stateEntry.label || normalizedCode;
+            renderDonutChart(
+                policyChartEl,
+                Array.isArray(stateEntry.enabledRows) ? stateEntry.enabledRows : [],
+                'Policy data appears after submissions are recorded for ' + stateLabel + '.'
+            );
+            renderDonutChart(
+                taxChartEl,
+                Array.isArray(stateEntry.taxRateRows) ? stateEntry.taxRateRows : [],
+                'Tax rate data appears after submissions are recorded for ' + stateLabel + '.'
+            );
 
             // Pass policy data for all states (extract from state entry)
             var policyData = stateEntry.countyPolicies || {};
