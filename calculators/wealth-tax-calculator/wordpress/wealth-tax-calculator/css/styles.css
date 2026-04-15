@@ -1448,12 +1448,25 @@
 }
 
 .calculator-container .selected-policies-box h4 {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px;
     font-size: 1rem;
     margin: 0 0 12px;
     color: #233071;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     font-family: var(--wtc-font-primary);
+}
+
+.calculator-container .selected-policies-mobile-hint {
+    display: none;
+    font-size: 0.74rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+    color: #7b6f66;
 }
 
 .calculator-container .selected-policies-list {
@@ -1713,6 +1726,10 @@
     .calculator-container .info-box {
         margin-top: 0;
     }
+
+    .calculator-container .selected-policies-mobile-hint {
+        display: inline;
+    }
 }
 
 @media (max-width: 600px) {
@@ -1883,6 +1900,7 @@
 .calculator-container .wtc-next-step-wrapper {
     display: none;
     margin-top: 16px;
+    margin-bottom: 4px;
     text-align: right;
 }
 
@@ -1923,6 +1941,10 @@
 .calculator-container.is-showing-summary .calculator-content,
 .calculator-container.is-showing-summary .wtc-share-block {
     display: none;
+}
+
+.calculator-container.is-showing-summary .wtc-final-summary .wtc-share-block {
+    display: flex;
 }
 
 .calculator-container.is-showing-summary .wtc-final-summary {

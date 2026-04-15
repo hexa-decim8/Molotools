@@ -26,13 +26,11 @@
         suppressCallback: false,
         resizeTicking: false
     };
-    var summarySliderController = {
-        instance: null,
-        suppressCallback: false,
-        resizeTicking: false
-    };
     var moneyPileController = {
-        stages: {}
+        shell: null,
+        field: null,
+        columns: [],
+        initialized: false
     };
     var analyticsController = {
         enabled: false,
@@ -40,22 +38,13 @@
         nonce: '',
         sessionId: ''
     };
-    var requestFrame = window.requestAnimationFrame || function (callback) { return window.setTimeout(callback, 16); };
+    var hasTrackedNextStepPrioritization = false;
+    var requestFrame = typeof window.requestAnimationFrame === 'function'
+        ? function (callback) { return window.requestAnimationFrame(callback); }
+        : function (callback) { return window.setTimeout(callback, 16); };
     var supportsCssVariables = !!(window.CSS && window.CSS.supports && window.CSS.supports('--wtc-test', '0'));
     var MONEY_PILE_PROFILES = [0.26, 0.4, 0.58, 0.82, 1, 0.92, 0.72, 0.5, 0.34];
     var MONEY_PILE_MAX_BUNDLES = 14;
-    var MONEY_PILE_STAGE_CONFIGS = [
-        {
-            key: 'main',
-            shellSelector: '.wtc-slider-shell',
-            fieldId: 'wtc-moneyField'
-        },
-        {
-            key: 'summary',
-            shellSelector: '.wtc-fs-slider-shell',
-            fieldId: 'wtc-fs-moneyField'
-        }
-    ];
 
     // Policy category labels
     var POLICY_LABELS = {
@@ -68,12 +57,12 @@
     };
 
     var POLICY_FILL_COLORS = {
-        healthcare:   '#D1495B',
-        education:    '#2B59C3',
-        business:     '#2A9D8F',
-        directRelief: '#F4A261',
-        housing:      '#7B2CBF',
-        childcare:    '#3A86FF'
+        healthcare:   '#E74C3C',
+        education:    '#E74C3C',
+        business:     '#E74C3C',
+        directRelief: '#E74C3C',
+        housing:      '#E74C3C',
+        childcare:    '#E74C3C'
     };
 
     var SANDERS_POLICY_SOURCES = [
@@ -292,10 +281,6 @@
             params.push('order=' + encodeURIComponent(JSON.stringify(payload.order)));
         }
 
-        if (payload && payload.selectedItems && payload.selectedItems.length) {
-            params.push('selected_items=' + encodeURIComponent(JSON.stringify(payload.selectedItems)));
-        }
-
         return params.join('&');
     }
 
@@ -331,34 +316,14 @@
         xhr.send(body);
     }
 
-    function buildPrioritizationAnalyticsSnapshot() {
-        var summaryData = buildFinalSummaryData();
-        var selectedItems = [];
-        var order = [];
-
-        for (var i = 0; i < summaryData.items.length; i++) {
-            var item = summaryData.items[i];
-            var fundedAmount = Math.max(0, Math.min(item.fundedAmount, item.cost));
-
-            order.push(item.key);
-            selectedItems.push({
-                policy_key: item.key,
-                policy_group: item.policy,
-                policy_label: POLICY_LABELS[item.policy] || item.policy,
-                description: item.exampleData.description,
-                cost_label: formatCostLabel(item.exampleData),
-                selected_amount: Math.round(item.cost),
-                funded_amount: Math.round(fundedAmount),
-                funded_percent: item.fundedPercent,
-                funding_status: item.status,
-                rank: i + 1
-            });
+    function getActivePolicyKeysInOrder() {
+        var active = [];
+        for (var i = 0; i < selectedPoliciesOrder.length; i++) {
+            if (Object.prototype.hasOwnProperty.call(selectedPolicyOptions, selectedPoliciesOrder[i])) {
+                active.push(selectedPoliciesOrder[i]);
+            }
         }
-
-        return {
-            order: order,
-            selectedItems: selectedItems
-        };
+        return active;
     }
 
 
@@ -434,12 +399,12 @@
         return String(rounded).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     }
 
-    function formatCurrency(amount, compact) {
+    function formatCurrency(amount) {
         if (amount >= 1e12) {
-            return compact ? '$' + (amount / 1e12).toFixed(2) + 'T' : '$' + (amount / 1e12).toFixed(2) + ' Trillion';
+            return '$' + (amount / 1e12).toFixed(2) + ' Trillion';
         }
         if (amount >= 1e9) {
-            return compact ? '$' + (amount / 1e9).toFixed(1) + 'B' : '$' + (amount / 1e9).toFixed(1) + ' Billion';
+            return '$' + (amount / 1e9).toFixed(1) + ' Billion';
         }
         return '$' + formatWholeNumber(amount);
     }
@@ -626,9 +591,9 @@
         return Math.max(min, Math.min(max, value));
     }
 
-    function keepInfoboxVisible(sliderId, infoboxId) {
-        var sliderWrapper = el(sliderId);
-        var sliderInfoBox = el(infoboxId);
+    function keepSliderInfoboxVisible() {
+        var sliderWrapper = el('wtc-pr-slider');
+        var sliderInfoBox = el('wtc-sliderInfobox');
 
         if (!sliderWrapper || !sliderInfoBox) {
             return;
@@ -646,20 +611,19 @@
             sliderInfoBox.style.marginLeft = '0px';
         }
 
-        var boundaryElement = sliderWrapper.closest('.wtc-slider-shell') || sliderWrapper.closest('.wtc-fs-slider-shell') || sliderWrapper;
-        var boundaryRect = boundaryElement.getBoundingClientRect();
+        var sliderRect = sliderWrapper.getBoundingClientRect();
         var handleRect = handleWrapper.getBoundingClientRect();
         var infoBoxWidth = sliderInfoBox.offsetWidth;
 
-        if (!infoBoxWidth || boundaryRect.width <= 0) {
+        if (!infoBoxWidth || sliderRect.width <= 0) {
             return;
         }
 
         var gutter = 8;
         var handleCenter = handleRect.left + (handleRect.width / 2);
         var desiredLeft = handleCenter - (infoBoxWidth / 2);
-        var minLeft = boundaryRect.left + gutter;
-        var maxLeft = boundaryRect.right - gutter - infoBoxWidth;
+        var minLeft = sliderRect.left + gutter;
+        var maxLeft = sliderRect.right - gutter - infoBoxWidth;
         var boundedLeft = clampNumber(desiredLeft, minLeft, maxLeft);
         var offset = boundedLeft - desiredLeft;
 
@@ -675,36 +639,21 @@
         }
     }
 
-    function keepSliderInfoboxVisible() {
-        keepInfoboxVisible('wtc-pr-slider', 'wtc-sliderInfobox');
-    }
-
-    function keepSummarySliderInfoboxVisible() {
-        keepInfoboxVisible('wtc-fs-pr-slider', 'wtc-fs-sliderInfobox');
-    }
-
-    function ensureMoneyPileStage(stageConfig) {
-        if (!stageConfig) {
-            return null;
+    function ensureMoneyPile() {
+        if (moneyPileController.initialized) {
+            return true;
         }
 
-        if (moneyPileController.stages[stageConfig.key]) {
-            return moneyPileController.stages[stageConfig.key];
-        }
-
-        var shell = document.querySelector(stageConfig.shellSelector);
-        var field = el(stageConfig.fieldId);
+        var shell = document.querySelector('.wtc-slider-shell');
+        var field = el('wtc-moneyField');
 
         if (!shell || !field) {
-            return null;
+            return false;
         }
 
-        var stage = {
-            shell: shell,
-            field: field,
-            columns: []
-        };
-
+        moneyPileController.shell = shell;
+        moneyPileController.field = field;
+        moneyPileController.columns = [];
         field.innerHTML = '';
 
         for (var columnIndex = 0; columnIndex < MONEY_PILE_PROFILES.length; columnIndex++) {
@@ -752,27 +701,14 @@
             }
 
             field.appendChild(column);
-            stage.columns.push({
+            moneyPileController.columns.push({
                 profile: MONEY_PILE_PROFILES[columnIndex],
                 bundles: bundles
             });
         }
 
-        moneyPileController.stages[stageConfig.key] = stage;
-        return stage;
-    }
-
-    function ensureMoneyPile() {
-        var initializedCount = 0;
-
-        for (var stageIndex = 0; stageIndex < MONEY_PILE_STAGE_CONFIGS.length; stageIndex++) {
-            var stage = ensureMoneyPileStage(MONEY_PILE_STAGE_CONFIGS[stageIndex]);
-            if (stage) {
-                initializedCount++;
-            }
-        }
-
-        return initializedCount > 0;
+        moneyPileController.initialized = true;
+        return true;
     }
 
     function syncMoneyPile(taxRate) {
@@ -783,49 +719,40 @@
         var progress = rateToRatio(taxRate);
         var visibleRatio = 0.08 + (Math.pow(progress, 0.72) * 0.92);
 
-        for (var stageIndex = 0; stageIndex < MONEY_PILE_STAGE_CONFIGS.length; stageIndex++) {
-            var stageConfig = MONEY_PILE_STAGE_CONFIGS[stageIndex];
-            var stage = moneyPileController.stages[stageConfig.key];
+        if (supportsCssVariables) {
+            moneyPileController.shell.style.setProperty('--wtc-money-progress', visibleRatio.toFixed(3));
+        }
 
-            if (!stage) {
-                continue;
+        for (var columnIndex = 0; columnIndex < moneyPileController.columns.length; columnIndex++) {
+            var column = moneyPileController.columns[columnIndex];
+            var bundleTarget = Math.round(column.profile * visibleRatio * MONEY_PILE_MAX_BUNDLES);
+
+            if (visibleRatio > 0.02) {
+                bundleTarget = Math.max(1, bundleTarget);
             }
 
-            if (supportsCssVariables) {
-                stage.shell.style.setProperty('--wtc-money-progress', visibleRatio.toFixed(3));
-            }
-
-            for (var columnIndex = 0; columnIndex < stage.columns.length; columnIndex++) {
-                var column = stage.columns[columnIndex];
-                var bundleTarget = Math.round(column.profile * visibleRatio * MONEY_PILE_MAX_BUNDLES);
-
-                if (visibleRatio > 0.02) {
-                    bundleTarget = Math.max(1, bundleTarget);
-                }
-
-                for (var bundleIndex = 0; bundleIndex < column.bundles.length; bundleIndex++) {
-                    if (bundleIndex < bundleTarget) {
-                        column.bundles[bundleIndex].classList.add('is-active');
-                        if (!supportsCssVariables) {
-                            column.bundles[bundleIndex].style.opacity = '1';
-                            column.bundles[bundleIndex].style.transform = buildMoneyBundleTransform(
-                                parseFloat(column.bundles[bundleIndex].getAttribute('data-bundle-scale')),
-                                parseFloat(column.bundles[bundleIndex].getAttribute('data-bundle-tilt')),
-                                true
-                            );
-                            column.bundles[bundleIndex].style.filter = 'saturate(1)';
-                        }
-                    } else {
-                        column.bundles[bundleIndex].classList.remove('is-active');
-                        if (!supportsCssVariables) {
-                            column.bundles[bundleIndex].style.opacity = '0';
-                            column.bundles[bundleIndex].style.transform = buildMoneyBundleTransform(
-                                parseFloat(column.bundles[bundleIndex].getAttribute('data-bundle-scale')),
-                                parseFloat(column.bundles[bundleIndex].getAttribute('data-bundle-tilt')),
-                                false
-                            );
-                            column.bundles[bundleIndex].style.filter = 'saturate(0.86)';
-                        }
+            for (var bundleIndex = 0; bundleIndex < column.bundles.length; bundleIndex++) {
+                if (bundleIndex < bundleTarget) {
+                    column.bundles[bundleIndex].classList.add('is-active');
+                    if (!supportsCssVariables) {
+                        column.bundles[bundleIndex].style.opacity = '1';
+                        column.bundles[bundleIndex].style.transform = buildMoneyBundleTransform(
+                            parseFloat(column.bundles[bundleIndex].getAttribute('data-bundle-scale')),
+                            parseFloat(column.bundles[bundleIndex].getAttribute('data-bundle-tilt')),
+                            true
+                        );
+                        column.bundles[bundleIndex].style.filter = 'saturate(1)';
+                    }
+                } else {
+                    column.bundles[bundleIndex].classList.remove('is-active');
+                    if (!supportsCssVariables) {
+                        column.bundles[bundleIndex].style.opacity = '0';
+                        column.bundles[bundleIndex].style.transform = buildMoneyBundleTransform(
+                            parseFloat(column.bundles[bundleIndex].getAttribute('data-bundle-scale')),
+                            parseFloat(column.bundles[bundleIndex].getAttribute('data-bundle-tilt')),
+                            false
+                        );
+                        column.bundles[bundleIndex].style.filter = 'saturate(0.86)';
                     }
                 }
             }
@@ -880,41 +807,6 @@
         sliderController.suppressCallback = true;
         sliderController.instance.setValue(rateToRatio(taxRate), 0, true);
         sliderController.suppressCallback = false;
-    }
-
-    function syncSummaryDragdealerPosition(taxRate) {
-        if (!summarySliderController.instance) {
-            return;
-        }
-
-        // Skip setValue while the user is actively dragging — the drag loop already
-        // updates value.current every frame, so calling setValue here would fight the
-        // drag and cause the handle to snap back to the quantized position each tick,
-        // making the slider appear locked.  The display decorations are still updated
-        // via syncSummarySliderDecor even when this is skipped.
-        if (summarySliderController.instance.dragging) {
-            return;
-        }
-
-        summarySliderController.suppressCallback = true;
-        summarySliderController.instance.setValue(rateToRatio(taxRate), 0, true);
-        summarySliderController.suppressCallback = false;
-    }
-
-    function refreshSummaryTaxRateSlider() {
-        var taxRate = getCurrentTaxRate();
-        var revenue = calculateRevenue(taxRate);
-
-        if (!summarySliderController.instance) {
-            initSummaryTaxRateSlider();
-        }
-
-        if (summarySliderController.instance && typeof summarySliderController.instance.reflow === 'function') {
-            summarySliderController.instance.reflow();
-        }
-
-        syncSummaryDragdealerPosition(taxRate);
-        syncSummarySliderDecor(taxRate, revenue);
     }
 
     function setTaxRate(taxRate, syncHandlePosition) {
@@ -1005,102 +897,6 @@
 
         window.addEventListener('resize', handleViewportChange);
         window.addEventListener('orientationchange', handleViewportChange);
-    }
-
-    function syncSummarySliderDecor(taxRate, revenue) {
-        var sliderValue = el('wtc-fs-sliderValue');
-        var annualPrice = el('wtc-fs-annualPrice');
-        var planHolder = el('wtc-fs-plan-holder');
-        var deviceHolder = el('wtc-fs-device-holder');
-        var highlightFill = el('wtc-fs-highlight-fill');
-        var handle = el('wtc-fs-sliderHandle');
-
-        var rateText = taxRate.toFixed(1) + '%';
-        var progress = rateToRatio(taxRate) * 100;
-
-        if (sliderValue) {
-            sliderValue.textContent = rateText;
-        }
-
-        if (planHolder) {
-            planHolder.textContent = 'Tax Rate:';
-        }
-
-        if (deviceHolder) {
-            deviceHolder.textContent = rateText;
-        }
-
-        if (annualPrice) {
-            annualPrice.textContent = formatCurrency(revenue);
-        }
-
-        if (highlightFill) {
-            highlightFill.style.width = progress.toFixed(2) + '%';
-        }
-
-        if (handle) {
-            handle.setAttribute('aria-valuenow', taxRate.toFixed(1));
-            handle.setAttribute('aria-valuetext', rateText);
-        }
-
-        syncMoneyPile(taxRate);
-        keepSummarySliderInfoboxVisible();
-    }
-
-    var handleSummarySliderKeydown = handleSliderKeydown;
-
-    function initSummaryTaxRateSlider() {
-        var sliderWrapper = el('wtc-fs-pr-slider');
-        var sliderHandle = el('wtc-fs-sliderHandle');
-        var taxRateInput = getTaxRateInput();
-
-        if (summarySliderController.instance) {
-            return summarySliderController.instance;
-        }
-
-        if (!sliderWrapper || !sliderHandle || !taxRateInput || typeof Dragdealer === 'undefined') {
-            return;
-        }
-
-        summarySliderController.instance = new Dragdealer('wtc-fs-pr-slider', {
-            x: rateToRatio(getCurrentTaxRate()),
-            speed: 0.15,
-            animationCallback: function (x) {
-                if (summarySliderController.suppressCallback) {
-                    return;
-                }
-
-                var nextRate = quantizeTaxRate(ratioToRate(x));
-                var nextValue = currentMode === 'basic' ? String(Math.round(nextRate)) : nextRate.toFixed(1);
-
-                if (taxRateInput.value !== nextValue) {
-                    taxRateInput.value = nextValue;
-                    updateDisplay();
-                } else {
-                    syncSummarySliderDecor(nextRate, calculateRevenue(nextRate));
-                }
-            }
-        });
-
-        sliderHandle.addEventListener('keydown', handleSummarySliderKeydown);
-        syncSummaryDragdealerPosition(getCurrentTaxRate());
-
-        function handleViewportChange() {
-            if (summarySliderController.resizeTicking) {
-                return;
-            }
-
-            summarySliderController.resizeTicking = true;
-            requestFrame(function () {
-                summarySliderController.resizeTicking = false;
-                keepSummarySliderInfoboxVisible();
-            });
-        }
-
-        window.addEventListener('resize', handleViewportChange);
-        window.addEventListener('orientationchange', handleViewportChange);
-
-        return summarySliderController.instance;
     }
 
     function getComparisonMatchCost(item) {
@@ -1275,6 +1071,7 @@
     function updatePolicyAllocation() {
         var allocationResults = el('wtc-allocationResults');
         if (!allocationResults) return;
+        ensureAllocationTotalsBetweenSliderAndPolicy();
 
         if (selectedPolicies.length === 0) {
             selectedPolicyOptions = {};
@@ -1437,27 +1234,6 @@
         return total;
     }
 
-    function getBudgetSnapshotData() {
-        var taxRate = getCurrentTaxRate();
-        var revenue = calculateRevenue(taxRate);
-        var selectedTotal = calculateSelectedPolicyFunding();
-        var overrun = Math.max(selectedTotal - revenue, 0);
-        var remaining = Math.max(revenue - selectedTotal, 0);
-
-        return {
-            taxRate: taxRate,
-            revenue: revenue,
-            annualRevenue: revenue / 10,
-            selectedTotal: selectedTotal,
-            annualSelectedTotal: selectedTotal / 10,
-            overrun: overrun,
-            annualOverrun: overrun / 10,
-            remaining: remaining,
-            annualRemaining: remaining / 10,
-            isOverBudget: overrun > 0
-        };
-    }
-
     function getOrCreateChild(parent, selector, tag, cls) {
         var child = parent.querySelector(selector);
         if (!child) {
@@ -1469,41 +1245,75 @@
     }
 
     function updateAllocationSummary() {
-        var snapshotData = getBudgetSnapshotData();
-        var policySection = document.querySelector('.policy-allocation-section');
-        var allocationResults = el('wtc-allocationResults');
+        // Allocation totals box has been removed - this function now only syncs selected policies
+        if (currentMode === 'advanced') {
+            syncSelectedPoliciesBox();
+        }
+    }
 
-        if (policySection && allocationResults) {
-            var card = policySection.querySelector('.wtc-budget-snapshot');
+    function DEPRECATED_updateAllocationSummary_fullLogic() {
+        var totalsBox = el('wtc-allocationTotalsBox');
+        if (!totalsBox) return;
 
-            if (currentMode === 'advanced') {
-                if (card) {
-                    card.remove();
+        var taxRate = parseFloat(el('wtc-taxRate').value);
+        var revenue = calculateRevenue(taxRate);
+        var selectedPolicyFunding = calculateSelectedPolicyFunding();
+
+        var overrunAmount = Math.max(selectedPolicyFunding - revenue, 0);
+        var remainingRevenue = Math.max(revenue - selectedPolicyFunding, 0);
+        var isOverBudget = overrunAmount > 0;
+
+        var summary = getOrCreateChild(totalsBox, '.allocation-summary', 'div', 'allocation-summary');
+        summary.classList.toggle('is-over-budget', isOverBudget);
+
+        var availableLine = getOrCreateChild(summary, '.allocation-available-line', 'span', 'allocation-available-line');
+        availableLine.textContent = '10-year tax revenue available: ' + formatCurrency(revenue);
+
+        var selectedLine = getOrCreateChild(summary, '.allocation-selected-line', 'span', 'allocation-selected-line');
+        selectedLine.textContent = 'Selected policy funding: ' + formatCurrency(selectedPolicyFunding);
+
+        var budgetLine = getOrCreateChild(summary, '.allocation-budget-line', 'span', 'allocation-budget-line');
+        budgetLine.classList.toggle('allocation-budget-warning', isOverBudget);
+        if (isOverBudget) {
+            budgetLine.textContent = 'Over budget by: ' + formatCurrency(overrunAmount);
+        } else {
+            budgetLine.textContent = 'Remaining revenue: ' + formatCurrency(remainingRevenue);
+        }
+
+        var budgetHint = getOrCreateChild(summary, '.allocation-budget-hint', 'span', 'allocation-budget-hint');
+        budgetHint.classList.toggle('allocation-overrun-message', isOverBudget);
+        if (isOverBudget) {
+            budgetHint.textContent = 'You need to tax billionaires more! Use the button to raise the rate by 1%.';
+        } else {
+            budgetHint.textContent = 'Selected policy costs are within available revenue.';
+        }
+
+        var existingPinataEl = summary.querySelector('.allocation-pinata-drop');
+
+        if (isOverBudget) {
+            if (!existingPinataEl) {
+                var pinataEl = createOverBudgetPinata(getCurrentTaxRate() >= TAX_RATE_MAX);
+                var pinataBtn = pinataEl.querySelector('.allocation-pinata-button');
+                if (pinataBtn) {
+                    pinataBtn.addEventListener('click', handleOverBudgetPinataClick);
                 }
+                summary.insertBefore(pinataEl, budgetHint);
             } else {
-                if (!card) {
-                    card = document.createElement('div');
-                    card.className = 'wtc-budget-snapshot';
-                    card.innerHTML =
-                        '<div class="wtc-budget-snapshot-header">Budget Snapshot</div>' +
-                        '<div class="wtc-budget-snapshot-grid">' +
-                            '<div class="wtc-budget-cell"><span class="wtc-budget-label">10-Year Revenue</span><strong class="wtc-budget-value" data-slot="revenue"></strong><span class="wtc-budget-sub" data-slot="revenueAnnual"></span></div>' +
-                            '<div class="wtc-budget-cell"><span class="wtc-budget-label">Selected Policies</span><strong class="wtc-budget-value" data-slot="selected"></strong><span class="wtc-budget-sub" data-slot="selectedAnnual"></span></div>' +
-                            '<div class="wtc-budget-cell wtc-budget-balance"><span class="wtc-budget-label" data-slot="balanceLabel"></span><strong class="wtc-budget-value" data-slot="balance"></strong><span class="wtc-budget-sub" data-slot="balanceAnnual"></span></div>' +
-                        '</div>';
-
-                    policySection.insertBefore(card, allocationResults);
+                var existingPinataButton = existingPinataEl.querySelector('.allocation-pinata-button');
+                if (existingPinataButton) {
+                    var isAtMaxRate = getCurrentTaxRate() >= TAX_RATE_MAX;
+                    existingPinataButton.disabled = isAtMaxRate;
+                    if (isAtMaxRate) {
+                        existingPinataButton.setAttribute('aria-label', 'Maximum tax rate reached');
+                        existingPinataButton.classList.add('is-maxed');
+                    } else {
+                        existingPinataButton.setAttribute('aria-label', 'Increase tax rate by 1 percent');
+                        existingPinataButton.classList.remove('is-maxed');
+                    }
                 }
-
-                card.classList.toggle('is-over-budget', snapshotData.isOverBudget);
-                card.querySelector('[data-slot="revenue"]').textContent = formatCurrency(snapshotData.revenue);
-                card.querySelector('[data-slot="revenueAnnual"]').textContent = 'Annual: ' + formatCurrency(snapshotData.annualRevenue);
-                card.querySelector('[data-slot="selected"]').textContent = formatCurrency(snapshotData.selectedTotal);
-                card.querySelector('[data-slot="selectedAnnual"]').textContent = 'Annual: ' + formatCurrency(snapshotData.annualSelectedTotal);
-                card.querySelector('[data-slot="balanceLabel"]').textContent = snapshotData.isOverBudget ? 'Funding Gap' : 'Remaining Budget';
-                card.querySelector('[data-slot="balance"]').textContent = formatCurrency(snapshotData.isOverBudget ? snapshotData.overrun : snapshotData.remaining);
-                card.querySelector('[data-slot="balanceAnnual"]').textContent = 'Annual: ' + formatCurrency(snapshotData.isOverBudget ? snapshotData.annualOverrun : snapshotData.annualRemaining);
             }
+        } else if (existingPinataEl) {
+            existingPinataEl.parentNode.removeChild(existingPinataEl);
         }
 
         if (currentMode === 'advanced') {
@@ -1548,34 +1358,23 @@
         }
         selectedPoliciesOrder.splice(srcIdx, 1);
         selectedPoliciesOrder.splice(tgtIdx, 0, dragPolicyKey);
+        sendAnalyticsEvent('policy_reorder', dragPolicyKey, {
+            rank: tgtIdx + 1,
+            order: getActivePolicyKeysInOrder()
+        });
         syncSelectedPoliciesBox();
-        if (isFinalSummaryVisible()) {
-            renderFinalSummary();
-        }
-    }
-
-    function clearPolicyDragOverClasses() {
-        var selectedList = el('wtc-selectedPoliciesList');
-        if (selectedList) {
-            var selectedEntries = selectedList.querySelectorAll('.selected-policy-entry');
-            for (var i = 0; i < selectedEntries.length; i++) {
-                selectedEntries[i].classList.remove('drag-over');
-            }
-        }
-
-        var summaryBody = el('wtc-finalSummaryBody');
-        if (summaryBody) {
-            var summaryEntries = summaryBody.querySelectorAll('.wtc-fs-entry');
-            for (var j = 0; j < summaryEntries.length; j++) {
-                summaryEntries[j].classList.remove('drag-over');
-            }
-        }
     }
 
     function handlePolicyEntryDragEnd(event) {
         event.currentTarget.classList.remove('is-dragging');
         dragPolicyKey = null;
-        clearPolicyDragOverClasses();
+        var list = el('wtc-selectedPoliciesList');
+        if (list) {
+            var entries = list.querySelectorAll('.selected-policy-entry');
+            for (var i = 0; i < entries.length; i++) {
+                entries[i].classList.remove('drag-over');
+            }
+        }
     }
 
     function syncSelectedPoliciesBox() {
@@ -1620,12 +1419,12 @@
 
             var itemCost = selectedPolicyOptions[key].amount;
             cumulativeCost += itemCost;
+            var isFunded = cumulativeCost <= revenue;
 
             var entry = document.createElement('div');
             entry.className = 'selected-policy-entry';
             entry.setAttribute('draggable', 'true');
             entry.setAttribute('data-key', key);
-            entry.style.setProperty('--wtc-policy-color', POLICY_FILL_COLORS[policy] || '#406BBF');
 
             var rank = document.createElement('span');
             rank.className = 'selected-policy-rank';
@@ -1747,7 +1546,6 @@
         }
 
         var items = [];
-        var categoryTotalsByKey = {};
         for (var i = 0; i < activeKeys.length; i++) {
             var key = activeKeys[i];
             var parts = key.split(':');
@@ -1778,17 +1576,6 @@
                 status: 'none',
                 fundedPercent: 0
             });
-
-            if (!Object.prototype.hasOwnProperty.call(categoryTotalsByKey, policy)) {
-                categoryTotalsByKey[policy] = {
-                    policy: policy,
-                    label: POLICY_LABELS[policy] || policy,
-                    color: POLICY_FILL_COLORS[policy] || '#406BBF',
-                    selected: 0,
-                    funded: 0
-                };
-            }
-            categoryTotalsByKey[policy].selected += cost;
         }
 
         if (currentMode === 'advanced' && items.length > 2) {
@@ -1838,17 +1625,11 @@
         }
 
         var totalAllocated = 0;
-        var totalSelected = 0;
         for (var a = 0; a < items.length; a++) {
             var summaryItem = items[a];
             var safeCost = summaryItem.cost;
             var allocated = Math.max(0, Math.min(summaryItem.fundedAmount, safeCost));
             totalAllocated += allocated;
-            totalSelected += safeCost;
-
-            if (Object.prototype.hasOwnProperty.call(categoryTotalsByKey, summaryItem.policy)) {
-                categoryTotalsByKey[summaryItem.policy].funded += allocated;
-            }
 
             if (safeCost <= 0 || allocated <= 0) {
                 summaryItem.status = 'none';
@@ -1868,30 +1649,10 @@
 
         remaining = Math.max(0, revenue - totalAllocated);
 
-        var categoryTotals = [];
-        for (var categoryKey in categoryTotalsByKey) {
-            if (!Object.prototype.hasOwnProperty.call(categoryTotalsByKey, categoryKey)) {
-                continue;
-            }
-            categoryTotals.push(categoryTotalsByKey[categoryKey]);
-        }
-
-        categoryTotals.sort(function (left, right) {
-            if (left.selected === right.selected) {
-                return left.label < right.label ? -1 : 1;
-            }
-            return left.selected > right.selected ? -1 : 1;
-        });
-
         return {
             taxRate: taxRate,
             revenue: revenue,
-            annualRevenue: revenue / 10,
             remaining: remaining,
-            overrun: Math.max(totalSelected - revenue, 0),
-            selectedTotal: totalSelected,
-            annualSelectedTotal: totalSelected / 10,
-            categoryTotals: categoryTotals,
             items: items
         };
     }
@@ -1902,6 +1663,36 @@
         summaryBody.innerHTML = '';
 
         var data = buildFinalSummaryData();
+
+        // Stats bar
+        var statsDiv = document.createElement('div');
+        statsDiv.className = 'wtc-fs-stats';
+
+        var rateStat = document.createElement('div');
+        rateStat.className = 'wtc-fs-stat';
+        var rateLabel = document.createElement('span');
+        rateLabel.className = 'wtc-fs-stat-label';
+        rateLabel.textContent = 'Tax Rate';
+        var rateValue = document.createElement('span');
+        rateValue.className = 'wtc-fs-stat-value';
+        rateValue.textContent = data.taxRate.toFixed(1) + '%';
+        rateStat.appendChild(rateLabel);
+        rateStat.appendChild(rateValue);
+
+        var revenueStat = document.createElement('div');
+        revenueStat.className = 'wtc-fs-stat';
+        var revenueLabel = document.createElement('span');
+        revenueLabel.className = 'wtc-fs-stat-label';
+        revenueLabel.textContent = '10-Year Revenue';
+        var revenueValue = document.createElement('span');
+        revenueValue.className = 'wtc-fs-stat-value';
+        revenueValue.textContent = formatCurrency(data.revenue);
+        revenueStat.appendChild(revenueLabel);
+        revenueStat.appendChild(revenueValue);
+
+        statsDiv.appendChild(rateStat);
+        statsDiv.appendChild(revenueStat);
+        summaryBody.appendChild(statsDiv);
 
         if (data.items.length === 0) {
             var empty = document.createElement('p');
@@ -1920,9 +1711,6 @@
 
             var entry = document.createElement('div');
             entry.className = 'wtc-fs-entry wtc-fs-' + item.status;
-            entry.setAttribute('draggable', 'true');
-            entry.setAttribute('data-key', item.key);
-            entry.style.setProperty('--wtc-policy-color', POLICY_FILL_COLORS[item.policy] || '#406BBF');
 
             var entryHeader = document.createElement('div');
             entryHeader.className = 'wtc-fs-entry-header';
@@ -1930,11 +1718,6 @@
             var rank = document.createElement('span');
             rank.className = 'wtc-fs-rank';
             rank.textContent = '#' + (i + 1);
-
-            var dragHandle = document.createElement('span');
-            dragHandle.className = 'wtc-fs-drag-handle';
-            dragHandle.textContent = '\u28FF';
-            dragHandle.setAttribute('aria-hidden', 'true');
 
             var label = document.createElement('span');
             label.className = 'wtc-fs-label';
@@ -1951,7 +1734,6 @@
             }
 
             entryHeader.appendChild(rank);
-            entryHeader.appendChild(dragHandle);
             entryHeader.appendChild(label);
             entryHeader.appendChild(badge);
 
@@ -1962,10 +1744,6 @@
             var costEl = document.createElement('span');
             costEl.className = 'wtc-fs-cost';
             costEl.textContent = formatCostLabel(item.exampleData);
-            if (item.status === 'partial') {
-                var gapAmount = Math.max(0, item.cost - Math.max(0, Math.min(item.fundedAmount, item.cost)));
-                costEl.title = 'Funding gap: ' + formatCurrency(gapAmount);
-            }
 
             var progressWrap = document.createElement('div');
             progressWrap.className = 'wtc-fs-progress';
@@ -1978,11 +1756,6 @@
             entry.appendChild(desc);
             entry.appendChild(costEl);
             entry.appendChild(progressWrap);
-            entry.addEventListener('dragstart', handlePolicyEntryDragStart);
-            entry.addEventListener('dragover', handlePolicyEntryDragOver);
-            entry.addEventListener('dragleave', handlePolicyEntryDragLeave);
-            entry.addEventListener('drop', handlePolicyEntryDrop);
-            entry.addEventListener('dragend', handlePolicyEntryDragEnd);
 
             list.appendChild(entry);
         }
@@ -1995,14 +1768,6 @@
             remainingEl.textContent = 'Remaining unallocated revenue: ' + formatCurrency(data.remaining);
             summaryBody.appendChild(remainingEl);
         }
-
-        syncSummarySliderDecor(data.taxRate, data.revenue);
-        syncSummaryDragdealerPosition(data.taxRate);
-    }
-
-    function isFinalSummaryVisible() {
-        var summaryPanel = el('wtc-finalSummary');
-        return !!(summaryPanel && summaryPanel.getAttribute('aria-hidden') !== 'true');
     }
 
     function showFinalSummary() {
@@ -2012,9 +1777,6 @@
         if (!container || !summaryPanel) { return; }
         container.classList.add('is-showing-summary');
         summaryPanel.removeAttribute('aria-hidden');
-        requestFrame(function () {
-            refreshSummaryTaxRateSlider();
-        });
         summaryPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
@@ -2027,17 +1789,31 @@
     }
 
     function trackNextStepPrioritizationSnapshot() {
-        var snapshot = buildPrioritizationAnalyticsSnapshot();
-        if (!snapshot.order.length) {
+        if (hasTrackedNextStepPrioritization || !analyticsController.enabled) {
             return;
         }
 
-        // Submit one authoritative snapshot for this session.
-        sendAnalyticsEvent('next_step_submit', 'submit:0', {
+        var activeKeys = getActivePolicyKeysInOrder();
+        if (!activeKeys.length) {
+            return;
+        }
+
+        // Record the selected sub-policies at the moment the user advances.
+        for (var i = 0; i < activeKeys.length; i++) {
+            sendAnalyticsEvent('policy_toggle', activeKeys[i], {
+                enabled: true,
+                rank: i + 1,
+                order: activeKeys
+            });
+        }
+
+        // Record the full priority ordering in one event.
+        sendAnalyticsEvent('policy_reorder', activeKeys[0], {
             rank: 1,
-            order: snapshot.order,
-            selectedItems: snapshot.selectedItems
+            order: activeKeys
         });
+
+        hasTrackedNextStepPrioritization = true;
     }
 
     function handleNextStepClick() {
@@ -2070,16 +1846,26 @@
         if (!item) return;
 
         var optionInputEl = row.querySelector('.policy-option-input');
+        var policyKey = getPolicyOptionKey(policy, index);
+        var isEnabledNow;
 
         if (isOptionEnabled(policy, index)) {
             disableOption(policy, index);
             row.classList.remove('is-enabled');
             if (optionInputEl) optionInputEl.checked = false;
+            isEnabledNow = false;
         } else {
             enableOption(policy, index, item);
             row.classList.add('is-enabled');
             if (optionInputEl) optionInputEl.checked = true;
+            isEnabledNow = true;
         }
+
+        sendAnalyticsEvent('policy_toggle', policyKey, {
+            enabled: isEnabledNow,
+            rank: isEnabledNow ? (selectedPoliciesOrder.indexOf(policyKey) + 1) : 0,
+            order: getActivePolicyKeysInOrder()
+        });
 
         updateAllocationSummary();
     }
@@ -2098,16 +1884,66 @@
         var policyExamples = POLICY_EXAMPLES[policy] || [];
         var item = policyExamples[parseInt(index, 10)];
         if (!item) return;
+        var policyKey = getPolicyOptionKey(policy, index);
+        var isEnabledNow = false;
 
         if (inputEl.checked) {
             enableOption(policy, index, item);
             row.classList.add('is-enabled');
+            isEnabledNow = true;
         } else {
             disableOption(policy, index);
             row.classList.remove('is-enabled');
         }
 
+        sendAnalyticsEvent('policy_toggle', policyKey, {
+            enabled: isEnabledNow,
+            rank: isEnabledNow ? (selectedPoliciesOrder.indexOf(policyKey) + 1) : 0,
+            order: getActivePolicyKeysInOrder()
+        });
+
         updateAllocationSummary();
+    }
+
+    function handleModeToggle(event) {
+        var button = event.target;
+        var mode = button.getAttribute('data-mode');
+
+        if (mode === currentMode) return;
+
+        currentMode = mode;
+
+        var modeButtons = document.querySelectorAll('.mode-button');
+        for (var i = 0; i < modeButtons.length; i++) {
+            modeButtons[i].classList.toggle('active', modeButtons[i].getAttribute('data-mode') === mode);
+        }
+
+        var policySection = document.querySelector('.policy-allocation-section');
+        if (policySection) {
+            if (mode === 'basic') {
+                policySection.classList.add('hidden');
+            } else {
+                policySection.classList.remove('hidden');
+            }
+        }
+
+        // Toggle advanced-mode class so only advanced-only hidden UI is scoped in CSS.
+        var calculatorContainer = document.querySelector('.calculator-container');
+        if (calculatorContainer) {
+            if (mode === 'basic') {
+                calculatorContainer.classList.remove('mode-advanced');
+            } else {
+                calculatorContainer.classList.add('mode-advanced');
+            }
+        }
+        
+        var currentValue = getCurrentTaxRate();
+
+        if (mode === 'basic') {
+            currentValue = Math.round(currentValue);
+        }
+
+        setTaxRate(currentValue, true);
     }
 
     // ── DOM ────────────────────────────────────────────────────────────────────
@@ -2130,8 +1966,6 @@
         var rateDisplay = el('wtc-rateDisplay');
         if (rateDisplay) { rateDisplay.textContent = taxRate.toFixed(1) + '%'; }
         syncSliderDecor(taxRate, revenue);
-        syncSummarySliderDecor(taxRate, revenue);
-        syncSummaryDragdealerPosition(taxRate);
 
         var comparisonSelection = getBestFitFundedComparisons(revenue);
         var fundableComparisons = comparisonSelection.comparisons;
@@ -2209,10 +2043,6 @@
 
         // Update policy allocation
         updatePolicyAllocation();
-
-        if (isFinalSummaryVisible()) {
-            renderFinalSummary();
-        }
     }
 
     function setShareStatus(statusEl, message) {
@@ -2233,7 +2063,7 @@
             return 'https://www.linkedin.com/sharing/share-offsite/?url=' + encodedUrl;
         }
 
-        if (action === 'twitter') {
+        if (action === 'twitter' || action === 'x') {
             return 'https://twitter.com/intent/tweet?url=' + encodedUrl + '&text=' + encodedText;
         }
 
@@ -2297,6 +2127,7 @@
         for (var b = 0; b < shareBlocks.length; b++) {
             var shareBlock = shareBlocks[b];
             var shareButtons = shareBlock.querySelectorAll('[data-share-action]');
+            var likeLinks = shareBlock.querySelectorAll('.like-btn a');
             var statusEl = shareBlock.querySelector('.wtc-share-status');
 
             for (var i = 0; i < shareButtons.length; i++) {
@@ -2325,6 +2156,11 @@
                 }(statusEl)));
             }
 
+            for (var l = 0; l < likeLinks.length; l++) {
+                likeLinks[l].addEventListener('click', function (event) {
+                    event.preventDefault();
+                });
+            }
         }
     }
 
@@ -2343,6 +2179,12 @@
         var calculatorContainer = document.querySelector('.calculator-container');
         if (calculatorContainer) {
             calculatorContainer.classList.add('mode-advanced');
+        }
+
+        // Set up event listeners for mode toggle buttons
+        var modeButtons = document.querySelectorAll('.mode-button');
+        for (var i = 0; i < modeButtons.length; i++) {
+            modeButtons[i].addEventListener('click', handleModeToggle);
         }
 
         initShareActions();
