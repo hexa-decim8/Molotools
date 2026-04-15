@@ -4636,13 +4636,13 @@ class Billionaire_Wealth_Tax_Calculator {
 
             <div id="wtc-finalSummary" class="wtc-final-summary" role="region" aria-label="Tax Plan Final Summary" aria-hidden="true">
                 <div class="wtc-final-summary-inner">
+                    <?php $this->render_share_bar( 'summary-top' ); ?>
                     <div class="wtc-final-summary-header">
                         <button type="button" id="wtc-finalSummaryBack" class="wtc-fs-back-button">
                             <span aria-hidden="true">&larr;</span> Back to Calculator
                         </button>
                         <h2 class="wtc-final-summary-title">Here's what you funded for the People:</h2>
                     </div>
-                    <?php $this->render_share_bar( 'summary-top' ); ?>
                     <div class="wtc-fs-slider-block">
                         <h3 class="wtc-fs-slider-title">Adjust Tax Rate</h3>
                         <div class="wtc-fs-slider-shell">
