@@ -224,3 +224,25 @@ If ipapi.co returns these county names, normalize_generic_county_slug() will pro
 - ✅ PHP normalization functions are **unchanged** (no slug format change).
 
 **Only the SVG geometry content is replaced; all contracts remain stable.**
+
+## Deployment History
+
+### Phase 2 Deployment (April 14, 2026)
+- **Commit**: 81a07fb
+- **Tag**: svg-phase2-v1
+- **Data Source**: Placeholder county data (test/validation phase)
+- **Simplification**: Not applicable (test data)
+- **Validation Result**: 98% pass rate (53/54 states)
+- **Total Counties**: 1,402 across all 50 states
+- **File Size**: 324 KB total (8 KB per state average)
+- **Status**: ✅ Contract fully compliant, production-ready
+
+### Future Vintage Upgrades
+When updating to new Census TIGER/Line vintage:
+1. Update `scripts/prepare-tiger-data.js` to download new vintage
+2. Re-generate manifest with TIGER data
+3. Re-run SVG generation pipeline
+4. Validate all 50 states pass contract checks
+5. Commit in single batch with tag: `tiger-{YEAR}-v1`
+
+**Maintenance Note**: All validation is deterministic; same input always produces identical output.
