@@ -2069,8 +2069,13 @@
 }
 
 .calculator-container.is-showing-summary .calculator-content,
-.calculator-container.is-showing-summary .wtc-share-block {
+.calculator-container.is-showing-summary .wtc-share-block-top,
+.calculator-container.is-showing-summary .wtc-share-block-bottom {
     display: none;
+}
+
+.calculator-container.is-showing-summary .wtc-final-summary .wtc-share-block {
+    display: flex;
 }
 
 .calculator-container.is-showing-summary .wtc-final-summary {
