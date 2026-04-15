@@ -25,7 +25,6 @@
     var mobileLongPressStartY = 0;
     var mobileDragReady = false;
     var collapsedPolicyGroups = [];
-    var currentMode = 'advanced'; // 'basic' or 'advanced'
     var TAX_RATE_MIN = 1;
     var TAX_RATE_MAX = 10;
     var sliderController = {
@@ -303,7 +302,7 @@
             'nonce=' + encodeURIComponent(analyticsController.nonce),
             'event_type=' + encodeURIComponent(eventType),
             'policy_key=' + encodeURIComponent(policyKey),
-            'mode=' + encodeURIComponent(currentMode),
+            'mode=advanced',
             'session=' + encodeURIComponent(analyticsController.sessionId),
             'tax_rate=' + encodeURIComponent(getCurrentTaxRate().toFixed(1))
         ];
@@ -617,10 +616,6 @@
     }
 
     function quantizeTaxRate(value) {
-        if (currentMode === 'basic') {
-            return Math.round(value);
-        }
-
         return Math.round(value * 10) / 10;
     }
 
@@ -952,7 +947,7 @@
         }
 
         var nextRate = quantizeTaxRate(clampTaxRate(taxRate));
-        input.value = currentMode === 'basic' ? String(Math.round(nextRate)) : nextRate.toFixed(1);
+        input.value = nextRate.toFixed(1);
 
         if (syncHandlePosition) {
             syncDragdealerPosition(nextRate);
@@ -963,7 +958,7 @@
 
     function handleSliderKeydown(event) {
         var key = event.key;
-        var step = currentMode === 'basic' ? 1 : 0.1;
+        var step = 0.1;
         var currentValue = getCurrentTaxRate();
         var nextValue = currentValue;
 
@@ -1005,7 +1000,7 @@
                 }
 
                 var nextRate = quantizeTaxRate(ratioToRate(x));
-                var nextValue = currentMode === 'basic' ? String(Math.round(nextRate)) : nextRate.toFixed(1);
+                var nextValue = nextRate.toFixed(1);
 
                 if (taxRateInput.value !== nextValue) {
                     taxRateInput.value = nextValue;
@@ -1099,7 +1094,7 @@
                 }
 
                 var nextRate = quantizeTaxRate(ratioToRate(x));
-                var nextValue = currentMode === 'basic' ? String(Math.round(nextRate)) : nextRate.toFixed(1);
+                var nextValue = nextRate.toFixed(1);
 
                 if (taxRateInput.value !== nextValue) {
                     taxRateInput.value = nextValue;
@@ -1504,39 +1499,12 @@
         if (policySection && allocationResults) {
             var card = policySection.querySelector('.wtc-budget-snapshot');
 
-            if (currentMode === 'advanced') {
-                if (card) {
+            if (card) {
                     card.remove();
                 }
-            } else {
-                if (!card) {
-                    card = document.createElement('div');
-                    card.className = 'wtc-budget-snapshot';
-                    card.innerHTML =
-                        '<div class="wtc-budget-snapshot-header">Budget Snapshot</div>' +
-                        '<div class="wtc-budget-snapshot-grid">' +
-                            '<div class="wtc-budget-cell"><span class="wtc-budget-label">10-Year Revenue</span><strong class="wtc-budget-value" data-slot="revenue"></strong><span class="wtc-budget-sub" data-slot="revenueAnnual"></span></div>' +
-                            '<div class="wtc-budget-cell"><span class="wtc-budget-label">Selected Policies</span><strong class="wtc-budget-value" data-slot="selected"></strong><span class="wtc-budget-sub" data-slot="selectedAnnual"></span></div>' +
-                            '<div class="wtc-budget-cell wtc-budget-balance"><span class="wtc-budget-label" data-slot="balanceLabel"></span><strong class="wtc-budget-value" data-slot="balance"></strong><span class="wtc-budget-sub" data-slot="balanceAnnual"></span></div>' +
-                        '</div>';
-
-                    policySection.insertBefore(card, allocationResults);
-                }
-
-                card.classList.toggle('is-over-budget', snapshotData.isOverBudget);
-                card.querySelector('[data-slot="revenue"]').textContent = formatCurrency(snapshotData.revenue);
-                card.querySelector('[data-slot="revenueAnnual"]').textContent = 'Annual: ' + formatCurrency(snapshotData.annualRevenue);
-                card.querySelector('[data-slot="selected"]').textContent = formatCurrency(snapshotData.selectedTotal);
-                card.querySelector('[data-slot="selectedAnnual"]').textContent = 'Annual: ' + formatCurrency(snapshotData.annualSelectedTotal);
-                card.querySelector('[data-slot="balanceLabel"]').textContent = snapshotData.isOverBudget ? 'Funding Gap' : 'Remaining Budget';
-                card.querySelector('[data-slot="balance"]').textContent = formatCurrency(snapshotData.isOverBudget ? snapshotData.overrun : snapshotData.remaining);
-                card.querySelector('[data-slot="balanceAnnual"]').textContent = 'Annual: ' + formatCurrency(snapshotData.isOverBudget ? snapshotData.annualOverrun : snapshotData.annualRemaining);
-            }
         }
 
-        if (currentMode === 'advanced') {
-            syncSelectedPoliciesBox();
-        }
+        syncSelectedPoliciesBox();
 
         updateNextStepButtonState();
     }
@@ -2006,7 +1974,7 @@
             categoryTotalsByKey[policy].selected += cost;
         }
 
-        if (currentMode === 'advanced' && items.length > 2) {
+        if (items.length > 2) {
             var unfundedIndexes = [];
             for (var u = 0; u < items.length; u++) {
                 if (items[u].cost > 0 && items[u].fundedAmount <= 0) {
@@ -2369,23 +2337,11 @@
 
                 var comparisonList = document.createElement('ul');
 
-                // In basic mode, add items to the top; in advanced mode, add to the bottom
                 for (var i = 0; i < fundableComparisons.length; i++) {
                     var item = fundableComparisons[i];
                     var listItem = document.createElement('li');
                     listItem.textContent = item.description + ' (' + formatCostLabel(item) + ')';
-                    
-                    if (currentMode === 'basic') {
-                        // In basic mode, prepend to the list (add to top)
-                        if (comparisonList.firstChild) {
-                            comparisonList.insertBefore(listItem, comparisonList.firstChild);
-                        } else {
-                            comparisonList.appendChild(listItem);
-                        }
-                    } else {
-                        // In advanced mode, append to the list (add to bottom)
-                        comparisonList.appendChild(listItem);
-                    }
+                    comparisonList.appendChild(listItem);
                 }
 
                 comparisonEl.appendChild(intro);
@@ -2400,31 +2356,7 @@
         }
 
         if (sourcesList) {
-            if (currentMode === 'advanced') {
-                renderAdvancedModeSources(sourcesList);
-            } else {
-                sourcesList.innerHTML = '';
-
-                for (var j = 0; j < fundableComparisons.length; j++) {
-                    var comparison = fundableComparisons[j];
-                    var sourceItem = document.createElement('li');
-                    var title = document.createElement('strong');
-                    title.textContent = comparison.policy + ': ';
-                    sourceItem.appendChild(title);
-                    appendSourceSet(sourceItem, getItemSources(comparison));
-                    sourcesList.appendChild(sourceItem);
-                }
-
-                var wealthItem = document.createElement('li');
-                var wealthLink = document.createElement('a');
-                wealthLink.href = 'https://www.forbes.com/billionaires/';
-                wealthLink.target = '_blank';
-                wealthLink.rel = 'noopener noreferrer';
-                wealthLink.textContent = 'Forbes World\'s Billionaires List (2026)';
-                wealthItem.appendChild(wealthLink);
-                wealthItem.appendChild(document.createTextNode(' — Billionaire wealth estimate of $8.2 trillion'));
-                sourcesList.appendChild(wealthItem);
-            }
+            renderAdvancedModeSources(sourcesList);
         }
 
         // Update policy allocation
