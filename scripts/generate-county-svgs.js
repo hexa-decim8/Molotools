@@ -172,7 +172,6 @@ function generateStateSVG(stateCode, counties, geojsonFeatures, options = {}) {
   // Scale to SVG viewBox
   const scale = 500 / Math.max(maxX - minX, maxY - minY);
   const offsetX = -minX * scale + padding;
-  const offsetY = -minY * scale + padding;
   const width = (maxX - minX) * scale + padding * 2;
   const height = (maxY - minY) * scale + padding * 2;
   
@@ -223,7 +222,9 @@ function generateStateSVG(stateCode, counties, geojsonFeatures, options = {}) {
     rings.forEach((ring) => {
       ring.forEach((coord, idx) => {
         const x = coord[0] * scale + offsetX;
-        const y = coord[1] * scale + offsetY;
+        // GeoJSON latitude increases northward while SVG y increases downward.
+        // Invert latitudes so north renders near the top of the viewBox.
+        const y = (maxY - coord[1]) * scale + padding;
         
         if (idx === 0) {
           pathData += `M${x.toFixed(1)},${y.toFixed(1)}`;

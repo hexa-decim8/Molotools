@@ -688,8 +688,9 @@ class WTC_Policy_Analytics {
             'wtc-admin-map',
             'wtcMichiganMap',
             array(
-                'cities'   => $mi_cities,
-                'counties' => $mi_counties,
+                'cities'       => $mi_cities,
+                'counties'     => $mi_counties,
+                'cityToCounty' => $this->get_michigan_city_to_county_map(),
             )
         );
 
@@ -925,89 +926,6 @@ class WTC_Policy_Analytics {
 
             <?php $this->render_us_map( $summary['region_counts'] ); ?>
 
-            <?php $this->render_michigan_map( $summary['region_counts'] ); ?>
-
-            <div id="wtc-michigan-only-charts-card" class="card wtc-analytics-card wtc-no-collapse" style="max-width: 920px; margin-top: 20px;">
-                <h2><?php esc_html_e( 'Michigan-Only Charts', 'wealth-tax-calculator' ); ?></h2>
-
-                <div class="wtc-analytics-chart-panel">
-                    <section class="wtc-analytics-chart-card">
-                        <h3 class="wtc-analytics-chart-title"><?php esc_html_e( 'Category Allocation Mix', 'wealth-tax-calculator' ); ?></h3>
-                        <?php if ( ! empty( $mi_summary['policy_group_rows'] ) && is_array( $mi_summary['policy_group_rows'] ) ) : ?>
-                            <?php
-                            $group_total = 0;
-                            foreach ( $mi_summary['policy_group_rows'] as $group_row ) {
-                                if ( ! is_array( $group_row ) ) {
-                                    continue;
-                                }
-                                $group_total += isset( $group_row['selected_amount'] ) ? (int) $group_row['selected_amount'] : 0;
-                            }
-                            ?>
-                            <div class="wtc-analytics-stacked-bar" role="img" aria-label="<?php esc_attr_e( 'Category allocation mix', 'wealth-tax-calculator' ); ?>">
-                                <?php foreach ( $mi_summary['policy_group_rows'] as $group_row ) : ?>
-                                    <?php
-                                    if ( ! is_array( $group_row ) ) {
-                                        continue;
-                                    }
-
-                                    $selected_amount = isset( $group_row['selected_amount'] ) ? (int) $group_row['selected_amount'] : 0;
-                                    if ( $selected_amount <= 0 || $group_total <= 0 ) {
-                                        continue;
-                                    }
-
-                                    $segment_width = max( 2, round( ( $selected_amount / $group_total ) * 100, 2 ) );
-                                    $segment_title = sprintf(
-                                        /* translators: 1: policy group label, 2: selected amount */
-                                        __( '%1$s: %2$s selected over 10 years', 'wealth-tax-calculator' ),
-                                        isset( $group_row['label'] ) ? sanitize_text_field( $group_row['label'] ) : __( 'Unknown', 'wealth-tax-calculator' ),
-                                        $this->format_compact_currency( $selected_amount )
-                                    );
-                                    ?>
-                                    <span class="wtc-analytics-stacked-segment" style="width: <?php echo esc_attr( $segment_width ); ?>%; background: <?php echo esc_attr( isset( $group_row['color'] ) ? sanitize_hex_color( $group_row['color'] ) : '#406BBF' ); ?>;" title="<?php echo esc_attr( $segment_title ); ?>"></span>
-                                <?php endforeach; ?>
-                            </div>
-
-                            <div class="wtc-analytics-legend">
-                                <?php foreach ( $mi_summary['policy_group_rows'] as $group_row ) : ?>
-                                    <?php
-                                    if ( ! is_array( $group_row ) ) {
-                                        continue;
-                                    }
-                                    $selected_amount = isset( $group_row['selected_amount'] ) ? (int) $group_row['selected_amount'] : 0;
-                                    if ( $selected_amount <= 0 ) {
-                                        continue;
-                                    }
-                                    ?>
-                                    <div class="wtc-analytics-legend-item">
-                                        <span class="wtc-analytics-legend-swatch" style="background: <?php echo esc_attr( isset( $group_row['color'] ) ? sanitize_hex_color( $group_row['color'] ) : '#406BBF' ); ?>"></span>
-                                        <span class="wtc-analytics-legend-label"><?php echo esc_html( isset( $group_row['label'] ) ? sanitize_text_field( $group_row['label'] ) : __( 'Unknown', 'wealth-tax-calculator' ) ); ?></span>
-                                        <span class="wtc-analytics-legend-value"><?php echo esc_html( $this->format_compact_currency( $selected_amount ) ); ?></span>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php else : ?>
-                            <p class="wtc-analytics-empty"><?php esc_html_e( 'Category mix appears after Michigan submissions are recorded.', 'wealth-tax-calculator' ); ?></p>
-                        <?php endif; ?>
-                    </section>
-
-                    <section class="wtc-analytics-chart-card">
-                        <h3 class="wtc-analytics-chart-title"><?php esc_html_e( 'Policy Popularity', 'wealth-tax-calculator' ); ?></h3>
-
-                        <div class="wtc-analytics-chart-toggle" role="tablist" aria-label="<?php esc_attr_e( 'Policy popularity mode', 'wealth-tax-calculator' ); ?>">
-                            <button type="button" class="wtc-analytics-toggle-btn is-active" data-wtc-target="enabled" role="tab" aria-selected="true"><?php esc_html_e( 'Most Selected', 'wealth-tax-calculator' ); ?></button>
-                            <button type="button" class="wtc-analytics-toggle-btn" data-wtc-target="top-rank" role="tab" aria-selected="false"><?php esc_html_e( 'Top Ranked #1', 'wealth-tax-calculator' ); ?></button>
-                        </div>
-
-                        <div class="wtc-analytics-popularity-panel is-active" data-wtc-panel="enabled">
-                            <?php $this->render_analytics_popularity_chart( isset( $mi_summary['enabled_rows'] ) ? $mi_summary['enabled_rows'] : array(), __( 'Popularity data appears after Michigan submissions are recorded.', 'wealth-tax-calculator' ) ); ?>
-                        </div>
-                        <div class="wtc-analytics-popularity-panel" data-wtc-panel="top-rank" hidden>
-                            <?php $this->render_analytics_popularity_chart( isset( $mi_summary['top_rank_rows'] ) ? $mi_summary['top_rank_rows'] : array(), __( 'Top-rank data appears after Michigan submissions are recorded.', 'wealth-tax-calculator' ) ); ?>
-                        </div>
-                    </section>
-                </div>
-            </div>
-
             <div class="card wtc-no-collapse" style="max-width: 920px; margin-top: 20px;">
                 <h2><?php esc_html_e( 'Most Selected Sub-Policies (Final Submissions)', 'wealth-tax-calculator' ); ?></h2>
                 <?php $this->render_policy_count_table( $summary['enabled_rows'], __( 'Sessions selected', 'wealth-tax-calculator' ) ); ?>
@@ -1088,6 +1006,89 @@ class WTC_Policy_Analytics {
                         <span class="wtc-analytics-stat-value"><?php echo esc_html( number_format_i18n( $mi_change_events_total ) ); ?></span>
                     </div>
                     <?php endif; ?>
+                </div>
+
+                <?php $this->render_michigan_map( isset( $mi_summary['region_counts'] ) ? $mi_summary['region_counts'] : array() ); ?>
+
+                <div id="wtc-michigan-only-charts-card" class="card wtc-analytics-card wtc-no-collapse" style="max-width: 920px; margin-top: 20px;">
+                    <h2><?php esc_html_e( 'Michigan-Only Charts', 'wealth-tax-calculator' ); ?></h2>
+
+                    <div class="wtc-analytics-chart-panel">
+                        <section class="wtc-analytics-chart-card">
+                            <h3 class="wtc-analytics-chart-title"><?php esc_html_e( 'Category Allocation Mix', 'wealth-tax-calculator' ); ?></h3>
+                            <?php if ( ! empty( $mi_summary['policy_group_rows'] ) && is_array( $mi_summary['policy_group_rows'] ) ) : ?>
+                                <?php
+                                $group_total = 0;
+                                foreach ( $mi_summary['policy_group_rows'] as $group_row ) {
+                                    if ( ! is_array( $group_row ) ) {
+                                        continue;
+                                    }
+                                    $group_total += isset( $group_row['selected_amount'] ) ? (int) $group_row['selected_amount'] : 0;
+                                }
+                                ?>
+                                <div class="wtc-analytics-stacked-bar" role="img" aria-label="<?php esc_attr_e( 'Category allocation mix', 'wealth-tax-calculator' ); ?>">
+                                    <?php foreach ( $mi_summary['policy_group_rows'] as $group_row ) : ?>
+                                        <?php
+                                        if ( ! is_array( $group_row ) ) {
+                                            continue;
+                                        }
+
+                                        $selected_amount = isset( $group_row['selected_amount'] ) ? (int) $group_row['selected_amount'] : 0;
+                                        if ( $selected_amount <= 0 || $group_total <= 0 ) {
+                                            continue;
+                                        }
+
+                                        $segment_width = max( 2, round( ( $selected_amount / $group_total ) * 100, 2 ) );
+                                        $segment_title = sprintf(
+                                            /* translators: 1: policy group label, 2: selected amount */
+                                            __( '%1$s: %2$s selected over 10 years', 'wealth-tax-calculator' ),
+                                            isset( $group_row['label'] ) ? sanitize_text_field( $group_row['label'] ) : __( 'Unknown', 'wealth-tax-calculator' ),
+                                            $this->format_compact_currency( $selected_amount )
+                                        );
+                                        ?>
+                                        <span class="wtc-analytics-stacked-segment" style="width: <?php echo esc_attr( $segment_width ); ?>%; background: <?php echo esc_attr( isset( $group_row['color'] ) ? sanitize_hex_color( $group_row['color'] ) : '#406BBF' ); ?>;" title="<?php echo esc_attr( $segment_title ); ?>"></span>
+                                    <?php endforeach; ?>
+                                </div>
+
+                                <div class="wtc-analytics-legend">
+                                    <?php foreach ( $mi_summary['policy_group_rows'] as $group_row ) : ?>
+                                        <?php
+                                        if ( ! is_array( $group_row ) ) {
+                                            continue;
+                                        }
+                                        $selected_amount = isset( $group_row['selected_amount'] ) ? (int) $group_row['selected_amount'] : 0;
+                                        if ( $selected_amount <= 0 ) {
+                                            continue;
+                                        }
+                                        ?>
+                                        <div class="wtc-analytics-legend-item">
+                                            <span class="wtc-analytics-legend-swatch" style="background: <?php echo esc_attr( isset( $group_row['color'] ) ? sanitize_hex_color( $group_row['color'] ) : '#406BBF' ); ?>"></span>
+                                            <span class="wtc-analytics-legend-label"><?php echo esc_html( isset( $group_row['label'] ) ? sanitize_text_field( $group_row['label'] ) : __( 'Unknown', 'wealth-tax-calculator' ) ); ?></span>
+                                            <span class="wtc-analytics-legend-value"><?php echo esc_html( $this->format_compact_currency( $selected_amount ) ); ?></span>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php else : ?>
+                                <p class="wtc-analytics-empty"><?php esc_html_e( 'Category mix appears after Michigan submissions are recorded.', 'wealth-tax-calculator' ); ?></p>
+                            <?php endif; ?>
+                        </section>
+
+                        <section class="wtc-analytics-chart-card">
+                            <h3 class="wtc-analytics-chart-title"><?php esc_html_e( 'Policy Popularity', 'wealth-tax-calculator' ); ?></h3>
+
+                            <div class="wtc-analytics-chart-toggle" role="tablist" aria-label="<?php esc_attr_e( 'Policy popularity mode', 'wealth-tax-calculator' ); ?>">
+                                <button type="button" class="wtc-analytics-toggle-btn is-active" data-wtc-target="enabled" role="tab" aria-selected="true"><?php esc_html_e( 'Most Selected', 'wealth-tax-calculator' ); ?></button>
+                                <button type="button" class="wtc-analytics-toggle-btn" data-wtc-target="top-rank" role="tab" aria-selected="false"><?php esc_html_e( 'Top Ranked #1', 'wealth-tax-calculator' ); ?></button>
+                            </div>
+
+                            <div class="wtc-analytics-popularity-panel is-active" data-wtc-panel="enabled">
+                                <?php $this->render_analytics_popularity_chart( isset( $mi_summary['enabled_rows'] ) ? $mi_summary['enabled_rows'] : array(), __( 'Popularity data appears after Michigan submissions are recorded.', 'wealth-tax-calculator' ) ); ?>
+                            </div>
+                            <div class="wtc-analytics-popularity-panel" data-wtc-panel="top-rank" hidden>
+                                <?php $this->render_analytics_popularity_chart( isset( $mi_summary['top_rank_rows'] ) ? $mi_summary['top_rank_rows'] : array(), __( 'Top-rank data appears after Michigan submissions are recorded.', 'wealth-tax-calculator' ) ); ?>
+                            </div>
+                        </section>
+                    </div>
                 </div>
 
                 <h3><?php esc_html_e( 'Most Selected Sub-Policies (Michigan)', 'wealth-tax-calculator' ); ?></h3>

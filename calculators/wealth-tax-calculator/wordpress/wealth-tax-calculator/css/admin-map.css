@@ -454,12 +454,6 @@
     background: #f9f5f0;
 }
 
-.wtc-state-county-geometry svg.wtc-map-orientation-fix,
-.wtc-mi-map-wrap svg.wtc-map-orientation-fix {
-    transform: scaleY(-1);
-    transform-origin: center center;
-}
-
 .wtc-state-county-geometry .wtc-state-county-map-bubble {
     fill: #406BBF;
     fill-opacity: 0.75;
