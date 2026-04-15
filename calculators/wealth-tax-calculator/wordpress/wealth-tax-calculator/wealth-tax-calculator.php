@@ -1447,7 +1447,7 @@ class WTC_Policy_Analytics {
         echo '</div>';
     }
 
-    private function render_analytics_popularity_chart( $rows, $empty_text ) {
+    private function render_analytics_popularity_chart( $rows, $empty_text, $format_as_currency = false ) {
         $rows = is_array( $rows ) ? $rows : array();
         $rows = array_values( $rows );
 
@@ -1499,7 +1499,14 @@ class WTC_Policy_Analytics {
             echo '<div class="wtc-analytics-legend-item">';
             echo '<span class="wtc-analytics-legend-swatch" style="background:' . esc_attr( sanitize_hex_color( $row['color'] ) ) . '"></span>';
             echo '<span class="wtc-analytics-legend-label">' . esc_html( $row['label'] ) . '</span>';
-            echo '<span class="wtc-analytics-legend-value">' . esc_html( number_format_i18n( $row['count'] ) . ' (' . number_format_i18n( $row['percent'], 1 ) . '%)' ) . '</span>';
+            
+            if ( $format_as_currency ) {
+                $formatted_value = $this->format_compact_currency( $row['count'] );
+                echo '<span class="wtc-analytics-legend-value">' . esc_html( $formatted_value . ' (' . number_format_i18n( $row['percent'], 1 ) . '%)' ) . '</span>';
+            } else {
+                echo '<span class="wtc-analytics-legend-value">' . esc_html( number_format_i18n( $row['count'] ) . ' (' . number_format_i18n( $row['percent'], 1 ) . '%)' ) . '</span>';
+            }
+            
             echo '</div>';
         }
 
@@ -1526,7 +1533,7 @@ class WTC_Policy_Analytics {
             );
         }
 
-        $this->render_analytics_popularity_chart( $chart_rows, $empty_text );
+        $this->render_analytics_popularity_chart( $chart_rows, $empty_text, true );
     }
 
     private function get_us_state_code_map() {
