@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-04-15
+
+
 ## [1.5.0] - 2026-04-15
 
 - Disabled and grayed out the "Find Out What You Funded" button until at least one policy has been added to the prioritization list.
