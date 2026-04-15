@@ -886,7 +886,7 @@
                 countyTableEl = countyTableBodyEl.closest('table');
             }
 
-            if (!titleEl || !submittedEl || !uniqueEl || !daysEl || !avgEl || !policyGroupEl || !policyEnabledEl || !policyTopRankEl || !taxChartEl || !countyBubblesEl || !countyEmptyEl || !countyGeometryEl || !countyGeometryEmptyEl || !countyTableEl || !countyTableBodyEl || !countyTableEmptyEl || !tileMapEl || !policyDistContainer || !taxAnalysisContainer) {
+            if (!titleEl || !submittedEl || !uniqueEl || !daysEl || !avgEl || !policyGroupEl || !policyEnabledEl || !policyTopRankEl || !taxChartEl || !countyBubblesEl || !countyEmptyEl || !countyGeometryEl || !countyGeometryEmptyEl || !countyTableEl || !countyTableBodyEl || !countyTableEmptyEl || !policyDistContainer || !taxAnalysisContainer) {
                 return;
             }
 
@@ -958,14 +958,16 @@
 
                 renderCountyPolicyDistribution(policyDistContainer, policyData, countyCounts, 20);
                 renderCountyTaxRateAnalysis(taxAnalysisContainer, taxRateSummary, 20);
-                buildStateTileMap(tileMapEl, normalizedCode, states, config.interactive);
+                if (tileMapEl) {
+                    buildStateTileMap(tileMapEl, normalizedCode, states, config.interactive);
+                }
 
                 if (selectorEl) {
                     selectorEl.value = normalizedCode;
                 }
             }
 
-            if (config.interactive) {
+            if (config.interactive && tileMapEl) {
                 tileMapEl.addEventListener('click', function (event) {
                     var tile = event.target.closest ? event.target.closest('.wtc-state-tile[data-state-code]') : null;
                     if (!tile || tile.classList.contains('is-empty')) {
@@ -1378,93 +1380,17 @@
      * all US-originated submissions for that state — no state is excluded.
      */
     function initUnitedStatesMap() {
-        if (typeof window.wtcUnitedStatesMap === 'undefined') {
+        var mapEl = document.getElementById('wtc-us-state-map');
+        if (!mapEl) {
             return;
         }
 
-        var mapConfig = window.wtcUnitedStatesMap;
-        var states = mapConfig.states || {};
-        var svgEl = document.getElementById('wtc-us-map');
-        var tooltip = document.getElementById('wtc-us-map-tooltip');
-        var wrapEl = svgEl ? svgEl.closest('.wtc-us-map-wrap') : null;
-        var maxCount = 0;
-
-        if (!svgEl || !tooltip || !wrapEl) {
+        var stateAnalyticsPayload = typeof window.wtcStateAnalytics !== 'undefined' ? window.wtcStateAnalytics : null;
+        if (!stateAnalyticsPayload || !stateAnalyticsPayload.states) {
             return;
         }
 
-        Object.keys(states).forEach(function (code) {
-            var normalizedCode = String(code).toUpperCase();
-            var count = parseInt(states[code], 10);
-            var stateEl;
-            var level;
-
-            if (!count || count <= 0) return;
-            if (!Object.prototype.hasOwnProperty.call(WTC_US_STATES, normalizedCode)) return;
-
-            stateEl = svgEl.querySelector('#wtc-us-state-' + normalizedCode.toLowerCase());
-            if (!stateEl) return;
-
-            if (count > maxCount) {
-                maxCount = count;
-            }
-
-            stateEl.setAttribute('data-state-name', WTC_US_STATES[normalizedCode]);
-            stateEl.setAttribute('data-count', String(count));
-            stateEl.setAttribute('tabindex', '0');
-            stateEl.setAttribute('role', 'img');
-            stateEl.setAttribute('aria-label', getSessionLabel(WTC_US_STATES[normalizedCode], count));
-            stateEl.classList.add('has-data');
-        });
-
-        if (!maxCount) {
-            return;
-        }
-
-        Object.keys(states).forEach(function (code) {
-            var normalizedCode = String(code).toUpperCase();
-            var count = parseInt(states[code], 10);
-            var stateEl;
-            var level;
-
-            if (!count || count <= 0) return;
-
-            stateEl = svgEl.querySelector('#wtc-us-state-' + normalizedCode.toLowerCase());
-            if (!stateEl || !stateEl.classList.contains('has-data')) return;
-
-            level = maxCount > 1 ? Math.ceil((count / maxCount) * 5) : 5;
-            level = Math.max(1, Math.min(5, level));
-            stateEl.classList.add('wtc-us-level-' + level);
-        });
-
-        svgEl.addEventListener('mousemove', function (event) {
-            var target = event.target.closest ? event.target.closest('.wtc-us-state.has-data') : null;
-            if (!target) {
-                hideTooltip(tooltip);
-                return;
-            }
-
-            showTooltip(tooltip, wrapEl, event.clientX, event.clientY, target.getAttribute('data-state-name'), parseInt(target.getAttribute('data-count'), 10));
-        });
-
-        svgEl.addEventListener('mouseleave', function () {
-            hideTooltip(tooltip);
-        });
-
-        svgEl.addEventListener('focusin', function (event) {
-            var target = event.target.closest ? event.target.closest('.wtc-us-state.has-data') : null;
-            var rect;
-            if (!target) {
-                return;
-            }
-
-            rect = target.getBoundingClientRect();
-            showTooltip(tooltip, wrapEl, (rect.left + rect.right) / 2, rect.top, target.getAttribute('data-state-name'), parseInt(target.getAttribute('data-count'), 10));
-        });
-
-        svgEl.addEventListener('focusout', function () {
-            hideTooltip(tooltip);
-        });
+        buildStateTileMap(mapEl, '', stateAnalyticsPayload.states, false);
     }
 
     function init() {

@@ -1118,7 +1118,8 @@ class WTC_Policy_Analytics {
                     $default_state_summary,
                     $default_state_counties,
                     __( 'This tab mirrors the state dashboard, locked to Michigan.', 'wealth-tax-calculator' ),
-                    __( 'Michigan is highlighted in the tile map. County bubbles are sized by submitted sessions for Michigan.', 'wealth-tax-calculator' )
+                    __( 'Michigan is highlighted in the tile map. County bubbles are sized by submitted sessions for Michigan.', 'wealth-tax-calculator' ),
+                    false
                 );
                 ?>
             </div>
@@ -1222,7 +1223,7 @@ class WTC_Policy_Analytics {
         return '$' . number_format_i18n( (int) round( $amount ) );
     }
 
-    private function render_state_analytics_dashboard_panel( $prefix, $default_state_code, $default_state_label, $default_state_summary, $default_state_counties, $description, $map_description ) {
+    private function render_state_analytics_dashboard_panel( $prefix, $default_state_code, $default_state_label, $default_state_summary, $default_state_counties, $description, $map_description, $include_map = true ) {
         $table_has_rows = ! empty( $default_state_counties );
         ?>
         <div class="card wtc-analytics-card" style="max-width: 920px; margin-top: 20px;">
@@ -1281,6 +1282,7 @@ class WTC_Policy_Analytics {
             </div>
         </div>
 
+        <?php if ( $include_map ) : ?>
         <div class="card" style="max-width: 920px; margin-top: 20px;">
             <h2><?php esc_html_e( 'State Region Map and County Bubbles', 'wealth-tax-calculator' ); ?></h2>
             <p class="description"><?php echo esc_html( $map_description ); ?></p>
@@ -1297,6 +1299,7 @@ class WTC_Policy_Analytics {
                 </div>
             </div>
         </div>
+        <?php endif; ?>
 
         <div class="card" style="max-width: 920px; margin-top: 20px;">
             <h2><span id="<?php echo esc_attr( $prefix ); ?>-county-title"><?php echo esc_html( $default_state_label ); ?></span> <?php esc_html_e( 'County Buckets', 'wealth-tax-calculator' ); ?></h2>
@@ -1981,6 +1984,37 @@ class WTC_Policy_Analytics {
         }
 
         return '';
+    }
+
+    private function infer_county_slug_from_postal( $postal, $state_code ) {
+        $postal     = sanitize_text_field( $postal );
+        $state_code = strtolower( sanitize_text_field( $state_code ) );
+
+        if ( ! preg_match( '/^\d{5}$/', $postal ) ) {
+            return '';
+        }
+
+        static $lookup = null;
+        if ( null === $lookup ) {
+            $file = plugin_dir_path( __FILE__ ) . 'data/us-zip-county-lookup.php';
+            if ( file_exists( $file ) ) {
+                $lookup = require $file; // phpcs:ignore WordPressVIPMinimum.Files.IncludingFile.UsingVariable
+            }
+            if ( ! is_array( $lookup ) ) {
+                $lookup = array();
+            }
+        }
+
+        if ( ! isset( $lookup[ $postal ] ) ) {
+            return '';
+        }
+
+        $entry = $lookup[ $postal ];
+        if ( ! isset( $entry['state'] ) || $entry['state'] !== $state_code ) {
+            return '';
+        }
+
+        return isset( $entry['county'] ) ? (string) $entry['county'] : '';
     }
 
     private function normalize_michigan_county_bucket( $bucket, $city_slug = '', $postal = '' ) {
@@ -4265,6 +4299,10 @@ class WTC_Policy_Analytics {
                         break;
                     }
                 }
+            }
+
+            if ( $county_slug === '' && $postal !== '' ) {
+                $county_slug = $this->infer_county_slug_from_postal( $postal, $region );
             }
 
             $county_bucket = strtolower( $region ) . '_county_' . ( $county_slug !== '' ? $county_slug : 'unknown' );
