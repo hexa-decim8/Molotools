@@ -689,6 +689,73 @@
     max-width: 820px;
 }
 
+.wtc-policy-distribution-table th:last-child,
+.wtc-policy-distribution-table td:last-child {
+    width: 46%;
+}
+
+.wtc-policy-details,
+.wtc-submission-policy-details {
+    margin: 0;
+}
+
+.wtc-policy-details summary,
+.wtc-submission-policy-details summary {
+    cursor: pointer;
+    color: #233071;
+    font-weight: 600;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.wtc-policy-summary {
+    color: #2f2b29;
+    font-weight: 600;
+}
+
+.wtc-policy-summary-meta {
+    color: #6d625b;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.wtc-policy-details-list,
+.wtc-submission-policy-list {
+    margin: 8px 0 0;
+    padding-left: 18px;
+}
+
+.wtc-policy-details-list li {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 8px;
+    align-items: baseline;
+    margin: 0 0 4px;
+}
+
+.wtc-policy-abbrev {
+    font-weight: 700;
+    color: #233071;
+    letter-spacing: 0.02em;
+}
+
+.wtc-policy-full-key {
+    color: #6d625b;
+    font-size: 11px;
+}
+
+.wtc-policy-count {
+    color: #2f2b29;
+    font-weight: 700;
+}
+
+.wtc-submission-policy-list li {
+    margin: 0 0 3px;
+}
+
 @media (max-width: 782px) {
     .wtc-state-map-grid {
         grid-template-columns: 1fr;
@@ -703,6 +770,21 @@
     }
 
     .wtc-analytics-chart-panel-three-up {
+        grid-template-columns: 1fr;
+    }
+
+    .wtc-policy-distribution-table th:last-child,
+    .wtc-policy-distribution-table td:last-child {
+        width: auto;
+    }
+
+    .wtc-policy-details summary,
+    .wtc-submission-policy-details summary {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .wtc-policy-details-list li {
         grid-template-columns: 1fr;
     }
 

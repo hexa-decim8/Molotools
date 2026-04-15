@@ -150,6 +150,42 @@
         return number.toFixed(1) + '%';
     }
 
+    function escapeHtml(value) {
+        return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/\"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function formatCountyBucketLabel(countyBucket) {
+        var label = String(countyBucket || '').replace(/^[a-z]{2}_county_/, '').replace(/-/g, ' ');
+        if (!label) {
+            return 'Unknown county';
+        }
+
+        return label.charAt(0).toUpperCase() + label.slice(1);
+    }
+
+    function abbreviatePolicyKey(policyKey) {
+        var key = String(policyKey || '');
+        var keyParts = key.split(':');
+        var groupKey = keyParts[0] || '';
+        var optionKey = keyParts.length > 1 ? keyParts[1] : '';
+        var map = {
+            healthcare: 'HC',
+            education: 'ED',
+            business: 'TR',
+            directrelief: 'DR',
+            housing: 'HS',
+            childcare: 'CF'
+        };
+        var abbreviatedGroup = map[groupKey] || groupKey.slice(0, 3).toUpperCase();
+
+        return optionKey === '' ? abbreviatedGroup : (abbreviatedGroup + ':' + optionKey);
+    }
+
     function formatCompactCurrency(value) {
         var amount = parseFloat(value);
 
@@ -501,31 +537,61 @@
         }
 
         maxRows = maxRows || 20;
-        var html = '<table class="widefat striped"><thead><tr><th>County</th><th>Sessions</th><th>Top 3 Policies</th></tr></thead><tbody>';
-        var rowCount = 0;
+        var html = '<table class="widefat striped wtc-policy-distribution-table"><thead><tr><th>County</th><th>Sessions</th><th>Policies</th></tr></thead><tbody>';
+        var countyRows = Object.keys(countyPolicies).map(function (countyBucket) {
+            return {
+                countyBucket: countyBucket,
+                sessionCount: countyCounts && countyCounts[countyBucket] ? parseInt(countyCounts[countyBucket], 10) : 0
+            };
+        }).sort(function (a, b) {
+            return b.sessionCount - a.sessionCount;
+        });
 
-        Object.keys(countyPolicies).forEach(function(countyBucket) {
-            if (rowCount >= maxRows) {
-                return;
-            }
-
+        countyRows.slice(0, maxRows).forEach(function (countyRow) {
+            var countyBucket = countyRow.countyBucket;
             var policies = countyPolicies[countyBucket] || {};
-            var sessionCount = countyCounts && countyCounts[countyBucket] ? parseInt(countyCounts[countyBucket], 10) : 0;
-            var countyLabel = countyBucket.replace(/^[a-z]{2}_county_/, '').replace(/-/g, ' ').charAt(0).toUpperCase() + countyBucket.replace(/^[a-z]{2}_county_/, '').replace(/-/g, ' ').slice(1);
-
-            var policyLines = [];
-            var sortedPolicies = Object.keys(policies).sort(function(a, b) {
+            var countyLabel = formatCountyBucketLabel(countyBucket);
+            var sortedPolicies = Object.keys(policies).sort(function (a, b) {
                 return (policies[b] || 0) - (policies[a] || 0);
             });
+            var detailsRows = [];
+            var topPolicySummary = '';
 
             for (var i = 0; i < Math.min(3, sortedPolicies.length); i++) {
                 var policyKey = sortedPolicies[i];
                 var count = policies[policyKey] || 0;
-                policyLines.push((i + 1) + '. ' + policyKey + ' (' + count + ')');
+                var compactPolicy = abbreviatePolicyKey(policyKey);
+
+                if (i === 0) {
+                    topPolicySummary = compactPolicy + ' (' + formatNumber(count) + ')';
+                }
+
+                detailsRows.push(
+                    '<li><span class="wtc-policy-abbrev">' +
+                    escapeHtml(compactPolicy) +
+                    '</span><span class="wtc-policy-full-key">' +
+                    escapeHtml(policyKey) +
+                    '</span><span class="wtc-policy-count">' +
+                    escapeHtml(formatNumber(count)) +
+                    '</span></li>'
+                );
             }
 
-            html += '<tr><td>' + countyLabel + '</td><td>' + formatNumber(sessionCount) + '</td><td>' + policyLines.join(' | ') + '</td></tr>';
-            rowCount++;
+            if (!detailsRows.length) {
+                detailsRows.push('<li>No policy details stored.</li>');
+                topPolicySummary = 'No policy details';
+            }
+
+            html += '<tr>';
+            html += '<td>' + escapeHtml(countyLabel) + '</td>';
+            html += '<td>' + formatNumber(countyRow.sessionCount) + '</td>';
+            html += '<td>';
+            html += '<details class="wtc-policy-details">';
+            html += '<summary><span class="wtc-policy-summary">' + escapeHtml(topPolicySummary) + '</span><span class="wtc-policy-summary-meta">View top 3</span></summary>';
+            html += '<ol class="wtc-policy-details-list">' + detailsRows.join('') + '</ol>';
+            html += '</details>';
+            html += '</td>';
+            html += '</tr>';
         });
 
         html += '</tbody></table>';

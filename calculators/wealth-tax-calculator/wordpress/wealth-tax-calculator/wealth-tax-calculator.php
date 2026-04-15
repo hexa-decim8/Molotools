@@ -2628,7 +2628,7 @@ class WTC_Policy_Analytics {
         }
 
         echo '<table class="widefat striped">';
-        echo '<thead><tr><th>' . esc_html__( 'Submitted', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Tax rate', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Region', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'County', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Prioritized selections', 'wealth-tax-calculator' ) . '</th></tr></thead>';
+        echo '<thead><tr><th>' . esc_html__( 'Submitted', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Tax rate', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Region', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'County', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Policies', 'wealth-tax-calculator' ) . '</th></tr></thead>';
         echo '<tbody>';
 
         foreach ( $rows as $row ) {
@@ -2652,7 +2652,7 @@ class WTC_Policy_Analytics {
             if ( empty( $items ) ) {
                 echo esc_html__( 'No policy details stored.', 'wealth-tax-calculator' );
             } else {
-                echo '<ol style="margin:0; padding-left: 20px;">';
+                $policy_lines = array();
                 foreach ( $items as $item ) {
                     if ( ! is_array( $item ) ) {
                         continue;
@@ -2660,9 +2660,25 @@ class WTC_Policy_Analytics {
 
                     $policy_key = isset( $item['policy_key'] ) ? sanitize_text_field( $item['policy_key'] ) : '';
                     $label      = $this->format_policy_submission_label( $item, $policy_key );
-                    echo '<li>' . esc_html( $label ) . '</li>';
+                    $policy_lines[] = $label;
                 }
-                echo '</ol>';
+
+                if ( empty( $policy_lines ) ) {
+                    echo esc_html__( 'No policy details stored.', 'wealth-tax-calculator' );
+                } else {
+                    /* translators: %d is the number of selected policy entries in this submission. */
+                    $summary_text = sprintf( esc_html__( 'View prioritized selections (%d)', 'wealth-tax-calculator' ), count( $policy_lines ) );
+                    echo '<details class="wtc-submission-policy-details">';
+                    echo '<summary>' . esc_html( $summary_text ) . '</summary>';
+                    echo '<ol class="wtc-submission-policy-list">';
+
+                    foreach ( $policy_lines as $policy_label ) {
+                        echo '<li>' . esc_html( $policy_label ) . '</li>';
+                    }
+
+                    echo '</ol>';
+                    echo '</details>';
+                }
             }
 
             echo '</td>';
