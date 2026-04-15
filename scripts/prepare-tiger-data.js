@@ -96,13 +96,13 @@ function checkPrerequisites() {
  * Download TIGER/Line shapefile for a state
  * 
  * Downloads from:
- * https://www2.census.gov/geo/tiger/TIGER{YEAR}/COUNTY/
+ * https://www2.census.gov/geo/tiger/TIGER{YEAR}/COUNTY20/
  * 
  * Tries 2023 first (stable), falls back to 2022 if needed
  */
 function downloadTigerShapefile(fips, stateCode) {
   const year = 2023;  // Use 2023 (stable and available)
-  const baseUrl = `https://www2.census.gov/geo/tiger/TIGER${year}/COUNTY`;
+  const baseUrl = `https://www2.census.gov/geo/tiger/TIGER${year}/COUNTY20`;
   const filename = `tl_${year}_${fips}_county.zip`;
   const url = `${baseUrl}/${filename}`;
   const outputPath = path.join(TIGER_SHAPEFILES_DIR, filename);

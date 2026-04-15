@@ -1,25 +1,27 @@
-<svg id="wtc-state-map-nj" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 420" role="img" aria-label="New Jersey county map">
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 443 600" id="wtc-state-map-NJ" role="img" aria-label="nj county map">
+  <title>nj Counties</title>
   <g class="wtc-counties">
-    <rect id="wtc-county-sussex" class="wtc-county" data-county="Sussex" x="24" y="24" width="90" height="52"/>
-    <rect id="wtc-county-passaic" class="wtc-county" data-county="Passaic" x="118" y="24" width="90" height="52"/>
-    <rect id="wtc-county-bergen" class="wtc-county" data-county="Bergen" x="212" y="24" width="90" height="52"/>
-    <rect id="wtc-county-warren" class="wtc-county" data-county="Warren" x="24" y="80" width="90" height="52"/>
-    <rect id="wtc-county-morris" class="wtc-county" data-county="Morris" x="118" y="80" width="90" height="52"/>
-    <rect id="wtc-county-essex" class="wtc-county" data-county="Essex" x="212" y="80" width="90" height="52"/>
-    <rect id="wtc-county-hudson" class="wtc-county" data-county="Hudson" x="306" y="80" width="90" height="52"/>
-    <rect id="wtc-county-hunterdon" class="wtc-county" data-county="Hunterdon" x="24" y="136" width="90" height="52"/>
-    <rect id="wtc-county-somerset" class="wtc-county" data-county="Somerset" x="118" y="136" width="90" height="52"/>
-    <rect id="wtc-county-union" class="wtc-county" data-county="Union" x="212" y="136" width="90" height="52"/>
-    <rect id="wtc-county-middlesex" class="wtc-county" data-county="Middlesex" x="306" y="136" width="90" height="52"/>
-    <rect id="wtc-county-mercer" class="wtc-county" data-county="Mercer" x="24" y="192" width="90" height="52"/>
-    <rect id="wtc-county-monmouth" class="wtc-county" data-county="Monmouth" x="306" y="192" width="90" height="52"/>
-    <rect id="wtc-county-burlington" class="wtc-county" data-county="Burlington" x="118" y="192" width="90" height="52"/>
-    <rect id="wtc-county-ocean" class="wtc-county" data-county="Ocean" x="212" y="192" width="90" height="52"/>
-    <rect id="wtc-county-camden" class="wtc-county" data-county="Camden" x="118" y="248" width="90" height="52"/>
-    <rect id="wtc-county-gloucester" class="wtc-county" data-county="Gloucester" x="24" y="248" width="90" height="52"/>
-    <rect id="wtc-county-atlantic" class="wtc-county" data-county="Atlantic" x="212" y="248" width="90" height="52"/>
-    <rect id="wtc-county-salem" class="wtc-county" data-county="Salem" x="24" y="304" width="90" height="52"/>
-    <rect id="wtc-county-cumberland" class="wtc-county" data-county="Cumberland" x="118" y="304" width="90" height="52"/>
-    <rect id="wtc-county-cape-may" class="wtc-county" data-county="Cape May" x="212" y="304" width="90" height="52"/>
+    <path class="wtc-county" id="wtc-county-atlantic" data-county="Atlantic" d="M190.4,190.0L168.2,170.8L194.8,152.0L194.0,131.5L227.3,124.3L244.3,125.1L250.2,128.7L259.8,126.6L276.8,135.7L301.9,153.6L309.3,163.3L307.1,167.6L293.0,167.4L284.9,179.4L273.1,178.4L262.0,182.1L243.5,193.7L235.4,194.6L235.4,202.4L219.9,215.0L190.4,190.0Z"/>
+    <path class="wtc-county" id="wtc-county-bergen" data-county="Bergen" d="M327.8,503.9L315.2,480.7L319.6,474.7L341.8,469.6L346.2,447.3L344.0,439.3L341.1,432.4L350.7,430.3L367.6,440.0L374.3,435.1L384.6,452.1L388.3,459.5L392.8,475.7L390.5,475.9L327.8,503.9Z"/>
+    <path class="wtc-county" id="wtc-county-burlington" data-county="Burlington" d="M170.4,280.7L152.7,268.9L163.0,266.4L162.3,259.7L170.4,257.9L179.3,247.1L185.2,227.5L202.2,227.0L219.9,215.0L235.4,202.4L235.4,194.6L243.5,193.7L262.0,182.1L273.1,178.4L284.9,179.4L290.8,187.4L290.8,224.0L257.6,286.9L250.2,299.1L242.8,300.0L225.1,308.0L222.1,301.6L210.3,295.4L202.9,296.8L194.0,287.8L170.4,280.7Z"/>
+    <path class="wtc-county" id="wtc-county-camden" data-county="Camden" d="M152.7,268.9L138.6,262.2L136.4,247.7L148.2,237.8L146.8,232.5L168.2,210.2L177.1,208.6L190.4,190.0L219.9,215.0L202.2,227.0L185.2,227.5L179.3,247.1L170.4,257.9L162.3,259.7L163.0,266.4L152.7,268.9Z"/>
+    <path class="wtc-county" id="wtc-county-cape-may" data-county="Cape May" d="M183.0,101.3L188.9,97.4L186.7,85.2L175.6,68.0L171.1,52.5L179.3,50.0L193.3,52.5L208.1,63.1L224.3,89.4L239.8,110.3L259.8,126.6L250.2,128.7L244.3,125.1L227.3,124.3L194.0,131.5L189.6,128.3L186.7,113.1L181.5,111.0L183.0,101.3Z"/>
+    <path class="wtc-county" id="wtc-county-cumberland" data-county="Cumberland" d="M152.7,181.9L149.7,176.8L148.2,158.9L116.5,179.8L89.9,158.7L80.3,158.0L81.8,143.4L89.9,135.0L95.1,136.5L106.1,124.4L113.5,126.6L115.7,121.3L129.0,114.7L130.5,106.4L137.2,102.2L142.3,108.5L155.6,109.1L160.1,104.6L183.0,101.3L181.5,111.0L186.7,113.1L189.6,128.3L194.0,131.5L194.8,152.0L168.2,170.8L152.7,181.9Z"/>
+    <path class="wtc-county" id="wtc-county-essex" data-county="Essex" d="M315.2,455.2L304.1,457.5L301.9,438.1L295.3,433.8L294.5,422.9L304.1,418.1L312.2,419.2L325.5,416.2L327.8,412.8L343.3,409.4L347.7,415.3L346.2,423.2L336.6,424.5L341.1,432.4L344.0,439.3L315.2,455.2Z"/>
+    <path class="wtc-county" id="wtc-county-gloucester" data-county="Gloucester" d="M79.5,229.8L80.3,228.2L87.7,214.3L98.0,206.8L123.9,202.1L152.7,181.9L168.2,170.8L190.4,190.0L177.1,208.6L168.2,210.2L146.8,232.5L148.2,237.8L136.4,247.7L121.7,242.9L109.8,239.5L92.1,237.6L79.5,229.8Z"/>
+    <path class="wtc-county" id="wtc-county-hudson" data-county="Hudson" d="M341.1,432.4L336.6,424.5L346.2,423.2L347.7,415.3L343.3,409.4L338.1,403.3L356.6,406.6L361.7,412.6L366.2,416.5L369.1,428.0L374.3,435.1L367.6,440.0L350.7,430.3L341.1,432.4Z"/>
+    <path class="wtc-county" id="wtc-county-hunterdon" data-county="Hunterdon" d="M126.1,392.3L132.0,386.6L144.6,387.5L151.9,381.0L150.5,364.2L153.4,356.2L171.9,352.9L177.1,340.8L194.8,341.9L191.8,348.3L205.9,349.9L204.4,356.4L216.9,357.8L206.6,376.7L211.8,374.3L224.3,390.7L226.6,398.5L221.4,400.8L222.1,418.6L201.4,423.4L188.1,432.8L171.9,416.9L161.5,413.5L143.1,402.2L135.0,399.9L126.1,392.3Z"/>
+    <path class="wtc-county" id="wtc-county-mercer" data-county="Mercer" d="M177.1,340.8L192.6,331.3L197.7,322.1L212.5,314.9L222.1,301.6L225.1,308.0L242.8,300.0L250.2,299.1L244.3,308.1L255.4,309.7L259.1,315.2L271.6,322.8L271.6,326.9L242.8,337.5L243.5,347.6L236.9,351.1L222.9,347.7L216.9,357.8L204.4,356.4L205.9,349.9L191.8,348.3L194.8,341.9L177.1,340.8Z"/>
+    <path class="wtc-county" id="wtc-county-middlesex" data-county="Middlesex" d="M243.5,347.6L242.8,337.5L271.6,326.9L271.6,322.8L290.1,328.1L298.2,337.5L320.4,354.5L324.8,363.8L317.4,366.3L317.4,373.9L319.6,382.7L326.3,385.6L329.2,392.6L327.0,394.9L311.5,392.5L308.5,395.8L276.0,393.9L265.7,390.3L262.7,385.7L276.8,372.7L262.0,361.4L250.9,356.6L243.5,347.6Z"/>
+    <path class="wtc-county" id="wtc-county-monmouth" data-county="Monmouth" d="M271.6,322.8L259.1,315.2L255.4,309.7L244.3,308.1L250.2,299.1L257.6,286.9L287.1,306.0L317.4,305.0L321.1,294.3L339.6,291.2L349.2,298.8L356.6,288.9L364.7,291.3L364.7,295.9L375.0,328.1L377.3,347.0L374.3,362.9L371.3,355.2L361.0,356.8L343.3,364.5L324.8,363.8L320.4,354.5L298.2,337.5L290.1,328.1L271.6,322.8Z"/>
+    <path class="wtc-county" id="wtc-county-morris" data-county="Morris" d="M212.5,458.1L205.1,452.1L202.9,442.9L188.1,432.8L201.4,423.4L222.1,418.6L256.8,426.6L265.7,414.2L263.5,404.1L276.0,409.3L294.5,422.9L295.3,433.8L301.9,438.1L304.1,457.5L315.2,455.2L313.7,471.0L309.3,476.3L290.8,478.9L279.0,487.6L267.9,485.1L267.9,494.1L239.1,469.0L236.9,460.2L225.1,455.6L220.6,460.2L212.5,458.1Z"/>
+    <path class="wtc-county" id="wtc-county-ocean" data-county="Ocean" d="M364.7,291.3L356.6,288.9L349.2,298.8L339.6,291.2L321.1,294.3L317.4,305.0L287.1,306.0L257.6,286.9L290.8,224.0L290.8,187.4L284.9,179.4L293.0,167.4L307.1,167.6L321.8,179.1L351.4,221.7L355.1,252.3L364.7,291.3Z"/>
+    <path class="wtc-county" id="wtc-county-passaic" data-county="Passaic" d="M267.9,494.1L267.9,485.1L279.0,487.6L290.8,478.9L309.3,476.3L313.7,471.0L315.2,455.2L344.0,439.3L346.2,447.3L341.8,469.6L319.6,474.7L315.2,480.7L327.8,503.9L322.6,505.8L295.3,518.4L267.9,494.1Z"/>
+    <path class="wtc-county" id="wtc-county-salem" data-county="Salem" d="M50.0,194.4L50.7,189.5L59.6,184.4L55.2,159.6L69.2,155.2L76.6,145.3L81.8,143.4L80.3,158.0L89.9,158.7L116.5,179.8L148.2,158.9L149.7,176.8L152.7,181.9L123.9,202.1L98.0,206.8L87.7,214.3L80.3,228.2L70.7,222.4L67.0,211.6L60.3,205.9L50.0,194.4Z"/>
+    <path class="wtc-county" id="wtc-county-somerset" data-county="Somerset" d="M222.1,418.6L221.4,400.8L226.6,398.5L224.3,390.7L211.8,374.3L206.6,376.7L216.9,357.8L222.9,347.7L236.9,351.1L243.5,347.6L250.9,356.6L262.0,361.4L276.8,372.7L262.7,385.7L265.7,390.3L276.0,393.9L283.4,398.1L287.9,407.9L278.3,405.2L276.0,409.3L263.5,404.1L265.7,414.2L256.8,426.6L222.1,418.6Z"/>
+    <path class="wtc-county" id="wtc-county-sussex" data-county="Sussex" d="M166.7,495.4L171.9,495.9L212.5,458.1L220.6,460.2L225.1,455.6L236.9,460.2L239.1,469.0L267.9,494.1L295.3,518.4L228.0,550.0L216.2,547.7L200.0,535.5L189.6,513.6L181.5,504.9L166.7,495.4Z"/>
+    <path class="wtc-county" id="wtc-county-union" data-county="Union" d="M276.0,393.9L308.5,395.8L311.5,392.5L327.0,394.9L329.2,392.6L329.2,400.4L338.1,403.3L343.3,409.4L327.8,412.8L325.5,416.2L312.2,419.2L304.1,418.1L294.5,422.9L276.0,409.3L278.3,405.2L287.9,407.9L283.4,398.1L276.0,393.9Z"/>
+    <path class="wtc-county" id="wtc-county-warren" data-county="Warren" d="M140.9,469.9L145.3,460.7L154.9,449.8L137.9,429.8L129.8,430.7L123.1,413.0L129.0,409.1L123.9,403.8L124.6,395.8L126.1,392.3L135.0,399.9L143.1,402.2L161.5,413.5L171.9,416.9L188.1,432.8L202.9,442.9L205.1,452.1L212.5,458.1L171.9,495.9L160.1,484.6L137.9,474.2L140.9,469.9Z"/>
   </g>
 </svg>

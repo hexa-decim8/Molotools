@@ -1,9 +1,11 @@
-<svg id="wtc-state-map-ri" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" role="img" aria-label="Rhode Island county map">
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 491 600" id="wtc-state-map-RI" role="img" aria-label="ri county map">
+  <title>ri Counties</title>
   <g class="wtc-counties">
-    <path id="wtc-county-providence" class="wtc-county" data-county="Providence" d="M26 38 L128 38 L140 96 L112 132 L54 130 L28 84 Z"/>
-    <path id="wtc-county-kent" class="wtc-county" data-county="Kent" d="M112 96 L186 94 L192 144 L138 170 L108 138 Z"/>
-    <path id="wtc-county-bristol" class="wtc-county" data-county="Bristol" d="M192 96 L220 100 L224 142 L194 144 Z"/>
-    <path id="wtc-county-newport" class="wtc-county" data-county="Newport" d="M224 126 L252 136 L256 186 L228 196 L216 164 Z"/>
-    <path id="wtc-county-washington" class="wtc-county" data-county="Washington" d="M94 142 L138 170 L188 162 L206 204 L178 226 L108 222 L74 178 Z"/>
+    <path class="wtc-county" id="wtc-county-bristol" data-county="Bristol" d="M302.3,398.5L341.6,367.8L333.4,350.5L345.8,329.7L374.7,350.0L380.9,372.3L360.3,396.0L327.2,409.9L302.3,398.5Z"/>
+    <path class="wtc-county" id="wtc-county-kent" data-county="Kent" d="M56.2,380.7L56.2,331.7L56.2,306.4L232.0,309.9L240.3,328.2L275.5,339.6L250.6,358.9L296.1,350.5L300.3,376.2L287.9,399.0L256.8,399.5L244.4,384.7L56.2,380.7Z"/>
+    <path class="wtc-county" id="wtc-county-newport" data-county="Newport" d="M397.5,352.0L362.3,329.2L345.8,295.5L312.7,248.5L314.8,221.3L335.4,224.8L339.6,242.1L374.7,241.1L370.6,319.8L391.3,308.9L387.1,277.2L399.6,226.7L440.9,249.5L434.7,343.1L397.5,352.0ZM300.3,343.6L323.0,317.8L333.4,321.3L310.6,347.0L300.3,343.6ZM279.6,228.2L302.3,241.1L302.3,283.2L294.1,293.1L283.7,264.9L292.0,253.5L279.6,228.2Z"/>
+    <path class="wtc-county" id="wtc-county-providence" data-county="Providence" d="M50.0,543.6L50.0,490.6L56.2,380.7L244.4,384.7L256.8,399.5L287.9,399.0L302.3,398.5L327.2,409.9L310.6,440.1L314.8,480.2L289.9,477.2L289.9,530.2L289.9,550.0L223.7,549.0L50.0,543.6Z"/>
+    <path class="wtc-county" id="wtc-county-washington" data-county="Washington" d="M157.6,55.0L192.7,50.0L190.7,87.6L180.3,94.6L157.6,55.0ZM14.8,147.0L16.9,139.1L95.5,154.0L151.4,170.8L207.2,179.7L232.0,176.7L248.6,212.9L269.3,235.1L269.3,270.8L252.7,297.0L277.5,302.5L275.5,339.6L240.3,328.2L232.0,309.9L56.2,306.4L50.0,203.0L25.2,199.0L31.4,161.4L14.8,147.0Z"/>
   </g>
 </svg>

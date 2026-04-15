@@ -1,12 +1,14 @@
-<svg id="wtc-state-map-ct" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 240" role="img" aria-label="Connecticut county map">
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 375" id="wtc-state-map-CT" role="img" aria-label="ct county map">
+  <title>ct Counties</title>
   <g class="wtc-counties">
-    <path id="wtc-county-fairfield" class="wtc-county" data-county="Fairfield" d="M18 134 L122 126 L136 182 L34 206 L16 170 Z"/>
-    <path id="wtc-county-litchfield" class="wtc-county" data-county="Litchfield" d="M16 36 L132 34 L124 126 L18 134 Z"/>
-    <path id="wtc-county-new-haven" class="wtc-county" data-county="New Haven" d="M122 126 L228 120 L238 176 L136 182 Z"/>
-    <path id="wtc-county-hartford" class="wtc-county" data-county="Hartford" d="M132 34 L242 34 L228 120 L124 126 Z"/>
-    <path id="wtc-county-middlesex" class="wtc-county" data-county="Middlesex" d="M238 132 L300 126 L304 178 L246 192 L236 168 Z"/>
-    <path id="wtc-county-tolland" class="wtc-county" data-county="Tolland" d="M242 34 L326 34 L314 112 L228 120 Z"/>
-    <path id="wtc-county-new-london" class="wtc-county" data-county="New London" d="M300 126 L450 120 L458 178 L304 178 Z"/>
-    <path id="wtc-county-windham" class="wtc-county" data-county="Windham" d="M326 34 L458 32 L450 120 L314 112 Z"/>
+    <path class="wtc-county" id="wtc-county-fairfield" data-county="Fairfield" d="M97.2,148.4L95.4,130.2L113.0,108.7L50.0,79.9L68.5,57.3L67.6,50.0L81.5,57.8L89.8,54.4L110.2,66.4L137.0,68.8L146.3,75.9L141.7,80.8L163.0,87.0L169.4,84.1L191.7,97.0L203.7,91.9L209.3,97.4L205.6,100.1L209.3,113.2L219.4,131.6L207.4,139.5L188.9,159.3L157.4,174.8L140.7,180.1L138.0,186.7L123.1,180.8L122.2,188.7L109.3,218.6L103.7,226.0L100.9,189.8L97.2,148.4Z"/>
+    <path class="wtc-county" id="wtc-county-hartford" data-county="Hartford" d="M235.2,321.9L229.6,303.3L266.7,304.9L259.3,285.4L252.8,284.9L249.1,274.3L250.9,261.9L233.3,259.9L241.7,218.9L252.8,220.2L254.6,210.7L250.9,197.6L268.5,199.1L277.8,194.5L288.9,201.8L300.9,203.4L311.1,209.8L311.1,215.8L364.8,220.9L375.0,204.5L389.8,209.3L389.8,216.7L379.6,227.3L372.2,263.6L364.8,262.7L367.6,276.0L362.0,274.9L363.0,297.8L368.5,298.4L363.9,320.8L338.9,319.9L300.0,321.3L297.2,312.6L284.3,311.3L285.2,321.3L235.2,321.9Z"/>
+    <path class="wtc-county" id="wtc-county-litchfield" data-county="Litchfield" d="M112.0,324.8L103.7,226.0L109.3,218.6L122.2,188.7L123.1,180.8L138.0,186.7L140.7,180.1L157.4,174.8L154.6,183.9L197.2,187.0L194.4,197.6L213.0,200.9L222.2,210.4L241.7,218.9L233.3,259.9L250.9,261.9L249.1,274.3L252.8,284.9L259.3,285.4L266.7,304.9L229.6,303.3L235.2,321.9L223.1,322.1L125.9,325.0L112.0,324.8Z"/>
+    <path class="wtc-county" id="wtc-county-middlesex" data-county="Middlesex" d="M375.0,204.5L364.8,220.9L311.1,215.8L311.1,209.8L300.9,203.4L305.6,179.2L302.8,163.0L326.9,167.0L337.0,153.5L337.0,139.1L354.6,126.2L356.5,119.8L378.7,125.8L392.6,125.8L395.4,121.4L407.4,126.2L405.6,137.5L397.2,144.2L396.3,153.3L386.1,154.6L383.3,163.2L416.7,166.6L412.0,191.8L383.3,191.2L375.0,204.5Z"/>
+    <path class="wtc-county" id="wtc-county-new-haven" data-county="New Haven" d="M241.7,218.9L222.2,210.4L213.0,200.9L194.4,197.6L197.2,187.0L154.6,183.9L157.4,174.8L188.9,159.3L207.4,139.5L219.4,131.6L209.3,113.2L205.6,100.1L209.3,97.4L224.1,108.1L235.2,108.1L252.8,126.2L261.1,130.0L263.9,116.7L300.9,122.7L317.6,117.6L324.1,123.4L348.1,123.1L356.5,119.8L354.6,126.2L337.0,139.1L337.0,153.5L326.9,167.0L302.8,163.0L305.6,179.2L300.9,203.4L288.9,201.8L277.8,194.5L268.5,199.1L250.9,197.6L254.6,210.7L252.8,220.2L241.7,218.9Z"/>
+    <path class="wtc-county" id="wtc-county-new-london" data-county="New London" d="M375.0,204.5L383.3,191.2L412.0,191.8L416.7,166.6L383.3,163.2L386.1,154.6L396.3,153.3L397.2,144.2L405.6,137.5L407.4,126.2L440.7,129.1L446.3,137.3L461.1,131.1L473.1,136.4L489.8,135.8L509.3,141.1L525.0,140.6L531.5,136.4L538.9,142.9L536.1,159.7L547.2,161.5L550.0,207.8L550.0,219.1L532.4,220.2L508.3,217.5L456.5,226.2L454.6,223.5L433.3,238.1L426.9,228.6L409.3,220.0L411.1,210.0L389.8,209.3L375.0,204.5Z"/>
+    <path class="wtc-county" id="wtc-county-tolland" data-county="Tolland" d="M363.9,320.8L368.5,298.4L363.0,297.8L362.0,274.9L367.6,276.0L364.8,262.7L372.2,263.6L379.6,227.3L389.8,216.7L389.8,209.3L411.1,210.0L409.3,220.0L426.9,228.6L433.3,238.1L454.6,248.3L452.8,269.4L438.9,269.4L438.9,301.1L469.4,301.3L468.5,319.3L460.2,319.7L363.9,320.8Z"/>
+    <path class="wtc-county" id="wtc-county-windham" data-county="Windham" d="M468.5,319.3L469.4,301.3L438.9,301.1L438.9,269.4L452.8,269.4L454.6,248.3L433.3,238.1L454.6,223.5L456.5,226.2L508.3,217.5L532.4,220.2L550.0,219.1L550.0,241.0L547.2,290.2L547.2,313.9L546.3,317.9L468.5,319.3Z"/>
   </g>
 </svg>

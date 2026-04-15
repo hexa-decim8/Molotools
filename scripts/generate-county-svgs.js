@@ -26,6 +26,46 @@ const path = require('path');
 const BASE_PATH = path.join(__dirname, '..', 'calculators', 'wealth-tax-calculator', 'wordpress', 'wealth-tax-calculator');
 const DATA_PATH = path.join(BASE_PATH, 'data', 'states');
 const MANIFEST_PATH = path.join(__dirname, 'county-manifest.csv');
+const PLUGIN_MAIN_FILE = path.join(BASE_PATH, 'wealth-tax-calculator.php');
+const FALLBACK_COUNTY_GEOJSON_PATH = path.join(__dirname, 'source-data', 'plotly-counties-fips.geojson');
+
+function loadPluginGeometryAssetMap() {
+  if (!fs.existsSync(PLUGIN_MAIN_FILE)) {
+    return {};
+  }
+
+  const php = fs.readFileSync(PLUGIN_MAIN_FILE, 'utf8');
+  const map = {};
+  const re = /'([A-Z]{2})'\s*=>\s*'states\/([^']+\-counties\.svg)'/g;
+  let match;
+
+  while ((match = re.exec(php)) !== null) {
+    map[match[1]] = match[2];
+  }
+
+  return map;
+}
+
+function loadFallbackCountyFeatureMap() {
+  if (!fs.existsSync(FALLBACK_COUNTY_GEOJSON_PATH)) {
+    return {};
+  }
+
+  const raw = JSON.parse(fs.readFileSync(FALLBACK_COUNTY_GEOJSON_PATH, 'utf8'));
+  const features = Array.isArray(raw.features) ? raw.features : [];
+  const map = {};
+
+  features.forEach(feature => {
+    const fips = String(feature.id || '').trim();
+    if (!fips || !feature.geometry) {
+      return;
+    }
+
+    map[fips] = feature;
+  });
+
+  return map;
+}
 
 // Parse manifest to get expected county metadata
 function loadManifest() {
@@ -108,6 +148,8 @@ function geojsonPolygonToSVGPath(coordinates, simplifyTolerance = 0.01) {
 function generateStateSVG(stateCode, counties, geojsonFeatures, options = {}) {
   const tolerance = options.simplifyTolerance || 0.01;
   const padding = options.padding || 50;
+  const stateFips = options.stateFips || '';
+  const fallbackFeatureMap = options.fallbackFeatureMap || {};
   
   // Calculate bounding box from all features
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -144,9 +186,23 @@ function generateStateSVG(stateCode, counties, geojsonFeatures, options = {}) {
   
   // Add county paths
   counties.forEach(county => {
-    const feature = geojsonFeatures.find(f => 
+    let feature = geojsonFeatures.find(f => 
       f.properties && (f.properties.NAME === county.name || f.properties.COUNTYFP === county.fips)
     );
+
+    if ((!feature || !feature.geometry) && stateFips) {
+      const fallbackFips = `${stateFips}${county.fips}`;
+      if (fallbackFeatureMap[fallbackFips]) {
+        feature = {
+          type: 'Feature',
+          properties: {
+            NAME: county.name,
+            COUNTYFP: county.fips,
+          },
+          geometry: fallbackFeatureMap[fallbackFips].geometry,
+        };
+      }
+    }
     
     if (!feature || !feature.geometry) {
       console.warn(`⚠️  No geometry found for ${county.name} (${county.slug})`);
@@ -154,11 +210,17 @@ function generateStateSVG(stateCode, counties, geojsonFeatures, options = {}) {
     }
     
     let pathData = '';
-    const coords = feature.geometry.type === 'Polygon'
-      ? [feature.geometry.coordinates[0]]
-      : feature.geometry.coordinates[0]; // MultiPolygon
-    
-    coords.forEach((ring, ringIdx) => {
+    const rings = [];
+
+    if (feature.geometry.type === 'Polygon') {
+      feature.geometry.coordinates.forEach(ring => rings.push(ring));
+    } else if (feature.geometry.type === 'MultiPolygon') {
+      feature.geometry.coordinates.forEach(polygon => {
+        polygon.forEach(ring => rings.push(ring));
+      });
+    }
+
+    rings.forEach((ring) => {
       ring.forEach((coord, idx) => {
         const x = coord[0] * scale + offsetX;
         const y = coord[1] * scale + offsetY;
@@ -194,23 +256,33 @@ function main() {
   // Load manifest
   const manifest = loadManifest();
   console.log(`✅ Loaded manifest with ${Object.keys(manifest).length} states\n`);
+  const geometryAssetMap = loadPluginGeometryAssetMap();
+  const fallbackFeatureMap = loadFallbackCountyFeatureMap();
+
+  if (Object.keys(geometryAssetMap).length === 0) {
+    console.warn('⚠️  No production geometry map found in plugin file; falling back to state-code folders.');
+  }
   
   let generated = 0;
   let skipped = 0;
   
   // For each state, generate SVG
   Object.entries(manifest).forEach(([stateCode, data]) => {
-    const stateDirPath = path.join(DATA_PATH, stateCode.toLowerCase());
+    const upperStateCode = stateCode.toUpperCase();
+    const configuredAssetPath = geometryAssetMap[upperStateCode];
+    const outputRelativePath = configuredAssetPath || `${stateCode.toLowerCase()}/${stateCode.toLowerCase()}-counties.svg`;
+    const outputFullPath = path.join(DATA_PATH, outputRelativePath);
+    const stateDirPath = path.dirname(outputFullPath);
     
     // Ensure directory exists
     if (!fs.existsSync(stateDirPath)) {
       fs.mkdirSync(stateDirPath, { recursive: true });
     }
     
-    const svgPath = path.join(stateDirPath, `${stateCode.toLowerCase()}-counties.svg`);
+    const svgPath = outputFullPath;
     
     // Check if TIGER/Line GeoJSON exists
-    const tigerPath = path.join(__dirname, 'tiger-geojson', `${stateCode.toUpperCase()}.geojson`);
+    const tigerPath = path.join(__dirname, 'tiger-geojson', `${upperStateCode}.geojson`);
     
     if (!fs.existsSync(tigerPath)) {
       console.warn(
@@ -234,7 +306,9 @@ function main() {
         geojson.features || [],
         {
           simplifyTolerance: 0.01,
-          padding: 50
+          padding: 50,
+          stateFips: data.stateFips,
+          fallbackFeatureMap,
         }
       );
       

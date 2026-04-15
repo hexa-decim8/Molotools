@@ -1,33 +1,98 @@
-<svg id="wtc-state-map-in" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 420" role="img" aria-label="Indiana county map">
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 513 600" id="wtc-state-map-IN" role="img" aria-label="in county map">
+  <title>in Counties</title>
   <g class="wtc-counties">
-    <rect id="wtc-county-allen" class="wtc-county" data-county="Allen" x="20" y="20" width="126" height="52"/>
-    <rect id="wtc-county-bartholomew" class="wtc-county" data-county="Bartholomew" x="156" y="20" width="126" height="52"/>
-    <rect id="wtc-county-boone" class="wtc-county" data-county="Boone" x="292" y="20" width="126" height="52"/>
-    <rect id="wtc-county-clark" class="wtc-county" data-county="Clark" x="428" y="20" width="126" height="52"/>
-    <rect id="wtc-county-delaware" class="wtc-county" data-county="Delaware" x="564" y="20" width="126" height="52"/>
-    <rect id="wtc-county-elkhart" class="wtc-county" data-county="Elkhart" x="700" y="20" width="126" height="52"/>
-    <rect id="wtc-county-floyd" class="wtc-county" data-county="Floyd" x="836" y="20" width="126" height="52"/>
-    <rect id="wtc-county-hamilton" class="wtc-county" data-county="Hamilton" x="972" y="20" width="126" height="52"/>
-
-    <rect id="wtc-county-hancock" class="wtc-county" data-county="Hancock" x="20" y="82" width="126" height="52"/>
-    <rect id="wtc-county-hendricks" class="wtc-county" data-county="Hendricks" x="156" y="82" width="126" height="52"/>
-    <rect id="wtc-county-howard" class="wtc-county" data-county="Howard" x="292" y="82" width="126" height="52"/>
-    <rect id="wtc-county-jackson" class="wtc-county" data-county="Jackson" x="428" y="82" width="126" height="52"/>
-    <rect id="wtc-county-johnson" class="wtc-county" data-county="Johnson" x="564" y="82" width="126" height="52"/>
-    <rect id="wtc-county-knox" class="wtc-county" data-county="Knox" x="700" y="82" width="126" height="52"/>
-    <rect id="wtc-county-lake" class="wtc-county" data-county="Lake" x="836" y="82" width="126" height="52"/>
-    <rect id="wtc-county-laporte" class="wtc-county" data-county="LaPorte" x="972" y="82" width="126" height="52"/>
-
-    <rect id="wtc-county-madison" class="wtc-county" data-county="Madison" x="20" y="144" width="126" height="52"/>
-    <rect id="wtc-county-marion" class="wtc-county" data-county="Marion" x="156" y="144" width="126" height="52"/>
-    <rect id="wtc-county-monroe" class="wtc-county" data-county="Monroe" x="292" y="144" width="126" height="52"/>
-    <rect id="wtc-county-montgomery" class="wtc-county" data-county="Montgomery" x="428" y="144" width="126" height="52"/>
-    <rect id="wtc-county-morgan" class="wtc-county" data-county="Morgan" x="564" y="144" width="126" height="52"/>
-    <rect id="wtc-county-porter" class="wtc-county" data-county="Porter" x="700" y="144" width="126" height="52"/>
-    <rect id="wtc-county-st-joseph" class="wtc-county" data-county="St. Joseph" x="836" y="144" width="126" height="52"/>
-    <rect id="wtc-county-tippecanoe" class="wtc-county" data-county="Tippecanoe" x="972" y="144" width="126" height="52"/>
-
-    <rect id="wtc-county-vanderburgh" class="wtc-county" data-county="Vanderburgh" x="20" y="206" width="126" height="52"/>
-    <rect id="wtc-county-vigo" class="wtc-county" data-county="Vigo" x="156" y="206" width="126" height="52"/>
+    <path class="wtc-county" id="wtc-county-adams" data-county="Adams" d="M428.0,444.4L428.9,400.5L462.1,401.1L462.1,420.6L462.1,445.0L428.0,444.4Z"/>
+    <path class="wtc-county" id="wtc-county-allen" data-county="Allen" d="M398.7,487.8L398.7,477.1L395.1,477.1L395.6,455.3L395.1,444.2L428.0,444.4L462.1,445.0L462.1,453.3L462.1,486.4L462.1,488.6L413.6,487.8L398.7,487.8Z"/>
+    <path class="wtc-county" id="wtc-county-bartholomew" data-county="Bartholomew" d="M301.5,247.1L302.0,210.2L302.0,208.4L329.4,209.1L337.1,212.5L337.1,220.1L351.5,220.4L351.5,247.8L318.2,247.5L301.5,247.1Z"/>
+    <path class="wtc-county" id="wtc-county-benton" data-county="Benton" d="M120.6,389.1L175.1,388.9L174.6,399.9L174.2,421.6L153.0,421.6L120.6,421.6L120.6,390.8L120.6,389.1Z"/>
+    <path class="wtc-county" id="wtc-county-blackford" data-county="Blackford" d="M381.6,400.4L381.6,376.8L410.0,376.8L411.3,376.8L412.2,400.4L381.6,400.4Z"/>
+    <path class="wtc-county" id="wtc-county-boone" data-county="Boone" d="M225.0,351.7L225.0,319.7L271.4,319.8L282.2,320.1L281.7,352.0L267.8,351.6L225.0,351.7Z"/>
+    <path class="wtc-county" id="wtc-county-brown" data-county="Brown" d="M264.2,246.5L265.5,235.4L265.5,210.0L272.3,210.0L302.0,210.2L301.5,247.1L280.4,246.7L264.2,246.5Z"/>
+    <path class="wtc-county" id="wtc-county-carroll" data-county="Carroll" d="M239.0,421.5L217.8,421.5L216.5,416.8L219.2,414.7L215.1,412.6L215.6,399.8L225.0,399.8L225.0,383.5L265.1,383.4L265.1,399.7L265.1,416.1L246.2,416.1L246.2,421.5L239.0,421.5Z"/>
+    <path class="wtc-county" id="wtc-county-cass" data-county="Cass" d="M239.0,443.5L239.0,421.5L246.2,421.5L246.2,416.1L265.1,416.1L265.1,399.7L291.2,399.9L290.7,443.4L253.4,443.4L239.0,443.5Z"/>
+    <path class="wtc-county" id="wtc-county-clark" data-county="Clark" d="M312.8,131.0L316.4,129.2L336.2,129.3L342.0,122.5L337.5,120.3L338.4,114.7L344.3,112.1L352.8,116.3L357.3,126.2L361.4,133.7L374.9,137.3L378.0,142.1L383.0,144.3L385.2,146.4L383.9,152.1L377.6,152.1L375.3,154.7L365.9,154.6L338.0,154.5L331.2,149.0L326.7,141.8L317.3,141.5L312.8,139.8L312.8,131.0Z"/>
+    <path class="wtc-county" id="wtc-county-clay" data-county="Clay" d="M156.6,236.4L156.6,225.5L180.0,225.0L180.0,246.9L194.0,246.9L194.4,263.3L185.0,263.3L185.0,279.8L161.6,280.0L161.6,269.1L156.6,269.3L156.6,236.4Z"/>
+    <path class="wtc-county" id="wtc-county-clinton" data-county="Clinton" d="M225.0,356.2L225.0,351.7L267.8,351.6L281.7,352.0L281.7,356.4L281.7,376.2L273.2,378.0L273.2,383.4L265.1,383.4L225.0,383.5L225.0,356.2Z"/>
+    <path class="wtc-county" id="wtc-county-crawford" data-county="Crawford" d="M226.8,128.1L226.8,111.6L240.8,112.0L240.3,104.6L254.3,104.5L254.3,93.8L261.5,91.9L265.1,95.0L270.9,95.2L271.4,97.9L265.5,99.2L265.1,102.9L270.5,101.3L275.9,104.0L277.7,113.6L280.4,115.2L276.8,122.6L281.3,122.4L279.9,131.6L273.2,131.6L273.2,128.0L226.8,128.1Z"/>
+    <path class="wtc-county" id="wtc-county-daviess" data-county="Daviess" d="M174.2,191.9L170.1,189.6L167.9,183.6L165.2,184.7L159.8,179.9L156.6,181.3L156.2,172.7L151.7,165.2L156.6,157.8L154.8,157.8L156.2,146.9L164.7,146.8L167.9,143.3L173.3,146.0L177.8,143.2L187.7,142.9L194.0,140.4L196.2,142.0L196.2,181.1L198.9,181.1L198.9,191.9L174.2,191.9Z"/>
+    <path class="wtc-county" id="wtc-county-dearborn" data-county="Dearborn" d="M420.8,197.4L425.3,195.8L430.2,197.5L437.9,203.6L443.2,203.3L452.7,207.8L451.3,212.3L459.9,217.1L459.9,242.2L429.3,242.4L426.6,229.8L420.8,197.4Z"/>
+    <path class="wtc-county" id="wtc-county-decatur" data-county="Decatur" d="M351.5,247.8L351.5,220.4L366.3,220.6L382.1,228.4L400.1,237.6L400.1,260.7L358.7,260.7L358.2,247.8L351.5,247.8Z"/>
+    <path class="wtc-county" id="wtc-county-dekalb" data-county="DeKalb" d="M413.1,520.6L413.6,487.8L462.1,488.6L462.1,508.1L461.7,521.1L413.1,520.6Z"/>
+    <path class="wtc-county" id="wtc-county-delaware" data-county="Delaware" d="M365.0,376.8L365.4,338.9L410.4,338.9L410.0,367.8L410.0,376.8L381.6,376.8L365.0,376.8Z"/>
+    <path class="wtc-county" id="wtc-county-dubois" data-county="Dubois" d="M177.8,143.2L177.3,107.7L177.3,104.2L184.5,104.1L212.9,104.3L212.9,109.8L226.8,109.7L226.8,111.6L226.8,128.1L226.4,144.6L207.0,144.6L202.1,140.7L196.2,142.0L194.0,140.4L187.7,142.9L177.8,143.2Z"/>
+    <path class="wtc-county" id="wtc-county-elkhart" data-county="Elkhart" d="M304.2,550.0L304.7,514.7L304.7,509.3L355.5,509.4L355.5,520.3L354.6,549.8L338.4,549.8L304.2,550.0Z"/>
+    <path class="wtc-county" id="wtc-county-fayette" data-county="Fayette" d="M399.6,302.6L400.1,269.8L432.9,269.9L432.9,293.6L414.0,293.6L414.5,302.7L409.5,302.7L399.6,302.6Z"/>
+    <path class="wtc-county" id="wtc-county-floyd" data-county="Floyd" d="M307.8,131.0L307.8,120.0L313.2,113.1L317.7,111.3L317.3,101.9L324.5,101.2L330.8,106.5L333.5,113.3L338.4,114.7L337.5,120.3L342.0,122.5L336.2,129.3L316.4,129.2L312.8,131.0L307.8,131.0Z"/>
+    <path class="wtc-county" id="wtc-county-fountain" data-county="Fountain" d="M135.9,345.3L134.6,336.7L132.3,332.6L134.1,323.3L175.1,323.4L175.1,356.3L175.1,375.2L170.1,372.0L155.7,368.0L141.8,355.7L134.1,353.4L131.9,349.9L135.9,345.3Z"/>
+    <path class="wtc-county" id="wtc-county-franklin" data-county="Franklin" d="M400.1,269.8L400.1,260.7L400.1,237.6L410.0,242.7L429.3,242.4L459.9,242.2L460.3,269.4L432.9,269.9L400.1,269.8Z"/>
+    <path class="wtc-county" id="wtc-county-fulton" data-county="Fulton" d="M253.4,476.1L253.4,443.4L290.7,443.4L291.2,454.2L318.6,454.6L319.1,460.1L309.6,459.9L309.6,465.5L302.4,465.2L302.4,476.3L253.4,476.1Z"/>
+    <path class="wtc-county" id="wtc-county-gibson" data-county="Gibson" d="M63.0,110.7L63.0,107.4L86.4,107.3L86.4,104.0L100.4,103.7L100.4,99.8L128.3,99.3L128.3,103.8L147.2,103.8L147.2,109.4L147.2,126.5L135.5,125.7L135.5,133.2L131.0,133.2L128.7,137.0L128.7,145.5L124.7,140.8L114.8,140.1L111.6,135.1L93.2,130.6L89.1,125.1L85.5,124.1L79.7,113.1L76.1,116.7L72.9,112.2L70.7,116.0L66.6,108.7L63.0,110.7Z"/>
+    <path class="wtc-county" id="wtc-county-grant" data-county="Grant" d="M329.0,411.0L329.0,400.2L329.4,380.3L329.4,376.7L365.0,376.8L381.6,376.8L381.6,400.4L381.2,411.2L357.3,411.2L329.0,411.0Z"/>
+    <path class="wtc-county" id="wtc-county-greene" data-county="Greene" d="M156.6,225.5L156.6,192.4L174.2,191.9L198.9,191.9L226.4,192.0L226.4,203.0L226.4,224.8L180.0,225.0L156.6,225.5Z"/>
+    <path class="wtc-county" id="wtc-county-hamilton" data-county="Hamilton" d="M281.7,356.4L281.7,352.0L282.2,320.1L320.0,320.2L329.4,320.4L329.4,322.2L329.4,356.7L281.7,356.4Z"/>
+    <path class="wtc-county" id="wtc-county-hancock" data-county="Hancock" d="M320.0,320.2L320.0,313.0L317.7,311.3L318.2,291.3L358.2,291.5L358.2,302.5L362.7,302.5L362.7,313.4L365.0,313.4L365.4,322.5L329.4,322.2L329.4,320.4L320.0,320.2Z"/>
+    <path class="wtc-county" id="wtc-county-harrison" data-county="Harrison" d="M279.9,131.6L281.3,122.4L276.8,122.6L280.4,115.2L277.7,113.6L275.9,104.0L270.5,101.3L278.1,95.9L278.6,85.8L290.3,79.8L300.2,79.7L306.0,73.5L307.8,77.4L312.3,78.5L319.1,79.6L321.8,81.9L324.0,89.4L324.5,101.2L317.3,101.9L317.7,111.3L313.2,113.1L307.8,120.0L307.8,131.0L279.9,131.6Z"/>
+    <path class="wtc-county" id="wtc-county-hendricks" data-county="Hendricks" d="M225.0,319.7L225.0,312.3L225.9,312.3L225.9,282.9L231.8,282.9L229.5,279.4L253.8,279.3L253.8,282.9L271.4,283.1L270.9,294.1L271.4,319.8L225.0,319.7Z"/>
+    <path class="wtc-county" id="wtc-county-henry" data-county="Henry" d="M365.4,322.5L365.0,313.4L362.7,313.4L362.7,302.5L399.6,302.6L409.5,302.7L410.0,313.4L412.2,313.5L412.2,329.9L410.4,338.9L365.4,338.9L365.4,322.5Z"/>
+    <path class="wtc-county" id="wtc-county-howard" data-county="Howard" d="M265.1,399.7L265.1,383.4L273.2,383.4L273.2,378.0L281.7,376.2L281.7,379.9L329.4,380.3L329.0,400.2L291.2,399.9L265.1,399.7Z"/>
+    <path class="wtc-county" id="wtc-county-huntington" data-county="Huntington" d="M356.9,454.9L357.3,411.2L381.2,411.2L395.6,411.3L395.1,444.2L395.6,455.3L356.9,454.9Z"/>
+    <path class="wtc-county" id="wtc-county-jackson" data-county="Jackson" d="M272.3,210.0L272.3,202.8L276.8,202.8L277.7,174.4L288.9,176.9L295.2,174.2L300.6,176.9L308.7,173.4L314.1,174.9L326.3,170.6L332.1,171.5L337.5,179.8L337.1,212.5L329.4,209.1L302.0,208.4L302.0,210.2L272.3,210.0Z"/>
+    <path class="wtc-county" id="wtc-county-jasper" data-county="Jasper" d="M152.1,482.0L152.1,443.6L153.0,443.6L153.0,421.6L174.2,421.6L174.2,434.3L188.6,434.3L188.1,443.6L195.3,443.7L195.3,476.2L195.3,484.3L190.8,482.2L179.1,488.4L170.1,490.6L162.5,488.0L159.3,485.0L152.1,482.0Z"/>
+    <path class="wtc-county" id="wtc-county-jay" data-county="Jay" d="M410.0,376.8L410.0,367.8L462.1,368.2L462.1,373.5L462.1,401.1L428.9,400.5L412.2,400.4L411.3,376.8L410.0,376.8Z"/>
+    <path class="wtc-county" id="wtc-county-jefferson" data-county="Jefferson" d="M351.9,180.8L351.9,170.9L356.4,167.4L360.9,167.3L361.4,163.7L365.9,163.6L365.9,154.6L375.3,154.7L377.6,152.1L383.9,152.1L380.7,167.5L386.1,171.0L395.6,170.8L405.0,171.0L412.2,165.2L411.8,193.1L381.6,193.0L369.9,192.9L369.9,189.2L365.4,189.2L365.4,185.6L360.9,185.6L360.9,181.9L351.9,180.8Z"/>
+    <path class="wtc-county" id="wtc-county-jennings" data-county="Jennings" d="M351.5,220.4L337.1,220.1L337.1,212.5L337.5,179.8L345.6,182.9L351.9,180.8L360.9,181.9L360.9,185.6L365.4,185.6L365.4,189.2L369.9,189.2L369.9,192.9L381.6,193.0L382.1,228.4L366.3,220.6L351.5,220.4Z"/>
+    <path class="wtc-county" id="wtc-county-johnson" data-county="Johnson" d="M280.8,283.4L280.4,246.7L301.5,247.1L318.2,247.5L317.7,252.0L318.2,284.0L280.8,283.4Z"/>
+    <path class="wtc-county" id="wtc-county-knox" data-county="Knox" d="M104.9,149.8L104.9,142.7L94.1,138.2L93.2,130.6L111.6,135.1L114.8,140.1L124.7,140.8L128.7,145.5L135.0,144.6L142.2,146.7L149.0,142.5L156.2,146.9L154.8,157.8L156.6,157.8L151.7,165.2L156.2,172.7L156.6,181.3L159.8,179.9L165.2,184.7L167.9,183.6L170.1,189.6L174.2,191.9L156.6,192.4L156.6,191.6L121.1,191.7L120.6,192.4L117.5,186.3L119.7,185.5L124.2,176.2L124.7,171.7L118.4,163.5L112.1,162.2L108.9,158.8L104.9,149.8Z"/>
+    <path class="wtc-county" id="wtc-county-kosciusko" data-county="Kosciusko" d="M302.4,476.3L302.4,465.2L309.6,465.5L309.6,459.9L319.1,460.1L351.5,460.5L351.5,477.0L355.5,477.0L355.5,491.6L355.5,509.4L304.7,509.3L305.1,476.3L302.4,476.3Z"/>
+    <path class="wtc-county" id="wtc-county-lagrange" data-county="LaGrange" d="M354.6,549.8L355.5,520.3L413.1,520.6L412.7,549.9L401.0,549.9L354.6,549.8Z"/>
+    <path class="wtc-county" id="wtc-county-lake" data-county="Lake" d="M120.6,492.1L120.6,475.5L131.4,476.4L134.6,475.0L145.8,478.0L152.1,482.0L159.3,485.0L158.9,532.9L145.8,532.8L133.7,535.2L136.4,539.6L133.2,541.2L127.8,539.0L121.1,543.4L120.6,513.6L120.6,492.1Z"/>
+    <path class="wtc-county" id="wtc-county-laporte" data-county="LaPorte" d="M195.3,543.8L195.3,484.3L203.0,487.9L213.8,490.4L219.2,495.0L224.1,505.1L231.3,508.9L246.2,509.0L246.2,519.8L248.9,519.7L251.1,526.2L251.1,536.1L246.2,536.2L246.2,549.9L208.8,550.0L195.3,543.8Z"/>
+    <path class="wtc-county" id="wtc-county-lawrence" data-county="Lawrence" d="M226.4,192.0L226.4,164.7L273.2,164.8L273.2,170.5L277.7,174.4L276.8,202.8L272.3,202.8L226.4,203.0L226.4,192.0Z"/>
+    <path class="wtc-county" id="wtc-county-madison" data-county="Madison" d="M329.4,356.7L329.4,322.2L365.4,322.5L365.4,338.9L365.0,376.8L329.4,376.7L329.4,356.7Z"/>
+    <path class="wtc-county" id="wtc-county-marion" data-county="Marion" d="M271.4,319.8L270.9,294.1L271.4,283.1L280.8,283.4L318.2,284.0L318.2,291.3L317.7,311.3L320.0,313.0L320.0,320.2L282.2,320.1L271.4,319.8Z"/>
+    <path class="wtc-county" id="wtc-county-marshall" data-county="Marshall" d="M304.7,514.7L253.4,514.4L253.4,509.0L253.4,476.1L302.4,476.3L305.1,476.3L304.7,509.3L304.7,514.7Z"/>
+    <path class="wtc-county" id="wtc-county-martin" data-county="Martin" d="M198.9,191.9L198.9,181.1L196.2,181.1L196.2,142.0L202.1,140.7L207.0,144.6L226.4,144.6L226.4,164.7L226.4,192.0L198.9,191.9Z"/>
+    <path class="wtc-county" id="wtc-county-miami" data-county="Miami" d="M290.7,443.4L291.2,399.9L329.0,400.2L329.0,411.0L319.5,410.9L318.6,454.6L291.2,454.2L290.7,443.4Z"/>
+    <path class="wtc-county" id="wtc-county-monroe" data-county="Monroe" d="M233.1,247.4L225.9,246.1L226.4,224.8L226.4,203.0L272.3,202.8L272.3,210.0L265.5,210.0L265.5,235.4L264.2,246.5L233.1,246.6L233.1,247.4Z"/>
+    <path class="wtc-county" id="wtc-county-montgomery" data-county="Montgomery" d="M175.1,356.3L175.1,323.4L175.1,312.7L185.4,312.5L225.0,312.3L225.0,319.7L225.0,351.7L225.0,356.2L175.1,356.3Z"/>
+    <path class="wtc-county" id="wtc-county-morgan" data-county="Morgan" d="M229.5,279.4L230.9,274.9L225.9,269.4L225.9,262.9L232.7,262.9L233.1,247.4L233.1,246.6L264.2,246.5L280.4,246.7L280.8,283.4L271.4,283.1L253.8,282.9L253.8,279.3L229.5,279.4Z"/>
+    <path class="wtc-county" id="wtc-county-newton" data-county="Newton" d="M120.6,475.5L120.6,456.0L120.6,421.6L153.0,421.6L153.0,443.6L152.1,443.6L152.1,482.0L145.8,478.0L134.6,475.0L131.4,476.4L120.6,475.5Z"/>
+    <path class="wtc-county" id="wtc-county-noble" data-county="Noble" d="M355.5,520.3L355.5,509.4L355.5,491.6L370.4,491.6L369.9,488.1L398.7,487.8L413.6,487.8L413.1,520.6L355.5,520.3Z"/>
+    <path class="wtc-county" id="wtc-county-ohio" data-county="Ohio" d="M420.3,195.2L419.9,191.8L453.6,191.5L453.6,195.1L458.5,199.1L452.7,207.8L443.2,203.3L437.9,203.6L430.2,197.5L425.3,195.8L420.8,197.4L420.3,195.2Z"/>
+    <path class="wtc-county" id="wtc-county-orange" data-county="Orange" d="M226.4,164.7L226.4,144.6L226.8,128.1L273.2,128.0L273.2,131.6L273.2,164.8L226.4,164.7Z"/>
+    <path class="wtc-county" id="wtc-county-owen" data-county="Owen" d="M194.4,263.3L194.0,246.9L180.0,246.9L180.0,225.0L226.4,224.8L225.9,246.1L233.1,247.4L232.7,262.9L225.9,262.9L194.4,263.3Z"/>
+    <path class="wtc-county" id="wtc-county-parke" data-county="Parke" d="M134.1,323.3L132.3,320.7L140.4,315.6L142.2,312.0L138.2,308.5L139.5,303.3L139.1,291.0L137.3,285.8L138.6,280.1L161.6,280.0L185.0,279.8L185.4,312.5L175.1,312.7L175.1,323.4L134.1,323.3Z"/>
+    <path class="wtc-county" id="wtc-county-perry" data-county="Perry" d="M209.7,78.4L212.4,77.2L217.8,67.7L222.3,65.3L226.8,68.0L231.3,66.9L230.0,58.8L237.2,62.0L238.1,68.7L248.4,69.7L246.2,73.8L246.2,82.1L250.7,84.4L255.2,84.9L257.9,89.4L254.3,93.8L254.3,104.5L240.3,104.6L240.8,112.0L226.8,111.6L226.8,109.7L212.9,109.8L212.9,104.3L211.1,96.5L216.0,90.4L213.8,84.7L215.1,78.3L209.7,78.4Z"/>
+    <path class="wtc-county" id="wtc-county-pike" data-county="Pike" d="M128.7,145.5L128.7,137.0L131.0,133.2L135.5,133.2L135.5,125.7L147.2,126.5L147.2,109.4L149.4,107.6L177.3,107.7L177.8,143.2L173.3,146.0L167.9,143.3L164.7,146.8L156.2,146.9L149.0,142.5L142.2,146.7L135.0,144.6L128.7,145.5Z"/>
+    <path class="wtc-county" id="wtc-county-porter" data-county="Porter" d="M158.9,532.9L159.3,485.0L162.5,488.0L170.1,490.6L179.1,488.4L190.8,482.2L195.3,484.3L195.3,543.8L171.5,535.6L158.9,532.9Z"/>
+    <path class="wtc-county" id="wtc-county-posey" data-county="Posey" d="M63.0,107.4L64.4,103.4L70.7,97.0L60.8,89.1L66.2,91.1L65.3,87.0L56.7,85.0L60.3,82.2L59.9,75.7L53.1,68.5L59.9,65.4L50.0,65.0L56.3,56.4L50.9,57.3L52.7,53.7L57.6,53.4L68.0,50.0L73.4,55.1L68.9,62.4L70.7,66.3L77.4,68.7L82.4,63.1L99.0,65.7L99.5,94.3L100.4,99.8L100.4,103.7L86.4,104.0L86.4,107.3L63.0,107.4Z"/>
+    <path class="wtc-county" id="wtc-county-pulaski" data-county="Pulaski" d="M195.3,476.2L195.3,443.7L239.0,443.5L253.4,443.4L253.4,476.1L195.3,476.2Z"/>
+    <path class="wtc-county" id="wtc-county-putnam" data-county="Putnam" d="M185.0,279.8L185.0,263.3L194.4,263.3L225.9,262.9L225.9,269.4L230.9,274.9L229.5,279.4L231.8,282.9L225.9,282.9L225.9,312.3L225.0,312.3L185.4,312.5L185.0,279.8Z"/>
+    <path class="wtc-county" id="wtc-county-randolph" data-county="Randolph" d="M410.0,367.8L410.4,338.9L412.2,329.9L461.2,330.0L461.2,345.5L462.1,368.2L410.0,367.8Z"/>
+    <path class="wtc-county" id="wtc-county-ripley" data-county="Ripley" d="M382.1,228.4L381.6,193.0L411.8,193.1L412.2,194.9L420.3,195.2L420.8,197.4L426.6,229.8L429.3,242.4L410.0,242.7L400.1,237.6L382.1,228.4Z"/>
+    <path class="wtc-county" id="wtc-county-rush" data-county="Rush" d="M362.7,302.5L358.2,302.5L358.2,291.5L358.7,260.7L400.1,260.7L400.1,269.8L399.6,302.6L362.7,302.5Z"/>
+    <path class="wtc-county" id="wtc-county-st-joseph" data-county="St. Joseph" d="M246.2,549.9L246.2,536.2L251.1,536.1L251.1,526.2L248.9,519.7L246.2,519.8L246.2,509.0L253.4,509.0L253.4,514.4L304.7,514.7L304.2,550.0L283.5,549.9L246.2,549.9Z"/>
+    <path class="wtc-county" id="wtc-county-scott" data-county="Scott" d="M326.3,170.6L326.3,150.7L331.2,149.0L338.0,154.5L365.9,154.6L365.9,163.6L361.4,163.7L360.9,167.3L356.4,167.4L351.9,170.9L351.9,180.8L345.6,182.9L337.5,179.8L332.1,171.5L326.3,170.6Z"/>
+    <path class="wtc-county" id="wtc-county-shelby" data-county="Shelby" d="M318.2,284.0L317.7,252.0L318.2,247.5L351.5,247.8L358.2,247.8L358.7,260.7L358.2,291.5L318.2,291.3L318.2,284.0Z"/>
+    <path class="wtc-county" id="wtc-county-spencer" data-county="Spencer" d="M184.5,104.1L184.5,93.4L177.8,93.4L175.5,84.8L167.4,85.3L167.4,81.6L163.8,79.9L153.0,69.2L153.0,63.4L158.9,59.7L167.0,58.3L170.6,51.6L175.5,51.9L178.7,54.8L180.9,65.3L189.5,69.8L198.5,71.4L204.8,77.0L209.7,78.4L215.1,78.3L213.8,84.7L216.0,90.4L211.1,96.5L212.9,104.3L184.5,104.1Z"/>
+    <path class="wtc-county" id="wtc-county-starke" data-county="Starke" d="M195.3,484.3L195.3,476.2L253.4,476.1L253.4,509.0L246.2,509.0L231.3,508.9L224.1,505.1L219.2,495.0L213.8,490.4L203.0,487.9L195.3,484.3Z"/>
+    <path class="wtc-county" id="wtc-county-steuben" data-county="Steuben" d="M412.7,549.9L413.1,520.6L461.7,521.1L461.7,541.9L461.7,550.0L459.4,549.9L412.7,549.9Z"/>
+    <path class="wtc-county" id="wtc-county-sullivan" data-county="Sullivan" d="M106.2,223.7L107.6,217.0L114.8,211.1L114.3,202.6L122.4,198.3L120.6,192.4L121.1,191.7L156.6,191.6L156.6,192.4L156.6,225.5L156.6,236.4L111.2,236.5L114.8,231.3L106.2,223.7Z"/>
+    <path class="wtc-county" id="wtc-county-switzerland" data-county="Switzerland" d="M420.3,195.2L412.2,194.9L411.8,193.1L412.2,165.2L415.8,164.8L434.3,174.2L451.3,178.3L461.2,177.9L458.5,182.7L463.0,186.0L462.6,190.3L453.6,191.5L419.9,191.8L420.3,195.2Z"/>
+    <path class="wtc-county" id="wtc-county-tippecanoe" data-county="Tippecanoe" d="M174.6,399.9L175.1,388.9L175.1,375.2L175.1,356.3L225.0,356.2L225.0,383.5L225.0,399.8L215.6,399.8L174.6,399.9Z"/>
+    <path class="wtc-county" id="wtc-county-tipton" data-county="Tipton" d="M329.4,380.3L281.7,379.9L281.7,376.2L281.7,356.4L329.4,356.7L329.4,376.7L329.4,380.3Z"/>
+    <path class="wtc-county" id="wtc-county-union" data-county="Union" d="M432.9,293.6L432.9,269.9L460.3,269.4L460.8,275.1L460.8,295.0L432.9,295.3L432.9,293.6Z"/>
+    <path class="wtc-county" id="wtc-county-vanderburgh" data-county="Vanderburgh" d="M100.4,99.8L99.5,94.3L99.0,65.7L103.5,65.3L102.2,57.2L107.1,56.9L113.0,61.2L108.0,68.1L111.2,75.2L114.8,74.6L117.5,69.3L123.8,67.2L130.1,71.2L130.1,83.0L127.4,83.0L128.3,99.3L100.4,99.8Z"/>
+    <path class="wtc-county" id="wtc-county-vermillion" data-county="Vermillion" d="M120.2,347.9L119.7,314.6L120.2,280.1L138.6,280.1L137.3,285.8L139.1,291.0L139.5,303.3L138.2,308.5L142.2,312.0L140.4,315.6L132.3,320.7L134.1,323.3L132.3,332.6L134.6,336.7L135.9,345.3L125.1,345.3L120.2,347.9Z"/>
+    <path class="wtc-county" id="wtc-county-vigo" data-county="Vigo" d="M120.2,263.8L120.2,247.6L114.3,246.6L110.3,239.3L111.2,236.5L156.6,236.4L156.6,269.3L161.6,269.1L161.6,280.0L138.6,280.1L120.2,280.1L120.2,263.8Z"/>
+    <path class="wtc-county" id="wtc-county-wabash" data-county="Wabash" d="M319.1,460.1L318.6,454.6L319.5,410.9L329.0,411.0L357.3,411.2L356.9,454.9L351.9,454.9L351.5,460.5L319.1,460.1Z"/>
+    <path class="wtc-county" id="wtc-county-warren" data-county="Warren" d="M120.6,389.1L120.2,347.9L125.1,345.3L135.9,345.3L131.9,349.9L134.1,353.4L141.8,355.7L155.7,368.0L170.1,372.0L175.1,375.2L175.1,388.9L120.6,389.1Z"/>
+    <path class="wtc-county" id="wtc-county-warrick" data-county="Warrick" d="M128.3,99.3L127.4,83.0L130.1,83.0L130.1,71.2L139.1,70.6L149.0,65.8L153.0,63.4L153.0,69.2L163.8,79.9L167.4,81.6L167.4,85.3L175.5,84.8L177.8,93.4L184.5,93.4L184.5,104.1L177.3,104.2L177.3,107.7L149.4,107.6L147.2,109.4L147.2,103.8L128.3,103.8L128.3,99.3Z"/>
+    <path class="wtc-county" id="wtc-county-washington" data-county="Washington" d="M277.7,174.4L273.2,170.5L273.2,164.8L273.2,131.6L279.9,131.6L307.8,131.0L312.8,131.0L312.8,139.8L317.3,141.5L326.7,141.8L331.2,149.0L326.3,150.7L326.3,170.6L314.1,174.9L308.7,173.4L300.6,176.9L295.2,174.2L288.9,176.9L277.7,174.4Z"/>
+    <path class="wtc-county" id="wtc-county-wayne" data-county="Wayne" d="M412.2,329.9L412.2,313.5L410.0,313.4L409.5,302.7L414.5,302.7L414.0,293.6L432.9,293.6L432.9,295.3L460.8,295.0L460.8,318.9L461.2,330.0L412.2,329.9Z"/>
+    <path class="wtc-county" id="wtc-county-wells" data-county="Wells" d="M381.2,411.2L381.6,400.4L412.2,400.4L428.9,400.5L428.0,444.4L395.1,444.2L395.6,411.3L381.2,411.2Z"/>
+    <path class="wtc-county" id="wtc-county-white" data-county="White" d="M195.3,443.7L188.1,443.6L188.6,434.3L174.2,434.3L174.2,421.6L174.6,399.9L215.6,399.8L215.1,412.6L219.2,414.7L216.5,416.8L217.8,421.5L239.0,421.5L239.0,443.5L195.3,443.7Z"/>
+    <path class="wtc-county" id="wtc-county-whitley" data-county="Whitley" d="M355.5,491.6L355.5,477.0L351.5,477.0L351.5,460.5L351.9,454.9L356.9,454.9L395.6,455.3L395.1,477.1L398.7,477.1L398.7,487.8L369.9,488.1L370.4,491.6L355.5,491.6Z"/>
   </g>
 </svg>

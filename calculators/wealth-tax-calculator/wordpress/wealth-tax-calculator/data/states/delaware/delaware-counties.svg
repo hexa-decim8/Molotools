@@ -1,7 +1,9 @@
-<svg id="wtc-state-map-de" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 420" role="img" aria-label="Delaware county map">
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 367 600" id="wtc-state-map-DE" role="img" aria-label="de county map">
+  <title>de Counties</title>
   <g class="wtc-counties">
-    <path id="wtc-county-new-castle" class="wtc-county" data-county="New Castle" d="M88 28 L185 28 L206 92 L180 124 L138 132 L96 120 L76 82 Z"/>
-    <path id="wtc-county-kent" class="wtc-county" data-county="Kent" d="M96 120 L138 132 L180 124 L198 188 L186 248 L126 262 L90 226 L86 172 Z"/>
-    <path id="wtc-county-sussex" class="wtc-county" data-county="Sussex" d="M90 226 L126 262 L186 248 L212 320 L194 392 L138 404 L82 368 L70 286 Z"/>
+    <path class="wtc-county" id="wtc-county-kent" data-county="Kent" d="M60.4,355.0L61.7,336.7L65.5,299.5L74.6,186.7L134.2,188.6L147.1,196.0L160.1,213.4L189.9,218.6L197.6,234.1L222.3,228.5L210.6,257.1L189.9,271.9L187.3,311.0L193.8,321.9L189.9,339.8L176.9,360.9L149.7,379.8L135.5,375.8L123.8,359.4L95.3,352.9L60.4,355.0Z"/>
+    <path class="wtc-county" id="wtc-county-new-castle" data-county="New Castle" d="M50.0,508.5L50.0,481.8L57.8,384.2L60.4,355.0L95.3,352.9L123.8,359.4L135.5,375.8L149.7,379.8L140.7,398.1L122.5,414.2L122.5,426.9L132.9,435.6L131.6,450.8L117.3,460.4L114.8,472.5L143.3,497.6L151.0,495.4L162.7,505.4L169.2,524.3L186.0,534.5L184.7,537.3L154.9,548.8L119.9,550.0L95.3,544.4L75.9,533.9L50.0,508.5Z"/>
+    <path class="wtc-county" id="wtc-county-sussex" data-county="Sussex" d="M74.6,186.7L79.8,116.3L82.4,89.4L85.0,53.1L211.9,50.3L316.8,50.0L311.6,125.6L305.1,165.6L300.0,176.8L287.0,169.3L266.3,178.3L224.8,216.5L222.3,228.5L197.6,234.1L189.9,218.6L160.1,213.4L147.1,196.0L134.2,188.6L74.6,186.7Z"/>
   </g>
 </svg>
