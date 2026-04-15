@@ -927,7 +927,7 @@ class WTC_Policy_Analytics {
 
             <?php $this->render_michigan_map( $summary['region_counts'] ); ?>
 
-            <div class="card wtc-analytics-card wtc-no-collapse" style="max-width: 920px; margin-top: 20px;">
+            <div id="wtc-michigan-only-charts-card" class="card wtc-analytics-card wtc-no-collapse" style="max-width: 920px; margin-top: 20px;">
                 <h2><?php esc_html_e( 'Michigan-Only Charts', 'wealth-tax-calculator' ); ?></h2>
 
                 <div class="wtc-analytics-chart-panel">
@@ -1057,7 +1057,13 @@ class WTC_Policy_Analytics {
 
             <div class="card wtc-analytics-card" style="max-width: 920px; margin-top: 20px;">
                 <h2><?php esc_html_e( 'Michigan-Only Statistics (Excludes Non-Michigan Data)', 'wealth-tax-calculator' ); ?></h2>
-                <p class="description"><?php esc_html_e( 'This section only includes Michigan buckets (mi_* and mi_county_*), including unknown Michigan buckets. All non-Michigan buckets such as us_* and non_us are excluded.', 'wealth-tax-calculator' ); ?></p>
+                <div class="wtc-info-callout">
+                    <button type="button" class="wtc-info-toggle" aria-expanded="false" aria-controls="wtc-mi-bucket-scope-info">
+                        <span class="wtc-info-toggle-icon" aria-hidden="true">i</span>
+                        <span class="wtc-info-toggle-label"><?php esc_html_e( 'Info', 'wealth-tax-calculator' ); ?></span>
+                    </button>
+                    <p id="wtc-mi-bucket-scope-info" class="description wtc-info-content" hidden><?php esc_html_e( 'This section only includes Michigan buckets (mi_* and mi_county_*), including unknown Michigan buckets. All non-Michigan buckets such as us_* and non_us are excluded.', 'wealth-tax-calculator' ); ?></p>
+                </div>
 
                 <div class="wtc-analytics-stats" role="list" aria-label="<?php esc_attr_e( 'Michigan-only analytics summary metrics', 'wealth-tax-calculator' ); ?>">
                     <div class="wtc-analytics-stat" role="listitem">

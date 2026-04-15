@@ -100,6 +100,38 @@
         }
     }
 
+    function initInfoToggles() {
+        var toggles = document.querySelectorAll('.wtc-info-toggle');
+        var i;
+
+        if (!toggles.length) {
+            return;
+        }
+
+        for (i = 0; i < toggles.length; i++) {
+            (function (toggle) {
+                var contentId = toggle.getAttribute('aria-controls');
+                var contentEl;
+
+                if (!contentId) {
+                    return;
+                }
+
+                contentEl = document.getElementById(contentId);
+                if (!contentEl) {
+                    return;
+                }
+
+                toggle.addEventListener('click', function () {
+                    var isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+                    var nextExpanded = !isExpanded;
+                    toggle.setAttribute('aria-expanded', nextExpanded ? 'true' : 'false');
+                    contentEl.hidden = !nextExpanded;
+                });
+            }(toggles[i]));
+        }
+    }
+
     function formatNumber(value) {
         var number = parseInt(value, 10);
         if (!number || number < 0) {
@@ -378,6 +410,14 @@
         return value.substring(prefix.length);
     }
 
+    function applyGlobalGeometryOrientationFix(svgEl) {
+        if (!svgEl || !svgEl.classList) {
+            return;
+        }
+
+        svgEl.classList.add('wtc-map-orientation-fix');
+    }
+
     function clearStateCountyGeometry(hostEl, emptyEl) {
         if (hostEl) {
             hostEl.innerHTML = '';
@@ -409,6 +449,8 @@
 
         svgEl = svgTemplate.cloneNode(true);
         svgEl.id = 'wtc-state-map-' + String(stateCode || '').toLowerCase();
+
+        applyGlobalGeometryOrientationFix(svgEl);
 
         hostEl.innerHTML = '';
         hostEl.appendChild(svgEl);
@@ -679,6 +721,24 @@
         }
 
         updateStatePanel(defaultState || getFirstStateWithData());
+    }
+
+    function moveMichiganOnlyChartsCard() {
+        var chartsCard = document.getElementById('wtc-michigan-only-charts-card');
+        var michiganPanel = document.querySelector('.wtc-analytics-section-panel[data-wtc-section-panel="michigan"]');
+        var anchorCard;
+
+        if (!chartsCard || !michiganPanel) {
+            return;
+        }
+
+        anchorCard = michiganPanel.querySelector('.card');
+        if (anchorCard && anchorCard.parentElement === michiganPanel) {
+            anchorCard.insertAdjacentElement('afterend', chartsCard);
+            return;
+        }
+
+        michiganPanel.insertBefore(chartsCard, michiganPanel.firstChild || null);
     }
 
     function normalizeSectionKey(text) {
@@ -1098,6 +1158,8 @@
             return;
         }
 
+        applyGlobalGeometryOrientationFix(svgEl);
+
         var bubbleData = [];
         var maxCount = 0;
         Object.keys(cities).forEach(function (bucket) {
@@ -1260,7 +1322,9 @@
     function init() {
         initAnalyticsCharts();
         initAnalyticsScopeTabs();
+        initInfoToggles();
         initStateAnalyticsPanel();
+        moveMichiganOnlyChartsCard();
         initCollapsibleAnalyticsSections();
         initUnitedStatesMap();
         initMichiganMap();
