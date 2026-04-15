@@ -265,6 +265,10 @@
     gap: 14px;
 }
 
+.wtc-analytics-chart-panel-three-up {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .wtc-analytics-chart-card {
     background: #fff;
     border: 1px solid #e1b682;
@@ -389,7 +393,7 @@
     align-items: start;
 }
 
-#wtc-state-geo-map {
+.wtc-state-geo-map {
     display: grid;
     grid-template-columns: repeat(13, 1fr);
     gap: 6px;
@@ -418,6 +422,10 @@
 .wtc-state-tile.is-selected {
     outline: 2px solid #233071;
     outline-offset: 1px;
+}
+
+.wtc-state-tile.is-static {
+    cursor: default;
 }
 
 .wtc-state-tile:focus-visible {
@@ -543,6 +551,48 @@
     box-shadow: inset 0 0 0 1px #e8d7c3;
 }
 
+.wtc-analytics-line-chart {
+    display: grid;
+    gap: 12px;
+}
+
+.wtc-analytics-line-chart svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+}
+
+.wtc-analytics-line-grid {
+    stroke: #ead9c8;
+    stroke-width: 1;
+}
+
+.wtc-analytics-line-path {
+    fill: none;
+    stroke: #233071;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.wtc-analytics-line-point {
+    fill: #d1495b;
+    stroke: #fff;
+    stroke-width: 2;
+}
+
+.wtc-analytics-line-axis-label {
+    fill: #5d524a;
+    font-size: 11px;
+}
+
+.wtc-analytics-line-value-label {
+    fill: #233071;
+    font-size: 11px;
+    font-weight: 700;
+}
+
 .wtc-analytics-legend {
     display: grid;
     grid-template-columns: 1fr;
@@ -567,6 +617,11 @@
     width: 12px;
     height: 12px;
     border-radius: 2px;
+}
+
+.wtc-analytics-legend-swatch-line {
+    border-radius: 999px;
+    background: linear-gradient(90deg, #233071 0%, #d1495b 100%);
 }
 
 .wtc-analytics-legend-label {
@@ -639,11 +694,15 @@
         grid-template-columns: 1fr;
     }
 
-    #wtc-state-geo-map {
+    .wtc-state-geo-map {
         min-width: 0;
     }
 
     .wtc-analytics-chart-panel {
+        grid-template-columns: 1fr;
+    }
+
+    .wtc-analytics-chart-panel-three-up {
         grid-template-columns: 1fr;
     }
 

@@ -1883,6 +1883,7 @@
 .calculator-container .wtc-next-step-wrapper {
     display: none;
     margin-top: 16px;
+    margin-bottom: 10px;
     text-align: right;
 }
 
