@@ -1481,12 +1481,32 @@
     flex-direction: row;
     align-items: flex-start;
     gap: 8px;
+    position: relative;
+    overflow: hidden;
     background: #fff;
     border: 1px solid #E1B682;
     border-radius: 6px;
     padding: 8px 10px;
+    touch-action: manipulation;
     cursor: grab;
     transition: opacity 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.calculator-container .selected-policy-entry::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 0;
+    background: linear-gradient(90deg, rgba(64, 107, 191, 0.06) 0%, rgba(64, 107, 191, 0.22) 100%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.calculator-container .selected-policy-entry > * {
+    position: relative;
+    z-index: 1;
 }
 
 .calculator-container .selected-policy-entry:active {
@@ -1501,6 +1521,21 @@
 .calculator-container .selected-policy-entry.drag-over {
     border-color: #233071;
     background: #EEF2FF;
+}
+
+@keyframes wtc-mobile-policy-wiggle {
+    0% {
+        transform: rotate(0deg);
+    }
+    33% {
+        transform: rotate(-1.25deg);
+    }
+    66% {
+        transform: rotate(1.25deg);
+    }
+    100% {
+        transform: rotate(0deg);
+    }
 }
 
 
@@ -1700,6 +1735,42 @@
         gap: 6px;
     }
 
+    .calculator-container .selected-policy-entry.is-arming {
+        border-color: #406BBF;
+    }
+
+    .calculator-container .selected-policy-entry.is-arming::before {
+        width: 100%;
+        opacity: 1;
+        transition: width 0.45s linear, opacity 0.1s linear;
+    }
+
+    .calculator-container .selected-policy-entry.is-drag-ready {
+        border-color: #233071;
+        box-shadow: 0 0 0 2px rgba(35, 48, 113, 0.16);
+    }
+
+    .calculator-container .selected-policies-list.is-mobile-drag-ready .selected-policy-entry {
+        animation: wtc-mobile-policy-wiggle 0.42s ease-in-out infinite;
+        transform-origin: center;
+    }
+
+    .calculator-container .selected-policies-list.is-mobile-drag-ready .selected-policy-entry:nth-child(2n) {
+        animation-delay: 0.04s;
+    }
+
+    .calculator-container .selected-policies-list.is-mobile-drag-ready .selected-policy-entry:nth-child(3n) {
+        animation-delay: 0.08s;
+    }
+
+    .calculator-container .selected-policies-list.is-mobile-drag-ready .selected-policy-entry.is-dragging {
+        animation: none;
+    }
+
+    .calculator-container .selected-policy-drag-handle {
+        color: #406BBF;
+    }
+
     .calculator-container .policy-option-meta {
         margin-left: 0;
         flex-wrap: wrap;
@@ -1712,6 +1783,12 @@
 
     .calculator-container .info-box {
         margin-top: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .calculator-container .selected-policies-list.is-mobile-drag-ready .selected-policy-entry {
+        animation: none;
     }
 }
 

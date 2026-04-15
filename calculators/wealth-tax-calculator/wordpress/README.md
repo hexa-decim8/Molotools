@@ -58,6 +58,7 @@ What the workflow does:
 - Validates version consistency between plugin header `Version` and `WTC_VERSION`
 - Validates changelog entry for the release version
 - Regenerates `js/calculator.min.js` and `css/styles.min.css` from source assets
+- Installs production Composer dependencies for the plugin (including Dompdf for PDF export)
 - Builds `wealth-tax-calculator.zip` directly in CI
 - Commits the rebuilt zip into the repository, replacing the previous zip build
 - Commits refreshed minified assets when they changed
@@ -88,6 +89,13 @@ To verify parity without keeping changes:
 
 ```bash
 npm run minify:check
+```
+
+If you manually package the plugin outside GitHub Actions and want server-side PDF generation enabled, install plugin dependencies first:
+
+```bash
+cd calculators/wealth-tax-calculator/wordpress/wealth-tax-calculator
+composer install --no-dev --prefer-dist --optimize-autoloader
 ```
 
 ## Releasing Updates

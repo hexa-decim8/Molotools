@@ -600,11 +600,78 @@
     function extractCountySlug(bucket, stateCode) {
         var prefix = String(stateCode || '').toLowerCase() + '_county_';
         var value = String(bucket || '').toLowerCase();
-        if (value.indexOf(prefix) !== 0) {
-            return '';
+        var genericMatch;
+
+        if (value.indexOf(prefix) === 0) {
+            return value.substring(prefix.length);
         }
 
-        return value.substring(prefix.length);
+        // Accept legacy/raw county bucket formats so older analytics rows still map.
+        genericMatch = value.match(/^[a-z]{2}_county_(.+)$/);
+        if (genericMatch && genericMatch[1]) {
+            return genericMatch[1];
+        }
+
+        if (value.indexOf('wtc-county-') === 0) {
+            return value.substring('wtc-county-'.length);
+        }
+
+        return value;
+    }
+
+    function normalizeCountyLookupToken(value) {
+        return String(value || '')
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9]/g, '');
+    }
+
+    function buildCountyPathLookup(svgEl) {
+        var map = {};
+
+        if (!svgEl) {
+            return map;
+        }
+
+        svgEl.querySelectorAll('.wtc-county[id^="wtc-county-"]').forEach(function (pathEl) {
+            var countyId = String(pathEl.id || '').replace(/^wtc-county-/, '');
+            var lookupToken;
+
+            if (!countyId) {
+                return;
+            }
+
+            lookupToken = normalizeCountyLookupToken(countyId);
+            if (!lookupToken || Object.prototype.hasOwnProperty.call(map, lookupToken)) {
+                return;
+            }
+
+            map[lookupToken] = pathEl;
+        });
+
+        return map;
+    }
+
+    function resolveCountyPath(svgEl, countyPathLookup, countySlug) {
+        var path = null;
+        var lookupToken;
+
+        if (!svgEl || !countySlug) {
+            return null;
+        }
+
+        path = svgEl.querySelector('#wtc-county-' + countySlug);
+        if (path) {
+            return path;
+        }
+
+        lookupToken = normalizeCountyLookupToken(countySlug);
+        if (!lookupToken) {
+            return null;
+        }
+
+        return countyPathLookup[lookupToken] || null;
     }
 
     function clearStateCountyGeometry(hostEl, emptyEl) {
@@ -620,6 +687,7 @@
         var templateRoot = document.getElementById(templateId);
         var svgTemplate;
         var svgEl;
+        var countyPathLookup;
         var maxCount = 0;
         var points = [];
         var bubbleGroup;
@@ -638,6 +706,7 @@
 
         svgEl = svgTemplate.cloneNode(true);
         svgEl.id = 'wtc-state-map-' + String(stateCode || '').toLowerCase();
+        countyPathLookup = buildCountyPathLookup(svgEl);
 
         hostEl.innerHTML = '';
         hostEl.appendChild(svgEl);
@@ -661,7 +730,7 @@
                 return;
             }
 
-            path = svgEl.querySelector('#wtc-county-' + slug);
+            path = resolveCountyPath(svgEl, countyPathLookup, slug);
             if (!path || typeof path.getBBox !== 'function') {
                 return;
             }

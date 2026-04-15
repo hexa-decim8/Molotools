@@ -17,6 +17,13 @@
     var selectedPolicyOptions = {};
     var selectedPoliciesOrder = [];
     var dragPolicyKey = null;
+    var MOBILE_LONG_PRESS_MS = 450;
+    var mobileLongPressTimer = null;
+    var mobileLongPressEntryKey = null;
+    var mobileLongPressPointerId = null;
+    var mobileLongPressStartX = 0;
+    var mobileLongPressStartY = 0;
+    var mobileDragReady = false;
     var collapsedPolicyGroups = [];
     var currentMode = 'advanced'; // 'basic' or 'advanced'
     var TAX_RATE_MIN = 1;
@@ -1513,7 +1520,187 @@
 
     // ── Selected Policies Box ──────────────────────────────────────────────────
 
+    function isMobileDragInteractionEnabled() {
+        if (!window.matchMedia || !window.matchMedia('(max-width: 768px)').matches) {
+            return false;
+        }
+
+        if (window.matchMedia('(pointer: coarse)').matches) {
+            return true;
+        }
+
+        return !!(('ontouchstart' in window) || (navigator && navigator.maxTouchPoints > 0));
+    }
+
+    function getSelectedPolicyEntries() {
+        var selectedList = el('wtc-selectedPoliciesList');
+        if (!selectedList) {
+            return [];
+        }
+        return selectedList.querySelectorAll('.selected-policy-entry');
+    }
+
+    function setSelectedPolicyEntriesDraggable(enabled) {
+        var selectedEntries = getSelectedPolicyEntries();
+        for (var i = 0; i < selectedEntries.length; i++) {
+            selectedEntries[i].setAttribute('draggable', enabled ? 'true' : 'false');
+        }
+    }
+
+    function clearMobileArmingVisualState() {
+        var selectedEntries = getSelectedPolicyEntries();
+        for (var i = 0; i < selectedEntries.length; i++) {
+            selectedEntries[i].classList.remove('is-arming');
+        }
+    }
+
+    function cancelMobileLongPressArm() {
+        if (mobileLongPressTimer) {
+            window.clearTimeout(mobileLongPressTimer);
+            mobileLongPressTimer = null;
+        }
+
+        mobileLongPressEntryKey = null;
+        mobileLongPressPointerId = null;
+        mobileLongPressStartX = 0;
+        mobileLongPressStartY = 0;
+        clearMobileArmingVisualState();
+    }
+
+    function enterMobileDragReadyMode() {
+        if (!isMobileDragInteractionEnabled()) {
+            return;
+        }
+
+        var selectedList = el('wtc-selectedPoliciesList');
+        if (!selectedList) {
+            return;
+        }
+
+        mobileDragReady = true;
+        selectedList.classList.add('is-mobile-drag-ready');
+
+        var selectedEntries = selectedList.querySelectorAll('.selected-policy-entry');
+        for (var i = 0; i < selectedEntries.length; i++) {
+            selectedEntries[i].classList.add('is-drag-ready');
+        }
+
+        setSelectedPolicyEntriesDraggable(true);
+    }
+
+    function exitMobileDragReadyMode() {
+        mobileDragReady = false;
+        cancelMobileLongPressArm();
+
+        var selectedList = el('wtc-selectedPoliciesList');
+        if (!selectedList) {
+            return;
+        }
+
+        selectedList.classList.remove('is-mobile-drag-ready');
+
+        var selectedEntries = selectedList.querySelectorAll('.selected-policy-entry');
+        for (var i = 0; i < selectedEntries.length; i++) {
+            selectedEntries[i].classList.remove('is-drag-ready');
+            selectedEntries[i].classList.remove('is-arming');
+        }
+
+        if (isMobileDragInteractionEnabled()) {
+            setSelectedPolicyEntriesDraggable(false);
+        }
+    }
+
+    function handlePolicyEntryPointerDown(event) {
+        if (!isMobileDragInteractionEnabled()) {
+            return;
+        }
+        if (event.pointerType === 'mouse') {
+            return;
+        }
+        if (typeof event.button === 'number' && event.button !== 0) {
+            return;
+        }
+
+        var entry = event.currentTarget;
+        var entryKey = entry.getAttribute('data-key');
+        if (!entryKey) {
+            return;
+        }
+
+        exitMobileDragReadyMode();
+
+        mobileLongPressEntryKey = entryKey;
+        mobileLongPressPointerId = event.pointerId;
+        mobileLongPressStartX = event.clientX;
+        mobileLongPressStartY = event.clientY;
+
+        entry.classList.add('is-arming');
+
+        mobileLongPressTimer = window.setTimeout(function () {
+            if (mobileLongPressEntryKey !== entryKey) {
+                return;
+            }
+            entry.classList.remove('is-arming');
+            enterMobileDragReadyMode();
+        }, MOBILE_LONG_PRESS_MS);
+    }
+
+    function handlePolicyEntryPointerMove(event) {
+        if (!isMobileDragInteractionEnabled() || mobileDragReady) {
+            return;
+        }
+        if (mobileLongPressPointerId === null || event.pointerId !== mobileLongPressPointerId) {
+            return;
+        }
+
+        var deltaX = Math.abs(event.clientX - mobileLongPressStartX);
+        var deltaY = Math.abs(event.clientY - mobileLongPressStartY);
+        if (deltaX > 10 || deltaY > 10) {
+            cancelMobileLongPressArm();
+        }
+    }
+
+    function handlePolicyEntryPointerEnd(event) {
+        if (!isMobileDragInteractionEnabled()) {
+            return;
+        }
+
+        if (mobileLongPressPointerId !== null && event.pointerId !== mobileLongPressPointerId) {
+            return;
+        }
+
+        if (!mobileDragReady) {
+            cancelMobileLongPressArm();
+            return;
+        }
+
+        if (!dragPolicyKey) {
+            exitMobileDragReadyMode();
+        }
+    }
+
+    function handlePolicyEntryPointerCancel(event) {
+        if (!isMobileDragInteractionEnabled()) {
+            return;
+        }
+
+        if (mobileLongPressPointerId !== null && event.pointerId !== mobileLongPressPointerId) {
+            return;
+        }
+
+        cancelMobileLongPressArm();
+        if (!dragPolicyKey) {
+            exitMobileDragReadyMode();
+        }
+    }
+
     function handlePolicyEntryDragStart(event) {
+        if (isMobileDragInteractionEnabled() && !mobileDragReady) {
+            event.preventDefault();
+            return;
+        }
+
+        cancelMobileLongPressArm();
         dragPolicyKey = event.currentTarget.getAttribute('data-key');
         event.currentTarget.classList.add('is-dragging');
         event.dataTransfer.effectAllowed = 'move';
@@ -1546,6 +1733,11 @@
         if (srcIdx === -1 || tgtIdx === -1) {
             return;
         }
+
+        if (isMobileDragInteractionEnabled()) {
+            exitMobileDragReadyMode();
+        }
+
         selectedPoliciesOrder.splice(srcIdx, 1);
         selectedPoliciesOrder.splice(tgtIdx, 0, dragPolicyKey);
         syncSelectedPoliciesBox();
@@ -1576,6 +1768,9 @@
         event.currentTarget.classList.remove('is-dragging');
         dragPolicyKey = null;
         clearPolicyDragOverClasses();
+        if (isMobileDragInteractionEnabled()) {
+            exitMobileDragReadyMode();
+        }
     }
 
     function syncSelectedPoliciesBox() {
@@ -1596,6 +1791,9 @@
         }
 
         list.innerHTML = '';
+        list.classList.remove('is-mobile-drag-ready');
+        mobileDragReady = false;
+        cancelMobileLongPressArm();
 
         if (activeKeys.length === 0) {
             var empty = document.createElement('p');
@@ -1623,7 +1821,7 @@
 
             var entry = document.createElement('div');
             entry.className = 'selected-policy-entry';
-            entry.setAttribute('draggable', 'true');
+            entry.setAttribute('draggable', isMobileDragInteractionEnabled() ? 'false' : 'true');
             entry.setAttribute('data-key', key);
             entry.style.setProperty('--wtc-policy-color', POLICY_FILL_COLORS[policy] || '#406BBF');
 
@@ -1663,6 +1861,10 @@
             entry.addEventListener('dragleave', handlePolicyEntryDragLeave);
             entry.addEventListener('drop', handlePolicyEntryDrop);
             entry.addEventListener('dragend', handlePolicyEntryDragEnd);
+            entry.addEventListener('pointerdown', handlePolicyEntryPointerDown);
+            entry.addEventListener('pointermove', handlePolicyEntryPointerMove);
+            entry.addEventListener('pointerup', handlePolicyEntryPointerEnd);
+            entry.addEventListener('pointercancel', handlePolicyEntryPointerCancel);
 
             list.appendChild(entry);
         }
