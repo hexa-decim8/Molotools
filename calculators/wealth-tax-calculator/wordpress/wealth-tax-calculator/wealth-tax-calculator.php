@@ -42,6 +42,20 @@ define( 'WTC_ANALYTICS_GEO_OPTION', 'wtc_analytics_geo_enabled' );
 define( 'WTC_ANALYTICS_RETENTION_OPTION', 'wtc_analytics_retention_days' );
 define( 'WTC_ANALYTICS_FINGERPRINT_OPTION', 'wtc_analytics_fingerprint_enabled' );
 
+// Analytics data schema version — bump this integer whenever the structure of
+// data stored in WTC_ANALYTICS_OPTION_KEY changes so that maybe_migrate_analytics()
+// can detect and upgrade existing records.
+//
+// History:
+//   0  – Pre-versioning era (flat event_total/policy_enabled/regions arrays).
+//         build_summary() handles this via its legacy fallback path.
+//   1  – Introduced in v1.5.3: per-session final_submissions records containing
+//         policy_key, order, selected_items (with rank/amount/funding fields),
+//         tax_rate_value, tax_rate_bucket, region_bucket, county_bucket,
+//         fingerprint, and submitted_at.  No structural change from v1.5.4.
+define( 'WTC_ANALYTICS_SCHEMA_VERSION', 1 );
+define( 'WTC_ANALYTICS_SCHEMA_VERSION_OPTION', 'wtc_analytics_schema_version' );
+
 // ---------------------------------------------------------------------------
 // Self-contained GitHub update checker — no extra plugins required.
 // Hooks into WordPress's native update system.
@@ -619,6 +633,80 @@ class WTC_Policy_Analytics {
         add_action( 'wp_ajax_wtc_track_policy_event', array( $this, 'track_policy_event' ) );
         add_action( 'wp_ajax_nopriv_wtc_track_policy_event', array( $this, 'track_policy_event' ) );
         add_action( WTC_UPDATE_CRON_HOOK, array( $this, 'prune_old_analytics_data' ) );
+
+        // Run data migrations on every load (cheap option read; exits immediately when up to date).
+        add_action( 'plugins_loaded', array( $this, 'maybe_migrate_analytics' ) );
+    }
+
+    /**
+     * Ensure stored analytics data conforms to the current schema version.
+     *
+     * This is the forward-compatibility contract for the wtc_policy_analytics_daily
+     * option.  Any structural change to the persisted format must:
+     *   1. Bump WTC_ANALYTICS_SCHEMA_VERSION.
+     *   2. Add a corresponding `case` here that transforms existing records.
+     *
+     * The method is intentionally idempotent: it reads a version stamp stored
+     * alongside the data and does nothing if the stored version already matches
+     * WTC_ANALYTICS_SCHEMA_VERSION, so the cost of calling it on every request
+     * is a single get_option() call.
+     *
+     * Schema versions:
+     *   0  Flat legacy format (event_total / policy_enabled / regions arrays).
+     *       build_summary() handles reading this format via its legacy fallback
+     *       path; no structural transform is needed — only the version stamp is
+     *       written so future migrations can identify the starting point.
+     *   1  Per-session final_submissions records (v1.5.3+).  Introduced fields:
+     *       policy_key, order, selected_items (rank/amount/funding sub-fields),
+     *       tax_rate_value, tax_rate_bucket, region_bucket, county_bucket,
+     *       fingerprint, submitted_at.  build_summary() reads all fields with
+     *       isset()-guarded defaults, so any missing field yields a neutral zero
+     *       value instead of a fatal error.
+     */
+    public function maybe_migrate_analytics() {
+        $stored_version = (int) get_option( WTC_ANALYTICS_SCHEMA_VERSION_OPTION, 0 );
+
+        // Nothing to do — data is already at the current schema.
+        if ( $stored_version >= WTC_ANALYTICS_SCHEMA_VERSION ) {
+            return;
+        }
+
+        $data = get_option( WTC_ANALYTICS_OPTION_KEY, array() );
+        if ( ! is_array( $data ) ) {
+            $data = array();
+        }
+
+        // Apply each migration step in order so the data advances one version
+        // at a time, regardless of how many versions behind it starts.
+        for ( $v = $stored_version; $v < WTC_ANALYTICS_SCHEMA_VERSION; $v++ ) {
+            switch ( $v ) {
+                case 0:
+                    // Schema 0 → 1: No structural transform required.
+                    // The legacy flat format (event_total / policy_enabled /
+                    // regions / sessions) is fully readable by build_summary()
+                    // through its legacy fallback branch.  Future migrations
+                    // that need to backfill new fields (e.g. county_bucket,
+                    // fingerprint) can do so in a later case statement.
+                    // All we do here is record that the data is now classified
+                    // so subsequent migrations know their starting point.
+                    break;
+
+                // Add future migration cases here as the schema evolves:
+                // case 1:
+                //     // Schema 1 → 2: description of changes.
+                //     foreach ( $data as $date => &$day ) { ... }
+                //     unset( $day );
+                //     break;
+            }
+        }
+
+        // Persist migrated data (no-op for schema 0→1, but present so that
+        // any future case that modifies $data is automatically saved).
+        if ( ! empty( $data ) ) {
+            update_option( WTC_ANALYTICS_OPTION_KEY, $data, false );
+        }
+
+        update_option( WTC_ANALYTICS_SCHEMA_VERSION_OPTION, WTC_ANALYTICS_SCHEMA_VERSION, false );
     }
 
     public function enqueue_admin_map_assets( $hook ) {
@@ -1547,7 +1635,122 @@ class WTC_Policy_Analytics {
             );
         }
 
-        $this->render_analytics_popularity_chart( $chart_rows, $empty_text, true );
+        usort(
+            $chart_rows,
+            function ( $a, $b ) {
+                if ( $a['count'] === $b['count'] ) {
+                    return strcasecmp( $a['label'], $b['label'] );
+                }
+
+                return ( $a['count'] > $b['count'] ) ? -1 : 1;
+            }
+        );
+
+        $this->render_policy_group_allocation_line_chart( $chart_rows, $empty_text );
+    }
+
+    private function render_policy_group_allocation_line_chart( $rows, $empty_text ) {
+        $rows = is_array( $rows ) ? $rows : array();
+
+        $normalized_rows = array();
+        $max_count       = 0;
+        $total_count     = 0;
+
+        foreach ( $rows as $row ) {
+            if ( ! is_array( $row ) ) {
+                continue;
+            }
+
+            $count = isset( $row['count'] ) ? (int) $row['count'] : 0;
+            if ( $count <= 0 ) {
+                continue;
+            }
+
+            $label = isset( $row['label'] ) ? sanitize_text_field( $row['label'] ) : '';
+
+            $normalized_rows[] = array(
+                'label' => $label,
+                'count' => $count,
+            );
+            $max_count   = max( $max_count, $count );
+            $total_count += $count;
+        }
+
+        if ( empty( $normalized_rows ) || $total_count <= 0 ) {
+            echo '<p class="wtc-analytics-empty">' . esc_html( $empty_text ) . '</p>';
+            return;
+        }
+
+        $width          = 360;
+        $height         = 220;
+        $padding_left   = 24;
+        $padding_top    = 18;
+        $padding_right  = 18;
+        $padding_bottom = 44;
+        $plot_width     = $width - $padding_left - $padding_right;
+        $plot_height    = $height - $padding_top - $padding_bottom;
+        $count_range    = $max_count > 0 ? $max_count : 1;
+        $point_count    = count( $normalized_rows );
+        $chart_rows     = array();
+        $point_parts    = array();
+
+        foreach ( $normalized_rows as $index => $row ) {
+            if ( $point_count === 1 ) {
+                $x = $padding_left + ( $plot_width / 2 );
+            } else {
+                $x = $padding_left + ( ( $index / ( $point_count - 1 ) ) * $plot_width );
+            }
+
+            $y = $padding_top + $plot_height - ( ( $row['count'] / $count_range ) * $plot_height );
+
+            $short_label = $row['label'];
+            // Keep axis labels compact and rely on the legend for full category names.
+            if ( strlen( $short_label ) > 12 ) {
+                $short_label = substr( $short_label, 0, 12 ) . '...';
+            }
+
+            $chart_rows[] = array(
+                'label'       => $row['label'],
+                'short_label' => $short_label,
+                'count'       => $row['count'],
+                'percent'     => round( ( $row['count'] / $total_count ) * 100, 1 ),
+                'x'           => round( $x, 2 ),
+                'y'           => round( $y, 2 ),
+            );
+            $point_parts[] = round( $x, 2 ) . ',' . round( $y, 2 );
+        }
+
+        echo '<div class="wtc-analytics-line-chart">';
+        echo '<svg viewBox="0 0 ' . esc_attr( $width ) . ' ' . esc_attr( $height ) . '" role="img" aria-label="' . esc_attr__( 'Category allocation line chart', 'wealth-tax-calculator' ) . '">';
+
+        for ( $i = 0; $i < 4; $i++ ) {
+            $grid_y = $padding_top + ( ( $plot_height / 3 ) * $i );
+            echo '<line class="wtc-analytics-line-grid" x1="' . esc_attr( $padding_left ) . '" y1="' . esc_attr( round( $grid_y, 2 ) ) . '" x2="' . esc_attr( $width - $padding_right ) . '" y2="' . esc_attr( round( $grid_y, 2 ) ) . '"></line>';
+        }
+
+        echo '<polyline class="wtc-analytics-line-path" points="' . esc_attr( implode( ' ', $point_parts ) ) . '"></polyline>';
+
+        foreach ( $chart_rows as $chart_row ) {
+            echo '<circle class="wtc-analytics-line-point" cx="' . esc_attr( $chart_row['x'] ) . '" cy="' . esc_attr( $chart_row['y'] ) . '" r="5"></circle>';
+            echo '<text class="wtc-analytics-line-value-label" x="' . esc_attr( $chart_row['x'] ) . '" y="' . esc_attr( $chart_row['y'] - 10 ) . '" text-anchor="middle">' . esc_html( $this->format_compact_currency( $chart_row['count'] ) ) . '</text>';
+            echo '<text class="wtc-analytics-line-axis-label" x="' . esc_attr( $chart_row['x'] ) . '" y="' . esc_attr( $height - 14 ) . '" text-anchor="middle">' . esc_html( $chart_row['short_label'] ) . '</text>';
+        }
+
+        echo '</svg>';
+        echo '<div class="wtc-analytics-legend wtc-analytics-legend-scroll">';
+
+        foreach ( $chart_rows as $chart_row ) {
+            $formatted_value = $this->format_compact_currency( $chart_row['count'] );
+
+            echo '<div class="wtc-analytics-legend-item">';
+            echo '<span class="wtc-analytics-legend-swatch wtc-analytics-legend-swatch-line"></span>';
+            echo '<span class="wtc-analytics-legend-label">' . esc_html( $chart_row['label'] ) . '</span>';
+            echo '<span class="wtc-analytics-legend-value">' . esc_html( $formatted_value . ' (' . number_format_i18n( $chart_row['percent'], 1 ) . '%)' ) . '</span>';
+            echo '</div>';
+        }
+
+        echo '</div>';
+        echo '</div>';
     }
 
     private function get_us_state_code_map() {
@@ -4020,6 +4223,7 @@ class WTC_Policy_Analytics {
 
         check_admin_referer( 'wtc_reset_analytics' );
         delete_option( WTC_ANALYTICS_OPTION_KEY );
+        delete_option( WTC_ANALYTICS_SCHEMA_VERSION_OPTION );
 
         wp_redirect( add_query_arg(
             array(
@@ -4406,6 +4610,18 @@ function wtc_activate() {
     );
 
     $wtc_updater->ensure_schedule();
+
+    // On a fresh activation (no analytics data yet) stamp the current schema
+    // version so the migration loop in maybe_migrate_analytics() is skipped.
+    // On re-activation of an existing install the stored version is already
+    // correct, and update_option() is a no-op when the value hasn't changed.
+    $existing_data = get_option( WTC_ANALYTICS_OPTION_KEY );
+    if ( $existing_data === false ) {
+        // Brand-new install: no data yet, mark as current schema.
+        update_option( WTC_ANALYTICS_SCHEMA_VERSION_OPTION, WTC_ANALYTICS_SCHEMA_VERSION, false );
+    }
+    // Existing data: leave the stored version intact so maybe_migrate_analytics()
+    // can upgrade it correctly on the next page load.
 }
 register_activation_hook( __FILE__, 'wtc_activate' );
 
