@@ -1107,107 +1107,16 @@ class WTC_Policy_Analytics {
             </div>
 
             <div class="wtc-analytics-section-panel" data-wtc-section-panel="all" hidden>
-
-            <div class="card wtc-analytics-card wtc-no-collapse" style="max-width: 920px; margin-top: 20px;">
-                <h2><?php esc_html_e( 'Nationwide Visual Summary', 'wealth-tax-calculator' ); ?></h2>
-
-                <div class="wtc-analytics-stats" role="list" aria-label="<?php esc_attr_e( 'Analytics summary metrics', 'wealth-tax-calculator' ); ?>">
-                    <div class="wtc-analytics-stat" role="listitem">
-                        <span class="wtc-analytics-stat-label"><?php esc_html_e( 'Submitted Sessions', 'wealth-tax-calculator' ); ?></span>
-                        <span class="wtc-analytics-stat-value"><?php echo esc_html( number_format_i18n( $nationwide_submitted_sessions ) ); ?></span>
-                    </div>
-                    <div class="wtc-analytics-stat" role="listitem">
-                        <span class="wtc-analytics-stat-label"><?php esc_html_e( 'Unique Sessions', 'wealth-tax-calculator' ); ?></span>
-                        <span class="wtc-analytics-stat-value"><?php echo esc_html( number_format_i18n( $nationwide_unique_sessions ) ); ?></span>
-                    </div>
-                    <div class="wtc-analytics-stat" role="listitem">
-                        <span class="wtc-analytics-stat-label"><?php esc_html_e( 'Days Stored', 'wealth-tax-calculator' ); ?></span>
-                        <span class="wtc-analytics-stat-value"><?php echo esc_html( number_format_i18n( $nationwide_days_stored ) ); ?></span>
-                    </div>
-                    <div class="wtc-analytics-stat" role="listitem">
-                        <span class="wtc-analytics-stat-label"><?php esc_html_e( 'Average Tax Rate', 'wealth-tax-calculator' ); ?></span>
-                        <span class="wtc-analytics-stat-value"><?php echo esc_html( $nationwide_average_tax_rate > 0 ? number_format_i18n( $nationwide_average_tax_rate, 1 ) . '%' : '—' ); ?></span>
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="card wtc-analytics-card wtc-no-collapse" style="max-width: 920px; margin-top: 20px;">
-                <h2><?php esc_html_e( 'Charts', 'wealth-tax-calculator' ); ?></h2>
-
-                <div class="wtc-analytics-chart-panel wtc-analytics-chart-panel-three-up">
-                    <section class="wtc-analytics-chart-card">
-                        <h3 class="wtc-analytics-chart-title"><?php esc_html_e( 'Category Allocation Mix', 'wealth-tax-calculator' ); ?></h3>
-                        <?php $this->render_policy_group_allocation_chart( isset( $nationwide_summary['policy_group_rows'] ) ? $nationwide_summary['policy_group_rows'] : array(), __( 'Category allocation data appears after submissions are recorded.', 'wealth-tax-calculator' ) ); ?>
-                    </section>
-
-                    <section class="wtc-analytics-chart-card">
-                        <h3 class="wtc-analytics-chart-title"><?php esc_html_e( 'Policy Selection', 'wealth-tax-calculator' ); ?></h3>
-
-                        <div class="wtc-analytics-chart-toggle" role="tablist" aria-label="<?php esc_attr_e( 'Policy popularity mode', 'wealth-tax-calculator' ); ?>">
-                            <button type="button" class="wtc-analytics-toggle-btn is-active" data-wtc-target="enabled" role="tab" aria-selected="true"><?php esc_html_e( 'Most Selected', 'wealth-tax-calculator' ); ?></button>
-                            <button type="button" class="wtc-analytics-toggle-btn" data-wtc-target="top-rank" role="tab" aria-selected="false"><?php esc_html_e( 'Top Ranked #1', 'wealth-tax-calculator' ); ?></button>
-                        </div>
-
-                        <div class="wtc-analytics-popularity-panel is-active" data-wtc-panel="enabled">
-                            <?php $this->render_analytics_popularity_chart( isset( $nationwide_summary['enabled_rows'] ) ? $nationwide_summary['enabled_rows'] : array(), __( 'Popularity data appears after submissions are recorded.', 'wealth-tax-calculator' ) ); ?>
-                        </div>
-                        <div class="wtc-analytics-popularity-panel" data-wtc-panel="top-rank" hidden>
-                            <?php $this->render_analytics_popularity_chart( isset( $nationwide_summary['top_rank_rows'] ) ? $nationwide_summary['top_rank_rows'] : array(), __( 'Top-rank data appears after submissions are recorded.', 'wealth-tax-calculator' ) ); ?>
-                        </div>
-                    </section>
-
-                    <section class="wtc-analytics-chart-card">
-                        <h3 class="wtc-analytics-chart-title"><?php esc_html_e( 'Tax Rate Selection', 'wealth-tax-calculator' ); ?></h3>
-                        <?php $this->render_analytics_tax_line_chart( isset( $nationwide_summary['tax_rate_counts'] ) ? $nationwide_summary['tax_rate_counts'] : array(), __( 'Tax rate data appears after submissions are recorded.', 'wealth-tax-calculator' ) ); ?>
-                    </section>
-                </div>
-            </div>
-
-            <?php $this->render_us_state_map( isset( $nationwide_summary['region_counts'] ) ? $nationwide_summary['region_counts'] : array() ); ?>
-
-            <div class="card wtc-no-collapse" style="max-width: 920px; margin-top: 20px;">
-                <h2><?php esc_html_e( 'Most Selected Sub-Policies (Final Submissions)', 'wealth-tax-calculator' ); ?></h2>
-                <?php $this->render_policy_count_table( $nationwide_summary['enabled_rows'], __( 'Sessions selected', 'wealth-tax-calculator' ) ); ?>
-            </div>
-
-            <div class="card wtc-no-collapse" style="max-width: 920px; margin-top: 20px;">
-                <h2><?php esc_html_e( 'Most Prioritized (Rank #1)', 'wealth-tax-calculator' ); ?></h2>
-                <?php $this->render_policy_count_table( $nationwide_summary['top_rank_rows'], __( 'Times ranked #1', 'wealth-tax-calculator' ) ); ?>
-            </div>
-
-            <div class="card" style="max-width: 920px; margin-top: 20px;">
-                <h2><?php esc_html_e( 'Priority Rank Breakdown', 'wealth-tax-calculator' ); ?></h2>
-                <?php $this->render_rank_breakdown_table( $nationwide_summary['rank_rows'] ); ?>
-            </div>
-
-            <div class="card" style="max-width: 920px; margin-top: 20px;">
-                <h2><?php esc_html_e( 'Region Buckets', 'wealth-tax-calculator' ); ?></h2>
-                <p class="description"><?php esc_html_e( 'Includes U.S. tracked regions only. Michigan uses mi_* buckets; other U.S. states use us_* buckets (for example, us_md for Maryland).', 'wealth-tax-calculator' ); ?></p>
-                <?php $this->render_simple_count_table( $nationwide_summary['region_counts'], __( 'Region bucket', 'wealth-tax-calculator' ), __( 'Submitted sessions', 'wealth-tax-calculator' ), 100 ); ?>
-            </div>
-
-            <div class="card" style="max-width: 920px; margin-top: 20px;">
-                <h2><?php esc_html_e( 'U.S. County Buckets', 'wealth-tax-calculator' ); ?></h2>
-                <?php $this->render_county_count_table( $nationwide_summary['county_counts'] ); ?>
-            </div>
-
-            <div class="card" style="max-width: 920px; margin-top: 20px;">
-                <h2><?php esc_html_e( 'Tax Rate Selection', 'wealth-tax-calculator' ); ?></h2>
-                <?php $this->render_analytics_tax_line_chart( isset( $nationwide_summary['tax_rate_counts'] ) ? $nationwide_summary['tax_rate_counts'] : array(), __( 'Tax rate data appears after submissions are recorded.', 'wealth-tax-calculator' ) ); ?>
-            </div>
-
-            <div class="card" style="max-width: 920px; margin-top: 20px;">
-                <h2><?php esc_html_e( 'Recent Submission Detail', 'wealth-tax-calculator' ); ?></h2>
-                <?php $this->render_recent_submissions_table( $nationwide_summary['recent_submissions'] ); ?>
-            </div>
-
-            <?php if ( $this->fingerprint_enabled() ) : ?>
-            <div class="card" style="max-width: 920px; margin-top: 20px;">
-                <h2><?php esc_html_e( 'Cross-Session Changes (Same Visitor)', 'wealth-tax-calculator' ); ?></h2>
-                <?php $this->render_cross_session_changes_table( isset( $nationwide_summary['cross_session_changes'] ) ? $nationwide_summary['cross_session_changes'] : array() ); ?>
-            </div>
-            <?php endif; ?>
+                <?php
+                $this->render_nationwide_analytics_dashboard_panel(
+                    $nationwide_summary,
+                    $nationwide_submitted_sessions,
+                    $nationwide_unique_sessions,
+                    $nationwide_days_stored,
+                    $nationwide_average_tax_rate,
+                    $this->fingerprint_enabled()
+                );
+                ?>
 
             </div>
 
@@ -1323,6 +1232,107 @@ class WTC_Policy_Analytics {
         }
 
         return '$' . number_format_i18n( (int) round( $amount ) );
+    }
+
+    private function render_nationwide_analytics_dashboard_panel( $nationwide_summary, $submitted_sessions, $unique_sessions, $days_stored, $average_tax_rate, $show_fingerprint_sections ) {
+        $nationwide_summary = is_array( $nationwide_summary ) ? $nationwide_summary : array();
+        ?>
+        <div class="card wtc-analytics-card" style="max-width: 920px; margin-top: 20px;">
+            <h2><?php esc_html_e( 'Nationwide Statistics', 'wealth-tax-calculator' ); ?></h2>
+            <p class="description"><?php esc_html_e( 'This view uses the same dashboard layout as the state panels, but aggregates all U.S. submissions into one nationwide report.', 'wealth-tax-calculator' ); ?></p>
+
+            <div class="wtc-analytics-stats" role="list" aria-label="<?php esc_attr_e( 'Nationwide analytics summary metrics', 'wealth-tax-calculator' ); ?>">
+                <div class="wtc-analytics-stat" role="listitem">
+                    <span class="wtc-analytics-stat-label"><?php esc_html_e( 'Submitted Sessions', 'wealth-tax-calculator' ); ?></span>
+                    <span class="wtc-analytics-stat-value"><?php echo esc_html( number_format_i18n( (int) $submitted_sessions ) ); ?></span>
+                </div>
+                <div class="wtc-analytics-stat" role="listitem">
+                    <span class="wtc-analytics-stat-label"><?php esc_html_e( 'Unique Sessions', 'wealth-tax-calculator' ); ?></span>
+                    <span class="wtc-analytics-stat-value"><?php echo esc_html( number_format_i18n( (int) $unique_sessions ) ); ?></span>
+                </div>
+                <div class="wtc-analytics-stat" role="listitem">
+                    <span class="wtc-analytics-stat-label"><?php esc_html_e( 'Days Stored', 'wealth-tax-calculator' ); ?></span>
+                    <span class="wtc-analytics-stat-value"><?php echo esc_html( number_format_i18n( (int) $days_stored ) ); ?></span>
+                </div>
+                <div class="wtc-analytics-stat" role="listitem">
+                    <span class="wtc-analytics-stat-label"><?php esc_html_e( 'Average Tax Rate', 'wealth-tax-calculator' ); ?></span>
+                    <span class="wtc-analytics-stat-value"><?php echo esc_html( (float) $average_tax_rate > 0 ? number_format_i18n( (float) $average_tax_rate, 1 ) . '%' : '—' ); ?></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card wtc-analytics-card wtc-no-collapse" style="max-width: 920px; margin-top: 20px;">
+            <h2><?php esc_html_e( 'Charts', 'wealth-tax-calculator' ); ?></h2>
+
+            <div class="wtc-analytics-chart-panel wtc-analytics-chart-panel-three-up">
+                <section class="wtc-analytics-chart-card">
+                    <h3 class="wtc-analytics-chart-title"><?php esc_html_e( 'Category Allocation Mix', 'wealth-tax-calculator' ); ?></h3>
+                    <?php $this->render_policy_group_allocation_chart( isset( $nationwide_summary['policy_group_rows'] ) ? $nationwide_summary['policy_group_rows'] : array(), __( 'Category allocation data appears after submissions are recorded.', 'wealth-tax-calculator' ) ); ?>
+                </section>
+
+                <section class="wtc-analytics-chart-card">
+                    <h3 class="wtc-analytics-chart-title"><?php esc_html_e( 'Policy Popularity', 'wealth-tax-calculator' ); ?></h3>
+
+                    <div class="wtc-analytics-chart-toggle" role="tablist" aria-label="<?php esc_attr_e( 'Policy popularity mode', 'wealth-tax-calculator' ); ?>">
+                        <button type="button" class="wtc-analytics-toggle-btn is-active" data-wtc-target="enabled" role="tab" aria-selected="true"><?php esc_html_e( 'Most Selected', 'wealth-tax-calculator' ); ?></button>
+                        <button type="button" class="wtc-analytics-toggle-btn" data-wtc-target="top-rank" role="tab" aria-selected="false"><?php esc_html_e( 'Top Ranked #1', 'wealth-tax-calculator' ); ?></button>
+                    </div>
+
+                    <div class="wtc-analytics-popularity-panel is-active" data-wtc-panel="enabled">
+                        <?php $this->render_analytics_popularity_chart( isset( $nationwide_summary['enabled_rows'] ) ? $nationwide_summary['enabled_rows'] : array(), __( 'Popularity data appears after submissions are recorded.', 'wealth-tax-calculator' ) ); ?>
+                    </div>
+                    <div class="wtc-analytics-popularity-panel" data-wtc-panel="top-rank" hidden>
+                        <?php $this->render_analytics_popularity_chart( isset( $nationwide_summary['top_rank_rows'] ) ? $nationwide_summary['top_rank_rows'] : array(), __( 'Top-rank data appears after submissions are recorded.', 'wealth-tax-calculator' ) ); ?>
+                    </div>
+                </section>
+
+                <section class="wtc-analytics-chart-card">
+                    <h3 class="wtc-analytics-chart-title"><?php esc_html_e( 'Tax Rate Selection', 'wealth-tax-calculator' ); ?></h3>
+                    <?php $this->render_analytics_tax_line_chart( isset( $nationwide_summary['tax_rate_counts'] ) ? $nationwide_summary['tax_rate_counts'] : array(), __( 'Tax rate data appears after submissions are recorded.', 'wealth-tax-calculator' ) ); ?>
+                </section>
+            </div>
+        </div>
+
+        <?php $this->render_us_state_map( isset( $nationwide_summary['region_counts'] ) ? $nationwide_summary['region_counts'] : array() ); ?>
+
+        <div class="card wtc-analytics-card" style="max-width: 920px; margin-top: 20px;">
+            <h2><?php esc_html_e( 'Most Selected Sub-Policies (Final Submissions)', 'wealth-tax-calculator' ); ?></h2>
+            <?php $this->render_policy_count_table( isset( $nationwide_summary['enabled_rows'] ) ? $nationwide_summary['enabled_rows'] : array(), __( 'Sessions selected', 'wealth-tax-calculator' ) ); ?>
+        </div>
+
+        <div class="card wtc-analytics-card" style="max-width: 920px; margin-top: 20px;">
+            <h2><?php esc_html_e( 'Most Prioritized (Rank #1)', 'wealth-tax-calculator' ); ?></h2>
+            <?php $this->render_policy_count_table( isset( $nationwide_summary['top_rank_rows'] ) ? $nationwide_summary['top_rank_rows'] : array(), __( 'Times ranked #1', 'wealth-tax-calculator' ) ); ?>
+        </div>
+
+        <div class="card wtc-analytics-card" style="max-width: 920px; margin-top: 20px;">
+            <h2><?php esc_html_e( 'Priority Rank Breakdown', 'wealth-tax-calculator' ); ?></h2>
+            <?php $this->render_rank_breakdown_table( isset( $nationwide_summary['rank_rows'] ) ? $nationwide_summary['rank_rows'] : array() ); ?>
+        </div>
+
+        <div class="card wtc-analytics-card" style="max-width: 920px; margin-top: 20px;">
+            <h2><?php esc_html_e( 'Region Buckets', 'wealth-tax-calculator' ); ?></h2>
+            <p class="description"><?php esc_html_e( 'Includes U.S. tracked regions only. Michigan uses mi_* buckets; other U.S. states use us_* buckets (for example, us_md for Maryland).', 'wealth-tax-calculator' ); ?></p>
+            <?php $this->render_simple_count_table( isset( $nationwide_summary['region_counts'] ) ? $nationwide_summary['region_counts'] : array(), __( 'Region bucket', 'wealth-tax-calculator' ), __( 'Submitted sessions', 'wealth-tax-calculator' ), 100 ); ?>
+        </div>
+
+        <div class="card wtc-analytics-card" style="max-width: 920px; margin-top: 20px;">
+            <h2><?php esc_html_e( 'U.S. County Buckets', 'wealth-tax-calculator' ); ?></h2>
+            <?php $this->render_county_count_table( isset( $nationwide_summary['county_counts'] ) ? $nationwide_summary['county_counts'] : array() ); ?>
+        </div>
+
+        <div class="card wtc-analytics-card" style="max-width: 920px; margin-top: 20px;">
+            <h2><?php esc_html_e( 'Recent Submission Detail', 'wealth-tax-calculator' ); ?></h2>
+            <?php $this->render_recent_submissions_table( isset( $nationwide_summary['recent_submissions'] ) ? $nationwide_summary['recent_submissions'] : array() ); ?>
+        </div>
+
+        <?php if ( $show_fingerprint_sections ) : ?>
+        <div class="card wtc-analytics-card" style="max-width: 920px; margin-top: 20px;">
+            <h2><?php esc_html_e( 'Cross-Session Changes (Same Visitor)', 'wealth-tax-calculator' ); ?></h2>
+            <?php $this->render_cross_session_changes_table( isset( $nationwide_summary['cross_session_changes'] ) ? $nationwide_summary['cross_session_changes'] : array() ); ?>
+        </div>
+        <?php endif; ?>
+        <?php
     }
 
     private function render_state_analytics_dashboard_panel( $prefix, $default_state_code, $default_state_label, $default_state_summary, $default_state_counties, $description, $map_description, $include_map = true ) {
@@ -1909,7 +1919,7 @@ class WTC_Policy_Analytics {
             }
         }
         ?>
-        <div class="card wtc-us-map-card" style="max-width: 920px; margin-top: 20px;">
+        <div class="card wtc-analytics-card wtc-us-map-card" style="max-width: 920px; margin-top: 20px;">
             <h2><?php esc_html_e( 'US Visitors Map', 'wealth-tax-calculator' ); ?></h2>
             <p class="description"><?php esc_html_e( 'All 50 states are shown. Tile intensity increases with submitted sessions.', 'wealth-tax-calculator' ); ?></p>
             <?php if ( ! $has_data ) : ?>
