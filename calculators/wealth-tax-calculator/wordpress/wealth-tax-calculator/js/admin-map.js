@@ -150,6 +150,42 @@
         return number.toFixed(1) + '%';
     }
 
+    function escapeHtml(value) {
+        return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/\"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function formatCountyBucketLabel(countyBucket) {
+        var label = String(countyBucket || '').replace(/^[a-z]{2}_county_/, '').replace(/-/g, ' ');
+        if (!label) {
+            return 'Unknown county';
+        }
+
+        return label.charAt(0).toUpperCase() + label.slice(1);
+    }
+
+    function abbreviatePolicyKey(policyKey) {
+        var key = String(policyKey || '');
+        var keyParts = key.split(':');
+        var groupKey = keyParts[0] || '';
+        var optionKey = keyParts.length > 1 ? keyParts[1] : '';
+        var map = {
+            healthcare: 'HC',
+            education: 'ED',
+            business: 'TR',
+            directrelief: 'DR',
+            housing: 'HS',
+            childcare: 'CF'
+        };
+        var abbreviatedGroup = map[groupKey] || groupKey.slice(0, 3).toUpperCase();
+
+        return optionKey === '' ? abbreviatedGroup : (abbreviatedGroup + ':' + optionKey);
+    }
+
     function formatCompactCurrency(value) {
         var amount = parseFloat(value);
 
@@ -501,31 +537,61 @@
         }
 
         maxRows = maxRows || 20;
-        var html = '<table class="widefat striped"><thead><tr><th>County</th><th>Sessions</th><th>Top 3 Policies</th></tr></thead><tbody>';
-        var rowCount = 0;
+        var html = '<table class="widefat striped wtc-policy-distribution-table"><thead><tr><th>County</th><th>Sessions</th><th>Policies</th></tr></thead><tbody>';
+        var countyRows = Object.keys(countyPolicies).map(function (countyBucket) {
+            return {
+                countyBucket: countyBucket,
+                sessionCount: countyCounts && countyCounts[countyBucket] ? parseInt(countyCounts[countyBucket], 10) : 0
+            };
+        }).sort(function (a, b) {
+            return b.sessionCount - a.sessionCount;
+        });
 
-        Object.keys(countyPolicies).forEach(function(countyBucket) {
-            if (rowCount >= maxRows) {
-                return;
-            }
-
+        countyRows.slice(0, maxRows).forEach(function (countyRow) {
+            var countyBucket = countyRow.countyBucket;
             var policies = countyPolicies[countyBucket] || {};
-            var sessionCount = countyCounts && countyCounts[countyBucket] ? parseInt(countyCounts[countyBucket], 10) : 0;
-            var countyLabel = countyBucket.replace(/^[a-z]{2}_county_/, '').replace(/-/g, ' ').charAt(0).toUpperCase() + countyBucket.replace(/^[a-z]{2}_county_/, '').replace(/-/g, ' ').slice(1);
-
-            var policyLines = [];
-            var sortedPolicies = Object.keys(policies).sort(function(a, b) {
+            var countyLabel = formatCountyBucketLabel(countyBucket);
+            var sortedPolicies = Object.keys(policies).sort(function (a, b) {
                 return (policies[b] || 0) - (policies[a] || 0);
             });
+            var detailsRows = [];
+            var topPolicySummary = '';
 
             for (var i = 0; i < Math.min(3, sortedPolicies.length); i++) {
                 var policyKey = sortedPolicies[i];
                 var count = policies[policyKey] || 0;
-                policyLines.push((i + 1) + '. ' + policyKey + ' (' + count + ')');
+                var compactPolicy = abbreviatePolicyKey(policyKey);
+
+                if (i === 0) {
+                    topPolicySummary = compactPolicy + ' (' + formatNumber(count) + ')';
+                }
+
+                detailsRows.push(
+                    '<li><span class="wtc-policy-abbrev">' +
+                    escapeHtml(compactPolicy) +
+                    '</span><span class="wtc-policy-full-key">' +
+                    escapeHtml(policyKey) +
+                    '</span><span class="wtc-policy-count">' +
+                    escapeHtml(formatNumber(count)) +
+                    '</span></li>'
+                );
             }
 
-            html += '<tr><td>' + countyLabel + '</td><td>' + formatNumber(sessionCount) + '</td><td>' + policyLines.join(' | ') + '</td></tr>';
-            rowCount++;
+            if (!detailsRows.length) {
+                detailsRows.push('<li>No policy details stored.</li>');
+                topPolicySummary = 'No policy details';
+            }
+
+            html += '<tr>';
+            html += '<td>' + escapeHtml(countyLabel) + '</td>';
+            html += '<td>' + formatNumber(countyRow.sessionCount) + '</td>';
+            html += '<td>';
+            html += '<details class="wtc-policy-details">';
+            html += '<summary><span class="wtc-policy-summary">' + escapeHtml(topPolicySummary) + '</span><span class="wtc-policy-summary-meta">View top 3</span></summary>';
+            html += '<ol class="wtc-policy-details-list">' + detailsRows.join('') + '</ol>';
+            html += '</details>';
+            html += '</td>';
+            html += '</tr>';
         });
 
         html += '</tbody></table>';
@@ -823,6 +889,13 @@
         clearStateCountyGeometry(hostEl, emptyEl);
     }
 
+    /**
+     * Rule: STATE-EXCLUSIVE / MICHIGAN-ONLY
+     * Each panel instance (Michigan tab and By State tab) renders charts, statistics,
+     * county tables, and tax-rate analyses using data scoped exclusively to the
+     * selected state. No data from other states may appear in any visualisation
+     * rendered by this function or its inner updateStatePanel().
+     */
     function initStateAnalyticsPanel() {
         if (typeof window.wtcStateAnalytics === 'undefined') {
             return;
@@ -879,10 +952,12 @@
                 countyTableEl = countyTableBodyEl.closest('table');
             }
 
-            if (!titleEl || !submittedEl || !uniqueEl || !daysEl || !avgEl || !policyGroupEl || !policyEnabledEl || !policyTopRankEl || !taxChartEl || !countyBubblesEl || !countyEmptyEl || !countyGeometryEl || !countyGeometryEmptyEl || !countyTableEl || !countyTableBodyEl || !countyTableEmptyEl || !tileMapEl || !policyDistContainer || !taxAnalysisContainer) {
+            if (!titleEl || !submittedEl || !uniqueEl || !daysEl || !avgEl || !policyGroupEl || !policyEnabledEl || !policyTopRankEl || !taxChartEl || !countyBubblesEl || !countyEmptyEl || !countyGeometryEl || !countyGeometryEmptyEl || !countyTableEl || !countyTableBodyEl || !countyTableEmptyEl || !policyDistContainer || !taxAnalysisContainer) {
                 return;
             }
 
+            // Rule: STATE-EXCLUSIVE — all data rendered below (stats, charts, tables)
+            // reflects exclusively the selected state's submissions.
             function updateStatePanel(stateCode) {
                 var normalizedCode = String(stateCode || '').toUpperCase();
                 var stateEntry = states[normalizedCode] || states[getFirstStateWithData(config.defaultState)];
@@ -949,14 +1024,16 @@
 
                 renderCountyPolicyDistribution(policyDistContainer, policyData, countyCounts, 20);
                 renderCountyTaxRateAnalysis(taxAnalysisContainer, taxRateSummary, 20);
-                buildStateTileMap(tileMapEl, normalizedCode, states, config.interactive);
+                if (tileMapEl) {
+                    buildStateTileMap(tileMapEl, normalizedCode, states, config.interactive);
+                }
 
                 if (selectorEl) {
                     selectorEl.value = normalizedCode;
                 }
             }
 
-            if (config.interactive) {
+            if (config.interactive && tileMapEl) {
                 tileMapEl.addEventListener('click', function (event) {
                     var tile = event.target.closest ? event.target.closest('.wtc-state-tile[data-state-code]') : null;
                     if (!tile || tile.classList.contains('is-empty')) {
@@ -1362,93 +1439,187 @@
         });
     }
 
+    /**
+     * Rule: NATIONWIDE
+     * Renders the US state heat map using cumulative data from all 50 US states,
+     * including Michigan. Every state's count in wtcUnitedStatesMap.states reflects
+     * all US-originated submissions for that state — no state is excluded.
+     */
     function initUnitedStatesMap() {
-        if (typeof window.wtcUnitedStatesMap === 'undefined') {
+        var mapEl = document.getElementById('wtc-us-state-map');
+        if (!mapEl) {
             return;
         }
 
-        var mapConfig = window.wtcUnitedStatesMap;
-        var states = mapConfig.states || {};
-        var svgEl = document.getElementById('wtc-us-map');
-        var tooltip = document.getElementById('wtc-us-map-tooltip');
-        var wrapEl = svgEl ? svgEl.closest('.wtc-us-map-wrap') : null;
-        var maxCount = 0;
-
-        if (!svgEl || !tooltip || !wrapEl) {
+        var stateAnalyticsPayload = typeof window.wtcStateAnalytics !== 'undefined' ? window.wtcStateAnalytics : null;
+        if (!stateAnalyticsPayload || !stateAnalyticsPayload.states) {
             return;
         }
 
-        Object.keys(states).forEach(function (code) {
-            var normalizedCode = String(code).toUpperCase();
-            var count = parseInt(states[code], 10);
-            var stateEl;
-            var level;
+        buildStateTileMap(mapEl, '', stateAnalyticsPayload.states, false);
+    }
 
-            if (!count || count <= 0) return;
-            if (!Object.prototype.hasOwnProperty.call(WTC_US_STATES, normalizedCode)) return;
+    function initStateSearchCombobox() {
+        var wrap      = document.querySelector('.wtc-state-combobox-wrap');
+        var input     = document.getElementById('wtc-state-search-input');
+        var list      = document.getElementById('wtc-state-search-list');
+        var hidden    = document.getElementById('wtc-state-analytics-select');
+        var stateBtn  = document.querySelector('[data-wtc-section-target="state"]');
 
-            stateEl = svgEl.querySelector('#wtc-us-state-' + normalizedCode.toLowerCase());
-            if (!stateEl) return;
-
-            if (count > maxCount) {
-                maxCount = count;
-            }
-
-            stateEl.setAttribute('data-state-name', WTC_US_STATES[normalizedCode]);
-            stateEl.setAttribute('data-count', String(count));
-            stateEl.setAttribute('tabindex', '0');
-            stateEl.setAttribute('role', 'img');
-            stateEl.setAttribute('aria-label', getSessionLabel(WTC_US_STATES[normalizedCode], count));
-            stateEl.classList.add('has-data');
-        });
-
-        if (!maxCount) {
+        if (!wrap || !input || !list || !hidden) {
             return;
         }
 
-        Object.keys(states).forEach(function (code) {
-            var normalizedCode = String(code).toUpperCase();
-            var count = parseInt(states[code], 10);
-            var stateEl;
-            var level;
+        var allOptions = Array.prototype.slice.call(list.querySelectorAll('.wtc-state-search-option'));
+        var focusedIndex = -1;
 
-            if (!count || count <= 0) return;
+        function openList() {
+            list.hidden = false;
+            wrap.setAttribute('aria-expanded', 'true');
+            wrap.classList.add('is-open');
+        }
 
-            stateEl = svgEl.querySelector('#wtc-us-state-' + normalizedCode.toLowerCase());
-            if (!stateEl || !stateEl.classList.contains('has-data')) return;
+        function closeList() {
+            list.hidden = true;
+            wrap.setAttribute('aria-expanded', 'false');
+            wrap.classList.remove('is-open');
+            focusedIndex = -1;
+            clearFocus();
+        }
 
-            level = maxCount > 1 ? Math.ceil((count / maxCount) * 5) : 5;
-            level = Math.max(1, Math.min(5, level));
-            stateEl.classList.add('wtc-us-level-' + level);
-        });
+        function clearFocus() {
+            allOptions.forEach(function (opt) {
+                opt.classList.remove('is-focused');
+            });
+        }
 
-        svgEl.addEventListener('mousemove', function (event) {
-            var target = event.target.closest ? event.target.closest('.wtc-us-state.has-data') : null;
-            if (!target) {
-                hideTooltip(tooltip);
-                return;
+        function getVisibleOptions() {
+            return allOptions.filter(function (opt) { return !opt.hidden; });
+        }
+
+        function filterOptions(query) {
+            var q = query.trim().toLowerCase();
+            var hasMatch = false;
+
+            allOptions.forEach(function (opt) {
+                var label = (opt.getAttribute('data-state-label') || '').toLowerCase();
+                var code  = (opt.getAttribute('data-state-code') || '').toLowerCase();
+                var match = !q || label.indexOf(q) !== -1 || code.indexOf(q) !== -1;
+                opt.hidden = !match;
+                if (match) { hasMatch = true; }
+            });
+
+            // Remove stale no-results message if present
+            var noResults = list.querySelector('.wtc-state-search-no-results');
+            if (!hasMatch) {
+                if (!noResults) {
+                    noResults = document.createElement('li');
+                    noResults.className = 'wtc-state-search-no-results';
+                    noResults.textContent = 'No states found';
+                    list.appendChild(noResults);
+                }
+            } else if (noResults) {
+                noResults.parentNode.removeChild(noResults);
+            }
+        }
+
+        function selectState(stateCode, stateLabel) {
+            hidden.value = stateCode;
+            input.value  = stateLabel + ' (' + stateCode + ')';
+
+            // Mark selected in list
+            allOptions.forEach(function (opt) {
+                opt.setAttribute('aria-selected', opt.getAttribute('data-state-code') === stateCode ? 'true' : 'false');
+            });
+
+            // Update PDF form's hidden state input (same bridge as before)
+            var changeEvent = document.createEvent('Event');
+            changeEvent.initEvent('change', true, true);
+            hidden.dispatchEvent(changeEvent);
+
+            // Activate the "By State" panel via the hidden tab button
+            wrap.classList.add('is-active');
+            wrap.classList.remove('is-open');
+            input.blur();
+
+            if (stateBtn) {
+                stateBtn.click();
             }
 
-            showTooltip(tooltip, wrapEl, event.clientX, event.clientY, target.getAttribute('data-state-name'), parseInt(target.getAttribute('data-count'), 10));
+            closeList();
+        }
+
+        // Deactivate combobox styling when other tabs are clicked
+        var otherTabBtns = document.querySelectorAll('[data-wtc-section-target="all"], [data-wtc-section-target="michigan"]');
+        otherTabBtns.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                wrap.classList.remove('is-active');
+            });
         });
 
-        svgEl.addEventListener('mouseleave', function () {
-            hideTooltip(tooltip);
+        // Open on focus / input
+        input.addEventListener('focus', function () {
+            filterOptions(input.value);
+            openList();
         });
 
-        svgEl.addEventListener('focusin', function (event) {
-            var target = event.target.closest ? event.target.closest('.wtc-us-state.has-data') : null;
-            var rect;
-            if (!target) {
-                return;
+        input.addEventListener('input', function () {
+            filterOptions(input.value);
+            openList();
+            focusedIndex = -1;
+            clearFocus();
+        });
+
+        // Keyboard navigation
+        input.addEventListener('keydown', function (e) {
+            var visible = getVisibleOptions();
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (list.hidden) { openList(); }
+                focusedIndex = Math.min(focusedIndex + 1, visible.length - 1);
+                clearFocus();
+                if (visible[focusedIndex]) {
+                    visible[focusedIndex].classList.add('is-focused');
+                    visible[focusedIndex].scrollIntoView({ block: 'nearest' });
+                }
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                focusedIndex = Math.max(focusedIndex - 1, 0);
+                clearFocus();
+                if (visible[focusedIndex]) {
+                    visible[focusedIndex].classList.add('is-focused');
+                    visible[focusedIndex].scrollIntoView({ block: 'nearest' });
+                }
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (focusedIndex >= 0 && visible[focusedIndex]) {
+                    var opt = visible[focusedIndex];
+                    selectState(opt.getAttribute('data-state-code'), opt.getAttribute('data-state-label'));
+                }
+            } else if (e.key === 'Escape') {
+                closeList();
+                input.blur();
             }
-
-            rect = target.getBoundingClientRect();
-            showTooltip(tooltip, wrapEl, (rect.left + rect.right) / 2, rect.top, target.getAttribute('data-state-name'), parseInt(target.getAttribute('data-count'), 10));
         });
 
-        svgEl.addEventListener('focusout', function () {
-            hideTooltip(tooltip);
+        // Click on option
+        list.addEventListener('click', function (e) {
+            var opt = e.target;
+            while (opt && opt !== list) {
+                if (opt.classList.contains('wtc-state-search-option')) {
+                    selectState(opt.getAttribute('data-state-code'), opt.getAttribute('data-state-label'));
+                    return;
+                }
+                opt = opt.parentNode;
+            }
+        });
+
+        // Close when clicking outside
+        document.addEventListener('mousedown', function (e) {
+            if (!wrap.contains(e.target)) {
+                closeList();
+            }
         });
     }
 
@@ -1460,6 +1631,7 @@
         initCollapsibleAnalyticsSections();
         initUnitedStatesMap();
         initMichiganMap();
+        initStateSearchCombobox();
     }
 
     if (document.readyState === 'loading') {

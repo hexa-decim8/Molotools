@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "minify": "node scripts/minify-assets.mjs",
-    "minify:check": "node scripts/minify-assets.mjs --check"
+    "minify:check": "node scripts/minify-assets.mjs --check",
+    "generate-zip-lookup": "node scripts/generate-zip-county-lookup.js"
   },
   "devDependencies": {
     "clean-css-cli": "5.6.3",
