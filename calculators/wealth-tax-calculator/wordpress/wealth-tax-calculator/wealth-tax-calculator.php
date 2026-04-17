@@ -55,6 +55,9 @@ define( 'WTC_ANALYTICS_FINGERPRINT_OPTION', 'wtc_analytics_fingerprint_enabled' 
 //         fingerprint, and submitted_at.  No structural change from v1.5.4.
 define( 'WTC_ANALYTICS_SCHEMA_VERSION', 1 );
 define( 'WTC_ANALYTICS_SCHEMA_VERSION_OPTION', 'wtc_analytics_schema_version' );
+define( 'WTC_COUNTY_BACKFILL_STATE_OPTION', 'wtc_county_backfill_state' );
+define( 'WTC_COUNTY_BACKFILL_LOCK_KEY', 'wtc_county_backfill_lock' );
+define( 'WTC_COUNTY_BACKFILL_BATCH_SIZE', 100 );
 
 // ---------------------------------------------------------------------------
 // Self-contained GitHub update checker — no extra plugins required.
@@ -627,11 +630,13 @@ class WTC_Policy_Analytics {
         add_action( 'admin_init', array( $this, 'register_settings' ) );
         add_action( 'admin_menu', array( $this, 'add_analytics_submenu' ) );
         add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_map_assets' ) );
+        add_action( 'admin_post_wtc_start_county_backfill', array( $this, 'handle_start_county_backfill' ) );
         add_action( 'admin_post_wtc_reset_analytics', array( $this, 'handle_reset_analytics' ) );
         add_action( 'admin_post_wtc_export_analytics_csv', array( $this, 'handle_export_analytics_csv' ) );
         add_action( 'admin_post_wtc_export_analytics_pdf', array( $this, 'handle_export_analytics_pdf' ) );
         add_action( 'wp_ajax_wtc_track_policy_event', array( $this, 'track_policy_event' ) );
         add_action( 'wp_ajax_nopriv_wtc_track_policy_event', array( $this, 'track_policy_event' ) );
+        add_action( WTC_UPDATE_CRON_HOOK, array( $this, 'run_scheduled_county_backfill' ) );
         add_action( WTC_UPDATE_CRON_HOOK, array( $this, 'prune_old_analytics_data' ) );
 
         // Run data migrations on every load (cheap option read; exits immediately when up to date).
@@ -916,6 +921,236 @@ class WTC_Policy_Analytics {
         return max( 7, min( 365, $days ) );
     }
 
+    private function get_county_backfill_default_state() {
+        return array(
+            'status' => 'idle',
+            'day_keys' => array(),
+            'day_index' => 0,
+            'session_index' => 0,
+            'processed' => 0,
+            'updated' => 0,
+            'started_at' => 0,
+            'last_run_at' => 0,
+            'completed_at' => 0,
+        );
+    }
+
+    private function get_county_backfill_state() {
+        $state = get_option( WTC_COUNTY_BACKFILL_STATE_OPTION, array() );
+        if ( ! is_array( $state ) ) {
+            $state = array();
+        }
+
+        $defaults = $this->get_county_backfill_default_state();
+        $state    = wp_parse_args( $state, $defaults );
+
+        $state['status'] = sanitize_key( $state['status'] );
+        if ( ! in_array( $state['status'], array( 'idle', 'running', 'completed' ), true ) ) {
+            $state['status'] = 'idle';
+        }
+
+        $state['day_keys']      = is_array( $state['day_keys'] ) ? array_values( $state['day_keys'] ) : array();
+        $state['day_index']     = max( 0, (int) $state['day_index'] );
+        $state['session_index'] = max( 0, (int) $state['session_index'] );
+        $state['processed']     = max( 0, (int) $state['processed'] );
+        $state['updated']       = max( 0, (int) $state['updated'] );
+        $state['started_at']    = max( 0, (int) $state['started_at'] );
+        $state['last_run_at']   = max( 0, (int) $state['last_run_at'] );
+        $state['completed_at']  = max( 0, (int) $state['completed_at'] );
+
+        return $state;
+    }
+
+    private function save_county_backfill_state( $state ) {
+        if ( ! is_array( $state ) ) {
+            return;
+        }
+
+        update_option( WTC_COUNTY_BACKFILL_STATE_OPTION, $state, false );
+    }
+
+    private function initialize_county_backfill_state( $analytics_data ) {
+        $state = $this->get_county_backfill_default_state();
+        $state['status']     = 'running';
+        $state['started_at'] = time();
+        $state['last_run_at'] = time();
+
+        if ( is_array( $analytics_data ) ) {
+            $day_keys = array_keys( $analytics_data );
+            sort( $day_keys, SORT_STRING );
+            $state['day_keys'] = array_values( $day_keys );
+        }
+
+        return $state;
+    }
+
+    private function is_unresolved_county_bucket( $county_bucket ) {
+        $county_bucket = sanitize_text_field( (string) $county_bucket );
+        if ( $county_bucket === '' ) {
+            return true;
+        }
+
+        return preg_match( '/_county_unknown$/', $county_bucket ) === 1;
+    }
+
+    private function resolve_submission_county_bucket( $submission ) {
+        if ( ! is_array( $submission ) ) {
+            return '';
+        }
+
+        $region_bucket = isset( $submission['region_bucket'] ) ? sanitize_text_field( $submission['region_bucket'] ) : '';
+        $county_bucket = isset( $submission['county_bucket'] ) ? sanitize_text_field( $submission['county_bucket'] ) : '';
+        $state_code    = $this->get_state_code_from_region_bucket( $region_bucket );
+        $city_slug     = ( $state_code === 'MI' && strncmp( $region_bucket, 'mi_', 3 ) === 0 ) ? substr( $region_bucket, 3 ) : '';
+
+        return $this->normalize_state_county_bucket( $county_bucket, $state_code, $city_slug );
+    }
+
+    private function run_county_backfill_batch( $batch_size = WTC_COUNTY_BACKFILL_BATCH_SIZE ) {
+        $batch_size = max( 1, (int) $batch_size );
+
+        $state = $this->get_county_backfill_state();
+        if ( $state['status'] !== 'running' ) {
+            return false;
+        }
+
+        $data = get_option( WTC_ANALYTICS_OPTION_KEY, array() );
+        if ( ! is_array( $data ) ) {
+            $data = array();
+        }
+
+        if ( empty( $state['day_keys'] ) ) {
+            $state['day_keys'] = array_keys( $data );
+            sort( $state['day_keys'], SORT_STRING );
+        }
+
+        $processed_in_batch = 0;
+        $updated_in_batch   = 0;
+        $data_changed       = false;
+
+        while ( $processed_in_batch < $batch_size && $state['day_index'] < count( $state['day_keys'] ) ) {
+            $day_key = $state['day_keys'][ $state['day_index'] ];
+
+            if ( ! isset( $data[ $day_key ] ) || ! is_array( $data[ $day_key ] ) ) {
+                $state['day_index'] += 1;
+                $state['session_index'] = 0;
+                continue;
+            }
+
+            $day =& $data[ $day_key ];
+            if ( ! isset( $day['final_submissions'] ) || ! is_array( $day['final_submissions'] ) ) {
+                $state['day_index'] += 1;
+                $state['session_index'] = 0;
+                unset( $day );
+                continue;
+            }
+
+            $session_keys = array_keys( $day['final_submissions'] );
+            if ( $state['session_index'] >= count( $session_keys ) ) {
+                $state['day_index'] += 1;
+                $state['session_index'] = 0;
+                unset( $day );
+                continue;
+            }
+
+            $session_key = $session_keys[ $state['session_index'] ];
+            $submission  = isset( $day['final_submissions'][ $session_key ] ) && is_array( $day['final_submissions'][ $session_key ] )
+                ? $day['final_submissions'][ $session_key ]
+                : array();
+
+            $old_bucket = isset( $submission['county_bucket'] ) ? sanitize_text_field( $submission['county_bucket'] ) : '';
+
+            if ( $this->is_unresolved_county_bucket( $old_bucket ) ) {
+                $new_bucket = $this->resolve_submission_county_bucket( $submission );
+                if ( $new_bucket !== '' && $new_bucket !== $old_bucket ) {
+                    $day['final_submissions'][ $session_key ]['county_bucket'] = $new_bucket;
+                    $updated_in_batch += 1;
+                    $data_changed = true;
+
+                    if ( ! isset( $day['counties'] ) || ! is_array( $day['counties'] ) ) {
+                        $day['counties'] = array();
+                    }
+
+                    if ( $old_bucket !== '' && isset( $day['counties'][ $old_bucket ] ) ) {
+                        $day['counties'][ $old_bucket ] = max( 0, (int) $day['counties'][ $old_bucket ] - 1 );
+                        if ( $day['counties'][ $old_bucket ] <= 0 ) {
+                            unset( $day['counties'][ $old_bucket ] );
+                        }
+                    }
+
+                    if ( ! isset( $day['counties'][ $new_bucket ] ) ) {
+                        $day['counties'][ $new_bucket ] = 0;
+                    }
+                    $day['counties'][ $new_bucket ] += 1;
+                }
+            }
+
+            $processed_in_batch += 1;
+            $state['session_index'] += 1;
+            unset( $day );
+        }
+
+        $state['processed'] += $processed_in_batch;
+        $state['updated'] += $updated_in_batch;
+        $state['last_run_at'] = time();
+
+        if ( $state['day_index'] >= count( $state['day_keys'] ) ) {
+            $state['status'] = 'completed';
+            $state['completed_at'] = time();
+        }
+
+        if ( $data_changed ) {
+            update_option( WTC_ANALYTICS_OPTION_KEY, $data, false );
+            update_option( 'wtc_analytics_version', (int) get_option( 'wtc_analytics_version', 0 ) + 1, false );
+        }
+
+        $this->save_county_backfill_state( $state );
+
+        return true;
+    }
+
+    public function run_scheduled_county_backfill() {
+        $state = $this->get_county_backfill_state();
+        if ( $state['status'] !== 'running' ) {
+            return;
+        }
+
+        if ( get_transient( WTC_COUNTY_BACKFILL_LOCK_KEY ) ) {
+            return;
+        }
+
+        set_transient( WTC_COUNTY_BACKFILL_LOCK_KEY, 1, WTC_AUTO_INSTALL_LOCK_TTL );
+        $this->run_county_backfill_batch();
+        delete_transient( WTC_COUNTY_BACKFILL_LOCK_KEY );
+    }
+
+    public function handle_start_county_backfill() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( 'Unauthorized access' );
+        }
+
+        check_admin_referer( 'wtc_start_county_backfill' );
+
+        $analytics_data = get_option( WTC_ANALYTICS_OPTION_KEY, array() );
+        if ( ! is_array( $analytics_data ) ) {
+            $analytics_data = array();
+        }
+
+        $state = $this->initialize_county_backfill_state( $analytics_data );
+        $this->save_county_backfill_state( $state );
+
+        $this->run_scheduled_county_backfill();
+
+        wp_redirect( add_query_arg(
+            array(
+                'page' => 'wealth-tax-calculator-analytics',
+                'county_backfill_started' => '1',
+            ),
+            admin_url( 'options-general.php' )
+        ) );
+        exit;
+    }
+
     public function get_frontend_popularity_summary() {
         if ( ! $this->is_enabled() ) {
             return array(
@@ -978,6 +1213,10 @@ class WTC_Policy_Analytics {
             return;
         }
 
+        $reset_done            = isset( $_GET['reset'] ) && $_GET['reset'] === '1';
+        $county_backfill_start = isset( $_GET['county_backfill_started'] ) && $_GET['county_backfill_started'] === '1';
+        $county_backfill_state = $this->get_county_backfill_state();
+
         $analytics_data = get_option( WTC_ANALYTICS_OPTION_KEY, array() );
         if ( ! is_array( $analytics_data ) ) {
             $analytics_data = array();
@@ -1012,6 +1251,18 @@ class WTC_Policy_Analytics {
         ?>
         <div class="wrap">
             <h1><?php esc_html_e( 'Wealth Tax Calculator Analytics', 'wealth-tax-calculator' ); ?></h1>
+
+            <?php if ( $reset_done ) : ?>
+                <div class="notice notice-success is-dismissible">
+                    <p><?php esc_html_e( 'Analytics data reset.', 'wealth-tax-calculator' ); ?></p>
+                </div>
+            <?php endif; ?>
+
+            <?php if ( $county_backfill_start ) : ?>
+                <div class="notice notice-success is-dismissible">
+                    <p><?php esc_html_e( 'County backfill started. It will continue in scheduled batches.', 'wealth-tax-calculator' ); ?></p>
+                </div>
+            <?php endif; ?>
 
             <div class="card" style="max-width: 920px; margin-top: 20px;">
                 <h2><?php esc_html_e( 'Tracking Settings', 'wealth-tax-calculator' ); ?></h2>
@@ -1164,6 +1415,27 @@ class WTC_Policy_Analytics {
 
             <div class="card" style="max-width: 920px; margin-top: 20px;">
                 <h2><?php esc_html_e( 'Data Management', 'wealth-tax-calculator' ); ?></h2>
+                <p class="description">
+                    <?php
+                    $county_backfill_status = isset( $county_backfill_state['status'] ) ? $county_backfill_state['status'] : 'idle';
+                    $county_backfill_label  = $county_backfill_status === 'running'
+                        ? __( 'Running', 'wealth-tax-calculator' )
+                        : ( $county_backfill_status === 'completed' ? __( 'Completed', 'wealth-tax-calculator' ) : __( 'Idle', 'wealth-tax-calculator' ) );
+
+                    printf(
+                        /* translators: 1: current status label, 2: processed count, 3: updated count */
+                        esc_html__( 'County backfill status: %1$s. Processed: %2$s. Updated: %3$s.', 'wealth-tax-calculator' ),
+                        esc_html( $county_backfill_label ),
+                        esc_html( number_format_i18n( isset( $county_backfill_state['processed'] ) ? (int) $county_backfill_state['processed'] : 0 ) ),
+                        esc_html( number_format_i18n( isset( $county_backfill_state['updated'] ) ? (int) $county_backfill_state['updated'] : 0 ) )
+                    );
+                    ?>
+                </p>
+                <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-bottom: 12px;">
+                    <input type="hidden" name="action" value="wtc_start_county_backfill" />
+                    <?php wp_nonce_field( 'wtc_start_county_backfill' ); ?>
+                    <?php submit_button( __( 'Reprocess Unresolved County Buckets', 'wealth-tax-calculator' ), 'secondary', 'submit', false ); ?>
+                </form>
                 <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-bottom: 12px;">
                     <input type="hidden" name="action" value="wtc_export_analytics_csv" />
                     <?php wp_nonce_field( 'wtc_export_analytics_csv' ); ?>
@@ -4234,6 +4506,8 @@ class WTC_Policy_Analytics {
         check_admin_referer( 'wtc_reset_analytics' );
         delete_option( WTC_ANALYTICS_OPTION_KEY );
         delete_option( WTC_ANALYTICS_SCHEMA_VERSION_OPTION );
+        delete_option( WTC_COUNTY_BACKFILL_STATE_OPTION );
+        delete_transient( WTC_COUNTY_BACKFILL_LOCK_KEY );
 
         wp_redirect( add_query_arg(
             array(
@@ -4641,6 +4915,7 @@ register_activation_hook( __FILE__, 'wtc_activate' );
 function wtc_deactivate() {
     wp_clear_scheduled_hook( WTC_UPDATE_CRON_HOOK );
     delete_transient( 'wtc_updater_install_lock' );
+    delete_transient( WTC_COUNTY_BACKFILL_LOCK_KEY );
 }
 register_deactivation_hook( __FILE__, 'wtc_deactivate' );
 
