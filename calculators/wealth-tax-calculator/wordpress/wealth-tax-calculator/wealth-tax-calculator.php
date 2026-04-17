@@ -635,7 +635,6 @@ class WTC_Policy_Analytics {
         add_action( 'admin_post_wtc_export_analytics_csv', array( $this, 'handle_export_analytics_csv' ) );
         add_action( 'admin_post_wtc_export_analytics_pdf', array( $this, 'handle_export_analytics_pdf' ) );
         add_action( 'wp_ajax_wtc_track_policy_event', array( $this, 'track_policy_event' ) );
-        add_action( 'wp_ajax_nopriv_wtc_track_policy_event', array( $this, 'track_policy_event' ) );
         add_action( WTC_UPDATE_CRON_HOOK, array( $this, 'run_scheduled_county_backfill' ) );
         add_action( WTC_UPDATE_CRON_HOOK, array( $this, 'prune_old_analytics_data' ) );
 
@@ -4520,6 +4519,10 @@ class WTC_Policy_Analytics {
     }
 
     public function track_policy_event() {
+        if ( ! is_user_logged_in() ) {
+            wp_send_json_error( array( 'message' => 'authentication-required' ), 403 );
+        }
+
         if ( ! $this->is_enabled() ) {
             wp_send_json_error( array( 'message' => 'analytics-disabled' ), 403 );
         }
@@ -5023,6 +5026,16 @@ class Billionaire_Wealth_Tax_Calculator {
             $frontend_popularity = $wtc_policy_analytics->get_frontend_popularity_summary();
         }
 
+        $analytics_enabled = get_option( WTC_ANALYTICS_ENABLED_OPTION, '0' ) === '1' && is_user_logged_in();
+        $analytics_config  = array(
+            'enabled'  => $analytics_enabled,
+            'endpoint' => admin_url( 'admin-ajax.php' ),
+        );
+
+        if ( $analytics_enabled ) {
+            $analytics_config['nonce'] = wp_create_nonce( 'wtc_track_policy_event' );
+        }
+
         wp_localize_script(
             'wealth-tax-calculator-script',
             'wealthTaxConfig',
@@ -5031,11 +5044,7 @@ class Billionaire_Wealth_Tax_Calculator {
                 'comparisons'       => $this->get_comparisons_data(),
                 'version'           => WTC_VERSION,
                 'popularity'        => $frontend_popularity,
-                'analytics'         => array(
-                    'enabled'  => get_option( WTC_ANALYTICS_ENABLED_OPTION, '0' ) === '1',
-                    'endpoint' => admin_url( 'admin-ajax.php' ),
-                    'nonce'    => wp_create_nonce( 'wtc_track_policy_event' ),
-                ),
+                'analytics'         => $analytics_config,
             )
         );
     }
