@@ -35,6 +35,12 @@ delete_option( 'wtc_analytics_enabled' );
 delete_option( 'wtc_analytics_geo_enabled' );
 delete_option( 'wtc_analytics_retention_days' );
 delete_option( 'wtc_analytics_fingerprint_enabled' );
+delete_option( 'wtc_analytics_schema_version' );
+delete_option( 'wtc_analytics_version' );
+delete_option( 'wtc_county_backfill_state' );
+
+// Drop the submissions table.
+$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}wtc_submissions" );
 
 // Delete updater options
 delete_option( 'wtc_auto_update_enabled' );
