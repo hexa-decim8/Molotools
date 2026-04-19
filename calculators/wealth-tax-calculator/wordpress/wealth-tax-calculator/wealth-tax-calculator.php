@@ -642,6 +642,7 @@ class WTC_Policy_Analytics {
         add_action( 'admin_post_wtc_start_county_backfill', array( $this, 'handle_start_county_backfill' ) );
         add_action( 'admin_post_wtc_reset_analytics', array( $this, 'handle_reset_analytics' ) );
         add_action( 'admin_post_wtc_export_analytics_csv', array( $this, 'handle_export_analytics_csv' ) );
+        add_action( 'admin_post_wtc_import_analytics_csv', array( $this, 'handle_import_analytics_csv' ) );
         add_action( 'admin_post_wtc_export_analytics_pdf', array( $this, 'handle_export_analytics_pdf' ) );
         add_action( 'wp_ajax_wtc_track_policy_event', array( $this, 'track_policy_event' ) );
         add_action( 'wp_ajax_nopriv_wtc_track_policy_event', array( $this, 'track_policy_event' ) );
@@ -1478,6 +1479,10 @@ class WTC_Policy_Analytics {
 
         $reset_done            = isset( $_GET['reset'] ) && $_GET['reset'] === '1';
         $county_backfill_start = isset( $_GET['county_backfill_started'] ) && $_GET['county_backfill_started'] === '1';
+        $import_done           = isset( $_GET['imported'] ) && $_GET['imported'] === '1';
+        $import_error          = isset( $_GET['import_error'] ) ? sanitize_key( wp_unslash( $_GET['import_error'] ) ) : '';
+        $import_rows           = isset( $_GET['import_rows'] ) ? max( 0, (int) $_GET['import_rows'] ) : 0;
+        $import_skipped        = isset( $_GET['import_skipped'] ) ? max( 0, (int) $_GET['import_skipped'] ) : 0;
         $county_backfill_state = $this->get_county_backfill_state();
 
         $analytics_data = $this->get_merged_analytics_data();
@@ -1521,6 +1526,39 @@ class WTC_Policy_Analytics {
             <?php if ( $county_backfill_start ) : ?>
                 <div class="notice notice-success is-dismissible">
                     <p><?php esc_html_e( 'County backfill started. It will continue in scheduled batches.', 'wealth-tax-calculator' ); ?></p>
+                </div>
+            <?php endif; ?>
+
+            <?php if ( $import_done ) : ?>
+                <div class="notice notice-success is-dismissible">
+                    <p>
+                        <?php
+                        printf(
+                            /* translators: 1: imported row count, 2: skipped row count */
+                            esc_html__( 'Analytics CSV import completed. Imported: %1$s. Skipped: %2$s.', 'wealth-tax-calculator' ),
+                            esc_html( number_format_i18n( $import_rows ) ),
+                            esc_html( number_format_i18n( $import_skipped ) )
+                        );
+                        ?>
+                    </p>
+                </div>
+            <?php elseif ( $import_error !== '' ) : ?>
+                <div class="notice notice-error is-dismissible">
+                    <p>
+                        <?php
+                        if ( $import_error === 'missing_file' ) {
+                            esc_html_e( 'CSV import failed: no file was uploaded.', 'wealth-tax-calculator' );
+                        } elseif ( $import_error === 'upload_failed' ) {
+                            esc_html_e( 'CSV import failed: the uploaded file could not be processed.', 'wealth-tax-calculator' );
+                        } elseif ( $import_error === 'unreadable_file' ) {
+                            esc_html_e( 'CSV import failed: the uploaded file could not be read.', 'wealth-tax-calculator' );
+                        } elseif ( $import_error === 'invalid_csv' ) {
+                            esc_html_e( 'CSV import failed: the file does not match the analytics CSV format exported by this plugin.', 'wealth-tax-calculator' );
+                        } else {
+                            esc_html_e( 'CSV import failed.', 'wealth-tax-calculator' );
+                        }
+                        ?>
+                    </p>
                 </div>
             <?php endif; ?>
 
@@ -1700,6 +1738,16 @@ class WTC_Policy_Analytics {
                     <input type="hidden" name="action" value="wtc_export_analytics_csv" />
                     <?php wp_nonce_field( 'wtc_export_analytics_csv' ); ?>
                     <?php submit_button( __( 'Export Collected Data (CSV)', 'wealth-tax-calculator' ), 'secondary', 'submit', false ); ?>
+                </form>
+                <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" enctype="multipart/form-data" style="margin-bottom: 12px; display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
+                    <input type="hidden" name="action" value="wtc_import_analytics_csv" />
+                    <?php wp_nonce_field( 'wtc_import_analytics_csv' ); ?>
+                    <div>
+                        <label for="wtc-import-analytics-csv" style="display:block; font-weight:600; margin-bottom:4px;"><?php esc_html_e( 'Import plugin-exported analytics CSV', 'wealth-tax-calculator' ); ?></label>
+                        <input type="file" id="wtc-import-analytics-csv" name="analytics_csv" accept=".csv,text/csv" required />
+                        <p class="description" style="margin:4px 0 0;"><?php esc_html_e( 'Imports CSV files exported by this plugin. Existing rows with the same session and day are updated.', 'wealth-tax-calculator' ); ?></p>
+                    </div>
+                    <?php submit_button( __( 'Import CSV Data', 'wealth-tax-calculator' ), 'secondary', 'submit', false ); ?>
                 </form>
                 <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" target="_blank" style="margin-bottom: 12px;">
                     <input type="hidden" name="action" value="wtc_export_analytics_pdf" />
@@ -4080,14 +4128,18 @@ class WTC_Policy_Analytics {
                     'submitted_at_utc'        => $submitted_at > 0 ? gmdate( 'Y-m-d H:i:s', $submitted_at ) . ' UTC' : '',
                     'stored_day'              => sanitize_text_field( $day_key ),
                     'session_hash'            => sanitize_text_field( (string) $session_hash ),
+                    'policy_key'              => isset( $submission['policy_key'] ) ? sanitize_text_field( $submission['policy_key'] ) : '',
                     'tax_rate_value'          => isset( $submission['tax_rate_value'] ) && is_numeric( $submission['tax_rate_value'] ) ? (float) $submission['tax_rate_value'] : '',
                     'tax_rate_bucket'         => isset( $submission['tax_rate_bucket'] ) ? sanitize_text_field( $submission['tax_rate_bucket'] ) : '',
                     'region_bucket'           => $region_bucket,
                     'county_bucket'           => $county_bucket,
                     'county_label'            => $county_bucket !== '' ? $this->format_county_bucket_label( $county_bucket ) : '',
+                    'fingerprint'             => isset( $submission['fingerprint'] ) ? sanitize_text_field( $submission['fingerprint'] ) : '',
                     'selected_policy_count'   => count( $selected_items ),
                     'selected_policy_keys'    => implode( ' | ', $policy_keys ),
                     'prioritized_selections'  => implode( ' | ', $policy_labels ),
+                    'order_json'              => wp_json_encode( isset( $submission['order'] ) && is_array( $submission['order'] ) ? $submission['order'] : $policy_keys ),
+                    'selected_items_json'     => wp_json_encode( $selected_items ),
                 );
             }
         }
@@ -4126,17 +4178,22 @@ class WTC_Policy_Analytics {
         fputcsv(
             $output,
             array(
+                'submitted_at_unix',
                 'submitted_at_utc',
                 'stored_day',
                 'session_hash',
+                'policy_key',
                 'tax_rate_value',
                 'tax_rate_bucket',
                 'region_bucket',
                 'county_bucket',
                 'county_label',
+                'fingerprint',
                 'selected_policy_count',
                 'selected_policy_keys',
                 'prioritized_selections',
+                'order_json',
+                'selected_items_json',
             )
         );
 
@@ -4148,22 +4205,343 @@ class WTC_Policy_Analytics {
             fputcsv(
                 $output,
                 array(
+                    isset( $row['submitted_at_unix'] ) ? $row['submitted_at_unix'] : 0,
                     isset( $row['submitted_at_utc'] ) ? $row['submitted_at_utc'] : '',
                     isset( $row['stored_day'] ) ? $row['stored_day'] : '',
                     isset( $row['session_hash'] ) ? $row['session_hash'] : '',
+                    isset( $row['policy_key'] ) ? $row['policy_key'] : '',
                     isset( $row['tax_rate_value'] ) ? $row['tax_rate_value'] : '',
                     isset( $row['tax_rate_bucket'] ) ? $row['tax_rate_bucket'] : '',
                     isset( $row['region_bucket'] ) ? $row['region_bucket'] : '',
                     isset( $row['county_bucket'] ) ? $row['county_bucket'] : '',
                     isset( $row['county_label'] ) ? $row['county_label'] : '',
+                    isset( $row['fingerprint'] ) ? $row['fingerprint'] : '',
                     isset( $row['selected_policy_count'] ) ? $row['selected_policy_count'] : 0,
                     isset( $row['selected_policy_keys'] ) ? $row['selected_policy_keys'] : '',
                     isset( $row['prioritized_selections'] ) ? $row['prioritized_selections'] : '',
+                    isset( $row['order_json'] ) ? $row['order_json'] : '',
+                    isset( $row['selected_items_json'] ) ? $row['selected_items_json'] : '',
                 )
             );
         }
 
         fclose( $output );
+        exit;
+    }
+
+    private function normalize_import_csv_headers( $headers ) {
+        $normalized = array();
+
+        if ( ! is_array( $headers ) ) {
+            return $normalized;
+        }
+
+        foreach ( $headers as $index => $header ) {
+            $header = (string) $header;
+            if ( $index === 0 ) {
+                $header = preg_replace( '/^\xEF\xBB\xBF/', '', $header );
+            }
+
+            $header = sanitize_key( str_replace( '-', '_', trim( strtolower( $header ) ) ) );
+            if ( $header !== '' ) {
+                $normalized[ $header ] = (int) $index;
+            }
+        }
+
+        return $normalized;
+    }
+
+    private function get_import_csv_column( $row, $header_map, $column, $default = '' ) {
+        if ( ! is_array( $row ) || ! is_array( $header_map ) || ! isset( $header_map[ $column ] ) ) {
+            return $default;
+        }
+
+        $index = (int) $header_map[ $column ];
+        return isset( $row[ $index ] ) ? (string) $row[ $index ] : $default;
+    }
+
+    private function split_export_csv_list( $value ) {
+        $value = trim( (string) $value );
+        if ( $value === '' ) {
+            return array();
+        }
+
+        $parts = preg_split( '/\s*\|\s*/', $value );
+        if ( ! is_array( $parts ) ) {
+            return array();
+        }
+
+        $normalized = array();
+        foreach ( $parts as $part ) {
+            $part = trim( (string) $part );
+            if ( $part !== '' ) {
+                $normalized[] = $part;
+            }
+        }
+
+        return $normalized;
+    }
+
+    private function build_import_selected_items( $order, $selected_items_json = '', $policy_labels = array() ) {
+        $decoded_items = json_decode( (string) $selected_items_json, true );
+        if ( is_array( $decoded_items ) ) {
+            return $this->sanitize_selected_items_payload( $decoded_items, $order );
+        }
+
+        $selected_items = array();
+        foreach ( $order as $index => $policy_key ) {
+            $label = isset( $policy_labels[ $index ] ) ? sanitize_text_field( $policy_labels[ $index ] ) : '';
+            $group_parts = explode( ':', $policy_key );
+
+            $selected_items[] = array(
+                'policy_key'   => $policy_key,
+                'policy_group' => isset( $group_parts[0] ) ? sanitize_key( $group_parts[0] ) : '',
+                'policy_label' => $label,
+                'rank'         => (int) $index + 1,
+            );
+        }
+
+        return $this->sanitize_selected_items_payload( $selected_items, $order );
+    }
+
+    private function import_csv_submission_row( $row, $header_map ) {
+        global $wpdb;
+
+        $session_hash = sanitize_text_field( $this->get_import_csv_column( $row, $header_map, 'session_hash' ) );
+        if ( ! preg_match( '/^[a-f0-9]{12}$/i', $session_hash ) ) {
+            return false;
+        }
+
+        $stored_day = sanitize_text_field( $this->get_import_csv_column( $row, $header_map, 'stored_day' ) );
+        if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $stored_day ) ) {
+            $stored_day = '';
+        }
+
+        $submitted_at_unix = $this->get_import_csv_column( $row, $header_map, 'submitted_at_unix' );
+        $submitted_at      = ctype_digit( trim( $submitted_at_unix ) ) ? (int) trim( $submitted_at_unix ) : 0;
+        if ( $submitted_at <= 0 ) {
+            $submitted_at_utc = sanitize_text_field( $this->get_import_csv_column( $row, $header_map, 'submitted_at_utc' ) );
+            $parsed_time      = $submitted_at_utc !== '' ? strtotime( $submitted_at_utc ) : false;
+            if ( false !== $parsed_time ) {
+                $submitted_at = (int) $parsed_time;
+            }
+        }
+
+        $day_date = $stored_day !== '' ? $stored_day : ( $submitted_at > 0 ? gmdate( 'Y-m-d', $submitted_at ) : '' );
+        if ( $day_date === '' ) {
+            return false;
+        }
+
+        $region_bucket = sanitize_text_field( $this->get_import_csv_column( $row, $header_map, 'region_bucket' ) );
+        if ( $region_bucket === '' ) {
+            return false;
+        }
+
+        $order_json = $this->get_import_csv_column( $row, $header_map, 'order_json' );
+        $order      = json_decode( (string) $order_json, true );
+        if ( ! is_array( $order ) ) {
+            $order = $this->split_export_csv_list( $this->get_import_csv_column( $row, $header_map, 'selected_policy_keys' ) );
+        }
+
+        $clean_order = array();
+        foreach ( $order as $policy_key ) {
+            $policy_key = sanitize_text_field( (string) $policy_key );
+            if ( ! preg_match( '/^[a-zA-Z]+:[0-9]+$/', $policy_key ) ) {
+                continue;
+            }
+            if ( in_array( $policy_key, $clean_order, true ) ) {
+                continue;
+            }
+            $clean_order[] = $policy_key;
+        }
+
+        if ( empty( $clean_order ) ) {
+            return false;
+        }
+
+        $policy_labels        = $this->split_export_csv_list( $this->get_import_csv_column( $row, $header_map, 'prioritized_selections' ) );
+        $selected_items_json  = $this->get_import_csv_column( $row, $header_map, 'selected_items_json' );
+        $clean_selected_items = $this->build_import_selected_items( $clean_order, $selected_items_json, $policy_labels );
+
+        $policy_key = sanitize_text_field( $this->get_import_csv_column( $row, $header_map, 'policy_key' ) );
+        if ( ! preg_match( '/^[a-zA-Z]+:[0-9]+$/', $policy_key ) ) {
+            $policy_key = $clean_order[0];
+        }
+
+        $tax_rate_value_raw = trim( $this->get_import_csv_column( $row, $header_map, 'tax_rate_value' ) );
+        $tax_rate_value     = is_numeric( $tax_rate_value_raw ) ? round( (float) $tax_rate_value_raw, 1 ) : null;
+        if ( null !== $tax_rate_value && ( $tax_rate_value < WTC_TAX_RATE_MIN || $tax_rate_value > WTC_TAX_RATE_MAX ) ) {
+            $tax_rate_value = null;
+        }
+
+        $tax_rate_bucket = sanitize_text_field( $this->get_import_csv_column( $row, $header_map, 'tax_rate_bucket' ) );
+        if ( $tax_rate_bucket === '' && null !== $tax_rate_value ) {
+            $tax_rate_bucket = (string) (int) round( $tax_rate_value );
+        }
+
+        $fingerprint  = sanitize_text_field( $this->get_import_csv_column( $row, $header_map, 'fingerprint' ) );
+        $county_bucket = sanitize_text_field( $this->get_import_csv_column( $row, $header_map, 'county_bucket' ) );
+
+        $submission = array(
+            'region_bucket' => $region_bucket,
+            'county_bucket' => $county_bucket,
+        );
+        $county_bucket = $this->resolve_submission_county_bucket( $submission );
+
+        $table        = $wpdb->prefix . WTC_SUBMISSIONS_TABLE_SUFFIX;
+        $tax_rate_sql = null !== $tax_rate_value ? $wpdb->prepare( '%f', $tax_rate_value ) : 'NULL';
+
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $result = $wpdb->query( $wpdb->prepare(
+            "INSERT INTO {$table}
+                (session_hash, day_date, policy_key, order_json, selected_items_json,
+                 tax_rate_value, tax_rate_bucket, region_bucket, county_bucket,
+                 fingerprint, submitted_at)
+            VALUES (%s, %s, %s, %s, %s, {$tax_rate_sql}, %s, %s, %s, %s, %d)
+            ON DUPLICATE KEY UPDATE
+                policy_key = VALUES(policy_key),
+                order_json = VALUES(order_json),
+                selected_items_json = VALUES(selected_items_json),
+                tax_rate_value = VALUES(tax_rate_value),
+                tax_rate_bucket = VALUES(tax_rate_bucket),
+                region_bucket = VALUES(region_bucket),
+                county_bucket = VALUES(county_bucket),
+                fingerprint = VALUES(fingerprint),
+                submitted_at = VALUES(submitted_at)",
+            $session_hash,
+            $day_date,
+            $policy_key,
+            wp_json_encode( $clean_order ),
+            wp_json_encode( $clean_selected_items ),
+            $tax_rate_bucket,
+            $region_bucket,
+            $county_bucket,
+            $fingerprint,
+            $submitted_at
+        ) );
+
+        return false !== $result;
+    }
+
+    public function handle_import_analytics_csv() {
+        global $wpdb;
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( 'Unauthorized access' );
+        }
+
+        check_admin_referer( 'wtc_import_analytics_csv' );
+
+        if ( ! isset( $_FILES['analytics_csv'] ) || ! is_array( $_FILES['analytics_csv'] ) ) {
+            wp_redirect( add_query_arg(
+                array(
+                    'page' => 'wealth-tax-calculator-analytics',
+                    'import_error' => 'missing_file',
+                ),
+                admin_url( 'options-general.php' )
+            ) );
+            exit;
+        }
+
+        $file = $_FILES['analytics_csv'];
+        if ( ! empty( $file['error'] ) || empty( $file['tmp_name'] ) || ! is_uploaded_file( $file['tmp_name'] ) ) {
+            wp_redirect( add_query_arg(
+                array(
+                    'page' => 'wealth-tax-calculator-analytics',
+                    'import_error' => 'upload_failed',
+                ),
+                admin_url( 'options-general.php' )
+            ) );
+            exit;
+        }
+
+        $handle = fopen( $file['tmp_name'], 'r' );
+        if ( false === $handle ) {
+            wp_redirect( add_query_arg(
+                array(
+                    'page' => 'wealth-tax-calculator-analytics',
+                    'import_error' => 'unreadable_file',
+                ),
+                admin_url( 'options-general.php' )
+            ) );
+            exit;
+        }
+
+        $headers = fgetcsv( $handle );
+        $header_map = $this->normalize_import_csv_headers( $headers );
+        $required_columns = array( 'stored_day', 'session_hash', 'region_bucket' );
+        foreach ( $required_columns as $required_column ) {
+            if ( ! isset( $header_map[ $required_column ] ) ) {
+                fclose( $handle );
+                wp_redirect( add_query_arg(
+                    array(
+                        'page' => 'wealth-tax-calculator-analytics',
+                        'import_error' => 'invalid_csv',
+                    ),
+                    admin_url( 'options-general.php' )
+                ) );
+                exit;
+            }
+        }
+
+        if ( ! isset( $header_map['order_json'] ) && ! isset( $header_map['selected_policy_keys'] ) ) {
+            fclose( $handle );
+            wp_redirect( add_query_arg(
+                array(
+                    'page' => 'wealth-tax-calculator-analytics',
+                    'import_error' => 'invalid_csv',
+                ),
+                admin_url( 'options-general.php' )
+            ) );
+            exit;
+        }
+
+        wtc_ensure_submissions_table();
+
+        $imported_rows = 0;
+        $skipped_rows  = 0;
+        while ( ( $row = fgetcsv( $handle ) ) !== false ) {
+            if ( ! is_array( $row ) ) {
+                $skipped_rows++;
+                continue;
+            }
+
+            $non_empty_values = array_filter(
+                $row,
+                function ( $value ) {
+                    return trim( (string) $value ) !== '';
+                }
+            );
+            if ( empty( $non_empty_values ) ) {
+                continue;
+            }
+
+            if ( $this->import_csv_submission_row( $row, $header_map ) ) {
+                $imported_rows++;
+            } else {
+                $skipped_rows++;
+            }
+        }
+        fclose( $handle );
+
+        update_option( WTC_ANALYTICS_SCHEMA_VERSION_OPTION, WTC_ANALYTICS_SCHEMA_VERSION, false );
+
+        $version_bumped = $wpdb->query(
+            "UPDATE {$wpdb->options} SET option_value = option_value + 1 WHERE option_name = 'wtc_analytics_version'"
+        );
+        if ( false === $version_bumped || 0 === (int) $version_bumped ) {
+            update_option( 'wtc_analytics_version', (int) get_option( 'wtc_analytics_version', 0 ) + 1, false );
+        }
+
+        wp_redirect( add_query_arg(
+            array(
+                'page' => 'wealth-tax-calculator-analytics',
+                'imported' => '1',
+                'import_rows' => $imported_rows,
+                'import_skipped' => $skipped_rows,
+            ),
+            admin_url( 'options-general.php' )
+        ) );
         exit;
     }
 
