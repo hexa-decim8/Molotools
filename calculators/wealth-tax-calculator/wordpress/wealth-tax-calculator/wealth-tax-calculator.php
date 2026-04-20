@@ -1678,8 +1678,7 @@ class WTC_Policy_Analytics {
                     $default_state_summary,
                     $default_state_counties,
                     __( 'This tab mirrors the state dashboard, locked to Michigan.', 'wealth-tax-calculator' ),
-                    __( 'Michigan is highlighted in the tile map. County bubbles are sized by submitted sessions for Michigan.', 'wealth-tax-calculator' ),
-                    false
+                    __( 'The tile map highlights Michigan. County bubbles are sized by submitted sessions for Michigan.', 'wealth-tax-calculator' )
                 );
                 ?>
             </div>
@@ -2501,12 +2500,20 @@ class WTC_Policy_Analytics {
         ?>
         <div class="card wtc-analytics-card wtc-us-map-card" style="max-width: 920px; margin-top: 20px;">
             <h2><?php esc_html_e( 'US Visitors Map', 'wealth-tax-calculator' ); ?></h2>
-            <p class="description"><?php esc_html_e( 'All 50 states are shown. Tile intensity increases with submitted sessions.', 'wealth-tax-calculator' ); ?></p>
+            <p class="description"><?php esc_html_e( 'All 50 states are shown in a U.S.-shaped tile map. Tile intensity increases with submitted sessions.', 'wealth-tax-calculator' ); ?></p>
             <?php if ( ! $has_data ) : ?>
                 <p><?php esc_html_e( 'No US state visitor data yet. Tiles are shown with zero counts until submissions are recorded.', 'wealth-tax-calculator' ); ?></p>
             <?php endif; ?>
             <div class="wtc-us-map-wrap">
-                <div id="wtc-us-state-map" role="img" aria-label="<?php esc_attr_e( 'US state visitor heat map', 'wealth-tax-calculator' ); ?>"></div>
+                <div id="wtc-us-state-map" role="img" aria-label="<?php esc_attr_e( 'US state visitor heat map', 'wealth-tax-calculator' ); ?>">
+                    <?php $us_map_path = plugin_dir_path( __FILE__ ) . 'data/states/us-map/us-states-tile-map.svg'; ?>
+                    <?php if ( file_exists( $us_map_path ) ) : ?>
+                        <?php
+                        // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents, WordPress.Security.EscapeOutput.OutputNotEscaped
+                        echo file_get_contents( $us_map_path );
+                        ?>
+                    <?php endif; ?>
+                </div>
                 <div id="wtc-us-map-tooltip"></div>
             </div>
             <div class="wtc-us-map-legend" aria-hidden="true">

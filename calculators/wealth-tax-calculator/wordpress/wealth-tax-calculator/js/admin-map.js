@@ -1447,6 +1447,11 @@
      */
     function initUnitedStatesMap() {
         var mapEl = document.getElementById('wtc-us-state-map');
+        var tooltip = document.getElementById('wtc-us-map-tooltip');
+        var svgEl;
+        var stateNodes;
+        var maxCount = 0;
+        var i;
         if (!mapEl) {
             return;
         }
@@ -1456,7 +1461,85 @@
             return;
         }
 
-        buildStateTileMap(mapEl, '', stateAnalyticsPayload.states, false);
+        svgEl = mapEl.querySelector('svg');
+
+        if (!svgEl) {
+            buildStateTileMap(mapEl, '', stateAnalyticsPayload.states, false);
+            return;
+        }
+
+        stateNodes = svgEl.querySelectorAll('.wtc-us-state[data-state]');
+
+        for (i = 0; i < stateNodes.length; i++) {
+            var maxStateCode = stateNodes[i].getAttribute('data-state');
+            var maxStateEntry = stateAnalyticsPayload.states[maxStateCode] || {};
+            maxCount = Math.max(maxCount, parseInt(maxStateEntry.stateSessions, 10) || 0);
+        }
+
+        for (i = 0; i < stateNodes.length; i++) {
+            var stateNode = stateNodes[i];
+            var stateCode = stateNode.getAttribute('data-state');
+            var tileMeta = WTC_US_STATE_TILES[stateCode] || {};
+            var stateEntry = stateAnalyticsPayload.states[stateCode] || {};
+            var stateLabel = stateEntry.label || tileMeta.label || stateCode;
+            var count = parseInt(stateEntry.stateSessions, 10) || 0;
+            var level = maxCount > 0 ? Math.max(1, Math.min(5, Math.ceil((count / maxCount) * 5))) : 1;
+
+            stateNode.setAttribute('class', 'wtc-us-state wtc-us-level-' + level + (count > 0 ? ' has-data' : ' is-empty'));
+            stateNode.setAttribute('data-count', String(count));
+            stateNode.setAttribute('data-state-label', stateLabel);
+            stateNode.setAttribute('tabindex', '0');
+            stateNode.setAttribute('title', getSessionLabel(stateLabel, count));
+            stateNode.setAttribute('aria-label', getSessionLabel(stateLabel, count));
+        }
+
+        if (!tooltip) {
+            return;
+        }
+
+        mapEl.addEventListener('mousemove', function (event) {
+            var stateNode = event.target.closest ? event.target.closest('.wtc-us-state[data-state]') : null;
+            if (!stateNode) {
+                hideTooltip(tooltip);
+                return;
+            }
+
+            showTooltip(
+                tooltip,
+                mapEl,
+                event.clientX,
+                event.clientY,
+                stateNode.getAttribute('data-state-label') || stateNode.getAttribute('data-state') || '',
+                parseInt(stateNode.getAttribute('data-count'), 10) || 0
+            );
+        });
+
+        mapEl.addEventListener('mouseleave', function () {
+            hideTooltip(tooltip);
+        });
+
+        mapEl.addEventListener('focusin', function (event) {
+            var stateNode = event.target.closest ? event.target.closest('.wtc-us-state[data-state]') : null;
+            var rect;
+
+            if (!stateNode) {
+                return;
+            }
+
+            rect = stateNode.getBoundingClientRect();
+            showTooltip(
+                tooltip,
+                mapEl,
+                (rect.left + rect.right) / 2,
+                rect.top,
+                stateNode.getAttribute('data-state-label') || stateNode.getAttribute('data-state') || '',
+                parseInt(stateNode.getAttribute('data-count'), 10) || 0
+            );
+        });
+
+        mapEl.addEventListener('focusout', function () {
+            hideTooltip(tooltip);
+        });
     }
 
     function initStateSearchCombobox() {
