@@ -1,6 +1,6 @@
 {
   "name": "@molotools/social-amplifier",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Social media amplification platform for political campaigns — create shareable content, distribute through supporter networks, and measure engagement",
   "private": true,
   "type": "module",
