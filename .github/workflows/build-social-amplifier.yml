@@ -1,0 +1,268 @@
+name: Build And Publish Social Amplifier
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/build-social-amplifier.yml
+      - social-amplifier/**
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Optional version override in X.Y.Z format (example: 0.2.0)'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-tag-and-release:
+    runs-on: ubuntu-latest
+
+    env:
+      SA_DIR: social-amplifier
+      PACKAGE_JSON: social-amplifier/package.json
+      CHANGELOG_FILE: social-amplifier/CHANGELOG.md
+      ZIP_FILE: social-amplifier/social-amplifier.zip
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: social-amplifier/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd "${{ env.SA_DIR }}"
+          npm ci
+
+      - name: Resolve release version and tag
+        id: version
+        run: |
+          VERSION="${{ inputs.version }}"
+
+          if [ -z "$VERSION" ]; then
+            VERSION=$(jq -r '.version' "${{ env.PACKAGE_JSON }}")
+          fi
+
+          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Invalid version: $VERSION"
+            echo "Expected X.Y.Z semver format"
+            exit 1
+          fi
+
+          git fetch --tags --force
+
+          RESOLVED_VERSION="$VERSION"
+          HEAD_COMMIT=$(git rev-parse HEAD)
+
+          # Auto-increment patch version if the tag already exists on a different commit.
+          while true; do
+            TAG="sa-v$RESOLVED_VERSION"
+
+            if ! git rev-parse "$TAG" >/dev/null 2>&1; then
+              break
+            fi
+
+            TAG_COMMIT=$(git rev-list -n 1 "$TAG")
+            if [ "$TAG_COMMIT" = "$HEAD_COMMIT" ]; then
+              break
+            fi
+
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$RESOLVED_VERSION"
+            PATCH=$((PATCH + 1))
+            RESOLVED_VERSION="$MAJOR.$MINOR.$PATCH"
+          done
+
+          if [ "$RESOLVED_VERSION" != "$VERSION" ]; then
+            echo "Tag sa-v$VERSION exists on a different commit. Auto-incrementing to sa-v$RESOLVED_VERSION."
+
+            # Update package.json version
+            jq --arg v "$RESOLVED_VERSION" '.version = $v' "${{ env.PACKAGE_JSON }}" > /tmp/pkg.json
+            mv /tmp/pkg.json "${{ env.PACKAGE_JSON }}"
+
+            # Inject changelog entry if missing
+            if ! grep -q "^## \[$RESOLVED_VERSION\]" "${{ env.CHANGELOG_FILE }}"; then
+              TODAY=$(date +%Y-%m-%d)
+              TMP_FILE=$(mktemp)
+
+              awk -v version="$RESOLVED_VERSION" -v today="$TODAY" '
+                { print }
+                $0 == "## [Unreleased]" {
+                  print ""
+                  print "## [" version "] - " today
+                  print ""
+                }
+              ' "${{ env.CHANGELOG_FILE }}" > "$TMP_FILE"
+
+              mv "$TMP_FILE" "${{ env.CHANGELOG_FILE }}"
+            fi
+          fi
+
+          echo "version=$RESOLVED_VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=sa-v$RESOLVED_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Validate version consistency
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          PKG_VERSION=$(jq -r '.version' "${{ env.PACKAGE_JSON }}")
+
+          if [ "$PKG_VERSION" != "$VERSION" ]; then
+            echo "package.json version $PKG_VERSION does not match target version $VERSION"
+            exit 1
+          fi
+
+      - name: Validate changelog entry
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          if ! grep -q "^## \[$VERSION\]" "${{ env.CHANGELOG_FILE }}"; then
+            echo "CHANGELOG.md is missing a section for version $VERSION"
+            exit 1
+          fi
+
+      - name: Build TypeScript
+        run: |
+          cd "${{ env.SA_DIR }}"
+          npm run build
+          # Copy the embed widget (plain JS; tsc does not copy non-TS files)
+          mkdir -p dist/embed
+          cp src/embed/toolkit.js dist/embed/toolkit.js
+
+      - name: Build release zip
+        run: |
+          cd "${{ env.SA_DIR }}"
+          rm -f social-amplifier.zip
+          # Zip everything a deployer needs: compiled output, embed widget,
+          # manifest files, and setup guide. node_modules and source are excluded.
+          zip -X -r social-amplifier.zip \
+            dist \
+            package.json \
+            package-lock.json \
+            README.md \
+            .env.example \
+            -x "*/node_modules/*" "*/.DS_Store" "*/Thumbs.db" "*/.git/*" "*.log" "*.map"
+
+      - name: Verify zip integrity
+        run: |
+          if [ ! -f "${{ env.ZIP_FILE }}" ]; then
+            echo "Release zip was not created"
+            exit 1
+          fi
+
+          unzip -t "${{ env.ZIP_FILE }}" > /dev/null
+
+          if ! unzip -Z1 "${{ env.ZIP_FILE }}" | grep -q '^dist/index.js$'; then
+            echo "Release zip does not contain dist/index.js"
+            exit 1
+          fi
+
+          if ! unzip -Z1 "${{ env.ZIP_FILE }}" | grep -q '^dist/embed/toolkit.js$'; then
+            echo "Release zip does not contain dist/embed/toolkit.js"
+            exit 1
+          fi
+
+      - name: Commit refreshed build artifacts
+        id: commit_zip
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add \
+            "${{ env.ZIP_FILE }}" \
+            "${{ env.PACKAGE_JSON }}" \
+            "${{ env.CHANGELOG_FILE }}"
+
+          if git diff --cached --quiet; then
+            echo "No build artifact changes to commit"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git commit -m "build(social-amplifier): refresh artifacts for sa-v$VERSION"
+          git push
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Create semantic release tag
+        id: tag
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+
+          git fetch --tags --force
+
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            TAG_COMMIT=$(git rev-list -n 1 "$TAG")
+            HEAD_COMMIT=$(git rev-parse HEAD)
+
+            if [ "$TAG_COMMIT" != "$HEAD_COMMIT" ]; then
+              echo "Tag $TAG already exists on a different commit ($TAG_COMMIT)."
+              echo "Bump the version in social-amplifier/package.json to create a new release tag."
+              exit 1
+            fi
+
+            echo "Tag $TAG already exists on HEAD."
+            echo "created=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
+          echo "created=true" >> "$GITHUB_OUTPUT"
+
+      - name: Extract release notes from changelog
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          NOTES_FILE="$RUNNER_TEMP/release-notes.md"
+
+          awk -v version="$VERSION" '
+            $0 ~ "^## \\[" version "\\]" { capture=1; print; next }
+            capture && /^## \[/ { exit }
+            capture { print }
+          ' "${{ env.CHANGELOG_FILE }}" > "$NOTES_FILE"
+
+          if [ ! -s "$NOTES_FILE" ]; then
+            echo "Could not extract release notes for $VERSION from changelog"
+            exit 1
+          fi
+
+          echo "RELEASE_NOTES_FILE=$NOTES_FILE" >> "$GITHUB_ENV"
+
+      - name: Create or update GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          VERSION="${{ steps.version.outputs.version }}"
+
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release upload "$TAG" "${{ env.ZIP_FILE }}" --clobber
+            gh release edit "$TAG" \
+              --title "Social Amplifier sa-v$VERSION" \
+              --notes-file "$RELEASE_NOTES_FILE"
+          else
+            gh release create "$TAG" "${{ env.ZIP_FILE }}" \
+              --title "Social Amplifier sa-v$VERSION" \
+              --notes-file "$RELEASE_NOTES_FILE"
+          fi
+
+      - name: Verify published release asset
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+
+          if ! gh release view "$TAG" --json assets --jq '.assets[].name' | grep -Fxq 'social-amplifier.zip'; then
+            echo "GitHub release is missing social-amplifier.zip"
+            exit 1
+          fi
