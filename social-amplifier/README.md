@@ -2,8 +2,6 @@
 
 A social media amplification platform for political campaigns. Create shareable content, distribute it through supporter networks on Facebook, Instagram, X, and TikTok, and measure engagement in real time.
 
-Inspired by platforms like [SoSha](https://sosha.ai) — built as a self-hosted, open-source alternative focused on political campaigns.
-
 ## Architecture
 
 ```
