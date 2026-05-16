@@ -20,6 +20,8 @@ Optional shortcode attributes:
 [billionaire_wealth_tax title="Wealth Tax Calculator" subtitle="See what taxing the ultra-rich could fund"]
 ```
 
+Do not upload `social-amplifier-server.zip` here. WordPress will reject it because it is a Node.js deployment package, not a plugin.
+
 ### Option 2: Deploy via SFTP
 
 Upload the entire `wealth-tax-calculator/` folder to your server's plugins directory:

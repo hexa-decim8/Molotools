@@ -9,6 +9,17 @@ A social media amplification platform for political campaigns. Create shareable 
 ### [Wealth Tax Calculator](calculators/wealth-tax-calculator/)
 WordPress plugin with interactive wealth tax calculators and county-level data visualizations.
 
+## Install Artifacts
+
+Use the package that matches the runtime you are deploying:
+
+| Project | Artifact | Install target | Installation method |
+| --- | --- | --- | --- |
+| Wealth Tax Calculator | `wealth-tax-calculator.zip` | WordPress | Upload in Plugins -> Add New -> Upload Plugin |
+| Social Amplifier | `social-amplifier-server.zip` | Node.js host | Unzip on the server, run `npm install --omit=dev`, then start `node dist/index.js` |
+
+Do not upload `social-amplifier-server.zip` through the WordPress plugin uploader. It is a Node.js application package, not a WordPress plugin.
+
 ---
 
 ## County Maps (Wealth Tax Calculator)

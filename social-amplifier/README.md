@@ -2,6 +2,12 @@
 
 A social media amplification platform for political campaigns. Create shareable content, distribute it through supporter networks on Facebook, Instagram, X, and TikTok, and measure engagement in real time.
 
+## Deployment Package
+
+The GitHub Actions release artifact for this project is `social-amplifier-server.zip`.
+
+This file is not a WordPress plugin and cannot be installed through WordPress Admin -> Plugins -> Add New -> Upload Plugin. Deploy it on a Node.js host instead.
+
 ## Architecture
 
 ```
@@ -73,6 +79,8 @@ npm run dev
 # Production
 npm run build && npm start
 ```
+
+If you are deploying from the release zip, unzip `social-amplifier-server.zip`, run `npm install --omit=dev`, and start the server with `node dist/index.js`.
 
 ### 5. Create a campaign
 

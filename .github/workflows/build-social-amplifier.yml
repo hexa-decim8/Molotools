@@ -25,7 +25,7 @@ jobs:
       SA_DIR: social-amplifier
       PACKAGE_JSON: social-amplifier/package.json
       CHANGELOG_FILE: social-amplifier/CHANGELOG.md
-      ZIP_FILE: social-amplifier/social-amplifier.zip
+      ZIP_FILE: social-amplifier/social-amplifier-server.zip
 
     steps:
       - name: Checkout code
@@ -141,10 +141,10 @@ jobs:
       - name: Build release zip
         run: |
           cd "${{ env.SA_DIR }}"
-          rm -f social-amplifier.zip
+          rm -f social-amplifier-server.zip
           # Zip everything a deployer needs: compiled output, embed widget,
           # manifest files, and setup guide. node_modules and source are excluded.
-          zip -X -r social-amplifier.zip \
+          zip -X -r social-amplifier-server.zip \
             dist \
             package.json \
             package-lock.json \
@@ -262,7 +262,7 @@ jobs:
         run: |
           TAG="${{ steps.version.outputs.tag }}"
 
-          if ! gh release view "$TAG" --json assets --jq '.assets[].name' | grep -Fxq 'social-amplifier.zip'; then
-            echo "GitHub release is missing social-amplifier.zip"
+          if ! gh release view "$TAG" --json assets --jq '.assets[].name' | grep -Fxq 'social-amplifier-server.zip'; then
+            echo "GitHub release is missing social-amplifier-server.zip"
             exit 1
           fi
