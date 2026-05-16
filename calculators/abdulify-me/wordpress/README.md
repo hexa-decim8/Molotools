@@ -29,6 +29,20 @@ Optional attributes:
 - The plugin does not upload image files to WordPress media storage.
 - No server-side image processing is performed.
 
+## Updates
+
+The plugin includes a built-in GitHub updater and does not require any extra update plugin.
+
+Update behavior:
+- Checks GitHub releases on a best-effort 5-minute WP-Cron schedule.
+- Expects a release asset named `abdulify-me.zip`.
+- Shows updates on the WordPress Plugins page when a newer release is available.
+- Supports automatic installation through WordPress auto-update flow for this plugin.
+
+Notes:
+- Because update checks use WP-Cron, timing depends on site traffic unless server cron is configured.
+- There is no dedicated Abdulify settings page for updates; updates are managed through the Plugins page.
+
 ## Minified Asset Commands
 
 From repository root:
@@ -55,3 +69,12 @@ wordpress/
       |- abdulify-me.js
       `- abdulify-me.min.js
 ```
+
+## Troubleshooting
+
+### Update not appearing
+
+1. Verify release tag is a valid version format (`am-vX.Y.Z` or `vX.Y.Z`).
+2. Verify the release contains an asset named `abdulify-me.zip`.
+3. Confirm the plugin folder path is `wp-content/plugins/abdulify-me/abdulify-me.php`.
+4. Clear site object cache/transients if your host aggressively caches update data.
