@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Abdulify Me Browser Smoke Test</title>
+  <link rel="stylesheet" href="../../../../calculators/abdulify-me/wordpress/abdulify-me/css/abdulify-me.css">
+</head>
+<body>
+  <section class="am-widget" data-am-widget>
+    <header class="am-header">
+      <h2 class="am-title">Abdulify Me</h2>
+      <p class="am-subtitle">Upload a photo, add campaign-style effects, and download your image.</p>
+    </header>
+
+    <div class="am-grid">
+      <div class="am-panel">
+        <label class="am-upload" for="am-photo-input">
+          <span class="am-upload-title">Upload Photo</span>
+          <span class="am-upload-help">PNG or JPG up to 8 MB</span>
+          <input id="am-photo-input" class="am-photo-input" type="file" accept="image/png,image/jpeg,image/webp">
+        </label>
+
+        <fieldset class="am-controls" aria-label="Photo effects">
+          <legend>Effects</legend>
+
+          <label class="am-toggle">
+            <input type="checkbox" data-am-effect="frame" checked>
+            <span>Campaign frame</span>
+          </label>
+
+          <label class="am-toggle">
+            <input type="checkbox" data-am-effect="text" checked>
+            <span>Support text ribbon</span>
+          </label>
+
+          <label class="am-toggle">
+            <input type="checkbox" data-am-effect="tint" checked>
+            <span>Color treatment</span>
+          </label>
+
+          <label class="am-toggle">
+            <input type="checkbox" data-am-effect="badge" checked>
+            <span>Badge sticker</span>
+          </label>
+        </fieldset>
+
+        <div class="am-actions">
+          <button class="am-button am-apply" type="button" data-am-apply disabled>Apply Effects</button>
+          <button class="am-button am-download" type="button" data-am-download disabled>Download Image</button>
+        </div>
+
+        <p class="am-status" data-am-status>Choose a photo to begin.</p>
+      </div>
+
+      <div class="am-preview-panel">
+        <canvas class="am-canvas" data-am-canvas width="1200" height="1200" aria-label="Image preview"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    window.abdulifyMeConfig = {
+      overlayText: 'I Support Abdul El-Sayed',
+      badgeText: 'Abdul 2026',
+      tintColor: '#175f8c',
+      maxBytes: 8 * 1024 * 1024,
+      nonce: 'fixture-nonce'
+    };
+  </script>
+  <script src="../../../../calculators/abdulify-me/wordpress/abdulify-me/js/abdulify-me.js"></script>
+</body>
+</html>

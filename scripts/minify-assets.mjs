@@ -3,41 +3,94 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const root = resolve(process.cwd());
-const pluginRoot = resolve(root, 'calculators/wealth-tax-calculator/wordpress/wealth-tax-calculator');
 
-const targets = [
+const pluginTargets = [
   {
-    label: 'calculator JS',
-    src: resolve(pluginRoot, 'js/calculator.js'),
-    out: resolve(pluginRoot, 'js/calculator.min.js'),
-    command: 'npx',
-    args: [
-      '--yes',
-      'terser',
-      'js/calculator.js',
-      '--compress',
-      '--mangle',
-      '--comments',
-      '/^!|@preserve|@license|@cc_on/i',
-      '--output',
-      'js/calculator.min.js'
+    pluginRoot: resolve(root, 'calculators/wealth-tax-calculator/wordpress/wealth-tax-calculator'),
+    assets: [
+      {
+        label: 'wealth tax calculator JS',
+        src: 'js/calculator.js',
+        out: 'js/calculator.min.js',
+        command: 'npx',
+        args: [
+          '--yes',
+          'terser',
+          'js/calculator.js',
+          '--compress',
+          '--mangle',
+          '--comments',
+          '/^!|@preserve|@license|@cc_on/i',
+          '--output',
+          'js/calculator.min.js'
+        ]
+      },
+      {
+        label: 'wealth tax calculator CSS',
+        src: 'css/styles.css',
+        out: 'css/styles.min.css',
+        command: 'npx',
+        args: [
+          '--yes',
+          'clean-css-cli',
+          '-O2',
+          '-o',
+          'css/styles.min.css',
+          'css/styles.css'
+        ]
+      }
     ]
   },
   {
-    label: 'styles CSS',
-    src: resolve(pluginRoot, 'css/styles.css'),
-    out: resolve(pluginRoot, 'css/styles.min.css'),
-    command: 'npx',
-    args: [
-      '--yes',
-      'clean-css-cli',
-      '-O2',
-      '-o',
-      'css/styles.min.css',
-      'css/styles.css'
+    pluginRoot: resolve(root, 'calculators/abdulify-me/wordpress/abdulify-me'),
+    assets: [
+      {
+        label: 'abdulify me JS',
+        src: 'js/abdulify-me.js',
+        out: 'js/abdulify-me.min.js',
+        command: 'npx',
+        args: [
+          '--yes',
+          'terser',
+          'js/abdulify-me.js',
+          '--compress',
+          '--mangle',
+          '--comments',
+          '/^!|@preserve|@license|@cc_on/i',
+          '--output',
+          'js/abdulify-me.min.js'
+        ]
+      },
+      {
+        label: 'abdulify me CSS',
+        src: 'css/abdulify-me.css',
+        out: 'css/abdulify-me.min.css',
+        command: 'npx',
+        args: [
+          '--yes',
+          'clean-css-cli',
+          '-O2',
+          '-o',
+          'css/abdulify-me.min.css',
+          'css/abdulify-me.css'
+        ]
+      }
     ]
   }
 ];
+
+const targets = pluginTargets.flatMap(function (plugin) {
+  return plugin.assets.map(function (asset) {
+    return {
+      label: asset.label,
+      src: resolve(plugin.pluginRoot, asset.src),
+      out: resolve(plugin.pluginRoot, asset.out),
+      command: asset.command,
+      args: asset.args,
+      cwd: plugin.pluginRoot
+    };
+  });
+});
 
 const checkMode = process.argv.includes('--check');
 
@@ -45,7 +98,7 @@ function runTarget(target) {
   const before = checkMode ? readFileSync(target.out, 'utf8') : null;
 
   const result = spawnSync(target.command, target.args, {
-    cwd: pluginRoot,
+    cwd: target.cwd,
     stdio: 'inherit',
     shell: false
   });

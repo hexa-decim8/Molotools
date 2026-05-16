@@ -7,22 +7,26 @@ on:
     paths:
       - .github/workflows/browser-validation.yml
       - .github/workflows/build-plugin.yml
+      - .github/workflows/build-abdulify-me-plugin.yml
       - .github/tests/browser/**
       - scripts/**
       - package.json
       - package-lock.json
       - calculators/wealth-tax-calculator/wordpress/wealth-tax-calculator/**
+      - calculators/abdulify-me/wordpress/abdulify-me/**
   push:
     branches:
       - main
     paths:
       - .github/workflows/browser-validation.yml
       - .github/workflows/build-plugin.yml
+      - .github/workflows/build-abdulify-me-plugin.yml
       - .github/tests/browser/**
       - scripts/**
       - package.json
       - package-lock.json
       - calculators/wealth-tax-calculator/wordpress/wealth-tax-calculator/**
+      - calculators/abdulify-me/wordpress/abdulify-me/**
   workflow_dispatch:
 
 jobs:
