@@ -1,0 +1,123 @@
+/* Social Amplifier — Admin styles */
+
+.sa-admin h1 { margin-bottom: 0; }
+
+.sa-tab-content {
+    margin-top: 1.5rem;
+}
+
+.sa-section {
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 1.5rem;
+    max-width: 900px;
+}
+
+.sa-section h2 {
+    margin-top: 0;
+}
+
+.sa-section h3 {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    border-top: 1px solid #f0f0f1;
+    padding-top: 1rem;
+    margin-top: 1.5rem;
+}
+
+.sa-section h3:first-of-type {
+    margin-top: 0;
+    border-top: none;
+    padding-top: 0;
+}
+
+.sa-docs-link {
+    font-size: .75rem;
+    font-weight: 400;
+    color: #2271b1;
+}
+
+.sa-steps {
+    margin: 0;
+    padding-left: 1.25rem;
+    line-height: 2;
+}
+
+/* Status badges */
+.sa-status {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-size: .75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+}
+.sa-status-active  { background: #d1fae5; color: #065f46; }
+.sa-status-draft   { background: #f3f4f6; color: #374151; }
+.sa-status-paused  { background: #fef3c7; color: #92400e; }
+.sa-status-ended   { background: #fee2e2; color: #991b1b; }
+
+/* Organizations / campaigns display */
+.sa-orgs-table .sa-org-desc {
+    font-size: .8125rem;
+    color: #666;
+    margin-top: .25rem;
+}
+
+.sa-campaigns-row td {
+    padding-top: 0 !important;
+    background: #fafafa !important;
+}
+
+.sa-campaigns {
+    padding: .5rem .75rem;
+    font-size: .875rem;
+}
+
+.sa-campaign {
+    display: flex;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: .5rem;
+    padding: .5rem 0;
+    border-bottom: 1px solid #f0f0f1;
+}
+
+.sa-campaign:last-child { border-bottom: none; }
+
+.sa-campaign-name {
+    font-weight: 600;
+}
+
+.sa-toolkits {
+    width: 100%;
+    margin-top: .5rem;
+    padding-left: 1rem;
+    border-left: 3px solid #e2e8f0;
+}
+
+.sa-toolkit-item {
+    padding: .375rem 0;
+    font-size: .8125rem;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+
+.sa-toolkit-item code {
+    background: #f0f0f1;
+    padding: 1px 6px;
+    border-radius: 3px;
+}
+
+/* Copy button feedback */
+.sa-copy-shortcode.copied {
+    background: #00a32a !important;
+    border-color: #00a32a !important;
+    color: #fff !important;
+}
