@@ -104,9 +104,14 @@
 
   function initWidget(widget) {
     var input = widget.querySelector('.am-photo-input');
+    var uploadLabel = widget.querySelector('.am-upload');
+    var previewPanel = widget.querySelector('.am-preview-panel');
     var canvas = widget.querySelector('[data-am-canvas]');
     var applyButton = widget.querySelector('[data-am-apply]');
     var downloadButton = widget.querySelector('[data-am-download]');
+    var facebookConnectButton = widget.querySelector('[data-am-fb-connect]');
+    var facebookPageSelect = widget.querySelector('[data-am-fb-page]');
+    var facebookAvatarButton = widget.querySelector('[data-am-fb-avatar]');
     var status = widget.querySelector('[data-am-status]');
     var toggles = widget.querySelectorAll('[data-am-effect]');
 
@@ -117,6 +122,18 @@
     var ctx = canvas.getContext('2d');
     var sourceImage = null;
     var config = window.abdulifyMeConfig || {};
+    var actions = config.actions && typeof config.actions === 'object' ? config.actions : {};
+    var facebook = config.facebook && typeof config.facebook === 'object' ? config.facebook : {};
+    var isFacebookEnabled = !!(facebook.enabled && facebook.appId);
+    var facebookGraphVersion = String(facebook.graphVersion || 'v25.0');
+    var facebookPermissions = String(facebook.permissions || 'pages_show_list,pages_read_engagement,pages_manage_metadata');
+    var facebookUserToken = '';
+    var facebookPageToken = '';
+    var facebookPageId = '';
+    var facebookAuthStateKey = 'abdulifyMeFacebookAuthState';
+    var facebookTokenStorageKey = 'abdulifyMeFacebookUserToken';
+    var facebookPagesStorageKey = 'abdulifyMeFacebookPages';
+    var isUploadingFacebookAvatar = false;
     var configColors = config.colors && typeof config.colors === 'object' ? config.colors : {};
     var maxBytes = Number(config.maxBytes || 8 * 1024 * 1024);
     var overlayText = String(config.overlayText || 'I Support Abdul El-Sayed');
@@ -183,6 +200,351 @@
       var colors = resolveColors();
       status.textContent = message;
       status.style.color = isError ? colors.statusError : colors.statusInfo;
+    }
+
+    function setControlDisabled(control, disabled) {
+      if (control) {
+        control.disabled = !!disabled;
+      }
+    }
+
+    function hasReadyCanvasImage() {
+      return !!sourceImage;
+    }
+
+    function updateFacebookButtonState() {
+      var canUpload = isFacebookEnabled && hasReadyCanvasImage() && !!facebookPageId && !!facebookPageToken && !isUploadingFacebookAvatar;
+      setControlDisabled(facebookAvatarButton, !canUpload);
+      setControlDisabled(facebookPageSelect, !isFacebookEnabled || !facebookUserToken || isUploadingFacebookAvatar);
+      setControlDisabled(facebookConnectButton, !isFacebookEnabled || isUploadingFacebookAvatar);
+    }
+
+    function clearFacebookAuthState() {
+      try {
+        window.localStorage.removeItem(facebookAuthStateKey);
+      } catch (e) {
+        // Ignore storage errors in restricted browser contexts.
+      }
+    }
+
+    function readFacebookAuthState() {
+      try {
+        return window.localStorage.getItem(facebookAuthStateKey) || '';
+      } catch (e) {
+        return '';
+      }
+    }
+
+    function writeFacebookAuthState(value) {
+      try {
+        window.localStorage.setItem(facebookAuthStateKey, value);
+      } catch (e) {
+        // Ignore storage errors in restricted browser contexts.
+      }
+    }
+
+    function storeFacebookUserToken(value) {
+      facebookUserToken = value || '';
+
+      try {
+        if (facebookUserToken) {
+          window.sessionStorage.setItem(facebookTokenStorageKey, facebookUserToken);
+        } else {
+          window.sessionStorage.removeItem(facebookTokenStorageKey);
+        }
+      } catch (e) {
+        // Ignore storage errors in restricted browser contexts.
+      }
+    }
+
+    function readStoredFacebookUserToken() {
+      try {
+        return window.sessionStorage.getItem(facebookTokenStorageKey) || '';
+      } catch (e) {
+        return '';
+      }
+    }
+
+    function storeFacebookPages(pages) {
+      try {
+        window.sessionStorage.setItem(facebookPagesStorageKey, JSON.stringify(pages || []));
+      } catch (e) {
+        // Ignore storage errors in restricted browser contexts.
+      }
+    }
+
+    function readStoredFacebookPages() {
+      try {
+        var raw = window.sessionStorage.getItem(facebookPagesStorageKey);
+        if (!raw) {
+          return [];
+        }
+
+        var parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function parseFragmentParams(hash) {
+      var result = {};
+      var raw = typeof hash === 'string' ? hash : '';
+      var trimmed = raw.replace(/^#/, '');
+      var entries;
+      var i;
+      var keyValue;
+
+      if (!trimmed) {
+        return result;
+      }
+
+      entries = trimmed.split('&');
+      for (i = 0; i < entries.length; i += 1) {
+        if (!entries[i]) {
+          continue;
+        }
+
+        keyValue = entries[i].split('=');
+        result[decodeURIComponent(keyValue[0] || '')] = decodeURIComponent(keyValue[1] || '');
+      }
+
+      return result;
+    }
+
+    function randomState() {
+      return 'amfb_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
+    }
+
+    function getRedirectUrl() {
+      return window.location.origin + window.location.pathname + window.location.search;
+    }
+
+    function buildFacebookLoginUrl(state) {
+      var params = new URLSearchParams({
+        client_id: String(facebook.appId),
+        redirect_uri: getRedirectUrl(),
+        response_type: 'token',
+        scope: facebookPermissions,
+        state: state
+      });
+
+      return 'https://www.facebook.com/' + facebookGraphVersion + '/dialog/oauth?' + params.toString();
+    }
+
+    function clearFacebookHashFromUrl() {
+      if (window.history && typeof window.history.replaceState === 'function') {
+        window.history.replaceState(null, document.title, getRedirectUrl());
+      }
+    }
+
+    function populateFacebookPages(pages) {
+      var i;
+      var option;
+
+      if (!facebookPageSelect) {
+        return;
+      }
+
+      facebookPageSelect.innerHTML = '';
+      option = document.createElement('option');
+      option.value = '';
+      option.textContent = 'Select a Facebook Page';
+      facebookPageSelect.appendChild(option);
+
+      for (i = 0; i < pages.length; i += 1) {
+        option = document.createElement('option');
+        option.value = pages[i].id;
+        option.textContent = pages[i].name;
+        option.dataset.pageToken = pages[i].access_token;
+        facebookPageSelect.appendChild(option);
+      }
+    }
+
+    function loadFacebookPagesFromGraph(userToken) {
+      var accountsUrl;
+
+      if (!userToken) {
+        return Promise.resolve([]);
+      }
+
+      accountsUrl = 'https://graph.facebook.com/' + facebookGraphVersion + '/me/accounts?fields=id,name,access_token,tasks&access_token=' + encodeURIComponent(userToken);
+
+      return fetch(accountsUrl)
+        .then(function (response) {
+          return response.json().then(function (json) {
+            if (!response.ok) {
+              throw new Error((json && json.error && json.error.message) || 'Could not read Facebook Pages.');
+            }
+
+            return json;
+          });
+        })
+        .then(function (json) {
+          var pages = Array.isArray(json.data) ? json.data : [];
+          var manageable = pages.filter(function (page) {
+            return page && page.id && page.name && page.access_token;
+          });
+
+          storeFacebookPages(manageable);
+          populateFacebookPages(manageable);
+          return manageable;
+        });
+    }
+
+    function hydrateFacebookFromHash() {
+      var params = parseFragmentParams(window.location.hash || '');
+      var expectedState = readFacebookAuthState();
+      var token = params.access_token || '';
+      var returnedState = params.state || '';
+
+      if (!token) {
+        return false;
+      }
+
+      if (!expectedState || returnedState !== expectedState) {
+        clearFacebookAuthState();
+        clearFacebookHashFromUrl();
+        setStatus('Facebook login state mismatch. Please connect again.', true);
+        return false;
+      }
+
+      clearFacebookAuthState();
+      clearFacebookHashFromUrl();
+      storeFacebookUserToken(token);
+      return true;
+    }
+
+    function startFacebookConnect() {
+      var state;
+
+      if (!isFacebookEnabled) {
+        setStatus('Facebook is not configured for this site.', true);
+        return;
+      }
+
+      state = randomState();
+      writeFacebookAuthState(state);
+      window.location.assign(buildFacebookLoginUrl(state));
+    }
+
+    function handleFacebookPageChange() {
+      var selectedOption;
+
+      if (!facebookPageSelect) {
+        return;
+      }
+
+      selectedOption = facebookPageSelect.options[facebookPageSelect.selectedIndex];
+      facebookPageId = facebookPageSelect.value || '';
+      facebookPageToken = selectedOption && selectedOption.dataset ? selectedOption.dataset.pageToken || '' : '';
+      updateFacebookButtonState();
+    }
+
+    function uploadFacebookAvatar() {
+      var imageData;
+      var payload;
+
+      if (!hasReadyCanvasImage()) {
+        setStatus('Upload and apply effects before setting a Facebook avatar.', true);
+        return;
+      }
+
+      if (!facebookPageId || !facebookPageToken) {
+        setStatus('Select a Facebook Page first.', true);
+        return;
+      }
+
+      if (!config.ajaxUrl || !actions.setFacebookAvatar || !config.facebookAvatarNonce) {
+        setStatus('Facebook upload endpoint is not configured.', true);
+        return;
+      }
+
+      imageData = canvas.toDataURL('image/png');
+      isUploadingFacebookAvatar = true;
+      updateFacebookButtonState();
+      setStatus('Uploading image to Facebook...', false);
+
+      payload = new URLSearchParams();
+      payload.set('action', actions.setFacebookAvatar);
+      payload.set('nonce', String(config.facebookAvatarNonce));
+      payload.set('pageId', facebookPageId);
+      payload.set('pageAccessToken', facebookPageToken);
+      payload.set('imageData', imageData);
+
+      fetch(String(config.ajaxUrl), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+        },
+        body: payload.toString()
+      })
+        .then(function (response) {
+          return response.json().then(function (json) {
+            if (!response.ok || !json || !json.success) {
+              throw new Error((json && json.data && json.data.message) || 'Facebook avatar update failed.');
+            }
+
+            return json;
+          });
+        })
+        .then(function (json) {
+          setStatus((json.data && json.data.message) || 'Facebook Page avatar updated.', false);
+        })
+        .catch(function (error) {
+          setStatus(error.message || 'Facebook avatar update failed.', true);
+        })
+        .finally(function () {
+          isUploadingFacebookAvatar = false;
+          updateFacebookButtonState();
+        });
+    }
+
+    function initFacebookUi() {
+      var fromHash;
+      var storedPages;
+
+      if (!facebookConnectButton || !facebookPageSelect || !facebookAvatarButton) {
+        return;
+      }
+
+      if (!isFacebookEnabled) {
+        setControlDisabled(facebookConnectButton, true);
+        setControlDisabled(facebookPageSelect, true);
+        setControlDisabled(facebookAvatarButton, true);
+        facebookConnectButton.title = 'Facebook App ID must be configured in WordPress settings.';
+        return;
+      }
+
+      fromHash = hydrateFacebookFromHash();
+      if (!fromHash) {
+        storeFacebookUserToken(readStoredFacebookUserToken());
+      }
+
+      storedPages = readStoredFacebookPages();
+      if (storedPages.length) {
+        populateFacebookPages(storedPages);
+      }
+
+      if (facebookUserToken) {
+        loadFacebookPagesFromGraph(facebookUserToken)
+          .then(function (pages) {
+            if (!pages.length) {
+              setStatus('Connected, but no manageable Facebook Pages were found.', true);
+            }
+          })
+          .catch(function (error) {
+            setStatus(error.message || 'Could not fetch Facebook Pages. Try reconnecting.', true);
+          })
+          .finally(function () {
+            updateFacebookButtonState();
+          });
+      }
+
+      facebookConnectButton.addEventListener('click', startFacebookConnect);
+      facebookPageSelect.addEventListener('change', handleFacebookPageChange);
+      facebookAvatarButton.addEventListener('click', uploadFacebookAvatar);
+      updateFacebookButtonState();
     }
 
     function drawPlaceholder() {
@@ -264,11 +626,11 @@
       }
 
       downloadButton.disabled = false;
+      updateFacebookButtonState();
       setStatus('Effects applied. Download is ready.', false);
     }
 
-    function handleFileSelect() {
-      var file = input.files && input.files[0];
+    function processFile(file) {
       if (!file) {
         return;
       }
@@ -297,6 +659,10 @@
         });
     }
 
+    function handleFileSelect() {
+      processFile(input.files && input.files[0]);
+    }
+
     function handleDownload() {
       if (!sourceImage) {
         return;
@@ -316,6 +682,41 @@
     input.addEventListener('change', handleFileSelect);
     applyButton.addEventListener('click', drawEffects);
     downloadButton.addEventListener('click', handleDownload);
+    initFacebookUi();
+
+    function addDropZone(element, dragoverClass) {
+      element.addEventListener('dragenter', function (event) {
+        event.preventDefault();
+        element.classList.add(dragoverClass);
+      });
+
+      element.addEventListener('dragover', function (event) {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'copy';
+        element.classList.add(dragoverClass);
+      });
+
+      element.addEventListener('dragleave', function (event) {
+        if (!element.contains(event.relatedTarget)) {
+          element.classList.remove(dragoverClass);
+        }
+      });
+
+      element.addEventListener('drop', function (event) {
+        event.preventDefault();
+        element.classList.remove(dragoverClass);
+        var file = event.dataTransfer.files && event.dataTransfer.files[0];
+        processFile(file);
+      });
+    }
+
+    if (uploadLabel) {
+      addDropZone(uploadLabel, 'am-upload--dragover');
+    }
+
+    if (previewPanel) {
+      addDropZone(previewPanel, 'am-preview-panel--dragover');
+    }
 
     for (var i = 0; i < toggles.length; i += 1) {
       toggles[i].addEventListener('change', function () {
@@ -326,6 +727,7 @@
     }
 
     drawPlaceholder();
+    updateFacebookButtonState();
   }
 
   function init() {

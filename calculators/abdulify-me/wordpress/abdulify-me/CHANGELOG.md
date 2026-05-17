@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added a new Facebook Page avatar action in the Abdulify widget:
+	- `Connect Facebook` button
+	- Page selector
+	- `Set as Facebook Page Avatar` button
+- Added WordPress settings page entry (Settings -> Abdulify Me) with configurable Facebook App ID.
+- Added secure AJAX upload endpoint for forwarding generated PNG image data to Facebook Page picture API.
+- Added frontend OAuth token handling (session-based) for loading manageable Pages and triggering one-click avatar updates.
+
 ## [0.1.2] - 2026-05-17
 
 

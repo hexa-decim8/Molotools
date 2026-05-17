@@ -74,6 +74,22 @@
   border-radius: 12px;
   padding: 14px;
   background: linear-gradient(145deg, var(--am-upload-bg-start), var(--am-upload-bg-end));
+  transition: border-color 0.15s, background-color 0.15s;
+}
+
+.am-upload--dragover {
+  border: 2px solid var(--am-primary);
+  background: var(--am-upload-bg-start);
+  cursor: copy;
+  outline: 3px solid var(--am-primary);
+  outline-offset: 2px;
+}
+
+.am-preview-panel--dragover {
+  border-color: var(--am-primary);
+  outline: 3px solid var(--am-primary);
+  outline-offset: 2px;
+  cursor: copy;
 }
 
 .am-upload-title {
@@ -150,6 +166,40 @@
   min-height: 1.4em;
   margin: 14px 0 0;
   color: var(--am-status-info);
+}
+
+.am-facebook {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--am-border);
+  display: grid;
+  gap: 8px;
+}
+
+.am-facebook-label {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--am-primary-strong);
+}
+
+.am-facebook-connect {
+  background: var(--am-primary-strong);
+  color: var(--am-primary-contrast);
+}
+
+.am-facebook-page {
+  width: 100%;
+  border: 1px solid var(--am-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #ffffff;
+  color: var(--am-ink);
+}
+
+.am-facebook-avatar {
+  background: var(--am-primary);
+  color: var(--am-primary-contrast);
 }
 
 .am-canvas {

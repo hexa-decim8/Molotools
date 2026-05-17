@@ -6,6 +6,8 @@ Abdulify Me is a standalone WordPress plugin that lets users upload a photo, app
 
 All image processing is client-side and does not persist uploads on the server.
 
+The plugin also supports one-click updates to a Facebook Page profile picture after effects are applied.
+
 ## Installation
 
 1. Download `abdulify-me.zip` from GitHub Releases.
@@ -22,6 +24,24 @@ Optional attributes:
 ```text
 [abdulify_me title="Abdulify Me" subtitle="Upload a photo and download a campaign-style version"]
 ```
+
+## Facebook Page Avatar Setup
+
+1. In WordPress Admin, open Settings -> Abdulify Me.
+2. Enter a Facebook App ID (from your Meta app) and save.
+3. Ensure your Meta app is configured for Facebook Login and allows this site domain/redirect URL.
+4. In the widget, click Connect Facebook, sign in, choose a manageable Page, then click Set as Facebook Page Avatar.
+
+Requested Facebook permissions:
+
+- `pages_show_list`
+- `pages_read_engagement`
+- `pages_manage_metadata`
+
+Notes:
+
+- The one-click flow targets Facebook Pages. Personal profile avatar updates are not supported by Facebook Graph API create/update endpoints.
+- The plugin does not store long-lived Facebook tokens server-side. Page access tokens are used during the active browser session.
 
 ## Color Inheritance and Overrides
 
@@ -80,6 +100,7 @@ You can also override defaults in WordPress/PHP with filter hooks:
 - Uploaded files are handled in the browser via Canvas APIs.
 - The plugin does not upload image files to WordPress media storage.
 - No server-side image processing is performed.
+- For Facebook Page avatar updates, an image payload is posted to WordPress AJAX and forwarded to Facebook. A temporary server file is created only for the upload request and then deleted.
 
 ## Updates
 

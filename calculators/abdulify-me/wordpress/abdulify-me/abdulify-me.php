@@ -373,10 +373,102 @@ register_deactivation_hook( __FILE__, 'abdulify_me_deactivate' );
 
 final class Abdulify_Me_Plugin {
     const SHORTCODE = 'abdulify_me';
+    const SETTINGS_GROUP = 'abdulify_me_settings';
+    const OPTION_FACEBOOK_APP_ID = 'abdulify_me_facebook_app_id';
+    const FACEBOOK_GRAPH_VERSION = 'v25.0';
+    const FACEBOOK_PERMISSIONS = 'pages_show_list,pages_read_engagement,pages_manage_metadata';
+    const AJAX_ACTION_SET_FACEBOOK_AVATAR = 'abdulify_me_set_facebook_avatar';
 
     public function __construct() {
         add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_assets' ) );
         add_shortcode( self::SHORTCODE, array( $this, 'render_shortcode' ) );
+        add_action( 'admin_menu', array( $this, 'register_settings_page' ) );
+        add_action( 'admin_init', array( $this, 'register_settings' ) );
+        add_action( 'wp_ajax_' . self::AJAX_ACTION_SET_FACEBOOK_AVATAR, array( $this, 'ajax_set_facebook_avatar' ) );
+        add_action( 'wp_ajax_nopriv_' . self::AJAX_ACTION_SET_FACEBOOK_AVATAR, array( $this, 'ajax_set_facebook_avatar' ) );
+    }
+
+    public function register_settings_page() {
+        add_options_page(
+            __( 'Abdulify Me', 'abdulify-me' ),
+            __( 'Abdulify Me', 'abdulify-me' ),
+            'manage_options',
+            'abdulify-me-settings',
+            array( $this, 'render_settings_page' )
+        );
+    }
+
+    public function register_settings() {
+        register_setting(
+            self::SETTINGS_GROUP,
+            self::OPTION_FACEBOOK_APP_ID,
+            array(
+                'type' => 'string',
+                'sanitize_callback' => 'sanitize_text_field',
+                'default' => '',
+            )
+        );
+
+        add_settings_section(
+            'abdulify_me_facebook_section',
+            __( 'Facebook Page Avatar', 'abdulify-me' ),
+            array( $this, 'render_facebook_settings_description' ),
+            self::SETTINGS_GROUP
+        );
+
+        add_settings_field(
+            self::OPTION_FACEBOOK_APP_ID,
+            __( 'Facebook App ID', 'abdulify-me' ),
+            array( $this, 'render_facebook_app_id_field' ),
+            self::SETTINGS_GROUP,
+            'abdulify_me_facebook_section'
+        );
+    }
+
+    public function render_facebook_settings_description() {
+        echo '<p>' . esc_html__( 'Enable one-click Page avatar updates by entering a Meta App ID configured for Facebook Login. The widget requests only Page permissions and does not store long-lived tokens server-side.', 'abdulify-me' ) . '</p>';
+        echo '<p><strong>' . esc_html__( 'Permissions requested:', 'abdulify-me' ) . '</strong> <code>' . esc_html( self::FACEBOOK_PERMISSIONS ) . '</code></p>';
+    }
+
+    public function render_facebook_app_id_field() {
+        $value = get_option( self::OPTION_FACEBOOK_APP_ID, '' );
+        ?>
+        <input
+            type="text"
+            class="regular-text"
+            id="<?php echo esc_attr( self::OPTION_FACEBOOK_APP_ID ); ?>"
+            name="<?php echo esc_attr( self::OPTION_FACEBOOK_APP_ID ); ?>"
+            value="<?php echo esc_attr( $value ); ?>"
+            autocomplete="off"
+            spellcheck="false"
+        />
+        <p class="description">
+            <?php esc_html_e( 'Set your Meta app ID. Keep your app secret out of WordPress frontend code. The plugin uses the Facebook implicit login flow and uploads the generated image to a selected Facebook Page.', 'abdulify-me' ); ?>
+        </p>
+        <?php
+    }
+
+    public function render_settings_page() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+
+        ?>
+        <div class="wrap">
+            <h1><?php esc_html_e( 'Abdulify Me Settings', 'abdulify-me' ); ?></h1>
+            <form method="post" action="options.php">
+                <?php
+                settings_fields( self::SETTINGS_GROUP );
+                do_settings_sections( self::SETTINGS_GROUP );
+                submit_button();
+                ?>
+            </form>
+        </div>
+        <?php
+    }
+
+    private function get_facebook_app_id() {
+        return (string) get_option( self::OPTION_FACEBOOK_APP_ID, '' );
     }
 
     public function enqueue_assets() {
@@ -437,6 +529,17 @@ final class Abdulify_Me_Plugin {
                 'colors'      => $colors,
                 'maxBytes'    => 8 * 1024 * 1024,
                 'nonce'       => wp_create_nonce( 'abdulify_me_client' ),
+                'ajaxUrl'     => admin_url( 'admin-ajax.php' ),
+                'actions'     => array(
+                    'setFacebookAvatar' => self::AJAX_ACTION_SET_FACEBOOK_AVATAR,
+                ),
+                'facebookAvatarNonce' => wp_create_nonce( 'abdulify_me_facebook_avatar' ),
+                'facebook' => array(
+                    'enabled'      => '' !== $this->get_facebook_app_id(),
+                    'appId'        => $this->get_facebook_app_id(),
+                    'graphVersion' => self::FACEBOOK_GRAPH_VERSION,
+                    'permissions'  => self::FACEBOOK_PERMISSIONS,
+                ),
             )
         );
     }
@@ -503,6 +606,22 @@ final class Abdulify_Me_Plugin {
                         </button>
                     </div>
 
+                    <div class="am-facebook" data-am-facebook>
+                        <p class="am-facebook-label"><?php esc_html_e( 'Facebook Page Avatar', 'abdulify-me' ); ?></p>
+                        <button class="am-button am-facebook-connect" type="button" data-am-fb-connect>
+                            <?php esc_html_e( 'Connect Facebook', 'abdulify-me' ); ?>
+                        </button>
+                        <label class="am-facebook-page-wrap">
+                            <span class="screen-reader-text"><?php esc_html_e( 'Select Facebook Page', 'abdulify-me' ); ?></span>
+                            <select class="am-facebook-page" data-am-fb-page disabled>
+                                <option value=""><?php esc_html_e( 'Select a Facebook Page', 'abdulify-me' ); ?></option>
+                            </select>
+                        </label>
+                        <button class="am-button am-facebook-avatar" type="button" data-am-fb-avatar disabled>
+                            <?php esc_html_e( 'Set as Facebook Page Avatar', 'abdulify-me' ); ?>
+                        </button>
+                    </div>
+
                     <p class="am-status" data-am-status><?php esc_html_e( 'Choose a photo to begin.', 'abdulify-me' ); ?></p>
                 </div>
 
@@ -514,6 +633,170 @@ final class Abdulify_Me_Plugin {
         <?php
 
         return (string) ob_get_clean();
+    }
+
+    public function ajax_set_facebook_avatar() {
+        $nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
+        if ( ! wp_verify_nonce( $nonce, 'abdulify_me_facebook_avatar' ) ) {
+            wp_send_json_error(
+                array(
+                    'message' => __( 'Security check failed. Refresh and try again.', 'abdulify-me' ),
+                ),
+                403
+            );
+        }
+
+        $page_id           = isset( $_POST['pageId'] ) ? sanitize_text_field( wp_unslash( $_POST['pageId'] ) ) : '';
+        $page_access_token = isset( $_POST['pageAccessToken'] ) ? sanitize_text_field( wp_unslash( $_POST['pageAccessToken'] ) ) : '';
+        $image_data        = isset( $_POST['imageData'] ) ? wp_unslash( $_POST['imageData'] ) : '';
+
+        if ( ! preg_match( '/^[0-9]+$/', $page_id ) ) {
+            wp_send_json_error(
+                array(
+                    'message' => __( 'Invalid Facebook Page selected.', 'abdulify-me' ),
+                ),
+                400
+            );
+        }
+
+        if ( strlen( $page_access_token ) < 20 ) {
+            wp_send_json_error(
+                array(
+                    'message' => __( 'Missing Facebook authorization token.', 'abdulify-me' ),
+                ),
+                400
+            );
+        }
+
+        if ( ! is_string( $image_data ) || 0 !== strpos( $image_data, 'data:image/png;base64,' ) ) {
+            wp_send_json_error(
+                array(
+                    'message' => __( 'Invalid image payload. Please apply effects again and retry.', 'abdulify-me' ),
+                ),
+                400
+            );
+        }
+
+        $raw_payload = substr( $image_data, strlen( 'data:image/png;base64,' ) );
+        $binary      = base64_decode( $raw_payload, true );
+
+        if ( false === $binary || '' === $binary ) {
+            wp_send_json_error(
+                array(
+                    'message' => __( 'Could not decode image data.', 'abdulify-me' ),
+                ),
+                400
+            );
+        }
+
+        if ( strlen( $binary ) > ( 10 * 1024 * 1024 ) ) {
+            wp_send_json_error(
+                array(
+                    'message' => __( 'Image is too large for Facebook upload.', 'abdulify-me' ),
+                ),
+                413
+            );
+        }
+
+        $temp_file = wp_tempnam( 'abdulify-facebook-avatar' );
+        if ( ! $temp_file ) {
+            wp_send_json_error(
+                array(
+                    'message' => __( 'Server could not prepare image upload.', 'abdulify-me' ),
+                ),
+                500
+            );
+        }
+
+        $bytes_written = file_put_contents( $temp_file, $binary );
+        if ( false === $bytes_written || 0 === $bytes_written ) {
+            @unlink( $temp_file );
+            wp_send_json_error(
+                array(
+                    'message' => __( 'Server could not prepare image upload.', 'abdulify-me' ),
+                ),
+                500
+            );
+        }
+
+        $upload_result = $this->upload_facebook_page_avatar( $page_id, $page_access_token, $temp_file );
+        @unlink( $temp_file );
+
+        if ( is_wp_error( $upload_result ) ) {
+            wp_send_json_error(
+                array(
+                    'message' => $upload_result->get_error_message(),
+                ),
+                500
+            );
+        }
+
+        wp_send_json_success(
+            array(
+                'message' => __( 'Facebook Page avatar updated.', 'abdulify-me' ),
+            )
+        );
+    }
+
+    private function upload_facebook_page_avatar( $page_id, $page_access_token, $temp_file ) {
+        if ( ! function_exists( 'curl_init' ) ) {
+            return new WP_Error( 'am_curl_missing', __( 'Server is missing cURL support for Facebook upload.', 'abdulify-me' ) );
+        }
+
+        if ( ! function_exists( 'curl_file_create' ) ) {
+            return new WP_Error( 'am_curl_file_missing', __( 'Server is missing curl_file_create required for image upload.', 'abdulify-me' ) );
+        }
+
+        $endpoint = sprintf(
+            'https://graph.facebook.com/%s/%s/picture',
+            self::FACEBOOK_GRAPH_VERSION,
+            rawurlencode( $page_id )
+        );
+
+        $file = curl_file_create( $temp_file, 'image/png', 'abdulified-photo.png' );
+
+        $ch = curl_init( $endpoint );
+        if ( false === $ch ) {
+            return new WP_Error( 'am_curl_init_failed', __( 'Could not initialize Facebook upload request.', 'abdulify-me' ) );
+        }
+
+        curl_setopt(
+            $ch,
+            CURLOPT_POSTFIELDS,
+            array(
+                'access_token' => $page_access_token,
+                'source'       => $file,
+            )
+        );
+        curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+        curl_setopt( $ch, CURLOPT_TIMEOUT, 25 );
+        curl_setopt( $ch, CURLOPT_HTTPHEADER, array( 'Expect:' ) );
+
+        $response_body = curl_exec( $ch );
+        $curl_error    = curl_error( $ch );
+        $status_code   = (int) curl_getinfo( $ch, CURLINFO_RESPONSE_CODE );
+
+        curl_close( $ch );
+
+        if ( '' !== $curl_error ) {
+            return new WP_Error( 'am_facebook_curl_error', sprintf( __( 'Facebook request failed: %s', 'abdulify-me' ), $curl_error ) );
+        }
+
+        $decoded = json_decode( (string) $response_body, true );
+        if ( ! is_array( $decoded ) ) {
+            return new WP_Error( 'am_facebook_invalid_response', __( 'Facebook returned an invalid response.', 'abdulify-me' ) );
+        }
+
+        if ( $status_code >= 400 || empty( $decoded['success'] ) ) {
+            $error_message = __( 'Facebook rejected the avatar update request.', 'abdulify-me' );
+            if ( isset( $decoded['error']['message'] ) && is_string( $decoded['error']['message'] ) ) {
+                $error_message = $decoded['error']['message'];
+            }
+
+            return new WP_Error( 'am_facebook_upload_failed', $error_message );
+        }
+
+        return $decoded;
     }
 }
 
