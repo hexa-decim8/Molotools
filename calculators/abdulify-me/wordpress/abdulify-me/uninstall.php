@@ -22,3 +22,7 @@ $wpdb->query(
 delete_option( 'abdulify_me_settings' );
 delete_option( 'am_updater_last_error' );
 delete_option( 'am_updater_last_check' );
+
+// Drop avatar events tracking table
+$table_name = $wpdb->prefix . 'abdulify_me_avatar_events';
+$wpdb->query( "DROP TABLE IF EXISTS $table_name" );

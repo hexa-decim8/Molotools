@@ -465,12 +465,27 @@
       updateFacebookButtonState();
       setStatus('Uploading image to Facebook...', false);
 
+      // Collect which effects are currently enabled
+      var effectsData = {
+        frame: false,
+        text: false,
+        tint: false,
+        badge: false
+      };
+      
+      document.querySelectorAll('[data-am-effect]').forEach(function (checkbox) {
+        if (checkbox.type === 'checkbox') {
+          effectsData[checkbox.dataset.amEffect] = checkbox.checked;
+        }
+      });
+
       payload = new URLSearchParams();
       payload.set('action', actions.setFacebookAvatar);
       payload.set('nonce', String(config.facebookAvatarNonce));
       payload.set('pageId', facebookPageId);
       payload.set('pageAccessToken', facebookPageToken);
       payload.set('imageData', imageData);
+      payload.set('effectsUsed', JSON.stringify(effectsData));
 
       fetch(String(config.ajaxUrl), {
         method: 'POST',

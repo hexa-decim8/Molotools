@@ -357,11 +357,33 @@ function abdulify_me_register_cron_schedule( $schedules ) {
 add_filter( 'cron_schedules', 'abdulify_me_register_cron_schedule' );
 
 function abdulify_me_activate() {
-    global $abdulify_me_updater;
+    global $abdulify_me_updater, $wpdb;
 
     if ( $abdulify_me_updater instanceof AM_GitHub_Updater ) {
         $abdulify_me_updater->ensure_schedule();
     }
+
+    // Create avatar events tracking table
+    $charset_collate = $wpdb->get_charset_collate();
+    $table_name      = $wpdb->prefix . 'abdulify_me_avatar_events';
+
+    $sql = "CREATE TABLE IF NOT EXISTS $table_name (
+        id bigint(20) NOT NULL AUTO_INCREMENT,
+        user_id bigint(20),
+        session_id varchar(64),
+        facebook_page_id varchar(20),
+        effects_used longtext,
+        success tinyint(1) NOT NULL DEFAULT 0,
+        error_message text,
+        created_at datetime DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        KEY user_id (user_id),
+        KEY success (success),
+        KEY created_at (created_at)
+    ) $charset_collate;";
+
+    require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+    dbDelta( $sql );
 }
 register_activation_hook( __FILE__, 'abdulify_me_activate' );
 
@@ -378,6 +400,7 @@ final class Abdulify_Me_Plugin {
     const FACEBOOK_GRAPH_VERSION = 'v25.0';
     const FACEBOOK_PERMISSIONS = 'pages_show_list,pages_read_engagement,pages_manage_metadata';
     const AJAX_ACTION_SET_FACEBOOK_AVATAR = 'abdulify_me_set_facebook_avatar';
+    const SESSION_ID_TRANSIENT = 'abdulify_me_session_';
 
     public function __construct() {
         add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_assets' ) );
@@ -453,6 +476,8 @@ final class Abdulify_Me_Plugin {
             return;
         }
 
+        $stats = $this->get_statistics();
+
         ?>
         <div class="wrap">
             <h1><?php esc_html_e( 'Abdulify Me Settings', 'abdulify-me' ); ?></h1>
@@ -463,6 +488,64 @@ final class Abdulify_Me_Plugin {
                 submit_button();
                 ?>
             </form>
+
+            <?php if ( $stats['total_attempts'] > 0 ) : ?>
+                <div class="card" style="margin-top: 20px;">
+                    <h2><?php esc_html_e( 'Facebook Avatar Statistics', 'abdulify-me' ); ?></h2>
+                    <table class="widefat" style="margin-top: 15px;">
+                        <tbody>
+                            <tr>
+                                <td><?php esc_html_e( 'Total Avatar Updates Attempted', 'abdulify-me' ); ?></td>
+                                <td><strong><?php echo esc_html( $stats['total_attempts'] ); ?></strong></td>
+                            </tr>
+                            <tr>
+                                <td><?php esc_html_e( 'Successful Updates', 'abdulify-me' ); ?></td>
+                                <td><strong><?php echo esc_html( $stats['successful'] ); ?></strong></td>
+                            </tr>
+                            <tr>
+                                <td><?php esc_html_e( 'Failed Updates', 'abdulify-me' ); ?></td>
+                                <td><strong><?php echo esc_html( $stats['failed'] ); ?></strong></td>
+                            </tr>
+                            <tr>
+                                <td><?php esc_html_e( 'Success Rate', 'abdulify-me' ); ?></td>
+                                <td><strong><?php echo esc_html( $stats['success_rate'] ); ?>%</strong></td>
+                            </tr>
+                            <tr>
+                                <td><?php esc_html_e( 'Unique Logged-in Users', 'abdulify-me' ); ?></td>
+                                <td><strong><?php echo esc_html( $stats['unique_users'] ); ?></strong></td>
+                            </tr>
+                            <tr>
+                                <td><?php esc_html_e( 'Unique Anonymous Sessions', 'abdulify-me' ); ?></td>
+                                <td><strong><?php echo esc_html( $stats['unique_sessions'] ); ?></strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <?php if ( ! empty( $stats['effects_breakdown'] ) ) : ?>
+                        <h3 style="margin-top: 20px;"><?php esc_html_e( 'Effects Used in Successful Updates', 'abdulify-me' ); ?></h3>
+                        <table class="widefat">
+                            <tbody>
+                                <?php foreach ( $stats['effects_breakdown'] as $effect => $count ) : ?>
+                                    <tr>
+                                        <td>
+                                            <?php
+                                            $effect_labels = array(
+                                                'frame' => __( 'Campaign Frame', 'abdulify-me' ),
+                                                'text'  => __( 'Support Text Ribbon', 'abdulify-me' ),
+                                                'tint'  => __( 'Color Treatment', 'abdulify-me' ),
+                                                'badge' => __( 'Badge Sticker', 'abdulify-me' ),
+                                            );
+                                            echo esc_html( $effect_labels[ $effect ] ?? ucfirst( $effect ) );
+                                            ?>
+                                        </td>
+                                        <td><strong><?php echo esc_html( $count ); ?></strong></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
         </div>
         <?php
     }
@@ -649,8 +732,16 @@ final class Abdulify_Me_Plugin {
         $page_id           = isset( $_POST['pageId'] ) ? sanitize_text_field( wp_unslash( $_POST['pageId'] ) ) : '';
         $page_access_token = isset( $_POST['pageAccessToken'] ) ? sanitize_text_field( wp_unslash( $_POST['pageAccessToken'] ) ) : '';
         $image_data        = isset( $_POST['imageData'] ) ? wp_unslash( $_POST['imageData'] ) : '';
+        $effects_used      = isset( $_POST['effectsUsed'] ) ? wp_unslash( $_POST['effectsUsed'] ) : '{}';
+
+        // Parse effects JSON
+        $effects_array = json_decode( $effects_used, true );
+        if ( ! is_array( $effects_array ) ) {
+            $effects_array = array();
+        }
 
         if ( ! preg_match( '/^[0-9]+$/', $page_id ) ) {
+            $this->log_avatar_event( 'invalid', $effects_array, false, 'Invalid Facebook Page ID' );
             wp_send_json_error(
                 array(
                     'message' => __( 'Invalid Facebook Page selected.', 'abdulify-me' ),
@@ -660,6 +751,7 @@ final class Abdulify_Me_Plugin {
         }
 
         if ( strlen( $page_access_token ) < 20 ) {
+            $this->log_avatar_event( $page_id, $effects_array, false, 'Missing Facebook authorization token' );
             wp_send_json_error(
                 array(
                     'message' => __( 'Missing Facebook authorization token.', 'abdulify-me' ),
@@ -669,6 +761,7 @@ final class Abdulify_Me_Plugin {
         }
 
         if ( ! is_string( $image_data ) || 0 !== strpos( $image_data, 'data:image/png;base64,' ) ) {
+            $this->log_avatar_event( $page_id, $effects_array, false, 'Invalid image payload format' );
             wp_send_json_error(
                 array(
                     'message' => __( 'Invalid image payload. Please apply effects again and retry.', 'abdulify-me' ),
@@ -681,6 +774,7 @@ final class Abdulify_Me_Plugin {
         $binary      = base64_decode( $raw_payload, true );
 
         if ( false === $binary || '' === $binary ) {
+            $this->log_avatar_event( $page_id, $effects_array, false, 'Could not decode image data' );
             wp_send_json_error(
                 array(
                     'message' => __( 'Could not decode image data.', 'abdulify-me' ),
@@ -690,6 +784,7 @@ final class Abdulify_Me_Plugin {
         }
 
         if ( strlen( $binary ) > ( 10 * 1024 * 1024 ) ) {
+            $this->log_avatar_event( $page_id, $effects_array, false, 'Image too large for upload' );
             wp_send_json_error(
                 array(
                     'message' => __( 'Image is too large for Facebook upload.', 'abdulify-me' ),
@@ -700,6 +795,7 @@ final class Abdulify_Me_Plugin {
 
         $temp_file = wp_tempnam( 'abdulify-facebook-avatar' );
         if ( ! $temp_file ) {
+            $this->log_avatar_event( $page_id, $effects_array, false, 'Server could not prepare image upload' );
             wp_send_json_error(
                 array(
                     'message' => __( 'Server could not prepare image upload.', 'abdulify-me' ),
@@ -711,6 +807,7 @@ final class Abdulify_Me_Plugin {
         $bytes_written = file_put_contents( $temp_file, $binary );
         if ( false === $bytes_written || 0 === $bytes_written ) {
             @unlink( $temp_file );
+            $this->log_avatar_event( $page_id, $effects_array, false, 'Could not write image to temporary file' );
             wp_send_json_error(
                 array(
                     'message' => __( 'Server could not prepare image upload.', 'abdulify-me' ),
@@ -723,6 +820,7 @@ final class Abdulify_Me_Plugin {
         @unlink( $temp_file );
 
         if ( is_wp_error( $upload_result ) ) {
+            $this->log_avatar_event( $page_id, $effects_array, false, $upload_result->get_error_message() );
             wp_send_json_error(
                 array(
                     'message' => $upload_result->get_error_message(),
@@ -731,10 +829,104 @@ final class Abdulify_Me_Plugin {
             );
         }
 
+        $this->log_avatar_event( $page_id, $effects_array, true );
         wp_send_json_success(
             array(
                 'message' => __( 'Facebook Page avatar updated.', 'abdulify-me' ),
             )
+        );
+    }
+
+    private function get_or_create_session_id() {
+        $session_id = isset( $_COOKIE['abdulify_me_session'] ) ? sanitize_text_field( wp_unslash( $_COOKIE['abdulify_me_session'] ) ) : '';
+
+        if ( empty( $session_id ) || strlen( $session_id ) !== 64 ) {
+            $session_id = bin2hex( random_bytes( 32 ) );
+            setcookie( 'abdulify_me_session', $session_id, time() + ( 30 * DAY_IN_SECONDS ), '/' );
+        }
+
+        return $session_id;
+    }
+
+    private function log_avatar_event( $page_id, $effects_used, $success, $error_message = '' ) {
+        global $wpdb;
+
+        $user_id   = get_current_user_id();
+        $session_id = $this->get_or_create_session_id();
+        $table_name = $wpdb->prefix . 'abdulify_me_avatar_events';
+
+        $wpdb->insert(
+            $table_name,
+            array(
+                'user_id'           => $user_id > 0 ? $user_id : null,
+                'session_id'        => $session_id,
+                'facebook_page_id'  => $page_id,
+                'effects_used'      => wp_json_encode( $effects_used ),
+                'success'           => $success ? 1 : 0,
+                'error_message'     => $error_message,
+            ),
+            array( '%d', '%s', '%s', '%s', '%d', '%s' )
+        );
+    }
+
+    public function get_statistics() {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'abdulify_me_avatar_events';
+
+        // Check if table exists
+        $table_exists = $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $table_name ) ) === $table_name;
+        if ( ! $table_exists ) {
+            return array(
+                'total_attempts'  => 0,
+                'successful'      => 0,
+                'failed'          => 0,
+                'success_rate'    => 0,
+                'unique_users'    => 0,
+                'unique_sessions' => 0,
+                'effects_breakdown' => array(),
+            );
+        }
+
+        $total_attempts = (int) $wpdb->get_var( "SELECT COUNT(*) FROM $table_name" );
+        $successful     = (int) $wpdb->get_var( "SELECT COUNT(*) FROM $table_name WHERE success = 1" );
+        $failed         = $total_attempts - $successful;
+        $success_rate   = $total_attempts > 0 ? round( ( $successful / $total_attempts ) * 100, 1 ) : 0;
+
+        $unique_users = (int) $wpdb->get_var(
+            "SELECT COUNT(DISTINCT user_id) FROM $table_name WHERE user_id IS NOT NULL"
+        );
+        $unique_sessions = (int) $wpdb->get_var(
+            "SELECT COUNT(DISTINCT session_id) FROM $table_name WHERE session_id IS NOT NULL"
+        );
+
+        // Calculate effects breakdown
+        $effects_breakdown = array(
+            'frame' => 0,
+            'text'  => 0,
+            'tint'  => 0,
+            'badge' => 0,
+        );
+
+        $events = $wpdb->get_results( "SELECT effects_used FROM $table_name WHERE success = 1 AND effects_used IS NOT NULL" );
+        foreach ( $events as $event ) {
+            $effects = json_decode( $event->effects_used, true );
+            if ( is_array( $effects ) ) {
+                foreach ( $effects as $effect => $enabled ) {
+                    if ( $enabled && isset( $effects_breakdown[ $effect ] ) ) {
+                        $effects_breakdown[ $effect ]++;
+                    }
+                }
+            }
+        }
+
+        return array(
+            'total_attempts'  => $total_attempts,
+            'successful'      => $successful,
+            'failed'          => $failed,
+            'success_rate'    => $success_rate,
+            'unique_users'    => $unique_users,
+            'unique_sessions' => $unique_sessions,
+            'effects_breakdown' => $effects_breakdown,
         );
     }
 

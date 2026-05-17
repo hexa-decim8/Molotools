@@ -18,6 +18,8 @@
 
   var toolkitId = script.getAttribute('data-toolkit-id');
   var apiBase = script.getAttribute('data-api') || '';
+  var FB_ACCOUNT_KEY = 'sa_facebook_account_id';
+  var PROFILE_RETRY_KEY = 'sa_profile_pic_retry_content_id';
 
   // Platform icons (inline SVG paths)
   var PLATFORM_ICONS = {
@@ -28,6 +30,8 @@
     x: '<svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>',
     tiktok:
       '<svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>',
+    profilePicture:
+      '<svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 12c2.76 0 5-2.24 5-5S14.76 2 12 2 7 4.24 7 7s2.24 5 5 5zm0 2c-3.34 0-10 1.68-10 5v3h20v-3c0-3.32-6.66-5-10-5zm7-1h-2v-2h-2v2h-2v2h2v2h2v-2h2z"/></svg>',
   };
 
   var PLATFORM_COLORS = {
@@ -35,7 +39,10 @@
     instagram: '#E4405F',
     x: '#000000',
     tiktok: '#000000',
+    profilePicture: '#1877F2',
   };
+
+  persistFacebookAccountFromQuery();
 
   // Fetch toolkit data
   fetch(apiBase + '/api/share/toolkit/' + toolkitId)
@@ -138,6 +145,23 @@
         buttons.appendChild(btn);
       });
 
+      // Profile picture action button (single-click flow)
+      if (item.media_url) {
+        var profileBtn = document.createElement('button');
+        profileBtn.className = 'sa-btn sa-btn-profile';
+        profileBtn.dataset.contentId = item.id;
+        profileBtn.style.backgroundColor = PLATFORM_COLORS.profilePicture;
+        profileBtn.innerHTML =
+          PLATFORM_ICONS.profilePicture + '<span>Set Profile Pic</span>';
+        profileBtn.title = 'Upload this image to Facebook and review it for profile picture';
+
+        profileBtn.addEventListener('click', function () {
+          runProfilePictureFlow(item.id, profileBtn);
+        });
+
+        buttons.appendChild(profileBtn);
+      }
+
       // Copy button
       var copyBtn = document.createElement('button');
       copyBtn.className = 'sa-btn sa-btn-copy';
@@ -156,6 +180,130 @@
     });
 
     container.className = 'sa-toolkit';
+
+    // If the user just reconnected Facebook, continue the pending action automatically.
+    var pendingContentId = safeStorageGet(PROFILE_RETRY_KEY);
+    if (pendingContentId) {
+      safeStorageRemove(PROFILE_RETRY_KEY);
+      var pendingBtn = container.querySelector('[data-content-id="' + pendingContentId + '"]');
+      runProfilePictureFlow(pendingContentId, pendingBtn);
+    }
+  }
+
+  function runProfilePictureFlow(contentId, btn) {
+    var accountId = safeStorageGet(FB_ACCOUNT_KEY);
+    if (!accountId) {
+      safeStorageSet(PROFILE_RETRY_KEY, contentId);
+      redirectToFacebookConnect();
+      return;
+    }
+
+    var body = {
+      content_id: contentId,
+      account_id: accountId,
+      return_url: window.location.href,
+    };
+
+    if (btn) setLoadingState(btn, 'Preparing...');
+
+    fetch(apiBase + '/api/share/toolkit/' + toolkitId + '/profile-picture', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+      .then(function (res) {
+        return res.json().then(function (data) {
+          return { status: res.status, ok: res.ok, data: data };
+        });
+      })
+      .then(function (result) {
+        if (result.ok && result.data.review_url) {
+          window.location.href = result.data.review_url;
+          return;
+        }
+
+        if (
+          (result.status === 401 || result.status === 403) &&
+          (result.data.error === 'facebook_connect_required' ||
+            result.data.error === 'facebook_reconnect_required')
+        ) {
+          safeStorageSet(PROFILE_RETRY_KEY, contentId);
+          if (result.data.reconnect_url) {
+            window.location.href = result.data.reconnect_url;
+            return;
+          }
+          redirectToFacebookConnect();
+          return;
+        }
+
+        throw new Error(result.data.error || 'Failed to start profile picture flow');
+      })
+      .catch(function (err) {
+        console.error('[Social Amplifier] Profile picture flow failed:', err);
+        if (btn) showCopiedToast(btn, 'Failed. Try again.');
+      })
+      .finally(function () {
+        if (btn) clearLoadingState(btn);
+      });
+  }
+
+  function redirectToFacebookConnect() {
+    var returnUrl = encodeURIComponent(window.location.href);
+    window.location.href = apiBase + '/api/auth/facebook/connect?return_url=' + returnUrl;
+  }
+
+  function persistFacebookAccountFromQuery() {
+    var params = new URLSearchParams(window.location.search);
+    var connected = params.get('connected');
+    var accountId = params.get('account_id');
+    if (connected === 'facebook' && accountId) {
+      safeStorageSet(FB_ACCOUNT_KEY, accountId);
+      params.delete('connected');
+      params.delete('account_id');
+      var cleanQuery = params.toString();
+      var cleanUrl = window.location.pathname + (cleanQuery ? '?' + cleanQuery : '') + window.location.hash;
+      window.history.replaceState({}, document.title, cleanUrl);
+    }
+  }
+
+  function setLoadingState(btn, label) {
+    btn.dataset.originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span>' + label + '</span>';
+    btn.classList.add('sa-btn-loading');
+  }
+
+  function clearLoadingState(btn) {
+    btn.disabled = false;
+    if (btn.dataset.originalHtml) {
+      btn.innerHTML = btn.dataset.originalHtml;
+      delete btn.dataset.originalHtml;
+    }
+    btn.classList.remove('sa-btn-loading');
+  }
+
+  function safeStorageGet(key) {
+    try {
+      return window.localStorage.getItem(key);
+    } catch (_e) {
+      return null;
+    }
+  }
+
+  function safeStorageSet(key, value) {
+    try {
+      window.localStorage.setItem(key, value);
+    } catch (_e) {
+      // no-op when storage is unavailable
+    }
+  }
+
+  function safeStorageRemove(key) {
+    try {
+      window.localStorage.removeItem(key);
+    } catch (_e) {
+      // no-op when storage is unavailable
+    }
   }
 
   function trackShare(contentId, platform) {
@@ -214,6 +362,7 @@
       '.sa-btn:active { transform: translateY(0); }\n' +
       '.sa-btn-copy { background: #718096; }\n' +
       '.sa-btn-success { background: #38a169 !important; }\n' +
+      '.sa-btn-loading { opacity: 0.75; cursor: wait; }\n' +
       '.sa-btn svg { flex-shrink: 0; }\n'
     );
   }

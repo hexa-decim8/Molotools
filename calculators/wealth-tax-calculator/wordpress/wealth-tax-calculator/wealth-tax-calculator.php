@@ -3,7 +3,7 @@
  * Plugin Name: Billionaire Wealth Tax Calculator
  * Plugin URI:  https://github.com/hexa-decim8/Molotools
  * Description: Interactive calculator showing estimated 10-year tax revenue from billionaire wealth at rates of 1%–10%, based on the 2026 Forbes estimate of $8.2 trillion. Embed with [billionaire_wealth_tax].
- * Version:     1.6.1
+ * Version:     1.4.11
  * Author:      Molotools
  * License:     GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin version constant - update this when releasing new versions
-define( 'WTC_VERSION', '1.6.1' );
+define( 'WTC_VERSION', '1.4.11' );
 
 // Plugin constants
 define( 'WTC_PLUGIN_BASENAME', 'wealth-tax-calculator/wealth-tax-calculator.php' );
@@ -41,29 +41,6 @@ define( 'WTC_ANALYTICS_ENABLED_OPTION', 'wtc_analytics_enabled' );
 define( 'WTC_ANALYTICS_GEO_OPTION', 'wtc_analytics_geo_enabled' );
 define( 'WTC_ANALYTICS_RETENTION_OPTION', 'wtc_analytics_retention_days' );
 define( 'WTC_ANALYTICS_FINGERPRINT_OPTION', 'wtc_analytics_fingerprint_enabled' );
-
-// Analytics data schema version — bump this integer whenever the structure of
-// data stored in WTC_ANALYTICS_OPTION_KEY changes so that maybe_migrate_analytics()
-// can detect and upgrade existing records.
-//
-// History:
-//   0  – Pre-versioning era (flat event_total/policy_enabled/regions arrays).
-//         build_summary() handles this via its legacy fallback path.
-//   1  – Introduced in v1.5.3: per-session final_submissions records containing
-//         policy_key, order, selected_items (with rank/amount/funding fields),
-//         tax_rate_value, tax_rate_bucket, region_bucket, county_bucket,
-//         fingerprint, and submitted_at.  No structural change from v1.5.4.
-//   2  – Introduced in v1.6: final_submissions moved from the wp_options blob
-//         into a dedicated wtc_submissions table (atomic INSERT per submission).
-//         Aggregate counters (event_total, regions, counties, sessions,
-//         tax_rate_counts) remain in wp_options.  Migration copies existing
-//         final_submissions into the table and removes them from the blob.
-define( 'WTC_ANALYTICS_SCHEMA_VERSION', 2 );
-define( 'WTC_ANALYTICS_SCHEMA_VERSION_OPTION', 'wtc_analytics_schema_version' );
-define( 'WTC_SUBMISSIONS_TABLE_SUFFIX', 'wtc_submissions' );
-define( 'WTC_COUNTY_BACKFILL_STATE_OPTION', 'wtc_county_backfill_state' );
-define( 'WTC_COUNTY_BACKFILL_LOCK_KEY', 'wtc_county_backfill_lock' );
-define( 'WTC_COUNTY_BACKFILL_BATCH_SIZE', 100 );
 
 // ---------------------------------------------------------------------------
 // Self-contained GitHub update checker — no extra plugins required.
@@ -598,292 +575,18 @@ if ( is_admin() ) {
     new WTC_Admin_Settings( $wtc_updater );
 }
 
-/**
- * Analytics data-scoping rules for the three admin views.
- *
- * These rules govern which events are included in each analytics panel.
- * Every filter method, call site, and JS visualisation MUST respect the rule
- * that corresponds to the view it serves.
- *
- * ┌─────────────────┬──────────────────────────────────────────────────────────┐
- * │ View            │ Rule                                                     │
- * ├─────────────────┼──────────────────────────────────────────────────────────┤
- * │ Nationwide tab  │ NATIONWIDE — Includes ALL US-originated events           │
- * │                 │ cumulatively: any region_bucket starting with "mi_"      │
- * │                 │ (Michigan city slugs) OR matching "us_{XX}" (any other   │
- * │                 │ US state). "unknown" and "non_us" buckets are excluded.  │
- * │                 │ All charts, statistics, and the US heat map on this tab  │
- * │                 │ must reflect this full cumulative US dataset.            │
- * ├─────────────────┼──────────────────────────────────────────────────────────┤
- * │ Michigan tab    │ MICHIGAN-ONLY — Includes exclusively events whose        │
- * │                 │ region_bucket starts with "mi_". No other state's data   │
- * │                 │ may appear in Michigan-tab charts or statistics.         │
- * ├─────────────────┼──────────────────────────────────────────────────────────┤
- * │ By State tab    │ STATE-EXCLUSIVE — Includes exclusively events from the   │
- * │                 │ selected state: "mi_*" for Michigan, "us_{XX}" (exact)   │
- * │                 │ for all other states. Every chart, statistic, county     │
- * │                 │ table, and tax-rate analysis shown for a state reflects  │
- * │                 │ only that state's submissions — never a mix.             │
- * └─────────────────┴──────────────────────────────────────────────────────────┘
- *
- * Enforced by: is_nationwide_region_bucket(), is_michigan_region_bucket(),
- *              is_state_region_bucket(), and the filter_analytics_data_to_*()
- *              family of methods.
- */
 class WTC_Policy_Analytics {
-
-    private $michigan_city_county_map = null;
-    private $michigan_postal_county_map = null;
 
     public function __construct() {
         add_action( 'admin_init', array( $this, 'register_settings' ) );
         add_action( 'admin_menu', array( $this, 'add_analytics_submenu' ) );
         add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_map_assets' ) );
-        add_action( 'admin_post_wtc_start_county_backfill', array( $this, 'handle_start_county_backfill' ) );
         add_action( 'admin_post_wtc_reset_analytics', array( $this, 'handle_reset_analytics' ) );
         add_action( 'admin_post_wtc_export_analytics_csv', array( $this, 'handle_export_analytics_csv' ) );
-        add_action( 'admin_post_wtc_import_analytics_csv', array( $this, 'handle_import_analytics_csv' ) );
         add_action( 'admin_post_wtc_export_analytics_pdf', array( $this, 'handle_export_analytics_pdf' ) );
         add_action( 'wp_ajax_wtc_track_policy_event', array( $this, 'track_policy_event' ) );
         add_action( 'wp_ajax_nopriv_wtc_track_policy_event', array( $this, 'track_policy_event' ) );
-        add_action( WTC_UPDATE_CRON_HOOK, array( $this, 'run_scheduled_county_backfill' ) );
         add_action( WTC_UPDATE_CRON_HOOK, array( $this, 'prune_old_analytics_data' ) );
-
-        // Run data migrations on every load (cheap option read; exits immediately when up to date).
-        add_action( 'plugins_loaded', array( $this, 'maybe_migrate_analytics' ) );
-    }
-
-    /**
-     * Ensure stored analytics data conforms to the current schema version.
-     *
-     * This is the forward-compatibility contract for the wtc_policy_analytics_daily
-     * option.  Any structural change to the persisted format must:
-     *   1. Bump WTC_ANALYTICS_SCHEMA_VERSION.
-     *   2. Add a corresponding `case` here that transforms existing records.
-     *
-     * The method is intentionally idempotent: it reads a version stamp stored
-     * alongside the data and does nothing if the stored version already matches
-     * WTC_ANALYTICS_SCHEMA_VERSION, so the cost of calling it on every request
-     * is a single get_option() call.
-     *
-     * Schema versions:
-     *   0  Flat legacy format (event_total / policy_enabled / regions arrays).
-     *       build_summary() handles reading this format via its legacy fallback
-     *       path; no structural transform is needed — only the version stamp is
-     *       written so future migrations can identify the starting point.
-     *   1  Per-session final_submissions records (v1.5.3+).  Introduced fields:
-     *       policy_key, order, selected_items (rank/amount/funding sub-fields),
-     *       tax_rate_value, tax_rate_bucket, region_bucket, county_bucket,
-     *       fingerprint, submitted_at.  build_summary() reads all fields with
-     *       isset()-guarded defaults, so any missing field yields a neutral zero
-     *       value instead of a fatal error.
-     */
-    public function maybe_migrate_analytics() {
-        $stored_version = (int) get_option( WTC_ANALYTICS_SCHEMA_VERSION_OPTION, 0 );
-
-        // Nothing to do — data is already at the current schema.
-        if ( $stored_version >= WTC_ANALYTICS_SCHEMA_VERSION ) {
-            return;
-        }
-
-        $data = get_option( WTC_ANALYTICS_OPTION_KEY, array() );
-        if ( ! is_array( $data ) ) {
-            $data = array();
-        }
-
-        // Apply each migration step in order so the data advances one version
-        // at a time, regardless of how many versions behind it starts.
-        for ( $v = $stored_version; $v < WTC_ANALYTICS_SCHEMA_VERSION; $v++ ) {
-            switch ( $v ) {
-                case 0:
-                    // Schema 0 → 1: No structural transform required.
-                    // The legacy flat format (event_total / policy_enabled /
-                    // regions / sessions) is fully readable by build_summary()
-                    // through its legacy fallback branch.  Future migrations
-                    // that need to backfill new fields (e.g. county_bucket,
-                    // fingerprint) can do so in a later case statement.
-                    // All we do here is record that the data is now classified
-                    // so subsequent migrations know their starting point.
-                    break;
-
-                case 1:
-                    // Schema 1 → 2: Move final_submissions from the wp_options
-                    // blob into the dedicated wtc_submissions table.  Aggregate
-                    // counters (event_total, regions, counties, sessions,
-                    // tax_rate_counts) remain in the blob.
-                    wtc_ensure_submissions_table();
-                    $this->migrate_final_submissions_to_table( $data );
-                    break;
-            }
-        }
-
-        // Persist migrated data (no-op for schema 0→1, but present so that
-        // any future case that modifies $data is automatically saved).
-        if ( ! empty( $data ) ) {
-            update_option( WTC_ANALYTICS_OPTION_KEY, $data, false );
-        }
-
-        update_option( WTC_ANALYTICS_SCHEMA_VERSION_OPTION, WTC_ANALYTICS_SCHEMA_VERSION, false );
-    }
-
-    /**
-     * Migrate final_submissions from the wp_options blob into the
-     * wtc_submissions table and remove them from the blob.
-     *
-     * @param array $data Analytics data array (passed by reference).
-     */
-    private function migrate_final_submissions_to_table( &$data ) {
-        global $wpdb;
-        $table = $wpdb->prefix . WTC_SUBMISSIONS_TABLE_SUFFIX;
-
-        foreach ( $data as $day_key => &$day ) {
-            if ( ! is_array( $day ) || empty( $day['final_submissions'] ) || ! is_array( $day['final_submissions'] ) ) {
-                continue;
-            }
-
-            foreach ( $day['final_submissions'] as $session_hash => $submission ) {
-                if ( ! is_array( $submission ) ) {
-                    continue;
-                }
-
-                $order          = isset( $submission['order'] ) && is_array( $submission['order'] ) ? $submission['order'] : array();
-                $selected_items = isset( $submission['selected_items'] ) && is_array( $submission['selected_items'] ) ? $submission['selected_items'] : array();
-                $tax_rate_value = isset( $submission['tax_rate_value'] ) && is_numeric( $submission['tax_rate_value'] ) ? round( (float) $submission['tax_rate_value'], 1 ) : null;
-                $submitted_at   = isset( $submission['submitted_at'] ) ? (int) $submission['submitted_at'] : 0;
-
-                // Determine the day_date from the day_key (Y-m-d) or submitted_at.
-                $day_date = preg_match( '/^\d{4}-\d{2}-\d{2}$/', $day_key ) ? $day_key : ( $submitted_at > 0 ? gmdate( 'Y-m-d', $submitted_at ) : gmdate( 'Y-m-d' ) );
-
-                $tax_rate_sql = null !== $tax_rate_value ? $wpdb->prepare( '%f', $tax_rate_value ) : 'NULL';
-
-                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-                $wpdb->query( $wpdb->prepare(
-                    "INSERT IGNORE INTO {$table}
-                        (session_hash, day_date, policy_key, order_json, selected_items_json,
-                         tax_rate_value, tax_rate_bucket, region_bucket, county_bucket,
-                         fingerprint, submitted_at)
-                    VALUES (%s, %s, %s, %s, %s, {$tax_rate_sql}, %s, %s, %s, %s, %d)",
-                    sanitize_text_field( (string) $session_hash ),
-                    $day_date,
-                    isset( $submission['policy_key'] ) ? sanitize_text_field( $submission['policy_key'] ) : '',
-                    wp_json_encode( $order ),
-                    wp_json_encode( $selected_items ),
-                    isset( $submission['tax_rate_bucket'] ) ? sanitize_text_field( $submission['tax_rate_bucket'] ) : '',
-                    isset( $submission['region_bucket'] ) ? sanitize_text_field( $submission['region_bucket'] ) : '',
-                    isset( $submission['county_bucket'] ) ? sanitize_text_field( $submission['county_bucket'] ) : '',
-                    isset( $submission['fingerprint'] ) ? sanitize_text_field( $submission['fingerprint'] ) : '',
-                    $submitted_at
-                ) );
-            }
-
-            // Remove final_submissions from the blob — they now live in the table.
-            unset( $day['final_submissions'] );
-        }
-        unset( $day );
-    }
-
-    /**
-     * Check whether the submissions table exists and has data.
-     *
-     * @return bool
-     */
-    private function submissions_table_exists() {
-        global $wpdb;
-        $table = $wpdb->prefix . WTC_SUBMISSIONS_TABLE_SUFFIX;
-        return ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) === $table );
-    }
-
-    /**
-     * Query the submissions table and return results grouped by day_date
-     * in the same format as the old final_submissions arrays, so existing
-     * build_summary / export / county-top-policy functions keep working.
-     *
-     * The returned array is keyed by 'Y-m-d' date strings, each containing
-     * a 'final_submissions' array keyed by session_hash.
-     *
-     * @return array Analytics-style data with final_submissions from DB.
-     */
-    private function get_submissions_from_table() {
-        global $wpdb;
-        $table = $wpdb->prefix . WTC_SUBMISSIONS_TABLE_SUFFIX;
-
-        if ( ! $this->submissions_table_exists() ) {
-            return array();
-        }
-
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
-        $rows = $wpdb->get_results( "SELECT * FROM {$table} ORDER BY day_date ASC, submitted_at ASC", ARRAY_A );
-        if ( ! is_array( $rows ) ) {
-            return array();
-        }
-
-        $days = array();
-        foreach ( $rows as $row ) {
-            $day_date     = isset( $row['day_date'] ) ? $row['day_date'] : '';
-            $session_hash = isset( $row['session_hash'] ) ? $row['session_hash'] : '';
-            if ( $day_date === '' || $session_hash === '' ) {
-                continue;
-            }
-
-            if ( ! isset( $days[ $day_date ] ) ) {
-                $days[ $day_date ] = array( 'final_submissions' => array() );
-            }
-
-            $order          = json_decode( isset( $row['order_json'] ) ? $row['order_json'] : '[]', true );
-            $selected_items = json_decode( isset( $row['selected_items_json'] ) ? $row['selected_items_json'] : '[]', true );
-            $tax_rate_value = isset( $row['tax_rate_value'] ) && $row['tax_rate_value'] !== null
-                ? (float) $row['tax_rate_value']
-                : null;
-
-            $days[ $day_date ]['final_submissions'][ $session_hash ] = array(
-                'policy_key'      => isset( $row['policy_key'] ) ? $row['policy_key'] : '',
-                'order'           => is_array( $order ) ? $order : array(),
-                'selected_items'  => is_array( $selected_items ) ? $selected_items : array(),
-                'tax_rate_value'  => $tax_rate_value,
-                'tax_rate_bucket' => isset( $row['tax_rate_bucket'] ) ? $row['tax_rate_bucket'] : '',
-                'region_bucket'   => isset( $row['region_bucket'] ) ? $row['region_bucket'] : '',
-                'county_bucket'   => isset( $row['county_bucket'] ) ? $row['county_bucket'] : '',
-                'fingerprint'     => isset( $row['fingerprint'] ) ? $row['fingerprint'] : '',
-                'submitted_at'    => isset( $row['submitted_at'] ) ? (int) $row['submitted_at'] : 0,
-            );
-        }
-
-        return $days;
-    }
-
-    /**
-     * Build a merged analytics data array that includes both the wp_options
-     * aggregate counters and the per-submission records from the DB table.
-     *
-     * Readers (build_summary, export, county-top-policy, etc.) call this
-     * instead of raw get_option() to get a unified view.
-     *
-     * @param array|null $analytics_data  Pre-loaded blob data, or null to load.
-     * @return array Merged analytics data.
-     */
-    public function get_merged_analytics_data( $analytics_data = null ) {
-        if ( null === $analytics_data ) {
-            $analytics_data = get_option( WTC_ANALYTICS_OPTION_KEY, array() );
-        }
-        if ( ! is_array( $analytics_data ) ) {
-            $analytics_data = array();
-        }
-
-        $table_data = $this->get_submissions_from_table();
-
-        // Merge: for each day that appears in the table data, inject
-        // its final_submissions into the blob data.  Any final_submissions
-        // still in the blob (pre-migration leftovers) are kept as fallback.
-        foreach ( $table_data as $day_key => $table_day ) {
-            if ( ! isset( $analytics_data[ $day_key ] ) || ! is_array( $analytics_data[ $day_key ] ) ) {
-                $analytics_data[ $day_key ] = array();
-            }
-
-            // Table data takes precedence.
-            $analytics_data[ $day_key ]['final_submissions'] = $table_day['final_submissions'];
-        }
-
-        return $analytics_data;
     }
 
     public function enqueue_admin_map_assets( $hook ) {
@@ -904,21 +607,10 @@ class WTC_Policy_Analytics {
             true
         );
 
-        $analytics_data = $this->get_merged_analytics_data();
-
-        // Avoid 50+ redundant full-dataset scans per page load by caching the JS payload.
-        // The cache is keyed on a version counter incremented by track_policy_event().
-        $analytics_version = (int) get_option( 'wtc_analytics_version', 0 );
-        $map_cache_key     = 'wtc_map_payload_v' . $analytics_version;
-        $cached_payload    = get_transient( $map_cache_key );
-
-        if ( is_array( $cached_payload ) && isset( $cached_payload['michigan'], $cached_payload['us_map'], $cached_payload['state_analytics'] ) ) {
-            wp_localize_script( 'wtc-admin-map', 'wtcMichiganMap', $cached_payload['michigan'] );
-            wp_localize_script( 'wtc-admin-map', 'wtcUnitedStatesMap', $cached_payload['us_map'] );
-            wp_localize_script( 'wtc-admin-map', 'wtcStateAnalytics', $cached_payload['state_analytics'] );
-            return;
+        $analytics_data = get_option( WTC_ANALYTICS_OPTION_KEY, array() );
+        if ( ! is_array( $analytics_data ) ) {
+            $analytics_data = array();
         }
-
         $summary       = $this->build_summary( $analytics_data );
         $region_counts = isset( $summary['region_counts'] ) ? $summary['region_counts'] : array();
         $county_counts = isset( $summary['county_counts'] ) ? $summary['county_counts'] : array();
@@ -939,15 +631,22 @@ class WTC_Policy_Analytics {
             }
         }
 
-        // Rule: NATIONWIDE — the US heat map must include ALL 50 states, Michigan included.
-        // $state_totals is already computed by aggregate_us_state_counts(), which merges all
-        // mi_* city buckets into the MI slot and maps each us_{XX} bucket to its state code.
-        // Using it directly satisfies the nationwide rule and fixes the prior omission of Michigan.
-        $us_states = $state_totals;
+        $us_states = array();
+        foreach ( $region_counts as $bucket => $count ) {
+            if ( strncmp( $bucket, 'us_', 3 ) !== 0 || 'us_unknown' === $bucket ) {
+                continue;
+            }
+
+            $state_code = strtoupper( substr( $bucket, 3 ) );
+            if ( 'MI' === $state_code || ! preg_match( '/^[A-Z]{2}$/', $state_code ) ) {
+                continue;
+            }
+
+            $us_states[ $state_code ] = (int) $count;
+        }
 
         $state_payload = array();
         foreach ( $state_map as $state_code => $state_label ) {
-            // Rule: STATE-EXCLUSIVE — only events from $state_code; feeds that state's panel in wtcStateAnalytics.
             $state_data    = $this->filter_analytics_data_to_state( $analytics_data, $state_code );
             $state_summary = $this->build_summary( $state_data );
             $county_rows   = isset( $state_summary['county_counts'] ) && is_array( $state_summary['county_counts'] ) ? $state_summary['county_counts'] : array();
@@ -1043,31 +742,38 @@ class WTC_Policy_Analytics {
             }
         }
 
-        $michigan_payload        = array(
-            'cities'       => $mi_cities,
-            'counties'     => $mi_counties,
-            'cityToCounty' => $this->get_michigan_city_to_county_map(),
-        );
-        $us_map_payload          = array( 'states' => $us_states );
-        $state_analytics_payload = array(
-            'states'            => $state_payload,
-            'defaultState'      => 'MI',
-            'geometryTemplates' => $geometry_templates,
-        );
-
-        set_transient(
-            $map_cache_key,
+        wp_localize_script(
+            'wtc-admin-map',
+            'wtcMichiganMap',
             array(
-                'michigan'        => $michigan_payload,
-                'us_map'          => $us_map_payload,
-                'state_analytics' => $state_analytics_payload,
-            ),
-            15 * MINUTE_IN_SECONDS
+                'cities'       => $mi_cities,
+                'counties'     => $mi_counties,
+                'cityToCounty' => $this->get_michigan_city_to_county_map(),
+            )
         );
 
-        wp_localize_script( 'wtc-admin-map', 'wtcMichiganMap', $michigan_payload );
-        wp_localize_script( 'wtc-admin-map', 'wtcUnitedStatesMap', $us_map_payload );
-        wp_localize_script( 'wtc-admin-map', 'wtcStateAnalytics', $state_analytics_payload );
+        wp_localize_script(
+            'wtc-admin-map',
+            'wtcUsMap',
+            array(
+                'states' => $us_states,
+            )
+        );
+        wp_localize_script(
+            'wtc-admin-map',
+            'wtcUnitedStatesMap',
+            array( 'states' => $us_states )
+        );
+
+        wp_localize_script(
+            'wtc-admin-map',
+            'wtcStateAnalytics',
+            array(
+                'states' => $state_payload,
+                'defaultState' => 'MI',
+                'geometryTemplates' => $geometry_templates,
+            )
+        );
     }
 
     public function is_enabled() {
@@ -1084,338 +790,7 @@ class WTC_Policy_Analytics {
 
     public function get_retention_days() {
         $days = (int) get_option( WTC_ANALYTICS_RETENTION_OPTION, 90 );
-        if ( $days <= 0 ) {
-            return 0;
-        }
         return max( 7, min( 365, $days ) );
-    }
-
-    private function get_county_backfill_default_state() {
-        return array(
-            'status' => 'idle',
-            'day_keys' => array(),
-            'day_index' => 0,
-            'session_index' => 0,
-            'processed' => 0,
-            'updated' => 0,
-            'started_at' => 0,
-            'last_run_at' => 0,
-            'completed_at' => 0,
-        );
-    }
-
-    private function get_county_backfill_state() {
-        $state = get_option( WTC_COUNTY_BACKFILL_STATE_OPTION, array() );
-        if ( ! is_array( $state ) ) {
-            $state = array();
-        }
-
-        $defaults = $this->get_county_backfill_default_state();
-        $state    = wp_parse_args( $state, $defaults );
-
-        $state['status'] = sanitize_key( $state['status'] );
-        if ( ! in_array( $state['status'], array( 'idle', 'running', 'completed' ), true ) ) {
-            $state['status'] = 'idle';
-        }
-
-        $state['day_keys']      = is_array( $state['day_keys'] ) ? array_values( $state['day_keys'] ) : array();
-        $state['day_index']     = max( 0, (int) $state['day_index'] );
-        $state['session_index'] = max( 0, (int) $state['session_index'] );
-        $state['processed']     = max( 0, (int) $state['processed'] );
-        $state['updated']       = max( 0, (int) $state['updated'] );
-        $state['started_at']    = max( 0, (int) $state['started_at'] );
-        $state['last_run_at']   = max( 0, (int) $state['last_run_at'] );
-        $state['completed_at']  = max( 0, (int) $state['completed_at'] );
-
-        return $state;
-    }
-
-    private function save_county_backfill_state( $state ) {
-        if ( ! is_array( $state ) ) {
-            return;
-        }
-
-        update_option( WTC_COUNTY_BACKFILL_STATE_OPTION, $state, false );
-    }
-
-    private function initialize_county_backfill_state( $analytics_data ) {
-        $state = $this->get_county_backfill_default_state();
-        $state['status']     = 'running';
-        $state['started_at'] = time();
-        $state['last_run_at'] = time();
-
-        if ( is_array( $analytics_data ) ) {
-            $day_keys = array_keys( $analytics_data );
-            sort( $day_keys, SORT_STRING );
-            $state['day_keys'] = array_values( $day_keys );
-        }
-
-        return $state;
-    }
-
-    private function is_unresolved_county_bucket( $county_bucket ) {
-        $county_bucket = sanitize_text_field( (string) $county_bucket );
-        if ( $county_bucket === '' ) {
-            return true;
-        }
-
-        return preg_match( '/_county_unknown$/', $county_bucket ) === 1;
-    }
-
-    private function resolve_submission_county_bucket( $submission ) {
-        if ( ! is_array( $submission ) ) {
-            return '';
-        }
-
-        $region_bucket = isset( $submission['region_bucket'] ) ? sanitize_text_field( $submission['region_bucket'] ) : '';
-        $county_bucket = isset( $submission['county_bucket'] ) ? sanitize_text_field( $submission['county_bucket'] ) : '';
-        $state_code    = $this->get_state_code_from_region_bucket( $region_bucket );
-        $city_slug     = ( $state_code === 'MI' && strncmp( $region_bucket, 'mi_', 3 ) === 0 ) ? substr( $region_bucket, 3 ) : '';
-
-        return $this->normalize_state_county_bucket( $county_bucket, $state_code, $city_slug );
-    }
-
-    private function run_county_backfill_batch( $batch_size = WTC_COUNTY_BACKFILL_BATCH_SIZE ) {
-        global $wpdb;
-        $batch_size = max( 1, (int) $batch_size );
-
-        $state = $this->get_county_backfill_state();
-        if ( $state['status'] !== 'running' ) {
-            return false;
-        }
-
-        $table        = $wpdb->prefix . WTC_SUBMISSIONS_TABLE_SUFFIX;
-        $table_exists = $this->submissions_table_exists();
-
-        // ---- Table-based backfill (preferred path) ----
-        if ( $table_exists ) {
-            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
-            $rows = $wpdb->get_results( $wpdb->prepare(
-                "SELECT id, session_hash, day_date, region_bucket, county_bucket
-                 FROM {$table}
-                 WHERE county_bucket = '' OR county_bucket LIKE '%%_county_unknown'
-                 ORDER BY id ASC
-                 LIMIT %d",
-                $batch_size
-            ), ARRAY_A );
-
-            if ( empty( $rows ) ) {
-                $state['status']       = 'completed';
-                $state['completed_at'] = time();
-                $this->save_county_backfill_state( $state );
-                return true;
-            }
-
-            $updated_in_batch = 0;
-            $data             = get_option( WTC_ANALYTICS_OPTION_KEY, array() );
-            if ( ! is_array( $data ) ) {
-                $data = array();
-            }
-            $blob_changed = false;
-
-            foreach ( $rows as $row ) {
-                $old_bucket = isset( $row['county_bucket'] ) ? sanitize_text_field( $row['county_bucket'] ) : '';
-
-                if ( ! $this->is_unresolved_county_bucket( $old_bucket ) ) {
-                    continue;
-                }
-
-                $submission = array(
-                    'region_bucket' => isset( $row['region_bucket'] ) ? $row['region_bucket'] : '',
-                    'county_bucket' => $old_bucket,
-                );
-
-                $new_bucket = $this->resolve_submission_county_bucket( $submission );
-                if ( $new_bucket !== '' && $new_bucket !== $old_bucket ) {
-                    // Atomic per-row UPDATE — no race condition.
-                    $wpdb->update(
-                        $table,
-                        array( 'county_bucket' => $new_bucket ),
-                        array( 'id' => (int) $row['id'] ),
-                        array( '%s' ),
-                        array( '%d' )
-                    );
-                    $updated_in_batch += 1;
-
-                    // Also update the blob aggregate county counters.
-                    $day_key = isset( $row['day_date'] ) ? $row['day_date'] : '';
-                    if ( $day_key !== '' && isset( $data[ $day_key ] ) && is_array( $data[ $day_key ] ) ) {
-                        $day =& $data[ $day_key ];
-                        if ( ! isset( $day['counties'] ) || ! is_array( $day['counties'] ) ) {
-                            $day['counties'] = array();
-                        }
-                        if ( $old_bucket !== '' && isset( $day['counties'][ $old_bucket ] ) ) {
-                            $day['counties'][ $old_bucket ] = max( 0, (int) $day['counties'][ $old_bucket ] - 1 );
-                            if ( $day['counties'][ $old_bucket ] <= 0 ) {
-                                unset( $day['counties'][ $old_bucket ] );
-                            }
-                        }
-                        if ( ! isset( $day['counties'][ $new_bucket ] ) ) {
-                            $day['counties'][ $new_bucket ] = 0;
-                        }
-                        $day['counties'][ $new_bucket ] += 1;
-                        $blob_changed = true;
-                        unset( $day );
-                    }
-                }
-            }
-
-            $state['processed'] += count( $rows );
-            $state['updated']   += $updated_in_batch;
-            $state['last_run_at'] = time();
-
-            if ( $blob_changed ) {
-                update_option( WTC_ANALYTICS_OPTION_KEY, $data, false );
-                $wpdb->query(
-                    "UPDATE {$wpdb->options} SET option_value = option_value + 1 WHERE option_name = 'wtc_analytics_version'"
-                );
-            }
-
-            $this->save_county_backfill_state( $state );
-            return true;
-        }
-
-        // ---- Legacy blob-based backfill (fallback when table doesn't exist) ----
-        $data = get_option( WTC_ANALYTICS_OPTION_KEY, array() );
-        if ( ! is_array( $data ) ) {
-            $data = array();
-        }
-
-        if ( empty( $state['day_keys'] ) ) {
-            $state['day_keys'] = array_keys( $data );
-            sort( $state['day_keys'], SORT_STRING );
-        }
-
-        $processed_in_batch = 0;
-        $updated_in_batch   = 0;
-        $data_changed       = false;
-
-        while ( $processed_in_batch < $batch_size && $state['day_index'] < count( $state['day_keys'] ) ) {
-            $day_key = $state['day_keys'][ $state['day_index'] ];
-
-            if ( ! isset( $data[ $day_key ] ) || ! is_array( $data[ $day_key ] ) ) {
-                $state['day_index'] += 1;
-                $state['session_index'] = 0;
-                continue;
-            }
-
-            $day =& $data[ $day_key ];
-            if ( ! isset( $day['final_submissions'] ) || ! is_array( $day['final_submissions'] ) ) {
-                $state['day_index'] += 1;
-                $state['session_index'] = 0;
-                unset( $day );
-                continue;
-            }
-
-            $session_keys = array_keys( $day['final_submissions'] );
-            if ( $state['session_index'] >= count( $session_keys ) ) {
-                $state['day_index'] += 1;
-                $state['session_index'] = 0;
-                unset( $day );
-                continue;
-            }
-
-            $session_key = $session_keys[ $state['session_index'] ];
-            $submission  = isset( $day['final_submissions'][ $session_key ] ) && is_array( $day['final_submissions'][ $session_key ] )
-                ? $day['final_submissions'][ $session_key ]
-                : array();
-
-            $old_bucket = isset( $submission['county_bucket'] ) ? sanitize_text_field( $submission['county_bucket'] ) : '';
-
-            if ( $this->is_unresolved_county_bucket( $old_bucket ) ) {
-                $new_bucket = $this->resolve_submission_county_bucket( $submission );
-                if ( $new_bucket !== '' && $new_bucket !== $old_bucket ) {
-                    $day['final_submissions'][ $session_key ]['county_bucket'] = $new_bucket;
-                    $updated_in_batch += 1;
-                    $data_changed = true;
-
-                    if ( ! isset( $day['counties'] ) || ! is_array( $day['counties'] ) ) {
-                        $day['counties'] = array();
-                    }
-
-                    if ( $old_bucket !== '' && isset( $day['counties'][ $old_bucket ] ) ) {
-                        $day['counties'][ $old_bucket ] = max( 0, (int) $day['counties'][ $old_bucket ] - 1 );
-                        if ( $day['counties'][ $old_bucket ] <= 0 ) {
-                            unset( $day['counties'][ $old_bucket ] );
-                        }
-                    }
-
-                    if ( ! isset( $day['counties'][ $new_bucket ] ) ) {
-                        $day['counties'][ $new_bucket ] = 0;
-                    }
-                    $day['counties'][ $new_bucket ] += 1;
-                }
-            }
-
-            $processed_in_batch += 1;
-            $state['session_index'] += 1;
-            unset( $day );
-        }
-
-        $state['processed'] += $processed_in_batch;
-        $state['updated'] += $updated_in_batch;
-        $state['last_run_at'] = time();
-
-        if ( $state['day_index'] >= count( $state['day_keys'] ) ) {
-            $state['status'] = 'completed';
-            $state['completed_at'] = time();
-        }
-
-        if ( $data_changed ) {
-            update_option( WTC_ANALYTICS_OPTION_KEY, $data, false );
-            $wpdb->query(
-                "UPDATE {$wpdb->options} SET option_value = option_value + 1 WHERE option_name = 'wtc_analytics_version'"
-            );
-        }
-
-        $this->save_county_backfill_state( $state );
-
-        return true;
-    }
-
-    public function run_scheduled_county_backfill() {
-        $state = $this->get_county_backfill_state();
-        if ( $state['status'] !== 'running' ) {
-            return;
-        }
-
-        if ( get_transient( WTC_COUNTY_BACKFILL_LOCK_KEY ) ) {
-            return;
-        }
-
-        set_transient( WTC_COUNTY_BACKFILL_LOCK_KEY, 1, WTC_AUTO_INSTALL_LOCK_TTL );
-        try {
-            $this->run_county_backfill_batch();
-        } finally {
-            delete_transient( WTC_COUNTY_BACKFILL_LOCK_KEY );
-        }
-    }
-
-    public function handle_start_county_backfill() {
-        if ( ! current_user_can( 'manage_options' ) ) {
-            wp_die( 'Unauthorized access' );
-        }
-
-        check_admin_referer( 'wtc_start_county_backfill' );
-
-        $analytics_data = get_option( WTC_ANALYTICS_OPTION_KEY, array() );
-        if ( ! is_array( $analytics_data ) ) {
-            $analytics_data = array();
-        }
-
-        $state = $this->initialize_county_backfill_state( $analytics_data );
-        $this->save_county_backfill_state( $state );
-
-        $this->run_scheduled_county_backfill();
-
-        wp_redirect( add_query_arg(
-            array(
-                'page' => 'wealth-tax-calculator-analytics',
-                'county_backfill_started' => '1',
-            ),
-            admin_url( 'options-general.php' )
-        ) );
-        exit;
     }
 
     public function get_frontend_popularity_summary() {
@@ -1426,7 +801,10 @@ class WTC_Policy_Analytics {
             );
         }
 
-        $analytics_data = $this->get_merged_analytics_data();
+        $analytics_data = get_option( WTC_ANALYTICS_OPTION_KEY, array() );
+        if ( ! is_array( $analytics_data ) ) {
+            $analytics_data = array();
+        }
 
         $summary = $this->build_summary( $analytics_data );
 
@@ -1449,9 +827,6 @@ class WTC_Policy_Analytics {
 
     public function sanitize_retention_days( $value ) {
         $days = (int) $value;
-        if ( $days <= 0 ) {
-            return 0;
-        }
         if ( $days < 7 ) {
             return 7;
         }
@@ -1477,17 +852,11 @@ class WTC_Policy_Analytics {
             return;
         }
 
-        $reset_done            = isset( $_GET['reset'] ) && $_GET['reset'] === '1';
-        $county_backfill_start = isset( $_GET['county_backfill_started'] ) && $_GET['county_backfill_started'] === '1';
-        $import_done           = isset( $_GET['imported'] ) && $_GET['imported'] === '1';
-        $import_error          = isset( $_GET['import_error'] ) ? sanitize_key( wp_unslash( $_GET['import_error'] ) ) : '';
-        $import_rows           = isset( $_GET['import_rows'] ) ? max( 0, (int) $_GET['import_rows'] ) : 0;
-        $import_skipped        = isset( $_GET['import_skipped'] ) ? max( 0, (int) $_GET['import_skipped'] ) : 0;
-        $county_backfill_state = $this->get_county_backfill_state();
+        $analytics_data = get_option( WTC_ANALYTICS_OPTION_KEY, array() );
+        if ( ! is_array( $analytics_data ) ) {
+            $analytics_data = array();
+        }
 
-        $analytics_data = $this->get_merged_analytics_data();
-
-        // Rule: NATIONWIDE — all US submissions (mi_* + us_*) cumulatively; feeds the Nationwide tab.
         $nationwide_analytics_data = $this->filter_analytics_data_to_nationwide( $analytics_data );
         $nationwide_summary        = $this->build_summary( $nationwide_analytics_data );
         $nationwide_submitted_sessions = isset( $nationwide_summary['total_events'] ) ? (int) $nationwide_summary['total_events'] : 0;
@@ -1495,7 +864,6 @@ class WTC_Policy_Analytics {
         $nationwide_days_stored        = isset( $nationwide_summary['days_count'] ) ? (int) $nationwide_summary['days_count'] : 0;
         $nationwide_average_tax_rate   = isset( $nationwide_summary['average_tax_rate'] ) ? (float) $nationwide_summary['average_tax_rate'] : 0.0;
 
-        // Rule: MICHIGAN-ONLY — exclusively mi_* events; feeds the Michigan tab stats block.
         $mi_analytics_data       = $this->filter_analytics_data_to_michigan( $analytics_data );
         $mi_summary              = $this->build_summary( $mi_analytics_data );
         $mi_submitted_sessions   = isset( $mi_summary['total_events'] ) ? (int) $mi_summary['total_events'] : 0;
@@ -1508,7 +876,6 @@ class WTC_Policy_Analytics {
         $state_map            = $this->get_us_state_code_map();
         $state_totals         = $this->aggregate_us_state_counts( isset( $nationwide_summary['region_counts'] ) && is_array( $nationwide_summary['region_counts'] ) ? $nationwide_summary['region_counts'] : array() );
         $default_state_code   = 'MI';
-        // Rule: STATE-EXCLUSIVE — only events from $default_state_code; feeds the By State tab initial render.
         $default_state_data   = $this->filter_analytics_data_to_state( $analytics_data, $default_state_code );
         $default_state_summary = $this->build_summary( $default_state_data );
         $default_state_label  = isset( $state_map[ $default_state_code ] ) ? $state_map[ $default_state_code ] : $default_state_code;
@@ -1516,51 +883,6 @@ class WTC_Policy_Analytics {
         ?>
         <div class="wrap">
             <h1><?php esc_html_e( 'Wealth Tax Calculator Analytics', 'wealth-tax-calculator' ); ?></h1>
-
-            <?php if ( $reset_done ) : ?>
-                <div class="notice notice-success is-dismissible">
-                    <p><?php esc_html_e( 'Analytics data reset.', 'wealth-tax-calculator' ); ?></p>
-                </div>
-            <?php endif; ?>
-
-            <?php if ( $county_backfill_start ) : ?>
-                <div class="notice notice-success is-dismissible">
-                    <p><?php esc_html_e( 'County backfill started. It will continue in scheduled batches.', 'wealth-tax-calculator' ); ?></p>
-                </div>
-            <?php endif; ?>
-
-            <?php if ( $import_done ) : ?>
-                <div class="notice notice-success is-dismissible">
-                    <p>
-                        <?php
-                        printf(
-                            /* translators: 1: imported row count, 2: skipped row count */
-                            esc_html__( 'Analytics CSV import completed. Imported: %1$s. Skipped: %2$s.', 'wealth-tax-calculator' ),
-                            esc_html( number_format_i18n( $import_rows ) ),
-                            esc_html( number_format_i18n( $import_skipped ) )
-                        );
-                        ?>
-                    </p>
-                </div>
-            <?php elseif ( $import_error !== '' ) : ?>
-                <div class="notice notice-error is-dismissible">
-                    <p>
-                        <?php
-                        if ( $import_error === 'missing_file' ) {
-                            esc_html_e( 'CSV import failed: no file was uploaded.', 'wealth-tax-calculator' );
-                        } elseif ( $import_error === 'upload_failed' ) {
-                            esc_html_e( 'CSV import failed: the uploaded file could not be processed.', 'wealth-tax-calculator' );
-                        } elseif ( $import_error === 'unreadable_file' ) {
-                            esc_html_e( 'CSV import failed: the uploaded file could not be read.', 'wealth-tax-calculator' );
-                        } elseif ( $import_error === 'invalid_csv' ) {
-                            esc_html_e( 'CSV import failed: the file does not match the analytics CSV format exported by this plugin.', 'wealth-tax-calculator' );
-                        } else {
-                            esc_html_e( 'CSV import failed.', 'wealth-tax-calculator' );
-                        }
-                        ?>
-                    </p>
-                </div>
-            <?php endif; ?>
 
             <div class="card" style="max-width: 920px; margin-top: 20px;">
                 <h2><?php esc_html_e( 'Tracking Settings', 'wealth-tax-calculator' ); ?></h2>
@@ -1602,8 +924,7 @@ class WTC_Policy_Analytics {
                         <tr>
                             <th scope="row"><?php esc_html_e( 'Retention (days)', 'wealth-tax-calculator' ); ?></th>
                             <td>
-                                <input type="number" min="0" max="365" name="<?php echo esc_attr( WTC_ANALYTICS_RETENTION_OPTION ); ?>" value="<?php echo esc_attr( $this->get_retention_days() ); ?>" />
-                                <p class="description"><?php esc_html_e( 'Set to 0 to keep analytics data permanently.', 'wealth-tax-calculator' ); ?></p>
+                                <input type="number" min="7" max="365" name="<?php echo esc_attr( WTC_ANALYTICS_RETENTION_OPTION ); ?>" value="<?php echo esc_attr( $this->get_retention_days() ); ?>" />
                             </td>
                         </tr>
                     </table>
@@ -1614,40 +935,26 @@ class WTC_Policy_Analytics {
             <div class="wtc-analytics-section-toggle" role="tablist" aria-label="<?php esc_attr_e( 'Analytics section scope', 'wealth-tax-calculator' ); ?>">
                 <button type="button" class="wtc-analytics-toggle-btn" data-wtc-section-target="all" role="tab" aria-selected="false"><?php esc_html_e( 'Nationwide', 'wealth-tax-calculator' ); ?></button>
                 <button type="button" class="wtc-analytics-toggle-btn is-active" data-wtc-section-target="michigan" role="tab" aria-selected="true"><?php esc_html_e( 'Michigan Only', 'wealth-tax-calculator' ); ?></button>
-                <button type="button" class="wtc-analytics-toggle-btn" data-wtc-section-target="state" role="tab" aria-selected="false" hidden><?php esc_html_e( 'By State', 'wealth-tax-calculator' ); ?></button>
-                <div class="wtc-state-combobox-wrap" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-owns="wtc-state-search-list">
-                    <input
-                        type="text"
-                        id="wtc-state-search-input"
-                        class="wtc-state-search-input"
-                        placeholder="<?php esc_attr_e( 'By State', 'wealth-tax-calculator' ); ?>"
-                        autocomplete="off"
-                        aria-label="<?php esc_attr_e( 'Search for a state', 'wealth-tax-calculator' ); ?>"
-                        aria-controls="wtc-state-search-list"
-                        aria-autocomplete="list"
-                        role="combobox"
-                    />
-                    <ul id="wtc-state-search-list" class="wtc-state-search-list" role="listbox" hidden aria-label="<?php esc_attr_e( 'States', 'wealth-tax-calculator' ); ?>">
+                <button type="button" class="wtc-analytics-toggle-btn" data-wtc-section-target="state" role="tab" aria-selected="false"><?php esc_html_e( 'By State', 'wealth-tax-calculator' ); ?></button>
+                <div class="wtc-analytics-state-picker-wrap">
+                    <label for="wtc-state-analytics-select" class="wtc-analytics-state-picker-label"><?php esc_html_e( 'Select state', 'wealth-tax-calculator' ); ?></label>
+                    <select id="wtc-state-analytics-select" class="wtc-analytics-state-picker" aria-label="<?php esc_attr_e( 'Select a state for analytics details', 'wealth-tax-calculator' ); ?>">
                         <?php foreach ( $state_map as $state_code => $state_label ) : ?>
-                            <li
-                                role="option"
-                                class="wtc-state-search-option"
-                                data-state-code="<?php echo esc_attr( $state_code ); ?>"
-                                data-state-label="<?php echo esc_attr( $state_label ); ?>"
-                                aria-selected="false"
-                            ><?php echo esc_html( $state_label . ' (' . $state_code . ')' ); ?></li>
+                            <?php $state_total = isset( $state_totals[ $state_code ] ) ? (int) $state_totals[ $state_code ] : 0; ?>
+                            <option value="<?php echo esc_attr( $state_code ); ?>" <?php selected( $state_code, $default_state_code ); ?> <?php disabled( $state_total <= 0 ); ?>>
+                                <?php echo esc_html( $state_label . ' (' . $state_code . ')' ); ?>
+                            </option>
                         <?php endforeach; ?>
-                    </ul>
-                    <input type="hidden" id="wtc-state-analytics-select" value="<?php echo esc_attr( $default_state_code ); ?>" />
+                    </select>
                 </div>
                 <script>
                 (function() {
-                    var hiddenInput = document.getElementById('wtc-state-analytics-select');
-                    var pdfExportForm = document.querySelector('input[name="action"][value="wtc_export_analytics_pdf"]') ? document.querySelector('input[name="action"][value="wtc_export_analytics_pdf"]').closest('form') : null;
+                    var stateSelect = document.getElementById('wtc-state-analytics-select');
+                    var pdfExportForm = document.querySelector('input[name="action"][value="wtc_export_analytics_pdf"]')?.closest('form');
                     var stateInput = pdfExportForm ? pdfExportForm.querySelector('input[name="state"]') : null;
-
-                    if (hiddenInput && stateInput) {
-                        hiddenInput.addEventListener('change', function() {
+                    
+                    if (stateSelect && stateInput) {
+                        stateSelect.addEventListener('change', function() {
                             stateInput.value = this.value;
                         });
                     }
@@ -1656,16 +963,107 @@ class WTC_Policy_Analytics {
             </div>
 
             <div class="wtc-analytics-section-panel" data-wtc-section-panel="all" hidden>
-                <?php
-                $this->render_nationwide_analytics_dashboard_panel(
-                    $nationwide_summary,
-                    $nationwide_submitted_sessions,
-                    $nationwide_unique_sessions,
-                    $nationwide_days_stored,
-                    $nationwide_average_tax_rate,
-                    $this->fingerprint_enabled()
-                );
-                ?>
+
+            <div class="card wtc-analytics-card wtc-no-collapse" style="max-width: 920px; margin-top: 20px;">
+                <h2><?php esc_html_e( 'Nationwide Visual Summary', 'wealth-tax-calculator' ); ?></h2>
+
+                <div class="wtc-analytics-stats" role="list" aria-label="<?php esc_attr_e( 'Analytics summary metrics', 'wealth-tax-calculator' ); ?>">
+                    <div class="wtc-analytics-stat" role="listitem">
+                        <span class="wtc-analytics-stat-label"><?php esc_html_e( 'Submitted Sessions', 'wealth-tax-calculator' ); ?></span>
+                        <span class="wtc-analytics-stat-value"><?php echo esc_html( number_format_i18n( $nationwide_submitted_sessions ) ); ?></span>
+                    </div>
+                    <div class="wtc-analytics-stat" role="listitem">
+                        <span class="wtc-analytics-stat-label"><?php esc_html_e( 'Unique Sessions', 'wealth-tax-calculator' ); ?></span>
+                        <span class="wtc-analytics-stat-value"><?php echo esc_html( number_format_i18n( $nationwide_unique_sessions ) ); ?></span>
+                    </div>
+                    <div class="wtc-analytics-stat" role="listitem">
+                        <span class="wtc-analytics-stat-label"><?php esc_html_e( 'Days Stored', 'wealth-tax-calculator' ); ?></span>
+                        <span class="wtc-analytics-stat-value"><?php echo esc_html( number_format_i18n( $nationwide_days_stored ) ); ?></span>
+                    </div>
+                    <div class="wtc-analytics-stat" role="listitem">
+                        <span class="wtc-analytics-stat-label"><?php esc_html_e( 'Average Tax Rate', 'wealth-tax-calculator' ); ?></span>
+                        <span class="wtc-analytics-stat-value"><?php echo esc_html( $nationwide_average_tax_rate > 0 ? number_format_i18n( $nationwide_average_tax_rate, 1 ) . '%' : '—' ); ?></span>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="card wtc-analytics-card wtc-no-collapse" style="max-width: 920px; margin-top: 20px;">
+                <h2><?php esc_html_e( 'Charts', 'wealth-tax-calculator' ); ?></h2>
+
+                <div class="wtc-analytics-chart-panel wtc-analytics-chart-panel-three-up">
+                    <section class="wtc-analytics-chart-card">
+                        <h3 class="wtc-analytics-chart-title"><?php esc_html_e( 'Category Allocation Mix', 'wealth-tax-calculator' ); ?></h3>
+                        <?php $this->render_policy_group_allocation_chart( isset( $nationwide_summary['policy_group_rows'] ) ? $nationwide_summary['policy_group_rows'] : array(), __( 'Category allocation data appears after submissions are recorded.', 'wealth-tax-calculator' ) ); ?>
+                    </section>
+
+                    <section class="wtc-analytics-chart-card">
+                        <h3 class="wtc-analytics-chart-title"><?php esc_html_e( 'Policy Selection', 'wealth-tax-calculator' ); ?></h3>
+
+                        <div class="wtc-analytics-chart-toggle" role="tablist" aria-label="<?php esc_attr_e( 'Policy popularity mode', 'wealth-tax-calculator' ); ?>">
+                            <button type="button" class="wtc-analytics-toggle-btn is-active" data-wtc-target="enabled" role="tab" aria-selected="true"><?php esc_html_e( 'Most Selected', 'wealth-tax-calculator' ); ?></button>
+                            <button type="button" class="wtc-analytics-toggle-btn" data-wtc-target="top-rank" role="tab" aria-selected="false"><?php esc_html_e( 'Top Ranked #1', 'wealth-tax-calculator' ); ?></button>
+                        </div>
+
+                        <div class="wtc-analytics-popularity-panel is-active" data-wtc-panel="enabled">
+                            <?php $this->render_analytics_popularity_chart( isset( $nationwide_summary['enabled_rows'] ) ? $nationwide_summary['enabled_rows'] : array(), __( 'Popularity data appears after submissions are recorded.', 'wealth-tax-calculator' ) ); ?>
+                        </div>
+                        <div class="wtc-analytics-popularity-panel" data-wtc-panel="top-rank" hidden>
+                            <?php $this->render_analytics_popularity_chart( isset( $nationwide_summary['top_rank_rows'] ) ? $nationwide_summary['top_rank_rows'] : array(), __( 'Top-rank data appears after submissions are recorded.', 'wealth-tax-calculator' ) ); ?>
+                        </div>
+                    </section>
+
+                    <section class="wtc-analytics-chart-card">
+                        <h3 class="wtc-analytics-chart-title"><?php esc_html_e( 'Tax Rate Selection', 'wealth-tax-calculator' ); ?></h3>
+                        <?php $this->render_analytics_tax_line_chart( isset( $nationwide_summary['tax_rate_counts'] ) ? $nationwide_summary['tax_rate_counts'] : array(), __( 'Tax rate data appears after submissions are recorded.', 'wealth-tax-calculator' ) ); ?>
+                    </section>
+                </div>
+            </div>
+
+            <?php $this->render_us_state_map( isset( $nationwide_summary['region_counts'] ) ? $nationwide_summary['region_counts'] : array() ); ?>
+
+            <div class="card wtc-no-collapse" style="max-width: 920px; margin-top: 20px;">
+                <h2><?php esc_html_e( 'Most Selected Sub-Policies (Final Submissions)', 'wealth-tax-calculator' ); ?></h2>
+                <?php $this->render_policy_count_table( $nationwide_summary['enabled_rows'], __( 'Sessions selected', 'wealth-tax-calculator' ) ); ?>
+            </div>
+
+            <div class="card wtc-no-collapse" style="max-width: 920px; margin-top: 20px;">
+                <h2><?php esc_html_e( 'Most Prioritized (Rank #1)', 'wealth-tax-calculator' ); ?></h2>
+                <?php $this->render_policy_count_table( $nationwide_summary['top_rank_rows'], __( 'Times ranked #1', 'wealth-tax-calculator' ) ); ?>
+            </div>
+
+            <div class="card" style="max-width: 920px; margin-top: 20px;">
+                <h2><?php esc_html_e( 'Priority Rank Breakdown', 'wealth-tax-calculator' ); ?></h2>
+                <?php $this->render_rank_breakdown_table( $nationwide_summary['rank_rows'] ); ?>
+            </div>
+
+            <div class="card" style="max-width: 920px; margin-top: 20px;">
+                <h2><?php esc_html_e( 'Region Buckets', 'wealth-tax-calculator' ); ?></h2>
+                <p class="description"><?php esc_html_e( 'Includes U.S. tracked regions only. Michigan uses mi_* buckets; other U.S. states use us_* buckets (for example, us_md for Maryland).', 'wealth-tax-calculator' ); ?></p>
+                <?php $this->render_simple_count_table( $nationwide_summary['region_counts'], __( 'Region bucket', 'wealth-tax-calculator' ), __( 'Submitted sessions', 'wealth-tax-calculator' ), 100 ); ?>
+            </div>
+
+            <div class="card" style="max-width: 920px; margin-top: 20px;">
+                <h2><?php esc_html_e( 'U.S. County Buckets', 'wealth-tax-calculator' ); ?></h2>
+                <?php $this->render_county_count_table( $nationwide_summary['county_counts'] ); ?>
+            </div>
+
+            <div class="card" style="max-width: 920px; margin-top: 20px;">
+                <h2><?php esc_html_e( 'Tax Rate Selection', 'wealth-tax-calculator' ); ?></h2>
+                <?php $this->render_analytics_tax_line_chart( isset( $nationwide_summary['tax_rate_counts'] ) ? $nationwide_summary['tax_rate_counts'] : array(), __( 'Tax rate data appears after submissions are recorded.', 'wealth-tax-calculator' ) ); ?>
+            </div>
+
+            <div class="card" style="max-width: 920px; margin-top: 20px;">
+                <h2><?php esc_html_e( 'Recent Submission Detail', 'wealth-tax-calculator' ); ?></h2>
+                <?php $this->render_recent_submissions_table( $nationwide_summary['recent_submissions'] ); ?>
+            </div>
+
+            <?php if ( $this->fingerprint_enabled() ) : ?>
+            <div class="card" style="max-width: 920px; margin-top: 20px;">
+                <h2><?php esc_html_e( 'Cross-Session Changes (Same Visitor)', 'wealth-tax-calculator' ); ?></h2>
+                <?php $this->render_cross_session_changes_table( isset( $nationwide_summary['cross_session_changes'] ) ? $nationwide_summary['cross_session_changes'] : array() ); ?>
+            </div>
+            <?php endif; ?>
 
             </div>
 
@@ -1678,8 +1076,7 @@ class WTC_Policy_Analytics {
                     $default_state_summary,
                     $default_state_counties,
                     __( 'This tab mirrors the state dashboard, locked to Michigan.', 'wealth-tax-calculator' ),
-                    __( 'Michigan is highlighted in the tile map. County bubbles are sized by submitted sessions for Michigan.', 'wealth-tax-calculator' ),
-                    false
+                    __( 'Michigan is highlighted in the tile map. County bubbles are sized by submitted sessions for Michigan.', 'wealth-tax-calculator' )
                 );
                 ?>
             </div>
@@ -1713,41 +1110,10 @@ class WTC_Policy_Analytics {
 
             <div class="card" style="max-width: 920px; margin-top: 20px;">
                 <h2><?php esc_html_e( 'Data Management', 'wealth-tax-calculator' ); ?></h2>
-                <p class="description">
-                    <?php
-                    $county_backfill_status = isset( $county_backfill_state['status'] ) ? $county_backfill_state['status'] : 'idle';
-                    $county_backfill_label  = $county_backfill_status === 'running'
-                        ? __( 'Running', 'wealth-tax-calculator' )
-                        : ( $county_backfill_status === 'completed' ? __( 'Completed', 'wealth-tax-calculator' ) : __( 'Idle', 'wealth-tax-calculator' ) );
-
-                    printf(
-                        /* translators: 1: current status label, 2: processed count, 3: updated count */
-                        esc_html__( 'County backfill status: %1$s. Processed: %2$s. Updated: %3$s.', 'wealth-tax-calculator' ),
-                        esc_html( $county_backfill_label ),
-                        esc_html( number_format_i18n( isset( $county_backfill_state['processed'] ) ? (int) $county_backfill_state['processed'] : 0 ) ),
-                        esc_html( number_format_i18n( isset( $county_backfill_state['updated'] ) ? (int) $county_backfill_state['updated'] : 0 ) )
-                    );
-                    ?>
-                </p>
-                <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-bottom: 12px;">
-                    <input type="hidden" name="action" value="wtc_start_county_backfill" />
-                    <?php wp_nonce_field( 'wtc_start_county_backfill' ); ?>
-                    <?php submit_button( __( 'Reprocess Unresolved County Buckets', 'wealth-tax-calculator' ), 'secondary', 'submit', false ); ?>
-                </form>
                 <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-bottom: 12px;">
                     <input type="hidden" name="action" value="wtc_export_analytics_csv" />
                     <?php wp_nonce_field( 'wtc_export_analytics_csv' ); ?>
                     <?php submit_button( __( 'Export Collected Data (CSV)', 'wealth-tax-calculator' ), 'secondary', 'submit', false ); ?>
-                </form>
-                <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" enctype="multipart/form-data" style="margin-bottom: 12px; display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
-                    <input type="hidden" name="action" value="wtc_import_analytics_csv" />
-                    <?php wp_nonce_field( 'wtc_import_analytics_csv' ); ?>
-                    <div>
-                        <label for="wtc-import-analytics-csv" style="display:block; font-weight:600; margin-bottom:4px;"><?php esc_html_e( 'Import plugin-exported analytics CSV', 'wealth-tax-calculator' ); ?></label>
-                        <input type="file" id="wtc-import-analytics-csv" name="analytics_csv" accept=".csv,text/csv" required />
-                        <p class="description" style="margin:4px 0 0;"><?php esc_html_e( 'Imports CSV files exported by this plugin. Existing rows with the same session and day are updated.', 'wealth-tax-calculator' ); ?></p>
-                    </div>
-                    <?php submit_button( __( 'Import CSV Data', 'wealth-tax-calculator' ), 'secondary', 'submit', false ); ?>
                 </form>
                 <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" target="_blank" style="margin-bottom: 12px;">
                     <input type="hidden" name="action" value="wtc_export_analytics_pdf" />
@@ -1814,108 +1180,7 @@ class WTC_Policy_Analytics {
         return '$' . number_format_i18n( (int) round( $amount ) );
     }
 
-    private function render_nationwide_analytics_dashboard_panel( $nationwide_summary, $submitted_sessions, $unique_sessions, $days_stored, $average_tax_rate, $show_fingerprint_sections ) {
-        $nationwide_summary = is_array( $nationwide_summary ) ? $nationwide_summary : array();
-        ?>
-        <div class="card wtc-analytics-card" style="max-width: 920px; margin-top: 20px;">
-            <h2><?php esc_html_e( 'Nationwide Statistics', 'wealth-tax-calculator' ); ?></h2>
-            <p class="description"><?php esc_html_e( 'This view uses the same dashboard layout as the state panels, but aggregates all U.S. submissions into one nationwide report.', 'wealth-tax-calculator' ); ?></p>
-
-            <div class="wtc-analytics-stats" role="list" aria-label="<?php esc_attr_e( 'Nationwide analytics summary metrics', 'wealth-tax-calculator' ); ?>">
-                <div class="wtc-analytics-stat" role="listitem">
-                    <span class="wtc-analytics-stat-label"><?php esc_html_e( 'Submitted Sessions', 'wealth-tax-calculator' ); ?></span>
-                    <span class="wtc-analytics-stat-value"><?php echo esc_html( number_format_i18n( (int) $submitted_sessions ) ); ?></span>
-                </div>
-                <div class="wtc-analytics-stat" role="listitem">
-                    <span class="wtc-analytics-stat-label"><?php esc_html_e( 'Unique Sessions', 'wealth-tax-calculator' ); ?></span>
-                    <span class="wtc-analytics-stat-value"><?php echo esc_html( number_format_i18n( (int) $unique_sessions ) ); ?></span>
-                </div>
-                <div class="wtc-analytics-stat" role="listitem">
-                    <span class="wtc-analytics-stat-label"><?php esc_html_e( 'Days Stored', 'wealth-tax-calculator' ); ?></span>
-                    <span class="wtc-analytics-stat-value"><?php echo esc_html( number_format_i18n( (int) $days_stored ) ); ?></span>
-                </div>
-                <div class="wtc-analytics-stat" role="listitem">
-                    <span class="wtc-analytics-stat-label"><?php esc_html_e( 'Average Tax Rate', 'wealth-tax-calculator' ); ?></span>
-                    <span class="wtc-analytics-stat-value"><?php echo esc_html( (float) $average_tax_rate > 0 ? number_format_i18n( (float) $average_tax_rate, 1 ) . '%' : '—' ); ?></span>
-                </div>
-            </div>
-        </div>
-
-        <div class="card wtc-analytics-card wtc-no-collapse" style="max-width: 920px; margin-top: 20px;">
-            <h2><?php esc_html_e( 'Charts', 'wealth-tax-calculator' ); ?></h2>
-
-            <div class="wtc-analytics-chart-panel wtc-analytics-chart-panel-three-up">
-                <section class="wtc-analytics-chart-card">
-                    <h3 class="wtc-analytics-chart-title"><?php esc_html_e( 'Category Allocation Mix', 'wealth-tax-calculator' ); ?></h3>
-                    <?php $this->render_policy_group_allocation_chart( isset( $nationwide_summary['policy_group_rows'] ) ? $nationwide_summary['policy_group_rows'] : array(), __( 'Category allocation data appears after submissions are recorded.', 'wealth-tax-calculator' ) ); ?>
-                </section>
-
-                <section class="wtc-analytics-chart-card">
-                    <h3 class="wtc-analytics-chart-title"><?php esc_html_e( 'Policy Popularity', 'wealth-tax-calculator' ); ?></h3>
-
-                    <div class="wtc-analytics-chart-toggle" role="tablist" aria-label="<?php esc_attr_e( 'Policy popularity mode', 'wealth-tax-calculator' ); ?>">
-                        <button type="button" class="wtc-analytics-toggle-btn is-active" data-wtc-target="enabled" role="tab" aria-selected="true"><?php esc_html_e( 'Most Selected', 'wealth-tax-calculator' ); ?></button>
-                        <button type="button" class="wtc-analytics-toggle-btn" data-wtc-target="top-rank" role="tab" aria-selected="false"><?php esc_html_e( 'Top Ranked #1', 'wealth-tax-calculator' ); ?></button>
-                    </div>
-
-                    <div class="wtc-analytics-popularity-panel is-active" data-wtc-panel="enabled">
-                        <?php $this->render_analytics_popularity_chart( isset( $nationwide_summary['enabled_rows'] ) ? $nationwide_summary['enabled_rows'] : array(), __( 'Popularity data appears after submissions are recorded.', 'wealth-tax-calculator' ) ); ?>
-                    </div>
-                    <div class="wtc-analytics-popularity-panel" data-wtc-panel="top-rank" hidden>
-                        <?php $this->render_analytics_popularity_chart( isset( $nationwide_summary['top_rank_rows'] ) ? $nationwide_summary['top_rank_rows'] : array(), __( 'Top-rank data appears after submissions are recorded.', 'wealth-tax-calculator' ) ); ?>
-                    </div>
-                </section>
-
-                <section class="wtc-analytics-chart-card">
-                    <h3 class="wtc-analytics-chart-title"><?php esc_html_e( 'Tax Rate Selection', 'wealth-tax-calculator' ); ?></h3>
-                    <?php $this->render_analytics_tax_line_chart( isset( $nationwide_summary['tax_rate_counts'] ) ? $nationwide_summary['tax_rate_counts'] : array(), __( 'Tax rate data appears after submissions are recorded.', 'wealth-tax-calculator' ) ); ?>
-                </section>
-            </div>
-        </div>
-
-        <?php $this->render_us_state_map( isset( $nationwide_summary['region_counts'] ) ? $nationwide_summary['region_counts'] : array() ); ?>
-
-        <div class="card wtc-analytics-card" style="max-width: 920px; margin-top: 20px;">
-            <h2><?php esc_html_e( 'Most Selected Sub-Policies (Final Submissions)', 'wealth-tax-calculator' ); ?></h2>
-            <?php $this->render_policy_count_table( isset( $nationwide_summary['enabled_rows'] ) ? $nationwide_summary['enabled_rows'] : array(), __( 'Sessions selected', 'wealth-tax-calculator' ) ); ?>
-        </div>
-
-        <div class="card wtc-analytics-card" style="max-width: 920px; margin-top: 20px;">
-            <h2><?php esc_html_e( 'Most Prioritized (Rank #1)', 'wealth-tax-calculator' ); ?></h2>
-            <?php $this->render_policy_count_table( isset( $nationwide_summary['top_rank_rows'] ) ? $nationwide_summary['top_rank_rows'] : array(), __( 'Times ranked #1', 'wealth-tax-calculator' ) ); ?>
-        </div>
-
-        <div class="card wtc-analytics-card" style="max-width: 920px; margin-top: 20px;">
-            <h2><?php esc_html_e( 'Priority Rank Breakdown', 'wealth-tax-calculator' ); ?></h2>
-            <?php $this->render_rank_breakdown_table( isset( $nationwide_summary['rank_rows'] ) ? $nationwide_summary['rank_rows'] : array() ); ?>
-        </div>
-
-        <div class="card wtc-analytics-card" style="max-width: 920px; margin-top: 20px;">
-            <h2><?php esc_html_e( 'Region Buckets', 'wealth-tax-calculator' ); ?></h2>
-            <p class="description"><?php esc_html_e( 'Includes U.S. tracked regions only. Michigan uses mi_* buckets; other U.S. states use us_* buckets (for example, us_md for Maryland).', 'wealth-tax-calculator' ); ?></p>
-            <?php $this->render_simple_count_table( isset( $nationwide_summary['region_counts'] ) ? $nationwide_summary['region_counts'] : array(), __( 'Region bucket', 'wealth-tax-calculator' ), __( 'Submitted sessions', 'wealth-tax-calculator' ), 100 ); ?>
-        </div>
-
-        <div class="card wtc-analytics-card" style="max-width: 920px; margin-top: 20px;">
-            <h2><?php esc_html_e( 'U.S. County Buckets', 'wealth-tax-calculator' ); ?></h2>
-            <?php $this->render_county_count_table( isset( $nationwide_summary['county_counts'] ) ? $nationwide_summary['county_counts'] : array() ); ?>
-        </div>
-
-        <div class="card wtc-analytics-card" style="max-width: 920px; margin-top: 20px;">
-            <h2><?php esc_html_e( 'Recent Submission Detail', 'wealth-tax-calculator' ); ?></h2>
-            <?php $this->render_recent_submissions_table( isset( $nationwide_summary['recent_submissions'] ) ? $nationwide_summary['recent_submissions'] : array() ); ?>
-        </div>
-
-        <?php if ( $show_fingerprint_sections ) : ?>
-        <div class="card wtc-analytics-card" style="max-width: 920px; margin-top: 20px;">
-            <h2><?php esc_html_e( 'Cross-Session Changes (Same Visitor)', 'wealth-tax-calculator' ); ?></h2>
-            <?php $this->render_cross_session_changes_table( isset( $nationwide_summary['cross_session_changes'] ) ? $nationwide_summary['cross_session_changes'] : array() ); ?>
-        </div>
-        <?php endif; ?>
-        <?php
-    }
-
-    private function render_state_analytics_dashboard_panel( $prefix, $default_state_code, $default_state_label, $default_state_summary, $default_state_counties, $description, $map_description, $include_map = true ) {
+    private function render_state_analytics_dashboard_panel( $prefix, $default_state_code, $default_state_label, $default_state_summary, $default_state_counties, $description, $map_description ) {
         $table_has_rows = ! empty( $default_state_counties );
         ?>
         <div class="card wtc-analytics-card" style="max-width: 920px; margin-top: 20px;">
@@ -1974,7 +1239,6 @@ class WTC_Policy_Analytics {
             </div>
         </div>
 
-        <?php if ( $include_map ) : ?>
         <div class="card" style="max-width: 920px; margin-top: 20px;">
             <h2><?php esc_html_e( 'State Region Map and County Bubbles', 'wealth-tax-calculator' ); ?></h2>
             <p class="description"><?php echo esc_html( $map_description ); ?></p>
@@ -1991,7 +1255,6 @@ class WTC_Policy_Analytics {
                 </div>
             </div>
         </div>
-        <?php endif; ?>
 
         <div class="card" style="max-width: 920px; margin-top: 20px;">
             <h2><span id="<?php echo esc_attr( $prefix ); ?>-county-title"><?php echo esc_html( $default_state_label ); ?></span> <?php esc_html_e( 'County Buckets', 'wealth-tax-calculator' ); ?></h2>
@@ -2139,7 +1402,7 @@ class WTC_Policy_Analytics {
         echo '</div>';
     }
 
-    private function render_analytics_popularity_chart( $rows, $empty_text, $format_as_currency = false ) {
+    private function render_analytics_popularity_chart( $rows, $empty_text ) {
         $rows = is_array( $rows ) ? $rows : array();
         $rows = array_values( $rows );
 
@@ -2191,14 +1454,7 @@ class WTC_Policy_Analytics {
             echo '<div class="wtc-analytics-legend-item">';
             echo '<span class="wtc-analytics-legend-swatch" style="background:' . esc_attr( sanitize_hex_color( $row['color'] ) ) . '"></span>';
             echo '<span class="wtc-analytics-legend-label">' . esc_html( $row['label'] ) . '</span>';
-            
-            if ( $format_as_currency ) {
-                $formatted_value = $this->format_compact_currency( $row['count'] );
-                echo '<span class="wtc-analytics-legend-value">' . esc_html( $formatted_value . ' (' . number_format_i18n( $row['percent'], 1 ) . '%)' ) . '</span>';
-            } else {
-                echo '<span class="wtc-analytics-legend-value">' . esc_html( number_format_i18n( $row['count'] ) . ' (' . number_format_i18n( $row['percent'], 1 ) . '%)' ) . '</span>';
-            }
-            
+            echo '<span class="wtc-analytics-legend-value">' . esc_html( number_format_i18n( $row['count'] ) . ' (' . number_format_i18n( $row['percent'], 1 ) . '%)' ) . '</span>';
             echo '</div>';
         }
 
@@ -2225,122 +1481,7 @@ class WTC_Policy_Analytics {
             );
         }
 
-        usort(
-            $chart_rows,
-            function ( $a, $b ) {
-                if ( $a['count'] === $b['count'] ) {
-                    return strcasecmp( $a['label'], $b['label'] );
-                }
-
-                return ( $a['count'] > $b['count'] ) ? -1 : 1;
-            }
-        );
-
-        $this->render_policy_group_allocation_line_chart( $chart_rows, $empty_text );
-    }
-
-    private function render_policy_group_allocation_line_chart( $rows, $empty_text ) {
-        $rows = is_array( $rows ) ? $rows : array();
-
-        $normalized_rows = array();
-        $max_count       = 0;
-        $total_count     = 0;
-
-        foreach ( $rows as $row ) {
-            if ( ! is_array( $row ) ) {
-                continue;
-            }
-
-            $count = isset( $row['count'] ) ? (int) $row['count'] : 0;
-            if ( $count <= 0 ) {
-                continue;
-            }
-
-            $label = isset( $row['label'] ) ? sanitize_text_field( $row['label'] ) : '';
-
-            $normalized_rows[] = array(
-                'label' => $label,
-                'count' => $count,
-            );
-            $max_count   = max( $max_count, $count );
-            $total_count += $count;
-        }
-
-        if ( empty( $normalized_rows ) || $total_count <= 0 ) {
-            echo '<p class="wtc-analytics-empty">' . esc_html( $empty_text ) . '</p>';
-            return;
-        }
-
-        $width          = 360;
-        $height         = 220;
-        $padding_left   = 24;
-        $padding_top    = 18;
-        $padding_right  = 18;
-        $padding_bottom = 44;
-        $plot_width     = $width - $padding_left - $padding_right;
-        $plot_height    = $height - $padding_top - $padding_bottom;
-        $count_range    = $max_count > 0 ? $max_count : 1;
-        $point_count    = count( $normalized_rows );
-        $chart_rows     = array();
-        $point_parts    = array();
-
-        foreach ( $normalized_rows as $index => $row ) {
-            if ( $point_count === 1 ) {
-                $x = $padding_left + ( $plot_width / 2 );
-            } else {
-                $x = $padding_left + ( ( $index / ( $point_count - 1 ) ) * $plot_width );
-            }
-
-            $y = $padding_top + $plot_height - ( ( $row['count'] / $count_range ) * $plot_height );
-
-            $short_label = $row['label'];
-            // Keep axis labels compact and rely on the legend for full category names.
-            if ( strlen( $short_label ) > 12 ) {
-                $short_label = substr( $short_label, 0, 12 ) . '...';
-            }
-
-            $chart_rows[] = array(
-                'label'       => $row['label'],
-                'short_label' => $short_label,
-                'count'       => $row['count'],
-                'percent'     => round( ( $row['count'] / $total_count ) * 100, 1 ),
-                'x'           => round( $x, 2 ),
-                'y'           => round( $y, 2 ),
-            );
-            $point_parts[] = round( $x, 2 ) . ',' . round( $y, 2 );
-        }
-
-        echo '<div class="wtc-analytics-line-chart">';
-        echo '<svg viewBox="0 0 ' . esc_attr( $width ) . ' ' . esc_attr( $height ) . '" role="img" aria-label="' . esc_attr__( 'Category allocation line chart', 'wealth-tax-calculator' ) . '">';
-
-        for ( $i = 0; $i < 4; $i++ ) {
-            $grid_y = $padding_top + ( ( $plot_height / 3 ) * $i );
-            echo '<line class="wtc-analytics-line-grid" x1="' . esc_attr( $padding_left ) . '" y1="' . esc_attr( round( $grid_y, 2 ) ) . '" x2="' . esc_attr( $width - $padding_right ) . '" y2="' . esc_attr( round( $grid_y, 2 ) ) . '"></line>';
-        }
-
-        echo '<polyline class="wtc-analytics-line-path" points="' . esc_attr( implode( ' ', $point_parts ) ) . '"></polyline>';
-
-        foreach ( $chart_rows as $chart_row ) {
-            echo '<circle class="wtc-analytics-line-point" cx="' . esc_attr( $chart_row['x'] ) . '" cy="' . esc_attr( $chart_row['y'] ) . '" r="5"></circle>';
-            echo '<text class="wtc-analytics-line-value-label" x="' . esc_attr( $chart_row['x'] ) . '" y="' . esc_attr( $chart_row['y'] - 10 ) . '" text-anchor="middle">' . esc_html( $this->format_compact_currency( $chart_row['count'] ) ) . '</text>';
-            echo '<text class="wtc-analytics-line-axis-label" x="' . esc_attr( $chart_row['x'] ) . '" y="' . esc_attr( $height - 14 ) . '" text-anchor="middle">' . esc_html( $chart_row['short_label'] ) . '</text>';
-        }
-
-        echo '</svg>';
-        echo '<div class="wtc-analytics-legend wtc-analytics-legend-scroll">';
-
-        foreach ( $chart_rows as $chart_row ) {
-            $formatted_value = $this->format_compact_currency( $chart_row['count'] );
-
-            echo '<div class="wtc-analytics-legend-item">';
-            echo '<span class="wtc-analytics-legend-swatch wtc-analytics-legend-swatch-line"></span>';
-            echo '<span class="wtc-analytics-legend-label">' . esc_html( $chart_row['label'] ) . '</span>';
-            echo '<span class="wtc-analytics-legend-value">' . esc_html( $formatted_value . ' (' . number_format_i18n( $chart_row['percent'], 1 ) . '%)' ) . '</span>';
-            echo '</div>';
-        }
-
-        echo '</div>';
-        echo '</div>';
+        $this->render_analytics_popularity_chart( $chart_rows, $empty_text );
     }
 
     private function get_us_state_code_map() {
@@ -2499,7 +1640,7 @@ class WTC_Policy_Analytics {
             }
         }
         ?>
-        <div class="card wtc-analytics-card wtc-us-map-card" style="max-width: 920px; margin-top: 20px;">
+        <div class="card wtc-us-map-card" style="max-width: 920px; margin-top: 20px;">
             <h2><?php esc_html_e( 'US Visitors Map', 'wealth-tax-calculator' ); ?></h2>
             <p class="description"><?php esc_html_e( 'All 50 states are shown. Tile intensity increases with submitted sessions.', 'wealth-tax-calculator' ); ?></p>
             <?php if ( ! $has_data ) : ?>
@@ -2534,6 +1675,147 @@ class WTC_Policy_Analytics {
                     </tbody>
                 </table>
             </details>
+        </div>
+        <?php
+    }
+
+    private function render_michigan_map( array $region_counts ) {
+        $mi_cities  = array();
+        $mi_unknown = 0;
+        foreach ( $region_counts as $bucket => $count ) {
+            if ( strncmp( $bucket, 'mi_', 3 ) !== 0 ) {
+                continue;
+            }
+            if ( 'mi_unknown' === $bucket ) {
+                $mi_unknown += (int) $count;
+            } else {
+                $mi_cities[ substr( $bucket, 3 ) ] = (int) $count;
+            }
+        }
+
+        $svg_path = plugin_dir_path( __FILE__ ) . 'data/states/michigan/michigan-counties.svg';
+        $has_data = ! empty( $mi_cities ) || $mi_unknown > 0;
+        ?>
+        <div class="card wtc-mi-map-card" style="max-width: 920px; margin-top: 20px;">
+            <h2><?php esc_html_e( 'Michigan Visitors Map', 'wealth-tax-calculator' ); ?></h2>
+            <p class="description"><?php esc_html_e( 'This map shows Michigan-only city data. Visitors from other states (for example, Maryland) appear in the Region Buckets table below.', 'wealth-tax-calculator' ); ?></p>
+            <?php if ( ! $has_data ) : ?>
+                <p><?php esc_html_e( 'No Michigan visitor data yet.', 'wealth-tax-calculator' ); ?></p>
+            <?php else : ?>
+                <div class="wtc-mi-map-wrap">
+                    <?php
+                    if ( file_exists( $svg_path ) ) {
+                        // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents, WordPress.Security.EscapeOutput.OutputNotEscaped
+                        echo file_get_contents( $svg_path );
+                    }
+                    ?>
+                    <div id="wtc-mi-map-tooltip"></div>
+                </div>
+                <div class="wtc-mi-map-legend" aria-hidden="true">
+                    <span class="wtc-mi-map-legend-item">
+                        <svg width="10" height="10" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <circle cx="5" cy="5" r="4" fill="#406BBF" fill-opacity="0.75" stroke="#233071" stroke-width="1"/>
+                        </svg>
+                        <span><?php esc_html_e( 'Smaller = fewer sessions', 'wealth-tax-calculator' ); ?></span>
+                    </span>
+                    <span class="wtc-mi-map-legend-item">
+                        <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <circle cx="9" cy="9" r="8" fill="#406BBF" fill-opacity="0.75" stroke="#233071" stroke-width="1"/>
+                        </svg>
+                        <span><?php esc_html_e( 'Larger = more sessions', 'wealth-tax-calculator' ); ?></span>
+                    </span>
+                </div>
+                <?php
+                $known_slugs    = $this->get_known_city_slugs();
+                $unknown_cities = array_diff_key( $mi_cities, $known_slugs );
+                $total_unlocated = $mi_unknown;
+                foreach ( $unknown_cities as $c ) {
+                    $total_unlocated += $c;
+                }
+                if ( $total_unlocated > 0 ) :
+                ?>
+                    <details class="wtc-mi-unlocated">
+                        <summary><?php
+                            /* translators: %d: number of sessions */
+                            printf( esc_html__( 'Unlocated Michigan sessions: %d', 'wealth-tax-calculator' ), (int) $total_unlocated );
+                        ?></summary>
+                        <table class="widefat striped">
+                            <thead><tr>
+                                <th><?php esc_html_e( 'City slug', 'wealth-tax-calculator' ); ?></th>
+                                <th><?php esc_html_e( 'Sessions', 'wealth-tax-calculator' ); ?></th>
+                            </tr></thead>
+                            <tbody>
+                            <?php if ( $mi_unknown > 0 ) : ?>
+                                <tr><td><?php esc_html_e( '(city unknown)', 'wealth-tax-calculator' ); ?></td><td><?php echo esc_html( number_format_i18n( $mi_unknown ) ); ?></td></tr>
+                            <?php endif; ?>
+                            <?php foreach ( $unknown_cities as $slug => $count ) : ?>
+                                <tr><td><?php echo esc_html( $slug ); ?></td><td><?php echo esc_html( number_format_i18n( $count ) ); ?></td></tr>
+                            <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </details>
+                <?php endif; ?>
+            <?php endif; ?>
+        </div>
+        <?php
+    }
+
+    private function render_us_map( array $region_counts ) {
+        $us_states  = array();
+        $us_unknown = 0;
+        foreach ( $region_counts as $bucket => $count ) {
+            if ( strncmp( $bucket, 'us_', 3 ) !== 0 ) {
+                continue;
+            }
+
+            if ( 'us_unknown' === $bucket ) {
+                $us_unknown += (int) $count;
+                continue;
+            }
+
+            $state_code = strtoupper( substr( $bucket, 3 ) );
+            if ( 'MI' === $state_code || ! preg_match( '/^[A-Z]{2}$/', $state_code ) ) {
+                continue;
+            }
+
+            $us_states[ $state_code ] = (int) $count;
+        }
+
+        $svg_path = plugin_dir_path( __FILE__ ) . 'data/states/us-map/us-states-tile-map.svg';
+        $has_data = ! empty( $us_states );
+        ?>
+        <div class="card wtc-us-map-card" style="max-width: 920px; margin-top: 20px;">
+            <h2><?php esc_html_e( 'U.S. Visitors Outside Michigan', 'wealth-tax-calculator' ); ?></h2>
+            <p class="description"><?php esc_html_e( 'State-level view of submitted sessions from outside Michigan. Michigan traffic remains in the detailed map below.', 'wealth-tax-calculator' ); ?></p>
+            <?php if ( ! $has_data ) : ?>
+                <p><?php esc_html_e( 'No outside-Michigan U.S. visitor data yet.', 'wealth-tax-calculator' ); ?></p>
+            <?php else : ?>
+                <div class="wtc-us-map-wrap">
+                    <?php
+                    if ( file_exists( $svg_path ) ) {
+                        // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents, WordPress.Security.EscapeOutput.OutputNotEscaped
+                        echo file_get_contents( $svg_path );
+                    }
+                    ?>
+                    <div id="wtc-us-map-tooltip"></div>
+                </div>
+                <div class="wtc-us-map-legend" aria-hidden="true">
+                    <span class="wtc-us-map-legend-item"><span class="wtc-us-map-legend-swatch wtc-us-level-1"></span><span><?php esc_html_e( 'Lower session volume', 'wealth-tax-calculator' ); ?></span></span>
+                    <span class="wtc-us-map-legend-item"><span class="wtc-us-map-legend-swatch wtc-us-level-3"></span><span><?php esc_html_e( 'Moderate session volume', 'wealth-tax-calculator' ); ?></span></span>
+                    <span class="wtc-us-map-legend-item"><span class="wtc-us-map-legend-swatch wtc-us-level-5"></span><span><?php esc_html_e( 'Higher session volume', 'wealth-tax-calculator' ); ?></span></span>
+                </div>
+                <?php if ( $us_unknown > 0 ) : ?>
+                    <p class="wtc-us-map-footnote">
+                        <?php
+                        printf(
+                            /* translators: %d: number of sessions */
+                            esc_html__( 'State could not be resolved for %d additional U.S. sessions.', 'wealth-tax-calculator' ),
+                            (int) $us_unknown
+                        );
+                        ?>
+                    </p>
+                <?php endif; ?>
+            <?php endif; ?>
         </div>
         <?php
     }
@@ -2647,11 +1929,7 @@ class WTC_Policy_Analytics {
     }
 
     private function get_michigan_city_to_county_map() {
-        if ( null !== $this->michigan_city_county_map ) {
-            return $this->michigan_city_county_map;
-        }
-
-        $this->michigan_city_county_map = array(
+        return array(
             'detroit' => 'wayne',
             'dearborn' => 'wayne',
             'dearborn-heights' => 'wayne',
@@ -2759,16 +2037,10 @@ class WTC_Policy_Analytics {
             'genesee' => 'genesee',
             'ingham' => 'ingham',
         );
-
-        return $this->michigan_city_county_map;
     }
 
     private function get_michigan_postal_to_county_map() {
-        if ( null !== $this->michigan_postal_county_map ) {
-            return $this->michigan_postal_county_map;
-        }
-
-        $this->michigan_postal_county_map = array(
+        return array(
             '48201' => 'wayne',
             '48226' => 'wayne',
             '48126' => 'wayne',
@@ -2784,8 +2056,6 @@ class WTC_Policy_Analytics {
             '48066' => 'macomb',
             '48093' => 'macomb',
         );
-
-        return $this->michigan_postal_county_map;
     }
 
     private function infer_michigan_county_slug( $city_slug, $postal ) {
@@ -2810,37 +2080,6 @@ class WTC_Policy_Analytics {
         }
 
         return '';
-    }
-
-    private function infer_county_slug_from_postal( $postal, $state_code ) {
-        $postal     = sanitize_text_field( $postal );
-        $state_code = strtolower( sanitize_text_field( $state_code ) );
-
-        if ( ! preg_match( '/^\d{5}$/', $postal ) ) {
-            return '';
-        }
-
-        static $lookup = null;
-        if ( null === $lookup ) {
-            $file = plugin_dir_path( __FILE__ ) . 'data/us-zip-county-lookup.php';
-            if ( file_exists( $file ) ) {
-                $lookup = require $file; // phpcs:ignore WordPressVIPMinimum.Files.IncludingFile.UsingVariable
-            }
-            if ( ! is_array( $lookup ) ) {
-                $lookup = array();
-            }
-        }
-
-        if ( ! isset( $lookup[ $postal ] ) ) {
-            return '';
-        }
-
-        $entry = $lookup[ $postal ];
-        if ( ! isset( $entry['state'] ) || $entry['state'] !== $state_code ) {
-            return '';
-        }
-
-        return isset( $entry['county'] ) ? (string) $entry['county'] : '';
     }
 
     private function normalize_michigan_county_bucket( $bucket, $city_slug = '', $postal = '' ) {
@@ -2892,11 +2131,6 @@ class WTC_Policy_Analytics {
         return '';
     }
 
-    /**
-     * @rule STATE-EXCLUSIVE: Returns true only for events that belong to the given state.
-     * Michigan (MI) matches any mi_* bucket; all other states match the exact us_{XX} bucket.
-     * Used to enforce that each By State panel contains only that state's data.
-     */
     private function is_state_region_bucket( $bucket, $state_code ) {
         $bucket     = sanitize_text_field( $bucket );
         $state_code = strtoupper( sanitize_text_field( $state_code ) );
@@ -2911,11 +2145,6 @@ class WTC_Policy_Analytics {
         return $bucket === 'us_' . strtolower( $state_code );
     }
 
-    /**
-     * @rule STATE-EXCLUSIVE: Filters raw analytics data to events from a single state only.
-     * Output feeds the By State tab and the Michigan tab. Every chart, statistic, county
-     * table, and visualisation built from this output reflects exclusively the given state.
-     */
     private function filter_analytics_data_to_state( $analytics_data, $state_code ) {
         if ( ! is_array( $analytics_data ) ) {
             return array();
@@ -3027,21 +2256,11 @@ class WTC_Policy_Analytics {
         return $filtered_data;
     }
 
-    /**
-     * @rule MICHIGAN-ONLY: Returns true only for Michigan city-level region buckets (mi_*).
-     * Used to enforce that the Michigan tab contains exclusively Michigan data.
-     */
     private function is_michigan_region_bucket( $bucket ) {
         $bucket = sanitize_text_field( $bucket );
         return strncmp( $bucket, 'mi_', 3 ) === 0;
     }
 
-    /**
-     * @rule NATIONWIDE: Returns true for any US-originated region bucket.
-     * Includes Michigan city slugs (mi_*) and all other US state buckets (us_{XX}).
-     * Excludes 'unknown' and 'non_us'. Used to enforce that the Nationwide tab
-     * contains all US submissions cumulatively.
-     */
     private function is_nationwide_region_bucket( $bucket ) {
         $bucket = sanitize_text_field( $bucket );
 
@@ -3056,12 +2275,6 @@ class WTC_Policy_Analytics {
         return false;
     }
 
-    /**
-     * @rule NATIONWIDE: Filters raw analytics data to all US-originated events.
-     * Includes Michigan (mi_*) and every other US state (us_{XX}) cumulatively.
-     * Excludes 'unknown' and 'non_us' buckets. Output feeds all charts, statistics,
-     * and visualisations on the Nationwide tab.
-     */
     private function filter_analytics_data_to_nationwide( $analytics_data ) {
         if ( ! is_array( $analytics_data ) ) {
             return array();
@@ -3174,11 +2387,6 @@ class WTC_Policy_Analytics {
         return $filtered_data;
     }
 
-    /**
-     * @rule MICHIGAN-ONLY: Filters raw analytics data to Michigan events (mi_*) only.
-     * Used for the standalone Michigan summary computed in render_analytics_page.
-     * Every statistic derived from this output is Michigan-exclusive.
-     */
     private function filter_analytics_data_to_michigan( $analytics_data ) {
         if ( ! is_array( $analytics_data ) ) {
             return array();
@@ -3228,7 +2436,7 @@ class WTC_Policy_Analytics {
 
                     $county_bucket = isset( $submission['county_bucket'] ) ? sanitize_text_field( $submission['county_bucket'] ) : '';
                     $city_slug     = substr( $region_bucket, 3 );
-                    $county_bucket = $this->normalize_state_county_bucket( $county_bucket, 'MI', $city_slug );
+                    $county_bucket = $this->normalize_michigan_county_bucket( $county_bucket, $city_slug );
 
                     if ( $county_bucket !== '' ) {
                         if ( ! isset( $filtered_day['counties'][ $county_bucket ] ) ) {
@@ -3264,7 +2472,7 @@ class WTC_Policy_Analytics {
 
                 if ( ! empty( $day['counties'] ) && is_array( $day['counties'] ) ) {
                     foreach ( $day['counties'] as $bucket => $count ) {
-                        $bucket = $this->normalize_state_county_bucket( $bucket, 'MI' );
+                        $bucket = $this->normalize_michigan_county_bucket( $bucket );
                         if ( $bucket === '' ) {
                             continue;
                         }
@@ -3447,7 +2655,7 @@ class WTC_Policy_Analytics {
         }
 
         echo '<table class="widefat striped">';
-        echo '<thead><tr><th>' . esc_html__( 'Submitted', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Tax rate', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Region', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'County', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Policies', 'wealth-tax-calculator' ) . '</th></tr></thead>';
+        echo '<thead><tr><th>' . esc_html__( 'Submitted', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Tax rate', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Region', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'County', 'wealth-tax-calculator' ) . '</th><th>' . esc_html__( 'Prioritized selections', 'wealth-tax-calculator' ) . '</th></tr></thead>';
         echo '<tbody>';
 
         foreach ( $rows as $row ) {
@@ -3471,7 +2679,7 @@ class WTC_Policy_Analytics {
             if ( empty( $items ) ) {
                 echo esc_html__( 'No policy details stored.', 'wealth-tax-calculator' );
             } else {
-                $policy_lines = array();
+                echo '<ol style="margin:0; padding-left: 20px;">';
                 foreach ( $items as $item ) {
                     if ( ! is_array( $item ) ) {
                         continue;
@@ -3479,25 +2687,9 @@ class WTC_Policy_Analytics {
 
                     $policy_key = isset( $item['policy_key'] ) ? sanitize_text_field( $item['policy_key'] ) : '';
                     $label      = $this->format_policy_submission_label( $item, $policy_key );
-                    $policy_lines[] = $label;
+                    echo '<li>' . esc_html( $label ) . '</li>';
                 }
-
-                if ( empty( $policy_lines ) ) {
-                    echo esc_html__( 'No policy details stored.', 'wealth-tax-calculator' );
-                } else {
-                    /* translators: %d is the number of selected policy entries in this submission. */
-                    $summary_text = sprintf( esc_html__( 'View prioritized selections (%d)', 'wealth-tax-calculator' ), count( $policy_lines ) );
-                    echo '<details class="wtc-submission-policy-details">';
-                    echo '<summary>' . esc_html( $summary_text ) . '</summary>';
-                    echo '<ol class="wtc-submission-policy-list">';
-
-                    foreach ( $policy_lines as $policy_label ) {
-                        echo '<li>' . esc_html( $policy_label ) . '</li>';
-                    }
-
-                    echo '</ol>';
-                    echo '</details>';
-                }
+                echo '</ol>';
             }
 
             echo '</td>';
@@ -3718,9 +2910,6 @@ class WTC_Policy_Analytics {
         $total_events       = 0;
         $tax_rate_total     = 0.0;
         $tax_rate_samples   = 0;
-        $tax_rate_values    = array();
-        $seen_fingerprints  = array();
-        $repeat_fingerprints = 0;
 
         foreach ( $analytics_data as $day ) {
             if ( ! is_array( $day ) ) {
@@ -3737,16 +2926,25 @@ class WTC_Policy_Analytics {
                         continue;
                     }
 
+                    $order = isset( $submission['order'] ) && is_array( $submission['order'] )
+                        ? $submission['order']
+                        : array();
                     $selected_items = $this->normalize_submission_selected_items( $submission );
                     $bucket         = isset( $submission['region_bucket'] ) ? sanitize_text_field( $submission['region_bucket'] ) : 'unknown';
                     $state_code     = $this->get_state_code_from_region_bucket( $bucket );
                     $county_bucket  = isset( $submission['county_bucket'] ) ? sanitize_text_field( $submission['county_bucket'] ) : '';
-                    $city_slug      = ( $state_code === 'MI' && strncmp( $bucket, 'mi_', 3 ) === 0 ) ? substr( $bucket, 3 ) : '';
-                    $county_bucket  = $this->normalize_state_county_bucket(
-                        $county_bucket !== '' ? $county_bucket : $bucket,
-                        $state_code,
-                        $city_slug
-                    );
+
+                    if ( $bucket === '' ) {
+                        $bucket = 'unknown';
+                    }
+
+                    if ( $county_bucket === '' ) {
+                        $city_slug     = ( $state_code === 'MI' && strncmp( $bucket, 'mi_', 3 ) === 0 ) ? substr( $bucket, 3 ) : '';
+                        $county_bucket = $this->normalize_state_county_bucket( $bucket, $state_code, $city_slug );
+                    } else {
+                        $city_slug     = ( $state_code === 'MI' && strncmp( $bucket, 'mi_', 3 ) === 0 ) ? substr( $bucket, 3 ) : '';
+                        $county_bucket = $this->normalize_state_county_bucket( $county_bucket, $state_code, $city_slug );
+                    }
 
                     for ( $i = 0; $i < count( $selected_items ); $i++ ) {
                         $selected_item = $selected_items[ $i ];
@@ -3840,14 +3038,6 @@ class WTC_Policy_Analytics {
                         'selected_items'  => $selected_items,
                     );
 
-                    $fingerprint = isset( $submission['fingerprint'] ) ? (string) $submission['fingerprint'] : '';
-                    if ( $fingerprint !== '' ) {
-                        if ( isset( $seen_fingerprints[ $fingerprint ] ) ) {
-                            $repeat_fingerprints++;
-                        }
-                        $seen_fingerprints[ $fingerprint ] = true;
-                    }
-
                     if ( ! isset( $region_counts[ $bucket ] ) ) {
                         $region_counts[ $bucket ] = 0;
                     }
@@ -3870,9 +3060,8 @@ class WTC_Policy_Analytics {
 
                     $tax_rate_value = isset( $submission['tax_rate_value'] ) ? (float) $submission['tax_rate_value'] : null;
                     if ( null !== $tax_rate_value && $tax_rate_value >= WTC_TAX_RATE_MIN && $tax_rate_value <= WTC_TAX_RATE_MAX ) {
-                        $tax_rate_total   += $tax_rate_value;
+                        $tax_rate_total += $tax_rate_value;
                         $tax_rate_samples += 1;
-                        $tax_rate_values[] = $tax_rate_value;
 
                         if ( $county_bucket !== '' ) {
                             if ( ! isset( $county_tax_rate_totals[ $county_bucket ] ) ) {
@@ -4052,36 +3241,22 @@ class WTC_Policy_Analytics {
 
         $average_tax_rate = $tax_rate_samples > 0 ? round( $tax_rate_total / $tax_rate_samples, 1 ) : 0.0;
 
-        sort( $tax_rate_values );
-        $rate_count      = count( $tax_rate_values );
-        $median_tax_rate = 0.0;
-        if ( $rate_count > 0 ) {
-            $mid             = (int) floor( $rate_count / 2 );
-            $median_tax_rate = ( $rate_count % 2 === 0 )
-                ? round( ( $tax_rate_values[ $mid - 1 ] + $tax_rate_values[ $mid ] ) / 2, 1 )
-                : round( $tax_rate_values[ $mid ], 1 );
-        }
-        $return_visitor_rate = $unique_sessions > 0 ? round( $repeat_fingerprints / $unique_sessions * 100, 1 ) : 0.0;
-
         return array(
-            'enabled_rows'        => array_values( $enabled_stats ),
-            'top_rank_rows'       => array_values( $top_rank_stats ),
-            'rank_rows'           => array_values( $rank_stats ),
-            'policy_group_rows'   => array_values( $policy_group_stats ),
+            'enabled_rows'      => array_values( $enabled_stats ),
+            'top_rank_rows'     => array_values( $top_rank_stats ),
+            'rank_rows'         => array_values( $rank_stats ),
+            'policy_group_rows' => array_values( $policy_group_stats ),
             'county_policy_counts' => $county_policy_counts,
             'county_tax_rate_rows' => $county_tax_rate_rows,
-            'policy_color_map'    => $policy_color_map,
-            'region_counts'       => $region_counts,
-            'county_counts'       => $county_counts,
-            'tax_rate_counts'     => $tax_rate_counts,
-            'recent_submissions'  => $recent_submissions,
-            'unique_sessions'     => $unique_sessions,
-            'days_count'          => count( $analytics_data ),
-            'average_tax_rate'    => $average_tax_rate,
-            'median_tax_rate'     => $median_tax_rate,
-            'repeat_fingerprints' => $repeat_fingerprints,
-            'return_visitor_rate' => $return_visitor_rate,
-            'total_events'        => $total_events,
+            'policy_color_map'  => $policy_color_map,
+            'region_counts'     => $region_counts,
+            'county_counts'     => $county_counts,
+            'tax_rate_counts'   => $tax_rate_counts,
+            'recent_submissions'=> $recent_submissions,
+            'unique_sessions'   => $unique_sessions,
+            'days_count'        => count( $analytics_data ),
+            'average_tax_rate'  => $average_tax_rate,
+            'total_events'      => $total_events,
         );
     }
 
@@ -4128,18 +3303,14 @@ class WTC_Policy_Analytics {
                     'submitted_at_utc'        => $submitted_at > 0 ? gmdate( 'Y-m-d H:i:s', $submitted_at ) . ' UTC' : '',
                     'stored_day'              => sanitize_text_field( $day_key ),
                     'session_hash'            => sanitize_text_field( (string) $session_hash ),
-                    'policy_key'              => isset( $submission['policy_key'] ) ? sanitize_text_field( $submission['policy_key'] ) : '',
                     'tax_rate_value'          => isset( $submission['tax_rate_value'] ) && is_numeric( $submission['tax_rate_value'] ) ? (float) $submission['tax_rate_value'] : '',
                     'tax_rate_bucket'         => isset( $submission['tax_rate_bucket'] ) ? sanitize_text_field( $submission['tax_rate_bucket'] ) : '',
                     'region_bucket'           => $region_bucket,
                     'county_bucket'           => $county_bucket,
                     'county_label'            => $county_bucket !== '' ? $this->format_county_bucket_label( $county_bucket ) : '',
-                    'fingerprint'             => isset( $submission['fingerprint'] ) ? sanitize_text_field( $submission['fingerprint'] ) : '',
                     'selected_policy_count'   => count( $selected_items ),
                     'selected_policy_keys'    => implode( ' | ', $policy_keys ),
                     'prioritized_selections'  => implode( ' | ', $policy_labels ),
-                    'order_json'              => wp_json_encode( isset( $submission['order'] ) && is_array( $submission['order'] ) ? $submission['order'] : $policy_keys ),
-                    'selected_items_json'     => wp_json_encode( $selected_items ),
                 );
             }
         }
@@ -4161,7 +3332,10 @@ class WTC_Policy_Analytics {
 
         check_admin_referer( 'wtc_export_analytics_csv' );
 
-        $analytics_data = $this->get_merged_analytics_data();
+        $analytics_data = get_option( WTC_ANALYTICS_OPTION_KEY, array() );
+        if ( ! is_array( $analytics_data ) ) {
+            $analytics_data = array();
+        }
 
         $rows = $this->get_export_submission_rows( $analytics_data );
 
@@ -4178,22 +3352,17 @@ class WTC_Policy_Analytics {
         fputcsv(
             $output,
             array(
-                'submitted_at_unix',
                 'submitted_at_utc',
                 'stored_day',
                 'session_hash',
-                'policy_key',
                 'tax_rate_value',
                 'tax_rate_bucket',
                 'region_bucket',
                 'county_bucket',
                 'county_label',
-                'fingerprint',
                 'selected_policy_count',
                 'selected_policy_keys',
                 'prioritized_selections',
-                'order_json',
-                'selected_items_json',
             )
         );
 
@@ -4205,22 +3374,17 @@ class WTC_Policy_Analytics {
             fputcsv(
                 $output,
                 array(
-                    isset( $row['submitted_at_unix'] ) ? $row['submitted_at_unix'] : 0,
                     isset( $row['submitted_at_utc'] ) ? $row['submitted_at_utc'] : '',
                     isset( $row['stored_day'] ) ? $row['stored_day'] : '',
                     isset( $row['session_hash'] ) ? $row['session_hash'] : '',
-                    isset( $row['policy_key'] ) ? $row['policy_key'] : '',
                     isset( $row['tax_rate_value'] ) ? $row['tax_rate_value'] : '',
                     isset( $row['tax_rate_bucket'] ) ? $row['tax_rate_bucket'] : '',
                     isset( $row['region_bucket'] ) ? $row['region_bucket'] : '',
                     isset( $row['county_bucket'] ) ? $row['county_bucket'] : '',
                     isset( $row['county_label'] ) ? $row['county_label'] : '',
-                    isset( $row['fingerprint'] ) ? $row['fingerprint'] : '',
                     isset( $row['selected_policy_count'] ) ? $row['selected_policy_count'] : 0,
                     isset( $row['selected_policy_keys'] ) ? $row['selected_policy_keys'] : '',
                     isset( $row['prioritized_selections'] ) ? $row['prioritized_selections'] : '',
-                    isset( $row['order_json'] ) ? $row['order_json'] : '',
-                    isset( $row['selected_items_json'] ) ? $row['selected_items_json'] : '',
                 )
             );
         }
@@ -4229,320 +3393,104 @@ class WTC_Policy_Analytics {
         exit;
     }
 
-    private function normalize_import_csv_headers( $headers ) {
-        $normalized = array();
-
-        if ( ! is_array( $headers ) ) {
-            return $normalized;
-        }
-
-        foreach ( $headers as $index => $header ) {
-            $header = (string) $header;
-            if ( $index === 0 ) {
-                $header = preg_replace( '/^\xEF\xBB\xBF/', '', $header );
-            }
-
-            $header = sanitize_key( str_replace( '-', '_', trim( strtolower( $header ) ) ) );
-            if ( $header !== '' ) {
-                $normalized[ $header ] = (int) $index;
-            }
-        }
-
-        return $normalized;
-    }
-
-    private function get_import_csv_column( $row, $header_map, $column, $default = '' ) {
-        if ( ! is_array( $row ) || ! is_array( $header_map ) || ! isset( $header_map[ $column ] ) ) {
-            return $default;
-        }
-
-        $index = (int) $header_map[ $column ];
-        return isset( $row[ $index ] ) ? (string) $row[ $index ] : $default;
-    }
-
-    private function split_export_csv_list( $value ) {
-        $value = trim( (string) $value );
-        if ( $value === '' ) {
+    private function get_michigan_county_top_policy_rows( $analytics_data, $max_counties = 25, $top_policies = 5 ) {
+        if ( ! is_array( $analytics_data ) ) {
             return array();
         }
 
-        $parts = preg_split( '/\s*\|\s*/', $value );
-        if ( ! is_array( $parts ) ) {
-            return array();
-        }
+        $county_stats = array();
 
-        $normalized = array();
-        foreach ( $parts as $part ) {
-            $part = trim( (string) $part );
-            if ( $part !== '' ) {
-                $normalized[] = $part;
-            }
-        }
-
-        return $normalized;
-    }
-
-    private function build_import_selected_items( $order, $selected_items_json = '', $policy_labels = array() ) {
-        $decoded_items = json_decode( (string) $selected_items_json, true );
-        if ( is_array( $decoded_items ) ) {
-            return $this->sanitize_selected_items_payload( $decoded_items, $order );
-        }
-
-        $selected_items = array();
-        foreach ( $order as $index => $policy_key ) {
-            $label = isset( $policy_labels[ $index ] ) ? sanitize_text_field( $policy_labels[ $index ] ) : '';
-            $group_parts = explode( ':', $policy_key );
-
-            $selected_items[] = array(
-                'policy_key'   => $policy_key,
-                'policy_group' => isset( $group_parts[0] ) ? sanitize_key( $group_parts[0] ) : '',
-                'policy_label' => $label,
-                'rank'         => (int) $index + 1,
-            );
-        }
-
-        return $this->sanitize_selected_items_payload( $selected_items, $order );
-    }
-
-    private function import_csv_submission_row( $row, $header_map ) {
-        global $wpdb;
-
-        $session_hash = sanitize_text_field( $this->get_import_csv_column( $row, $header_map, 'session_hash' ) );
-        if ( ! preg_match( '/^[a-f0-9]{12}$/i', $session_hash ) ) {
-            return false;
-        }
-
-        $stored_day = sanitize_text_field( $this->get_import_csv_column( $row, $header_map, 'stored_day' ) );
-        if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $stored_day ) ) {
-            $stored_day = '';
-        }
-
-        $submitted_at_unix = $this->get_import_csv_column( $row, $header_map, 'submitted_at_unix' );
-        $submitted_at      = ctype_digit( trim( $submitted_at_unix ) ) ? (int) trim( $submitted_at_unix ) : 0;
-        if ( $submitted_at <= 0 ) {
-            $submitted_at_utc = sanitize_text_field( $this->get_import_csv_column( $row, $header_map, 'submitted_at_utc' ) );
-            $parsed_time      = $submitted_at_utc !== '' ? strtotime( $submitted_at_utc ) : false;
-            if ( false !== $parsed_time ) {
-                $submitted_at = (int) $parsed_time;
-            }
-        }
-
-        $day_date = $stored_day !== '' ? $stored_day : ( $submitted_at > 0 ? gmdate( 'Y-m-d', $submitted_at ) : '' );
-        if ( $day_date === '' ) {
-            return false;
-        }
-
-        $region_bucket = sanitize_text_field( $this->get_import_csv_column( $row, $header_map, 'region_bucket' ) );
-        if ( $region_bucket === '' ) {
-            return false;
-        }
-
-        $order_json = $this->get_import_csv_column( $row, $header_map, 'order_json' );
-        $order      = json_decode( (string) $order_json, true );
-        if ( ! is_array( $order ) ) {
-            $order = $this->split_export_csv_list( $this->get_import_csv_column( $row, $header_map, 'selected_policy_keys' ) );
-        }
-
-        $clean_order = array();
-        foreach ( $order as $policy_key ) {
-            $policy_key = sanitize_text_field( (string) $policy_key );
-            if ( ! preg_match( '/^[a-zA-Z]+:[0-9]+$/', $policy_key ) ) {
-                continue;
-            }
-            if ( in_array( $policy_key, $clean_order, true ) ) {
-                continue;
-            }
-            $clean_order[] = $policy_key;
-        }
-
-        if ( empty( $clean_order ) ) {
-            return false;
-        }
-
-        $policy_labels        = $this->split_export_csv_list( $this->get_import_csv_column( $row, $header_map, 'prioritized_selections' ) );
-        $selected_items_json  = $this->get_import_csv_column( $row, $header_map, 'selected_items_json' );
-        $clean_selected_items = $this->build_import_selected_items( $clean_order, $selected_items_json, $policy_labels );
-
-        $policy_key = sanitize_text_field( $this->get_import_csv_column( $row, $header_map, 'policy_key' ) );
-        if ( ! preg_match( '/^[a-zA-Z]+:[0-9]+$/', $policy_key ) ) {
-            $policy_key = $clean_order[0];
-        }
-
-        $tax_rate_value_raw = trim( $this->get_import_csv_column( $row, $header_map, 'tax_rate_value' ) );
-        $tax_rate_value     = is_numeric( $tax_rate_value_raw ) ? round( (float) $tax_rate_value_raw, 1 ) : null;
-        if ( null !== $tax_rate_value && ( $tax_rate_value < WTC_TAX_RATE_MIN || $tax_rate_value > WTC_TAX_RATE_MAX ) ) {
-            $tax_rate_value = null;
-        }
-
-        $tax_rate_bucket = sanitize_text_field( $this->get_import_csv_column( $row, $header_map, 'tax_rate_bucket' ) );
-        if ( $tax_rate_bucket === '' && null !== $tax_rate_value ) {
-            $tax_rate_bucket = (string) (int) round( $tax_rate_value );
-        }
-
-        $fingerprint  = sanitize_text_field( $this->get_import_csv_column( $row, $header_map, 'fingerprint' ) );
-        $county_bucket = sanitize_text_field( $this->get_import_csv_column( $row, $header_map, 'county_bucket' ) );
-
-        $submission = array(
-            'region_bucket' => $region_bucket,
-            'county_bucket' => $county_bucket,
-        );
-        $county_bucket = $this->resolve_submission_county_bucket( $submission );
-
-        $table        = $wpdb->prefix . WTC_SUBMISSIONS_TABLE_SUFFIX;
-        $tax_rate_sql = null !== $tax_rate_value ? $wpdb->prepare( '%f', $tax_rate_value ) : 'NULL';
-
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-        $result = $wpdb->query( $wpdb->prepare(
-            "INSERT INTO {$table}
-                (session_hash, day_date, policy_key, order_json, selected_items_json,
-                 tax_rate_value, tax_rate_bucket, region_bucket, county_bucket,
-                 fingerprint, submitted_at)
-            VALUES (%s, %s, %s, %s, %s, {$tax_rate_sql}, %s, %s, %s, %s, %d)
-            ON DUPLICATE KEY UPDATE
-                policy_key = VALUES(policy_key),
-                order_json = VALUES(order_json),
-                selected_items_json = VALUES(selected_items_json),
-                tax_rate_value = VALUES(tax_rate_value),
-                tax_rate_bucket = VALUES(tax_rate_bucket),
-                region_bucket = VALUES(region_bucket),
-                county_bucket = VALUES(county_bucket),
-                fingerprint = VALUES(fingerprint),
-                submitted_at = VALUES(submitted_at)",
-            $session_hash,
-            $day_date,
-            $policy_key,
-            wp_json_encode( $clean_order ),
-            wp_json_encode( $clean_selected_items ),
-            $tax_rate_bucket,
-            $region_bucket,
-            $county_bucket,
-            $fingerprint,
-            $submitted_at
-        ) );
-
-        return false !== $result;
-    }
-
-    public function handle_import_analytics_csv() {
-        global $wpdb;
-
-        if ( ! current_user_can( 'manage_options' ) ) {
-            wp_die( 'Unauthorized access' );
-        }
-
-        check_admin_referer( 'wtc_import_analytics_csv' );
-
-        if ( ! isset( $_FILES['analytics_csv'] ) || ! is_array( $_FILES['analytics_csv'] ) ) {
-            wp_redirect( add_query_arg(
-                array(
-                    'page' => 'wealth-tax-calculator-analytics',
-                    'import_error' => 'missing_file',
-                ),
-                admin_url( 'options-general.php' )
-            ) );
-            exit;
-        }
-
-        $file = $_FILES['analytics_csv'];
-        if ( ! empty( $file['error'] ) || empty( $file['tmp_name'] ) || ! is_uploaded_file( $file['tmp_name'] ) ) {
-            wp_redirect( add_query_arg(
-                array(
-                    'page' => 'wealth-tax-calculator-analytics',
-                    'import_error' => 'upload_failed',
-                ),
-                admin_url( 'options-general.php' )
-            ) );
-            exit;
-        }
-
-        $handle = fopen( $file['tmp_name'], 'r' );
-        if ( false === $handle ) {
-            wp_redirect( add_query_arg(
-                array(
-                    'page' => 'wealth-tax-calculator-analytics',
-                    'import_error' => 'unreadable_file',
-                ),
-                admin_url( 'options-general.php' )
-            ) );
-            exit;
-        }
-
-        $headers = fgetcsv( $handle );
-        $header_map = $this->normalize_import_csv_headers( $headers );
-        $required_columns = array( 'stored_day', 'session_hash', 'region_bucket' );
-        foreach ( $required_columns as $required_column ) {
-            if ( ! isset( $header_map[ $required_column ] ) ) {
-                fclose( $handle );
-                wp_redirect( add_query_arg(
-                    array(
-                        'page' => 'wealth-tax-calculator-analytics',
-                        'import_error' => 'invalid_csv',
-                    ),
-                    admin_url( 'options-general.php' )
-                ) );
-                exit;
-            }
-        }
-
-        if ( ! isset( $header_map['order_json'] ) && ! isset( $header_map['selected_policy_keys'] ) ) {
-            fclose( $handle );
-            wp_redirect( add_query_arg(
-                array(
-                    'page' => 'wealth-tax-calculator-analytics',
-                    'import_error' => 'invalid_csv',
-                ),
-                admin_url( 'options-general.php' )
-            ) );
-            exit;
-        }
-
-        wtc_ensure_submissions_table();
-
-        $imported_rows = 0;
-        $skipped_rows  = 0;
-        while ( ( $row = fgetcsv( $handle ) ) !== false ) {
-            if ( ! is_array( $row ) ) {
-                $skipped_rows++;
+        foreach ( $analytics_data as $day ) {
+            if ( ! is_array( $day ) || empty( $day['final_submissions'] ) || ! is_array( $day['final_submissions'] ) ) {
                 continue;
             }
 
-            $non_empty_values = array_filter(
-                $row,
-                function ( $value ) {
-                    return trim( (string) $value ) !== '';
+            foreach ( $day['final_submissions'] as $submission ) {
+                if ( ! is_array( $submission ) ) {
+                    continue;
+                }
+
+                $region_bucket = isset( $submission['region_bucket'] ) ? sanitize_text_field( $submission['region_bucket'] ) : '';
+                if ( ! $this->is_michigan_region_bucket( $region_bucket ) ) {
+                    continue;
+                }
+
+                $county_bucket = isset( $submission['county_bucket'] ) ? sanitize_text_field( $submission['county_bucket'] ) : '';
+                $city_slug     = strncmp( $region_bucket, 'mi_', 3 ) === 0 ? substr( $region_bucket, 3 ) : '';
+                $county_bucket = $this->normalize_michigan_county_bucket( $county_bucket, $city_slug );
+
+                if ( $county_bucket === '' ) {
+                    continue;
+                }
+
+                if ( ! isset( $county_stats[ $county_bucket ] ) ) {
+                    $county_stats[ $county_bucket ] = array(
+                        'county_bucket' => $county_bucket,
+                        'county_label'  => $this->format_county_bucket_label( $county_bucket ),
+                        'submissions'   => 0,
+                        'policy_counts' => array(),
+                    );
+                }
+
+                $county_stats[ $county_bucket ]['submissions'] += 1;
+
+                $selected_items = $this->normalize_submission_selected_items( $submission );
+                foreach ( $selected_items as $item ) {
+                    if ( ! is_array( $item ) ) {
+                        continue;
+                    }
+
+                    $policy_key = isset( $item['policy_key'] ) ? sanitize_text_field( $item['policy_key'] ) : '';
+                    if ( $policy_key === '' ) {
+                        continue;
+                    }
+
+                    if ( ! isset( $county_stats[ $county_bucket ]['policy_counts'][ $policy_key ] ) ) {
+                        $county_stats[ $county_bucket ]['policy_counts'][ $policy_key ] = array(
+                            'policy_key' => $policy_key,
+                            'label'      => $this->format_policy_submission_label( $item, $policy_key ),
+                            'count'      => 0,
+                        );
+                    }
+
+                    $county_stats[ $county_bucket ]['policy_counts'][ $policy_key ]['count'] += 1;
+                }
+            }
+        }
+
+        foreach ( $county_stats as $county_bucket => $county_row ) {
+            if ( empty( $county_row['policy_counts'] ) || ! is_array( $county_row['policy_counts'] ) ) {
+                $county_stats[ $county_bucket ]['top_policies'] = array();
+                continue;
+            }
+
+            uasort(
+                $county_row['policy_counts'],
+                function ( $left, $right ) {
+                    if ( (int) $left['count'] === (int) $right['count'] ) {
+                        return strcmp( (string) $left['label'], (string) $right['label'] );
+                    }
+
+                    return ( (int) $left['count'] > (int) $right['count'] ) ? -1 : 1;
                 }
             );
-            if ( empty( $non_empty_values ) ) {
-                continue;
-            }
 
-            if ( $this->import_csv_submission_row( $row, $header_map ) ) {
-                $imported_rows++;
-            } else {
-                $skipped_rows++;
-            }
+            $county_stats[ $county_bucket ]['top_policies'] = array_slice( array_values( $county_row['policy_counts'] ), 0, max( 1, (int) $top_policies ) );
+            unset( $county_stats[ $county_bucket ]['policy_counts'] );
         }
-        fclose( $handle );
 
-        update_option( WTC_ANALYTICS_SCHEMA_VERSION_OPTION, WTC_ANALYTICS_SCHEMA_VERSION, false );
+        uasort(
+            $county_stats,
+            function ( $left, $right ) {
+                if ( (int) $left['submissions'] === (int) $right['submissions'] ) {
+                    return strcmp( (string) $left['county_label'], (string) $right['county_label'] );
+                }
 
-        $version_bumped = $wpdb->query(
-            "UPDATE {$wpdb->options} SET option_value = option_value + 1 WHERE option_name = 'wtc_analytics_version'"
+                return ( (int) $left['submissions'] > (int) $right['submissions'] ) ? -1 : 1;
+            }
         );
-        if ( false === $version_bumped || 0 === (int) $version_bumped ) {
-            update_option( 'wtc_analytics_version', (int) get_option( 'wtc_analytics_version', 0 ) + 1, false );
-        }
 
-        wp_redirect( add_query_arg(
-            array(
-                'page' => 'wealth-tax-calculator-analytics',
-                'imported' => '1',
-                'import_rows' => $imported_rows,
-                'import_skipped' => $skipped_rows,
-            ),
-            admin_url( 'options-general.php' )
-        ) );
-        exit;
+        return array_slice( array_values( $county_stats ), 0, max( 1, (int) $max_counties ) );
     }
 
     private function get_state_county_top_policy_rows( $analytics_data, $state_code = '', $max_counties = 50, $top_policies = 3 ) {
@@ -4715,7 +3663,7 @@ class WTC_Policy_Analytics {
         if ( $is_state_report ) {
             $county_top_rows = $this->get_state_county_top_policy_rows( $analytics_data, $state_code, 50, 3 );
         } else {
-            $county_top_rows = $this->get_state_county_top_policy_rows( $analytics_data, 'MI', 25, 5 );
+            $county_top_rows = $this->get_michigan_county_top_policy_rows( $analytics_data );
         }
 
         $state_dashboard_rows = array();
@@ -4996,7 +3944,10 @@ class WTC_Policy_Analytics {
             $state_code = '';
         }
 
-        $analytics_data = $this->get_merged_analytics_data();
+        $analytics_data = get_option( WTC_ANALYTICS_OPTION_KEY, array() );
+        if ( ! is_array( $analytics_data ) ) {
+            $analytics_data = array();
+        }
 
         ob_start();
         $this->render_analytics_pdf_report( $analytics_data, $state_code );
@@ -5034,26 +3985,12 @@ class WTC_Policy_Analytics {
     }
 
     public function handle_reset_analytics() {
-        global $wpdb;
-
         if ( ! current_user_can( 'manage_options' ) ) {
             wp_die( 'Unauthorized access' );
         }
 
         check_admin_referer( 'wtc_reset_analytics' );
         delete_option( WTC_ANALYTICS_OPTION_KEY );
-        delete_option( WTC_ANALYTICS_SCHEMA_VERSION_OPTION );
-        delete_option( WTC_COUNTY_BACKFILL_STATE_OPTION );
-        delete_transient( WTC_COUNTY_BACKFILL_LOCK_KEY );
-
-        // Truncate the submissions table if it exists.
-        $table = $wpdb->prefix . WTC_SUBMISSIONS_TABLE_SUFFIX;
-        if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) === $table ) {
-            $wpdb->query( "TRUNCATE TABLE {$table}" );
-        }
-
-        // Re-stamp schema version so migration doesn't re-run on empty data.
-        update_option( WTC_ANALYTICS_SCHEMA_VERSION_OPTION, WTC_ANALYTICS_SCHEMA_VERSION, false );
 
         wp_redirect( add_query_arg(
             array(
@@ -5066,8 +4003,6 @@ class WTC_Policy_Analytics {
     }
 
     public function track_policy_event() {
-        global $wpdb;
-
         if ( ! $this->is_enabled() ) {
             wp_send_json_error( array( 'message' => 'analytics-disabled' ), 403 );
         }
@@ -5111,6 +4046,41 @@ class WTC_Policy_Analytics {
             $selected_items = array();
         }
 
+        $today = gmdate( 'Y-m-d' );
+        $data  = get_option( WTC_ANALYTICS_OPTION_KEY, array() );
+        if ( ! is_array( $data ) ) {
+            $data = array();
+        }
+
+        if ( ! isset( $data[ $today ] ) || ! is_array( $data[ $today ] ) ) {
+            $data[ $today ] = array(
+                'event_total'           => 0,
+                'policy_enabled'        => array(),
+                'policy_disabled'       => array(),
+                'priority_rank_counts'  => array(),
+                'regions'               => array(),
+                'counties'              => array(),
+                'tax_rate_counts'       => array(),
+                'sessions'              => array(),
+                'final_submissions'     => array(),
+            );
+        }
+
+        $geo_context   = $this->get_geo_context();
+        $region_bucket = $geo_context['bucket'];
+        $county_bucket = isset( $geo_context['county_bucket'] ) ? sanitize_text_field( $geo_context['county_bucket'] ) : '';
+        if ( $this->geo_enabled() && ! $geo_context['include'] ) {
+            wp_send_json_success( array( 'ok' => true, 'excluded' => 'non-us' ) );
+        }
+
+        $day =& $data[ $today ];
+
+        if ( ! isset( $day['final_submissions'] ) || ! is_array( $day['final_submissions'] ) ) {
+            $day['final_submissions'] = array();
+        }
+
+        $day['event_total'] = isset( $day['event_total'] ) ? (int) $day['event_total'] + 1 : 1;
+
         $clean_order = array();
         for ( $i = 0; $i < count( $order ); $i++ ) {
             $item_key = sanitize_text_field( $order[ $i ] );
@@ -5132,88 +4102,6 @@ class WTC_Policy_Analytics {
         }
 
         $clean_selected_items = $this->sanitize_selected_items_payload( $selected_items, $clean_order );
-
-        $geo_context   = $this->get_geo_context();
-        $region_bucket = $geo_context['bucket'];
-        $county_bucket = isset( $geo_context['county_bucket'] ) ? sanitize_text_field( $geo_context['county_bucket'] ) : '';
-        if ( $this->geo_enabled() && ! $geo_context['include'] ) {
-            wp_send_json_success( array( 'ok' => true, 'excluded' => 'non-us' ) );
-        }
-
-        $state_code    = $this->get_state_code_from_region_bucket( $region_bucket );
-        $city_slug     = strncmp( $region_bucket, 'mi_', 3 ) === 0 ? substr( $region_bucket, 3 ) : '';
-        $county_bucket = $this->normalize_state_county_bucket( $county_bucket, $state_code, $city_slug );
-
-        $visitor_fingerprint = $this->fingerprint_enabled() ? $this->get_visitor_fingerprint() : '';
-
-        $today          = gmdate( 'Y-m-d' );
-        $submitted_at   = time();
-        $safe_tax_rate  = ( null !== $tax_rate_val && $tax_rate_val >= WTC_TAX_RATE_MIN && $tax_rate_val <= WTC_TAX_RATE_MAX )
-            ? round( $tax_rate_val, 1 )
-            : null;
-
-        // ---- Primary write: atomic INSERT into the submissions table ----
-        $table = $wpdb->prefix . WTC_SUBMISSIONS_TABLE_SUFFIX;
-        $table_exists = ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) === $table );
-
-        $table_write_ok = false;
-        if ( $table_exists ) {
-            $tax_rate_sql = null !== $safe_tax_rate ? $wpdb->prepare( '%f', $safe_tax_rate ) : 'NULL';
-
-            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-            $result = $wpdb->query( $wpdb->prepare(
-                "INSERT INTO {$table}
-                    (session_hash, day_date, policy_key, order_json, selected_items_json,
-                     tax_rate_value, tax_rate_bucket, region_bucket, county_bucket,
-                     fingerprint, submitted_at)
-                VALUES (%s, %s, %s, %s, %s, {$tax_rate_sql}, %s, %s, %s, %s, %d)
-                ON DUPLICATE KEY UPDATE
-                    policy_key = VALUES(policy_key),
-                    order_json = VALUES(order_json),
-                    selected_items_json = VALUES(selected_items_json),
-                    tax_rate_value = VALUES(tax_rate_value),
-                    tax_rate_bucket = VALUES(tax_rate_bucket),
-                    region_bucket = VALUES(region_bucket),
-                    county_bucket = VALUES(county_bucket),
-                    fingerprint = VALUES(fingerprint),
-                    submitted_at = VALUES(submitted_at)",
-                $session_hash,
-                $today,
-                sanitize_text_field( $policy_key ),
-                wp_json_encode( $clean_order ),
-                wp_json_encode( $clean_selected_items ),
-                $tax_rate_bucket,
-                sanitize_text_field( $region_bucket ),
-                $county_bucket,
-                $visitor_fingerprint,
-                $submitted_at
-            ) );
-
-            $table_write_ok = ( false !== $result );
-        }
-
-        // ---- Secondary write: lightweight aggregate counters in wp_options ----
-        $data = get_option( WTC_ANALYTICS_OPTION_KEY, array() );
-        if ( ! is_array( $data ) ) {
-            $data = array();
-        }
-
-        if ( ! isset( $data[ $today ] ) || ! is_array( $data[ $today ] ) ) {
-            $data[ $today ] = array(
-                'event_total'           => 0,
-                'policy_enabled'        => array(),
-                'policy_disabled'       => array(),
-                'priority_rank_counts'  => array(),
-                'regions'               => array(),
-                'counties'              => array(),
-                'tax_rate_counts'       => array(),
-                'sessions'              => array(),
-            );
-        }
-
-        $day =& $data[ $today ];
-
-        $day['event_total'] = isset( $day['event_total'] ) ? (int) $day['event_total'] + 1 : 1;
 
         if ( $tax_rate_bucket !== '' ) {
             if ( ! isset( $day['tax_rate_counts'] ) ) {
@@ -5237,6 +4125,9 @@ class WTC_Policy_Analytics {
         }
         $day['regions'][ $region_bucket ] += 1;
 
+        $state_code    = $this->get_state_code_from_region_bucket( $region_bucket );
+        $city_slug     = strncmp( $region_bucket, 'mi_', 3 ) === 0 ? substr( $region_bucket, 3 ) : '';
+        $county_bucket = $this->normalize_state_county_bucket( $county_bucket, $state_code, $city_slug );
         if ( $county_bucket !== '' ) {
             if ( ! isset( $day['counties'] ) || ! is_array( $day['counties'] ) ) {
                 $day['counties'] = array();
@@ -5247,17 +4138,20 @@ class WTC_Policy_Analytics {
             $day['counties'][ $county_bucket ] += 1;
         }
 
-        $option_write_ok = update_option( WTC_ANALYTICS_OPTION_KEY, $data, false );
+        $visitor_fingerprint = $this->fingerprint_enabled() ? $this->get_visitor_fingerprint() : '';
 
-        // Atomic version counter increment — avoids read-then-write race.
-        $wpdb->query(
-            "UPDATE {$wpdb->options} SET option_value = option_value + 1 WHERE option_name = 'wtc_analytics_version'"
+        $day['final_submissions'][ $session_hash ] = array(
+            'policy_key'       => sanitize_text_field( $policy_key ),
+            'order'            => $clean_order,
+            'selected_items'   => $clean_selected_items,
+            'tax_rate_value'   => ( null !== $tax_rate_val && $tax_rate_val >= WTC_TAX_RATE_MIN && $tax_rate_val <= WTC_TAX_RATE_MAX ) ? round( $tax_rate_val, 1 ) : null,
+            'tax_rate_bucket'  => $tax_rate_bucket,
+            'region_bucket'    => sanitize_text_field( $region_bucket ),
+            'county_bucket'    => $county_bucket,
+            'submitted_at'     => time(),
         );
 
-        if ( ! $table_write_ok && ! $option_write_ok ) {
-            wp_send_json_error( array( 'message' => 'save-failed' ), 500 );
-        }
-
+        update_option( WTC_ANALYTICS_OPTION_KEY, $data, false );
         wp_send_json_success( array( 'ok' => true ) );
     }
 
@@ -5269,21 +4163,13 @@ class WTC_Policy_Analytics {
     }
 
     private function get_client_ip() {
-        $remote_addr = isset( $_SERVER['REMOTE_ADDR'] ) ? trim( (string) $_SERVER['REMOTE_ADDR'] ) : '';
-
-        // If REMOTE_ADDR is a valid public IP it cannot be spoofed by the client, so prefer it.
-        if ( filter_var( $remote_addr, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) {
-            return $remote_addr;
-        }
-
-        // REMOTE_ADDR is private or loopback — the server is behind a proxy.
-        // Only fall back to forwarded headers in this case.
-        $forwarded_candidates = array(
-            isset( $_SERVER['HTTP_CF_CONNECTING_IP'] ) ? (string) $_SERVER['HTTP_CF_CONNECTING_IP'] : '',
-            isset( $_SERVER['HTTP_X_FORWARDED_FOR'] )  ? (string) $_SERVER['HTTP_X_FORWARDED_FOR']  : '',
+        $candidates = array(
+            isset( $_SERVER['HTTP_CF_CONNECTING_IP'] ) ? $_SERVER['HTTP_CF_CONNECTING_IP'] : '',
+            isset( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : '',
+            isset( $_SERVER['REMOTE_ADDR'] ) ? $_SERVER['REMOTE_ADDR'] : '',
         );
 
-        foreach ( $forwarded_candidates as $candidate ) {
+        foreach ( $candidates as $candidate ) {
             if ( ! $candidate ) {
                 continue;
             }
@@ -5294,11 +4180,6 @@ class WTC_Policy_Analytics {
             if ( filter_var( $ip, FILTER_VALIDATE_IP ) ) {
                 return $ip;
             }
-        }
-
-        // Last resort: return REMOTE_ADDR even if private.
-        if ( filter_var( $remote_addr, FILTER_VALIDATE_IP ) ) {
-            return $remote_addr;
         }
 
         return '';
@@ -5413,10 +4294,6 @@ class WTC_Policy_Analytics {
                 }
             }
 
-            if ( $county_slug === '' && $postal !== '' ) {
-                $county_slug = $this->infer_county_slug_from_postal( $postal, $region );
-            }
-
             $county_bucket = strtolower( $region ) . '_county_' . ( $county_slug !== '' ? $county_slug : 'unknown' );
         } else {
             $bucket = 'us_unknown';
@@ -5433,39 +4310,19 @@ class WTC_Policy_Analytics {
     }
 
     public function prune_old_analytics_data() {
-        global $wpdb;
-
         $data = get_option( WTC_ANALYTICS_OPTION_KEY, array() );
         if ( ! is_array( $data ) || empty( $data ) ) {
             return;
         }
 
-        $retention_days = $this->get_retention_days();
-        if ( $retention_days <= 0 ) {
-            return;
-        }
-
-        $cutoff  = gmdate( 'Y-m-d', strtotime( '-' . $retention_days . ' days' ) );
-        $changed = false;
+        $cutoff = gmdate( 'Y-m-d', strtotime( '-' . $this->get_retention_days() . ' days' ) );
         foreach ( $data as $date => $day_data ) {
             if ( $date < $cutoff ) {
                 unset( $data[ $date ] );
-                $changed = true;
             }
         }
 
-        if ( $changed ) {
-            update_option( WTC_ANALYTICS_OPTION_KEY, $data, false );
-        }
-
-        // Prune old rows from the submissions table.
-        $table = $wpdb->prefix . 'wtc_submissions';
-        if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) === $table ) {
-            $wpdb->query( $wpdb->prepare(
-                "DELETE FROM {$table} WHERE day_date < %s",
-                $cutoff
-            ) );
-        }
+        update_option( WTC_ANALYTICS_OPTION_KEY, $data, false );
     }
 }
 
@@ -5496,54 +4353,8 @@ function wtc_activate() {
     );
 
     $wtc_updater->ensure_schedule();
-
-    wtc_ensure_submissions_table();
-
-    // On a fresh activation (no analytics data yet) stamp the current schema
-    // version so the migration loop in maybe_migrate_analytics() is skipped.
-    // On re-activation of an existing install the stored version is already
-    // correct, and update_option() is a no-op when the value hasn't changed.
-    $existing_data = get_option( WTC_ANALYTICS_OPTION_KEY );
-    if ( $existing_data === false ) {
-        // Brand-new install: no data yet, mark as current schema.
-        update_option( WTC_ANALYTICS_SCHEMA_VERSION_OPTION, WTC_ANALYTICS_SCHEMA_VERSION, false );
-    }
-    // Existing data: leave the stored version intact so maybe_migrate_analytics()
-    // can upgrade it correctly on the next page load.
 }
 register_activation_hook( __FILE__, 'wtc_activate' );
-
-/**
- * Create or update the wtc_submissions table via dbDelta.
- */
-function wtc_ensure_submissions_table() {
-    global $wpdb;
-    $table   = $wpdb->prefix . WTC_SUBMISSIONS_TABLE_SUFFIX;
-    $charset = $wpdb->get_charset_collate();
-
-    $sql = "CREATE TABLE {$table} (
-        id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-        session_hash VARCHAR(12) NOT NULL,
-        day_date DATE NOT NULL,
-        policy_key VARCHAR(64) NOT NULL DEFAULT '',
-        order_json LONGTEXT NOT NULL,
-        selected_items_json LONGTEXT NOT NULL,
-        tax_rate_value DECIMAL(3,1) DEFAULT NULL,
-        tax_rate_bucket VARCHAR(4) NOT NULL DEFAULT '',
-        region_bucket VARCHAR(64) NOT NULL DEFAULT '',
-        county_bucket VARCHAR(64) NOT NULL DEFAULT '',
-        fingerprint VARCHAR(16) NOT NULL DEFAULT '',
-        submitted_at INT UNSIGNED NOT NULL DEFAULT 0,
-        PRIMARY KEY  (id),
-        UNIQUE KEY uq_session_day (session_hash, day_date),
-        KEY idx_day_date (day_date),
-        KEY idx_region (region_bucket),
-        KEY idx_county (county_bucket)
-    ) {$charset};";
-
-    require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-    dbDelta( $sql );
-}
 
 /**
  * Deactivation hook - clear the recurring updater hook.
@@ -5551,7 +4362,6 @@ function wtc_ensure_submissions_table() {
 function wtc_deactivate() {
     wp_clear_scheduled_hook( WTC_UPDATE_CRON_HOOK );
     delete_transient( 'wtc_updater_install_lock' );
-    delete_transient( WTC_COUNTY_BACKFILL_LOCK_KEY );
 }
 register_deactivation_hook( __FILE__, 'wtc_deactivate' );
 
@@ -5659,16 +4469,6 @@ class Billionaire_Wealth_Tax_Calculator {
             $frontend_popularity = $wtc_policy_analytics->get_frontend_popularity_summary();
         }
 
-        $analytics_enabled = get_option( WTC_ANALYTICS_ENABLED_OPTION, '0' ) === '1';
-        $analytics_config  = array(
-            'enabled'  => $analytics_enabled,
-            'endpoint' => admin_url( 'admin-ajax.php' ),
-        );
-
-        if ( $analytics_enabled ) {
-            $analytics_config['nonce'] = wp_create_nonce( 'wtc_track_policy_event' );
-        }
-
         wp_localize_script(
             'wealth-tax-calculator-script',
             'wealthTaxConfig',
@@ -5677,7 +4477,11 @@ class Billionaire_Wealth_Tax_Calculator {
                 'comparisons'       => $this->get_comparisons_data(),
                 'version'           => WTC_VERSION,
                 'popularity'        => $frontend_popularity,
-                'analytics'         => $analytics_config,
+                'analytics'         => array(
+                    'enabled'  => get_option( WTC_ANALYTICS_ENABLED_OPTION, '0' ) === '1',
+                    'endpoint' => admin_url( 'admin-ajax.php' ),
+                    'nonce'    => wp_create_nonce( 'wtc_track_policy_event' ),
+                ),
             )
         );
     }
@@ -5802,7 +4606,7 @@ class Billionaire_Wealth_Tax_Calculator {
                         </div>
 
                         <div id="wtc-nextStepWrapper" class="wtc-next-step-wrapper">
-                            <button type="button" id="wtc-nextStepButton" class="wtc-next-step-button" disabled aria-disabled="true">
+                            <button type="button" id="wtc-nextStepButton" class="wtc-next-step-button">
                                 Find Out What You Funded <span aria-hidden="true">&rarr;</span>
                             </button>
                         </div>
@@ -5832,13 +4636,13 @@ class Billionaire_Wealth_Tax_Calculator {
 
             <div id="wtc-finalSummary" class="wtc-final-summary" role="region" aria-label="Tax Plan Final Summary" aria-hidden="true">
                 <div class="wtc-final-summary-inner">
-                    <?php $this->render_share_bar( 'summary-top' ); ?>
                     <div class="wtc-final-summary-header">
                         <button type="button" id="wtc-finalSummaryBack" class="wtc-fs-back-button">
                             <span aria-hidden="true">&larr;</span> Back to Calculator
                         </button>
                         <h2 class="wtc-final-summary-title">Here's what you funded for the People:</h2>
                     </div>
+                    <?php $this->render_share_bar( 'summary-top' ); ?>
                     <div class="wtc-fs-slider-block">
                         <h3 class="wtc-fs-slider-title">Adjust Tax Rate</h3>
                         <div class="wtc-fs-slider-shell">

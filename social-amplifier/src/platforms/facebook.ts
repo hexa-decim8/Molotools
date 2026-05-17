@@ -6,6 +6,18 @@ import type {
   PlatformProfile,
 } from './base.js';
 
+export class FacebookApiError extends Error {
+  readonly status: number;
+  readonly code?: number;
+
+  constructor(message: string, status: number, code?: number) {
+    super(message);
+    this.name = 'FacebookApiError';
+    this.status = status;
+    this.code = code;
+  }
+}
+
 /**
  * Facebook integration using the Graph API v19.0
  * https://developers.facebook.com/docs/graph-api/
@@ -34,7 +46,7 @@ export class FacebookPlatform implements SocialPlatform {
       client_id: this.appId!,
       redirect_uri: this.redirectUri!,
       state,
-      scope: 'pages_manage_posts,pages_read_engagement,public_profile',
+      scope: 'pages_manage_posts,pages_read_engagement,public_profile,user_photos',
       response_type: 'code',
     });
     return `https://www.facebook.com/v19.0/dialog/oauth?${params}`;
@@ -180,5 +192,50 @@ export class FacebookPlatform implements SocialPlatform {
     if (url) params.set('u', url);
     if (text) params.set('quote', text);
     return `https://www.facebook.com/sharer/sharer.php?${params}`;
+  }
+
+  async uploadPhotoForProfileReview(
+    accessToken: string,
+    imageBuffer: Buffer,
+    mimeType: 'image/jpeg' | 'image/png'
+  ): Promise<{ reviewUrl: string; profileUrl: string; photoId: string }> {
+    const formData = new FormData();
+    formData.append('published', 'false');
+    formData.append(
+      'source',
+      new Blob([new Uint8Array(imageBuffer)], { type: mimeType }),
+      mimeType === 'image/png' ? 'profile-picture.png' : 'profile-picture.jpg'
+    );
+
+    const uploadRes = await fetch('https://graph.facebook.com/v19.0/me/photos', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: formData,
+    });
+
+    const uploadData = await uploadRes.json().catch(() => ({}));
+
+    if (!uploadRes.ok) {
+      const message = uploadData?.error?.message ?? uploadRes.statusText;
+      throw new FacebookApiError(
+        `Facebook photo upload failed: ${message}`,
+        uploadRes.status,
+        uploadData?.error?.code
+      );
+    }
+
+    const photoId = uploadData?.id as string | undefined;
+    if (!photoId) {
+      throw new FacebookApiError('Facebook photo upload returned no photo ID', 502);
+    }
+
+    const profile = await this.getProfile(accessToken);
+    return {
+      photoId,
+      reviewUrl: `https://www.facebook.com/photo/?fbid=${encodeURIComponent(photoId)}`,
+      profileUrl: profile.profileUrl,
+    };
   }
 }
