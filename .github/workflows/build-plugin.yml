@@ -264,3 +264,8 @@ jobs:
             echo "GitHub release is missing wealth-tax-calculator.zip"
             exit 1
           fi
+
+      - name: Cleanup older Wealth Tax Calculator versions
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/cleanup-old-tool-versions.sh "v" 4

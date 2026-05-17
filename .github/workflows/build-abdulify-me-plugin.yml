@@ -253,3 +253,8 @@ jobs:
             echo "Release asset abdulify-me.zip not found for tag $TAG"
             exit 1
           fi
+
+      - name: Cleanup older Abdulify Me versions
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/cleanup-old-tool-versions.sh "am-v" 4

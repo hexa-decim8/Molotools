@@ -406,13 +406,35 @@ final class Abdulify_Me_Plugin {
             true
         );
 
+        $tint_color = apply_filters( 'abdulify_me_tint_color', '#175f8c' );
+        $colors     = array(
+            'bg'              => apply_filters( 'abdulify_me_color_bg', '#f6f1e5' ),
+            'surface'         => apply_filters( 'abdulify_me_color_surface', '#ffffff' ),
+            'primary'         => apply_filters( 'abdulify_me_color_primary', '#0f4f78' ),
+            'primaryStrong'   => apply_filters( 'abdulify_me_color_primary_strong', '#0b3957' ),
+            'accent'          => apply_filters( 'abdulify_me_color_accent', '#f0a33b' ),
+            'ink'             => apply_filters( 'abdulify_me_color_ink', '#1f2530' ),
+            'muted'           => apply_filters( 'abdulify_me_color_muted', '#5f6877' ),
+            'border'          => apply_filters( 'abdulify_me_color_border', '#dbe3ec' ),
+            'statusInfo'      => apply_filters( 'abdulify_me_color_status_info', '#5f6877' ),
+            'statusError'     => apply_filters( 'abdulify_me_color_status_error', '#b3212f' ),
+            'placeholderBg'   => apply_filters( 'abdulify_me_color_placeholder_bg', '#f2f6fb' ),
+            'placeholderText' => apply_filters( 'abdulify_me_color_placeholder_text', '#335f88' ),
+            'ribbon'          => apply_filters( 'abdulify_me_color_ribbon', '' ),
+            'ribbonText'      => apply_filters( 'abdulify_me_color_ribbon_text', '#ffffff' ),
+            'badgeStroke'     => apply_filters( 'abdulify_me_color_badge_stroke', '#0b3957' ),
+            'badgeText'       => apply_filters( 'abdulify_me_color_badge_text', '#0b3957' ),
+            'tint'            => apply_filters( 'abdulify_me_color_tint', $tint_color ),
+        );
+
         wp_localize_script(
             'abdulify-me',
             'abdulifyMeConfig',
             array(
                 'overlayText' => __( 'I Support Abdul El-Sayed', 'abdulify-me' ),
                 'badgeText'   => __( 'Abdul 2026', 'abdulify-me' ),
-                'tintColor'   => '#175f8c',
+                'tintColor'   => $tint_color,
+                'colors'      => $colors,
                 'maxBytes'    => 8 * 1024 * 1024,
                 'nonce'       => wp_create_nonce( 'abdulify_me_client' ),
             )

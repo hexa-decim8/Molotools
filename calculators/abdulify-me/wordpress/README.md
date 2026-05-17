@@ -23,6 +23,58 @@ Optional attributes:
 [abdulify_me title="Abdulify Me" subtitle="Upload a photo and download a campaign-style version"]
 ```
 
+## Color Inheritance and Overrides
+
+By default, Abdulify Me inherits host page colors when matching CSS variables are present. This allows embeds to match the Abdul for Senate page palette without editing plugin source.
+
+The plugin looks for these variables first, then uses built-in fallbacks:
+
+- `--abdul-primary`, `--abdul-primary-strong`, `--abdul-accent`
+- `--abdul-bg`, `--abdul-surface`, `--abdul-ink`, `--abdul-muted`, `--abdul-border`
+- `--abdul-primary-contrast`, `--abdul-accent-contrast`
+- `--abdul-status-info`, `--abdul-status-error`
+- `--abdul-tint`, `--abdul-ribbon`, `--abdul-ribbon-contrast`
+- `--abdul-badge-stroke`, `--abdul-badge-text`
+- `--abdul-canvas-placeholder-bg`, `--abdul-canvas-placeholder-text`
+
+Legacy/fallback aliases are also supported for primary theme tokens:
+
+- `--afs-primary`, `--afs-primary-strong`, `--afs-accent`
+- `--afs-bg`, `--afs-surface`, `--afs-ink`, `--afs-muted`, `--afs-border`
+
+Example host override:
+
+```css
+:root {
+   --abdul-primary: #233071;
+   --abdul-primary-strong: #1b2559;
+   --abdul-accent: #e1b682;
+   --abdul-bg: #fbf0e4;
+   --abdul-ink: #1e2433;
+}
+```
+
+You can also override defaults in WordPress/PHP with filter hooks:
+
+- `abdulify_me_tint_color`
+- `abdulify_me_color_primary`
+- `abdulify_me_color_primary_strong`
+- `abdulify_me_color_accent`
+- `abdulify_me_color_bg`
+- `abdulify_me_color_surface`
+- `abdulify_me_color_ink`
+- `abdulify_me_color_muted`
+- `abdulify_me_color_border`
+- `abdulify_me_color_status_info`
+- `abdulify_me_color_status_error`
+- `abdulify_me_color_placeholder_bg`
+- `abdulify_me_color_placeholder_text`
+- `abdulify_me_color_ribbon`
+- `abdulify_me_color_ribbon_text`
+- `abdulify_me_color_badge_stroke`
+- `abdulify_me_color_badge_text`
+- `abdulify_me_color_tint`
+
 ## Privacy Model
 
 - Uploaded files are handled in the browser via Canvas APIs.

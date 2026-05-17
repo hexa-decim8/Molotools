@@ -266,3 +266,8 @@ jobs:
             echo "GitHub release is missing social-amplifier-server.zip"
             exit 1
           fi
+
+      - name: Cleanup older Social Amplifier versions
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/cleanup-old-tool-versions.sh "sa-v" 4
