@@ -401,6 +401,8 @@ final class Abdulify_Me_Plugin {
     const FACEBOOK_PERMISSIONS = 'pages_show_list,pages_read_engagement,pages_manage_metadata';
     const AJAX_ACTION_SET_FACEBOOK_AVATAR = 'abdulify_me_set_facebook_avatar';
     const SESSION_ID_TRANSIENT = 'abdulify_me_session_';
+    const OVERLAY_DIR = 'overlays';
+    const OVERLAY_PREFIX = 'AFS-Social';
 
     public function __construct() {
         add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_assets' ) );
@@ -522,20 +524,14 @@ final class Abdulify_Me_Plugin {
                     </table>
 
                     <?php if ( ! empty( $stats['effects_breakdown'] ) ) : ?>
-                        <h3 style="margin-top: 20px;"><?php esc_html_e( 'Effects Used in Successful Updates', 'abdulify-me' ); ?></h3>
+                        <h3 style="margin-top: 20px;"><?php esc_html_e( 'Borders Used in Successful Updates', 'abdulify-me' ); ?></h3>
                         <table class="widefat">
                             <tbody>
                                 <?php foreach ( $stats['effects_breakdown'] as $effect => $count ) : ?>
                                     <tr>
                                         <td>
                                             <?php
-                                            $effect_labels = array(
-                                                'frame' => __( 'Campaign Frame', 'abdulify-me' ),
-                                                'text'  => __( 'Support Text Ribbon', 'abdulify-me' ),
-                                                'tint'  => __( 'Color Treatment', 'abdulify-me' ),
-                                                'badge' => __( 'Badge Sticker', 'abdulify-me' ),
-                                            );
-                                            echo esc_html( $effect_labels[ $effect ] ?? ucfirst( $effect ) );
+                                            echo esc_html( $this->format_overlay_label( (string) $effect ) );
                                             ?>
                                         </td>
                                         <td><strong><?php echo esc_html( $count ); ?></strong></td>
@@ -552,6 +548,97 @@ final class Abdulify_Me_Plugin {
 
     private function get_facebook_app_id() {
         return (string) get_option( self::OPTION_FACEBOOK_APP_ID, '' );
+    }
+
+    private function get_overlay_dir_path() {
+        return trailingslashit( plugin_dir_path( __FILE__ ) ) . self::OVERLAY_DIR . '/';
+    }
+
+    private function get_overlay_dir_url() {
+        return trailingslashit( plugin_dir_url( __FILE__ ) ) . self::OVERLAY_DIR . '/';
+    }
+
+    private function normalize_overlay_id( $name ) {
+        $normalized = strtolower( (string) $name );
+        $normalized = preg_replace( '/[^a-z0-9._-]+/', '-', $normalized );
+        $normalized = trim( (string) $normalized, '-._' );
+
+        return $normalized ?: strtolower( self::OVERLAY_PREFIX );
+    }
+
+    private function format_overlay_label( $value ) {
+        $label = str_replace( array( '-', '_' ), ' ', (string) $value );
+        $label = preg_replace( '/\s+/', ' ', (string) $label );
+        $label = trim( (string) $label );
+
+        if ( '' === $label ) {
+            return self::OVERLAY_PREFIX;
+        }
+
+        if ( function_exists( 'mb_convert_case' ) ) {
+            return mb_convert_case( $label, MB_CASE_TITLE, 'UTF-8' );
+        }
+
+        return ucwords( strtolower( $label ) );
+    }
+
+    private function get_available_overlays() {
+        $overlay_dir = $this->get_overlay_dir_path();
+        if ( ! is_dir( $overlay_dir ) ) {
+            return array();
+        }
+
+        $files = scandir( $overlay_dir );
+        if ( false === $files ) {
+            return array();
+        }
+
+        $allowed_extensions = array( 'png', 'jpg', 'jpeg', 'webp', 'svg' );
+        $overlay_url_base   = $this->get_overlay_dir_url();
+        $overlays           = array();
+
+        foreach ( $files as $file_name ) {
+            if ( ! is_string( $file_name ) || '.' === $file_name || '..' === $file_name ) {
+                continue;
+            }
+
+            $source_path = $overlay_dir . $file_name;
+            if ( ! is_file( $source_path ) ) {
+                continue;
+            }
+
+            if ( 0 !== stripos( $file_name, self::OVERLAY_PREFIX ) ) {
+                continue;
+            }
+
+            $extension = strtolower( (string) pathinfo( $file_name, PATHINFO_EXTENSION ) );
+            if ( ! in_array( $extension, $allowed_extensions, true ) ) {
+                continue;
+            }
+
+            $base_name = (string) pathinfo( $file_name, PATHINFO_FILENAME );
+            $overlay_id = $this->normalize_overlay_id( $base_name );
+
+            $overlays[ $overlay_id ] = array(
+                'id'    => $overlay_id,
+                'label' => $this->format_overlay_label( $base_name ),
+                'url'   => $overlay_url_base . rawurlencode( $file_name ),
+                'file'  => $file_name,
+            );
+        }
+
+        if ( empty( $overlays ) ) {
+            return array();
+        }
+
+        uasort(
+            $overlays,
+            static function ( $a, $b ) {
+                return strcasecmp( (string) $a['label'], (string) $b['label'] );
+            }
+        );
+
+        return array_values( $overlays );
     }
 
     public function enqueue_assets() {
@@ -606,11 +693,10 @@ final class Abdulify_Me_Plugin {
             'abdulify-me',
             'abdulifyMeConfig',
             array(
-                'overlayText' => __( 'I Support Abdul El-Sayed', 'abdulify-me' ),
-                'badgeText'   => __( 'Abdul 2026', 'abdulify-me' ),
                 'tintColor'   => $tint_color,
                 'colors'      => $colors,
                 'maxBytes'    => 8 * 1024 * 1024,
+                'overlays'    => $this->get_available_overlays(),
                 'nonce'       => wp_create_nonce( 'abdulify_me_client' ),
                 'ajaxUrl'     => admin_url( 'admin-ajax.php' ),
                 'actions'     => array(
@@ -631,7 +717,7 @@ final class Abdulify_Me_Plugin {
         $atts = shortcode_atts(
             array(
                 'title'    => __( 'Abdulify Me', 'abdulify-me' ),
-                'subtitle' => __( 'Upload a photo, add campaign-style effects, and download your image.', 'abdulify-me' ),
+                'subtitle' => __( 'Upload a photo, apply an AFS-Social border, and download your image.', 'abdulify-me' ),
             ),
             $atts,
             self::SHORTCODE
@@ -656,33 +742,20 @@ final class Abdulify_Me_Plugin {
                         <input class="am-photo-input" type="file" accept="image/png,image/jpeg,image/webp">
                     </label>
 
-                    <fieldset class="am-controls" aria-label="<?php esc_attr_e( 'Photo effects', 'abdulify-me' ); ?>">
-                        <legend><?php esc_html_e( 'Effects', 'abdulify-me' ); ?></legend>
+                    <fieldset class="am-controls" aria-label="<?php esc_attr_e( 'Photo border', 'abdulify-me' ); ?>">
+                        <legend><?php esc_html_e( 'Border', 'abdulify-me' ); ?></legend>
 
-                        <label class="am-toggle">
-                            <input type="checkbox" data-am-effect="frame" checked>
-                            <span><?php esc_html_e( 'Campaign frame', 'abdulify-me' ); ?></span>
+                        <label class="am-control-row">
+                            <span><?php esc_html_e( 'AFS-Social border', 'abdulify-me' ); ?></span>
                         </label>
-
-                        <label class="am-toggle">
-                            <input type="checkbox" data-am-effect="text" checked>
-                            <span><?php esc_html_e( 'Support text ribbon', 'abdulify-me' ); ?></span>
-                        </label>
-
-                        <label class="am-toggle">
-                            <input type="checkbox" data-am-effect="tint" checked>
-                            <span><?php esc_html_e( 'Color treatment', 'abdulify-me' ); ?></span>
-                        </label>
-
-                        <label class="am-toggle">
-                            <input type="checkbox" data-am-effect="badge" checked>
-                            <span><?php esc_html_e( 'Badge sticker', 'abdulify-me' ); ?></span>
-                        </label>
+                        <select class="am-select" data-am-overlay-select>
+                            <option value=""><?php esc_html_e( 'Select a border', 'abdulify-me' ); ?></option>
+                        </select>
                     </fieldset>
 
                     <div class="am-actions">
                         <button class="am-button am-apply" type="button" data-am-apply disabled>
-                            <?php esc_html_e( 'Apply Effects', 'abdulify-me' ); ?>
+                            <?php esc_html_e( 'Apply Border', 'abdulify-me' ); ?>
                         </button>
                         <button class="am-button am-download" type="button" data-am-download disabled>
                             <?php esc_html_e( 'Download Image', 'abdulify-me' ); ?>
@@ -690,18 +763,9 @@ final class Abdulify_Me_Plugin {
                     </div>
 
                     <div class="am-facebook" data-am-facebook>
-                        <p class="am-facebook-label"><?php esc_html_e( 'Facebook Page Avatar', 'abdulify-me' ); ?></p>
-                        <button class="am-button am-facebook-connect" type="button" data-am-fb-connect>
-                            <?php esc_html_e( 'Connect Facebook', 'abdulify-me' ); ?>
-                        </button>
-                        <label class="am-facebook-page-wrap">
-                            <span class="screen-reader-text"><?php esc_html_e( 'Select Facebook Page', 'abdulify-me' ); ?></span>
-                            <select class="am-facebook-page" data-am-fb-page disabled>
-                                <option value=""><?php esc_html_e( 'Select a Facebook Page', 'abdulify-me' ); ?></option>
-                            </select>
-                        </label>
-                        <button class="am-button am-facebook-avatar" type="button" data-am-fb-avatar disabled>
-                            <?php esc_html_e( 'Set as Facebook Page Avatar', 'abdulify-me' ); ?>
+                        <button class="am-button am-facebook-avatar" type="button" data-am-fb-avatar disabled aria-label="<?php esc_attr_e( 'Share to Facebook', 'abdulify-me' ); ?>">
+                            <span class="am-facebook-icon">f</span>
+                            <span class="screen-reader-text"><?php esc_html_e( 'Upload image as Facebook Page avatar', 'abdulify-me' ); ?></span>
                         </button>
                     </div>
 
@@ -900,24 +964,36 @@ final class Abdulify_Me_Plugin {
         );
 
         // Calculate effects breakdown
-        $effects_breakdown = array(
-            'frame' => 0,
-            'text'  => 0,
-            'tint'  => 0,
-            'badge' => 0,
-        );
+        $effects_breakdown = array();
 
         $events = $wpdb->get_results( "SELECT effects_used FROM $table_name WHERE success = 1 AND effects_used IS NOT NULL" );
         foreach ( $events as $event ) {
             $effects = json_decode( $event->effects_used, true );
             if ( is_array( $effects ) ) {
-                foreach ( $effects as $effect => $enabled ) {
-                    if ( $enabled && isset( $effects_breakdown[ $effect ] ) ) {
-                        $effects_breakdown[ $effect ]++;
+                if ( isset( $effects['overlay'] ) && is_string( $effects['overlay'] ) && '' !== trim( $effects['overlay'] ) ) {
+                    $overlay_key = trim( $effects['overlay'] );
+                    if ( ! isset( $effects_breakdown[ $overlay_key ] ) ) {
+                        $effects_breakdown[ $overlay_key ] = 0;
                     }
+                    $effects_breakdown[ $overlay_key ]++;
+                    continue;
+                }
+
+                foreach ( $effects as $effect => $enabled ) {
+                    if ( ! $enabled ) {
+                        continue;
+                    }
+
+                    $legacy_effect = (string) $effect;
+                    if ( ! isset( $effects_breakdown[ $legacy_effect ] ) ) {
+                        $effects_breakdown[ $legacy_effect ] = 0;
+                    }
+                    $effects_breakdown[ $legacy_effect ]++;
                 }
             }
         }
+
+        arsort( $effects_breakdown );
 
         return array(
             'total_attempts'  => $total_attempts,

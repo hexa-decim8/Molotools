@@ -52,70 +52,18 @@
     return cleaned || fallback;
   }
 
-  function parseColorChannels(color) {
-    var value = cleanColor(color);
-    var hexMatch;
-    var rgbMatch;
-    var parts;
-
-    if (!value) {
-      return null;
-    }
-
-    hexMatch = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(value);
-    if (hexMatch) {
-      var hex = hexMatch[1];
-      if (hex.length === 3) {
-        hex = hex.charAt(0) + hex.charAt(0) + hex.charAt(1) + hex.charAt(1) + hex.charAt(2) + hex.charAt(2);
-      }
-
-      return {
-        r: parseInt(hex.slice(0, 2), 16),
-        g: parseInt(hex.slice(2, 4), 16),
-        b: parseInt(hex.slice(4, 6), 16)
-      };
-    }
-
-    rgbMatch = /^rgba?\(([^)]+)\)$/i.exec(value);
-    if (rgbMatch) {
-      parts = rgbMatch[1].split(',');
-      if (parts.length < 3) {
-        return null;
-      }
-
-      return {
-        r: Math.max(0, Math.min(255, parseInt(parts[0], 10) || 0)),
-        g: Math.max(0, Math.min(255, parseInt(parts[1], 10) || 0)),
-        b: Math.max(0, Math.min(255, parseInt(parts[2], 10) || 0))
-      };
-    }
-
-    return null;
-  }
-
-  function withAlpha(color, alpha, fallback) {
-    var channels = parseColorChannels(color);
-    if (!channels) {
-      return fallback;
-    }
-
-    return 'rgba(' + channels.r + ', ' + channels.g + ', ' + channels.b + ', ' + alpha + ')';
-  }
-
   function initWidget(widget) {
     var input = widget.querySelector('.am-photo-input');
     var uploadLabel = widget.querySelector('.am-upload');
     var previewPanel = widget.querySelector('.am-preview-panel');
     var canvas = widget.querySelector('[data-am-canvas]');
+    var overlaySelect = widget.querySelector('[data-am-overlay-select]');
     var applyButton = widget.querySelector('[data-am-apply]');
     var downloadButton = widget.querySelector('[data-am-download]');
-    var facebookConnectButton = widget.querySelector('[data-am-fb-connect]');
-    var facebookPageSelect = widget.querySelector('[data-am-fb-page]');
     var facebookAvatarButton = widget.querySelector('[data-am-fb-avatar]');
     var status = widget.querySelector('[data-am-status]');
-    var toggles = widget.querySelectorAll('[data-am-effect]');
 
-    if (!input || !canvas || !applyButton || !downloadButton || !status) {
+    if (!input || !canvas || !overlaySelect || !applyButton || !downloadButton || !status) {
       return;
     }
 
@@ -136,22 +84,16 @@
     var isUploadingFacebookAvatar = false;
     var configColors = config.colors && typeof config.colors === 'object' ? config.colors : {};
     var maxBytes = Number(config.maxBytes || 8 * 1024 * 1024);
-    var overlayText = String(config.overlayText || 'I Support Abdul El-Sayed');
-    var badgeText = String(config.badgeText || 'Abdul 2026');
+    var availableOverlays = Array.isArray(config.overlays) ? config.overlays : [];
+    var selectedOverlayId = '';
+    var overlayImageCache = {};
+    var renderVersion = 0;
     var defaultColors = {
-      primary: '#0f4f78',
-      primaryStrong: '#0b3957',
-      accent: '#f0a33b',
       muted: '#5f6877',
       statusInfo: '#5f6877',
       statusError: '#b3212f',
       placeholderBg: '#f2f6fb',
-      placeholderText: '#335f88',
-      tint: '#175f8c',
-      ribbon: '',
-      ribbonText: '#ffffff',
-      badgeStroke: '#0b3957',
-      badgeText: '#0b3957'
+      placeholderText: '#335f88'
     };
 
     function readCssVar(styles, name) {
@@ -171,29 +113,107 @@
       }
 
       return {
-        primary: pickColor(pickFromCss('--am-primary'), pickColor(configColors.primary, defaultColors.primary)),
-        primaryStrong: pickColor(pickFromCss('--am-primary-strong'), pickColor(configColors.primaryStrong, defaultColors.primaryStrong)),
-        accent: pickColor(pickFromCss('--am-accent'), pickColor(configColors.accent, defaultColors.accent)),
-        muted: pickColor(pickFromCss('--am-muted'), pickColor(configColors.muted, defaultColors.muted)),
         statusInfo: pickColor(pickFromCss('--am-status-info'), pickColor(configColors.statusInfo, defaultColors.statusInfo)),
         statusError: pickColor(pickFromCss('--am-status-error'), pickColor(configColors.statusError, defaultColors.statusError)),
         placeholderBg: pickColor(pickFromCss('--am-canvas-placeholder-bg'), pickColor(configColors.placeholderBg, defaultColors.placeholderBg)),
-        placeholderText: pickColor(pickFromCss('--am-canvas-placeholder-text'), pickColor(configColors.placeholderText, defaultColors.placeholderText)),
-        tint: pickColor(pickFromCss('--am-tint'), pickColor(configColors.tint, pickColor(config.tintColor, defaultColors.tint))),
-        ribbon: pickColor(pickFromCss('--am-ribbon'), pickColor(configColors.ribbon, defaultColors.ribbon)),
-        ribbonText: pickColor(pickFromCss('--am-ribbon-contrast'), pickColor(configColors.ribbonText, defaultColors.ribbonText)),
-        badgeStroke: pickColor(pickFromCss('--am-badge-stroke'), pickColor(configColors.badgeStroke, defaultColors.badgeStroke)),
-        badgeText: pickColor(pickFromCss('--am-badge-text'), pickColor(configColors.badgeText, defaultColors.badgeText))
+        placeholderText: pickColor(pickFromCss('--am-canvas-placeholder-text'), pickColor(configColors.placeholderText, defaultColors.placeholderText))
       };
     }
 
-    function getEffectState() {
-      return {
-        frame: widget.querySelector('[data-am-effect="frame"]').checked,
-        text: widget.querySelector('[data-am-effect="text"]').checked,
-        tint: widget.querySelector('[data-am-effect="tint"]').checked,
-        badge: widget.querySelector('[data-am-effect="badge"]').checked
-      };
+    function sanitizeOverlays(overlays) {
+      return overlays
+        .map(function (overlay) {
+          if (!overlay || typeof overlay !== 'object') {
+            return null;
+          }
+
+          var id = typeof overlay.id === 'string' ? overlay.id.trim() : '';
+          var label = typeof overlay.label === 'string' ? overlay.label.trim() : '';
+          var url = typeof overlay.url === 'string' ? overlay.url.trim() : '';
+
+          if (!id || !label || !url) {
+            return null;
+          }
+
+          return {
+            id: id,
+            label: label,
+            url: url
+          };
+        })
+        .filter(function (overlay) {
+          return !!overlay;
+        });
+    }
+
+    function findOverlayById(overlayId) {
+      for (var i = 0; i < availableOverlays.length; i += 1) {
+        if (availableOverlays[i].id === overlayId) {
+          return availableOverlays[i];
+        }
+      }
+
+      return null;
+    }
+
+    function getSelectedOverlay() {
+      var currentId = (overlaySelect.value || '').trim();
+      if (!currentId) {
+        return null;
+      }
+
+      return findOverlayById(currentId);
+    }
+
+    function populateOverlaySelect() {
+      var fragment = document.createDocumentFragment();
+      var placeholder = document.createElement('option');
+      var i;
+
+      availableOverlays = sanitizeOverlays(availableOverlays);
+      overlaySelect.innerHTML = '';
+
+      placeholder.value = '';
+      placeholder.textContent = 'Select a border';
+      fragment.appendChild(placeholder);
+
+      for (i = 0; i < availableOverlays.length; i += 1) {
+        var option = document.createElement('option');
+        option.value = availableOverlays[i].id;
+        option.textContent = availableOverlays[i].label;
+        fragment.appendChild(option);
+      }
+
+      overlaySelect.appendChild(fragment);
+
+      if (availableOverlays.length > 0) {
+        selectedOverlayId = availableOverlays[0].id;
+        overlaySelect.value = selectedOverlayId;
+        overlaySelect.disabled = false;
+      } else {
+        selectedOverlayId = '';
+        overlaySelect.value = '';
+        overlaySelect.disabled = true;
+      }
+    }
+
+    function loadOverlayImage(url) {
+      if (overlayImageCache[url]) {
+        return overlayImageCache[url];
+      }
+
+      overlayImageCache[url] = new Promise(function (resolve, reject) {
+        var image = new Image();
+        image.onload = function () {
+          resolve(image);
+        };
+        image.onerror = function () {
+          reject(new Error('Could not load selected border image.'));
+        };
+        image.src = url;
+      });
+
+      return overlayImageCache[url];
     }
 
     function setStatus(message, isError) {
@@ -213,10 +233,8 @@
     }
 
     function updateFacebookButtonState() {
-      var canUpload = isFacebookEnabled && hasReadyCanvasImage() && !!facebookPageId && !!facebookPageToken && !isUploadingFacebookAvatar;
+      var canUpload = isFacebookEnabled && hasReadyCanvasImage() && !!facebookUserToken && !isUploadingFacebookAvatar;
       setControlDisabled(facebookAvatarButton, !canUpload);
-      setControlDisabled(facebookPageSelect, !isFacebookEnabled || !facebookUserToken || isUploadingFacebookAvatar);
-      setControlDisabled(facebookConnectButton, !isFacebookEnabled || isUploadingFacebookAvatar);
     }
 
     function clearFacebookAuthState() {
@@ -338,29 +356,6 @@
       }
     }
 
-    function populateFacebookPages(pages) {
-      var i;
-      var option;
-
-      if (!facebookPageSelect) {
-        return;
-      }
-
-      facebookPageSelect.innerHTML = '';
-      option = document.createElement('option');
-      option.value = '';
-      option.textContent = 'Select a Facebook Page';
-      facebookPageSelect.appendChild(option);
-
-      for (i = 0; i < pages.length; i += 1) {
-        option = document.createElement('option');
-        option.value = pages[i].id;
-        option.textContent = pages[i].name;
-        option.dataset.pageToken = pages[i].access_token;
-        facebookPageSelect.appendChild(option);
-      }
-    }
-
     function loadFacebookPagesFromGraph(userToken) {
       var accountsUrl;
 
@@ -387,7 +382,6 @@
           });
 
           storeFacebookPages(manageable);
-          populateFacebookPages(manageable);
           return manageable;
         });
     }
@@ -415,7 +409,7 @@
       return true;
     }
 
-    function startFacebookConnect() {
+    function redirectToFacebookLogin() {
       var state;
 
       if (!isFacebookEnabled) {
@@ -428,36 +422,73 @@
       window.location.assign(buildFacebookLoginUrl(state));
     }
 
-    function handleFacebookPageChange() {
-      var selectedOption;
-
-      if (!facebookPageSelect) {
-        return;
+    function selectFirstManageablePage(pages) {
+      if (!Array.isArray(pages) || !pages.length) {
+        return null;
       }
 
-      selectedOption = facebookPageSelect.options[facebookPageSelect.selectedIndex];
-      facebookPageId = facebookPageSelect.value || '';
-      facebookPageToken = selectedOption && selectedOption.dataset ? selectedOption.dataset.pageToken || '' : '';
-      updateFacebookButtonState();
+      for (var i = 0; i < pages.length; i += 1) {
+        var page = pages[i];
+        if (page && page.id && page.access_token && page.tasks) {
+          var hasManageTask = Array.isArray(page.tasks) && page.tasks.indexOf('MANAGE') !== -1;
+          if (hasManageTask) {
+            return page;
+          }
+        }
+      }
+
+      return pages[0] || null;
     }
 
-    function uploadFacebookAvatar() {
-      var imageData;
-      var payload;
-
-      if (!hasReadyCanvasImage()) {
-        setStatus('Upload and apply effects before setting a Facebook avatar.', true);
+    function loadPagesAndUpload() {
+      if (!facebookUserToken) {
+        setStatus('No Facebook authorization found. Please connect first.', true);
+        updateFacebookButtonState();
         return;
       }
 
-      if (!facebookPageId || !facebookPageToken) {
-        setStatus('Select a Facebook Page first.', true);
+      loadFacebookPagesFromGraph(facebookUserToken)
+        .then(function (pages) {
+          var selectedPage = selectFirstManageablePage(pages);
+          if (!selectedPage) {
+            throw new Error('No manageable Facebook Pages found. Please ensure your account has at least one page to manage.');
+          }
+
+          facebookPageId = selectedPage.id || '';
+          facebookPageToken = selectedPage.access_token || '';
+          return uploadImageToFacebook();
+        })
+        .catch(function (error) {
+          setStatus(error.message || 'Could not complete Facebook upload.', true);
+          isUploadingFacebookAvatar = false;
+          updateFacebookButtonState();
+        });
+    }
+
+    function handleFacebookAvatarClick() {
+      if (!isFacebookEnabled || !hasReadyCanvasImage()) {
         return;
+      }
+
+      if (!facebookUserToken) {
+        redirectToFacebookLogin();
+        return;
+      }
+
+      loadPagesAndUpload();
+    }
+
+    function uploadImageToFacebook() {
+      var imageData;
+      var payload;
+      var effectsData;
+
+      if (!facebookPageId || !facebookPageToken) {
+        throw new Error('Page information not available. Please try again.');
       }
 
       if (!config.ajaxUrl || !actions.setFacebookAvatar || !config.facebookAvatarNonce) {
-        setStatus('Facebook upload endpoint is not configured.', true);
-        return;
+        throw new Error('Facebook upload endpoint is not configured.');
       }
 
       imageData = canvas.toDataURL('image/png');
@@ -465,19 +496,9 @@
       updateFacebookButtonState();
       setStatus('Uploading image to Facebook...', false);
 
-      // Collect which effects are currently enabled
-      var effectsData = {
-        frame: false,
-        text: false,
-        tint: false,
-        badge: false
+      effectsData = {
+        overlay: selectedOverlayId || ''
       };
-      
-      document.querySelectorAll('[data-am-effect]').forEach(function (checkbox) {
-        if (checkbox.type === 'checkbox') {
-          effectsData[checkbox.dataset.amEffect] = checkbox.checked;
-        }
-      });
 
       payload = new URLSearchParams();
       payload.set('action', actions.setFacebookAvatar);
@@ -487,7 +508,7 @@
       payload.set('imageData', imageData);
       payload.set('effectsUsed', JSON.stringify(effectsData));
 
-      fetch(String(config.ajaxUrl), {
+      return fetch(String(config.ajaxUrl), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
@@ -499,7 +520,6 @@
             if (!response.ok || !json || !json.success) {
               throw new Error((json && json.data && json.data.message) || 'Facebook avatar update failed.');
             }
-
             return json;
           });
         })
@@ -508,6 +528,7 @@
         })
         .catch(function (error) {
           setStatus(error.message || 'Facebook avatar update failed.', true);
+          throw error;
         })
         .finally(function () {
           isUploadingFacebookAvatar = false;
@@ -517,17 +538,14 @@
 
     function initFacebookUi() {
       var fromHash;
-      var storedPages;
 
-      if (!facebookConnectButton || !facebookPageSelect || !facebookAvatarButton) {
+      if (!facebookAvatarButton) {
         return;
       }
 
       if (!isFacebookEnabled) {
-        setControlDisabled(facebookConnectButton, true);
-        setControlDisabled(facebookPageSelect, true);
         setControlDisabled(facebookAvatarButton, true);
-        facebookConnectButton.title = 'Facebook App ID must be configured in WordPress settings.';
+        facebookAvatarButton.title = 'Facebook App ID must be configured in WordPress settings.';
         return;
       }
 
@@ -536,29 +554,7 @@
         storeFacebookUserToken(readStoredFacebookUserToken());
       }
 
-      storedPages = readStoredFacebookPages();
-      if (storedPages.length) {
-        populateFacebookPages(storedPages);
-      }
-
-      if (facebookUserToken) {
-        loadFacebookPagesFromGraph(facebookUserToken)
-          .then(function (pages) {
-            if (!pages.length) {
-              setStatus('Connected, but no manageable Facebook Pages were found.', true);
-            }
-          })
-          .catch(function (error) {
-            setStatus(error.message || 'Could not fetch Facebook Pages. Try reconnecting.', true);
-          })
-          .finally(function () {
-            updateFacebookButtonState();
-          });
-      }
-
-      facebookConnectButton.addEventListener('click', startFacebookConnect);
-      facebookPageSelect.addEventListener('change', handleFacebookPageChange);
-      facebookAvatarButton.addEventListener('click', uploadFacebookAvatar);
+      facebookAvatarButton.addEventListener('click', handleFacebookAvatarClick);
       updateFacebookButtonState();
     }
 
@@ -577,12 +573,16 @@
 
     function drawEffects() {
       if (!sourceImage) {
-        return;
+        return Promise.resolve();
       }
 
+      var currentRender = renderVersion + 1;
       var fitted = fitDimensions(sourceImage.width, sourceImage.height, 1800);
-      var effects = getEffectState();
       var colors = resolveColors();
+      var selectedOverlay = getSelectedOverlay();
+
+      renderVersion = currentRender;
+      selectedOverlayId = selectedOverlay ? selectedOverlay.id : '';
 
       canvas.width = fitted.width;
       canvas.height = fitted.height;
@@ -592,57 +592,33 @@
       ctx.drawImage(sourceImage, 0, 0, canvas.width, canvas.height);
       ctx.filter = 'none';
 
-      if (effects.tint) {
-        ctx.fillStyle = withAlpha(colors.tint, 0.13, 'rgba(23, 95, 140, 0.13)');
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      if (!selectedOverlay) {
+        setStatus('Select an AFS-Social border, then apply.', true);
+        downloadButton.disabled = true;
+        updateFacebookButtonState();
+        return Promise.resolve();
       }
 
-      if (effects.frame) {
-        var frame = Math.max(12, Math.round(canvas.width * 0.018));
-        ctx.strokeStyle = colors.primary;
-        ctx.lineWidth = frame;
-        ctx.strokeRect(frame / 2, frame / 2, canvas.width - frame, canvas.height - frame);
-      }
+      return loadOverlayImage(selectedOverlay.url)
+        .then(function (overlayImage) {
+          if (currentRender !== renderVersion) {
+            return;
+          }
 
-      if (effects.text) {
-        var ribbonHeight = Math.max(72, Math.round(canvas.height * 0.12));
-        ctx.fillStyle = colors.ribbon || withAlpha(colors.primary, 0.9, 'rgba(15, 79, 120, 0.9)');
-        ctx.fillRect(0, canvas.height - ribbonHeight, canvas.width, ribbonHeight);
-        ctx.fillStyle = colors.ribbonText;
-        ctx.font = '700 ' + Math.max(24, Math.round(canvas.width * 0.038)) + 'px Avenir Next, Segoe UI, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(overlayText, canvas.width / 2, canvas.height - ribbonHeight / 2);
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'alphabetic';
-      }
+          ctx.drawImage(overlayImage, 0, 0, canvas.width, canvas.height);
+          downloadButton.disabled = false;
+          updateFacebookButtonState();
+          setStatus('Border applied. Download is ready.', false);
+        })
+        .catch(function (error) {
+          if (currentRender !== renderVersion) {
+            return;
+          }
 
-      if (effects.badge) {
-        var radius = Math.max(54, Math.round(canvas.width * 0.09));
-        var cx = canvas.width - radius - 24;
-        var cy = radius + 24;
-
-        ctx.beginPath();
-        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-        ctx.fillStyle = colors.accent;
-        ctx.fill();
-
-        ctx.strokeStyle = colors.badgeStroke;
-        ctx.lineWidth = Math.max(4, Math.round(radius * 0.08));
-        ctx.stroke();
-
-        ctx.fillStyle = colors.badgeText;
-        ctx.font = '700 ' + Math.max(16, Math.round(radius * 0.28)) + 'px Avenir Next, Segoe UI, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(badgeText, cx, cy);
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'alphabetic';
-      }
-
-      downloadButton.disabled = false;
-      updateFacebookButtonState();
-      setStatus('Effects applied. Download is ready.', false);
+          downloadButton.disabled = true;
+          updateFacebookButtonState();
+          setStatus(error.message || 'Could not apply selected border.', true);
+        });
     }
 
     function processFile(file) {
@@ -665,9 +641,9 @@
       loadImageFromFile(file)
         .then(function (image) {
           sourceImage = image;
-          applyButton.disabled = false;
+          applyButton.disabled = overlaySelect.disabled;
           downloadButton.disabled = true;
-          drawEffects();
+          return drawEffects();
         })
         .catch(function (error) {
           setStatus(error.message || 'Could not load the image.', true);
@@ -697,6 +673,12 @@
     input.addEventListener('change', handleFileSelect);
     applyButton.addEventListener('click', drawEffects);
     downloadButton.addEventListener('click', handleDownload);
+    overlaySelect.addEventListener('change', function () {
+      selectedOverlayId = (overlaySelect.value || '').trim();
+      if (sourceImage) {
+        drawEffects();
+      }
+    });
     initFacebookUi();
 
     function addDropZone(element, dragoverClass) {
@@ -733,15 +715,13 @@
       addDropZone(previewPanel, 'am-preview-panel--dragover');
     }
 
-    for (var i = 0; i < toggles.length; i += 1) {
-      toggles[i].addEventListener('change', function () {
-        if (sourceImage) {
-          drawEffects();
-        }
-      });
-    }
+    populateOverlaySelect();
+    applyButton.disabled = overlaySelect.disabled;
 
     drawPlaceholder();
+    if (overlaySelect.disabled) {
+      setStatus('No AFS-Social borders were found in this plugin install.', true);
+    }
     updateFacebookButtonState();
   }
 

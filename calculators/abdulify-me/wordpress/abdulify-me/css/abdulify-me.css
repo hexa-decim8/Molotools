@@ -128,6 +128,28 @@
   color: var(--am-ink);
 }
 
+.am-control-row {
+  display: block;
+  margin: 8px 0;
+  color: var(--am-primary-strong);
+  font-weight: 700;
+}
+
+.am-select {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--am-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: var(--am-ink);
+  background: #ffffff;
+}
+
+.am-select:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
 .am-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -170,36 +192,40 @@
 
 .am-facebook {
   margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--am-border);
-  display: grid;
-  gap: 8px;
-}
-
-.am-facebook-label {
-  margin: 0;
-  font-size: 0.92rem;
-  font-weight: 700;
-  color: var(--am-primary-strong);
-}
-
-.am-facebook-connect {
-  background: var(--am-primary-strong);
-  color: var(--am-primary-contrast);
-}
-
-.am-facebook-page {
-  width: 100%;
-  border: 1px solid var(--am-border);
-  border-radius: 10px;
-  padding: 10px 12px;
-  background: #ffffff;
-  color: var(--am-ink);
+  display: flex;
+  justify-content: flex-start;
 }
 
 .am-facebook-avatar {
-  background: var(--am-primary);
-  color: var(--am-primary-contrast);
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 8px;
+  background: #1877f2;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #1877f2;
+  cursor: pointer;
+  transition: background 200ms, border-color 200ms;
+}
+
+.am-facebook-avatar:hover:not(:disabled) {
+  background: #165ac2;
+  border-color: #165ac2;
+}
+
+.am-facebook-avatar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.am-facebook-icon {
+  display: inline-block;
 }
 
 .am-canvas {
