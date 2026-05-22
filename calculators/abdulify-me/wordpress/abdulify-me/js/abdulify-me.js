@@ -5,10 +5,69 @@
     return new Promise(function (resolve, reject) {
       var reader = new FileReader();
 
+      function readExifOrientation(arrayBuffer) {
+        var view = new DataView(arrayBuffer);
+        if (view.byteLength < 2) {
+          return 1;
+        }
+
+        var littleEndian = view.getUint8(0) === 0xFF && view.getUint8(1) === 0xD8;
+        if (!littleEndian) {
+          return 1;
+        }
+
+        var offset = 2;
+        while (offset < view.byteLength) {
+          if (view.getUint8(offset) !== 0xFF) {
+            break;
+          }
+          offset += 1;
+
+          var marker = view.getUint8(offset);
+          offset += 1;
+
+          if (marker === 0xE1) {
+            var length = view.getUint16(offset, false);
+            offset += 2;
+
+            var exifHeader = view.getUint32(offset, false);
+            if (exifHeader === 0x45786966) {
+              var exifData = offset + 4;
+              var byteOrder = view.getUint16(exifData, false);
+              var isLittleEndian = byteOrder === 0x4949;
+
+              var offset_ifd0 = exifData + view.getUint32(exifData + 4, isLittleEndian);
+              var numberOfDirectory = view.getUint16(offset_ifd0, isLittleEndian);
+
+              for (var i = 0; i < numberOfDirectory; i += 1) {
+                var ifdOffset = offset_ifd0 + 2 + i * 12;
+                var tag = view.getUint16(ifdOffset, isLittleEndian);
+
+                if (tag === 0x0112) {
+                  var value = view.getUint16(ifdOffset + 8, isLittleEndian);
+                  return Math.min(8, Math.max(1, value));
+                }
+              }
+            }
+            break;
+          } else if (marker === 0xD9) {
+            break;
+          } else if (marker >= 0xD0 && marker <= 0xD8) {
+            offset += 1;
+          } else {
+            var segmentLength = view.getUint16(offset, false);
+            offset += segmentLength;
+          }
+        }
+
+        return 1;
+      }
+
       reader.onload = function (event) {
         var image = new Image();
 
         image.onload = function () {
+          image.exifOrientation = 1;
           resolve(image);
         };
 
@@ -19,11 +78,41 @@
         image.src = event.target.result;
       };
 
+      reader.onload_binary = function (binaryEvent) {
+        var arrayBuffer = binaryEvent.target.result;
+        var orientation = readExifOrientation(arrayBuffer);
+        var dataUrl = reader.result;
+
+        var image = new Image();
+        image.exifOrientation = orientation;
+
+        image.onload = function () {
+          resolve(image);
+        };
+
+        image.onerror = function () {
+          reject(new Error('Unable to read image data.'));
+        };
+
+        image.src = dataUrl;
+      };
+
       reader.onerror = function () {
         reject(new Error('Unable to read selected file.'));
       };
 
-      reader.readAsDataURL(file);
+      var fileType = (file.type || '').toLowerCase();
+      if (fileType === 'image/jpeg' || fileType === 'image/jpg') {
+        reader.onload = function (event) {
+          var dataUrl = event.target.result;
+          var binaryReader = new FileReader();
+          binaryReader.onload = reader.onload_binary;
+          binaryReader.readAsArrayBuffer(file);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        reader.readAsDataURL(file);
+      }
     });
   }
 
@@ -36,6 +125,33 @@
     return {
       width: Math.round(width * ratio),
       height: Math.round(height * ratio)
+    };
+  }
+
+  function isFinitePositive(value) {
+    return Number.isFinite(value) && value > 0;
+  }
+
+  function computeFitRect(sourceWidth, sourceHeight, targetWidth, targetHeight, mode) {
+    if (!isFinitePositive(sourceWidth) || !isFinitePositive(sourceHeight)) {
+      return null;
+    }
+
+    if (!isFinitePositive(targetWidth) || !isFinitePositive(targetHeight)) {
+      return null;
+    }
+
+    var scaleX = targetWidth / sourceWidth;
+    var scaleY = targetHeight / sourceHeight;
+    var scale = mode === 'cover' ? Math.max(scaleX, scaleY) : Math.min(scaleX, scaleY);
+    var drawWidth = sourceWidth * scale;
+    var drawHeight = sourceHeight * scale;
+
+    return {
+      x: (targetWidth - drawWidth) / 2,
+      y: (targetHeight - drawHeight) / 2,
+      width: drawWidth,
+      height: drawHeight
     };
   }
 
@@ -571,25 +687,88 @@
       ctx.textAlign = 'left';
     }
 
+    function drawImageOptimized(image, mode) {
+      var sourceWidth = image.naturalWidth || image.width;
+      var sourceHeight = image.naturalHeight || image.height;
+      var orientation = image.exifOrientation || 1;
+      var fitRect = computeFitRect(sourceWidth, sourceHeight, canvas.width, canvas.height, mode || 'contain');
+
+      if (!fitRect) {
+        return false;
+      }
+
+      var swapDimensions = orientation >= 5 && orientation <= 8;
+      var scaledWidth = swapDimensions ? fitRect.height : fitRect.width;
+      var scaledHeight = swapDimensions ? fitRect.width : fitRect.height;
+
+      ctx.save();
+      ctx.translate(fitRect.x + scaledWidth / 2, fitRect.y + scaledHeight / 2);
+
+      switch (orientation) {
+        case 2:
+          ctx.scale(-1, 1);
+          break;
+        case 3:
+          ctx.rotate(Math.PI);
+          break;
+        case 4:
+          ctx.scale(1, -1);
+          break;
+        case 5:
+          ctx.scale(-1, 1);
+          ctx.rotate((Math.PI / 2));
+          break;
+        case 6:
+          ctx.rotate((Math.PI / 2));
+          break;
+        case 7:
+          ctx.scale(1, -1);
+          ctx.rotate((Math.PI / 2));
+          break;
+        case 8:
+          ctx.rotate((-Math.PI / 2));
+          break;
+      }
+
+      ctx.drawImage(image, -(scaledWidth / 2), -(scaledHeight / 2), scaledWidth, scaledHeight);
+      ctx.restore();
+      return true;
+    }
+
     function drawEffects() {
       if (!sourceImage) {
         return Promise.resolve();
       }
 
       var currentRender = renderVersion + 1;
-      var fitted = fitDimensions(sourceImage.width, sourceImage.height, 1800);
-      var colors = resolveColors();
+      var sourceWidth = sourceImage.naturalWidth || sourceImage.width;
+      var sourceHeight = sourceImage.naturalHeight || sourceImage.height;
       var selectedOverlay = getSelectedOverlay();
+
+      if (!isFinitePositive(sourceWidth) || !isFinitePositive(sourceHeight)) {
+        setStatus('Could not read the selected image dimensions.', true);
+        downloadButton.disabled = true;
+        updateFacebookButtonState();
+        return Promise.resolve();
+      }
 
       renderVersion = currentRender;
       selectedOverlayId = selectedOverlay ? selectedOverlay.id : '';
 
-      canvas.width = fitted.width;
-      canvas.height = fitted.height;
+      canvas.width = Math.round(sourceWidth);
+      canvas.height = Math.round(sourceHeight);
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
       ctx.filter = 'contrast(1.05) saturate(1.04)';
-      ctx.drawImage(sourceImage, 0, 0, canvas.width, canvas.height);
+      if (!drawImageOptimized(sourceImage, 'contain')) {
+        ctx.filter = 'none';
+        setStatus('Could not render the selected image.', true);
+        downloadButton.disabled = true;
+        updateFacebookButtonState();
+        return Promise.resolve();
+      }
       ctx.filter = 'none';
 
       if (!selectedOverlay) {
@@ -605,7 +784,10 @@
             return;
           }
 
-          ctx.drawImage(overlayImage, 0, 0, canvas.width, canvas.height);
+          if (!drawImageOptimized(overlayImage, 'cover')) {
+            throw new Error('Could not render selected border image.');
+          }
+
           downloadButton.disabled = false;
           updateFacebookButtonState();
           setStatus('Border applied. Download is ready.', false);
@@ -651,7 +833,13 @@
     }
 
     function handleFileSelect() {
-      processFile(input.files && input.files[0]);
+      var selectedFile = input.files && input.files[0];
+      if (!selectedFile) {
+        return;
+      }
+
+      processFile(selectedFile);
+      input.value = '';
     }
 
     function handleDownload() {

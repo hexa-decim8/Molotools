@@ -68,6 +68,7 @@
 }
 
 .am-upload {
+  position: relative;
   display: grid;
   gap: 8px;
   border: 1px dashed var(--am-primary);
@@ -103,8 +104,23 @@
 }
 
 .am-photo-input {
-  display: block;
-  width: 100%;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  border: 0;
+  padding: 0;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: 0;
+}
+
+.am-upload:focus-within {
+  border-color: var(--am-primary-strong);
+  outline: 3px solid color-mix(in srgb, var(--am-primary) 45%, transparent);
+  outline-offset: 2px;
 }
 
 .am-controls {
@@ -230,8 +246,11 @@
 
 .am-canvas {
   display: block;
-  width: 100%;
+  width: auto;
+  max-width: 100%;
+  height: auto;
   max-height: 72vh;
+  margin: 0 auto;
   border-radius: 10px;
   background: repeating-linear-gradient(
     45deg,
