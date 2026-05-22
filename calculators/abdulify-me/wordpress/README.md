@@ -43,6 +43,17 @@ Notes:
 - The one-click flow targets Facebook Pages. Personal profile avatar updates are not supported by Facebook Graph API create/update endpoints.
 - The plugin does not store long-lived Facebook tokens server-side. Page access tokens are used during the active browser session.
 
+## Plugin Updates
+
+1. In WordPress Admin, open Settings -> Abdulify Me Updates.
+2. View the current and latest versions, and the status of your plugin.
+3. Enable or disable automatic updates by checking the "Enable Automatic Updates" checkbox.
+4. Click "Check for Updates" to manually refresh update information immediately.
+
+By default, automatic updates are enabled. When enabled, the plugin will automatically download and install new versions from GitHub. You can disable this to have manual control over when updates are applied.
+
+Update status (last check time and any errors) is displayed on the updates page for troubleshooting.
+
 ## Color Inheritance and Overrides
 
 By default, Abdulify Me inherits host page colors when matching CSS variables are present. This allows embeds to match the Abdul for Senate page palette without editing plugin source.

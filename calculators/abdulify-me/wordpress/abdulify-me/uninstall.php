@@ -2,6 +2,10 @@
 /**
  * Fired when the plugin is uninstalled.
  *
+ * This script cleans up all Abdulify Me plugin data from the database,
+ * including user settings, internal tracking options, transient caches,
+ * and the avatar events tracking table.
+ *
  * @package AbdulifyMe
  */
 
@@ -19,7 +23,11 @@ $wpdb->query(
     OR option_name = '_transient_timeout_am_updater_install_lock'"
 );
 
-delete_option( 'abdulify_me_settings' );
+// Delete user-facing settings
+delete_option( 'abdulify_me_facebook_app_id' );
+delete_option( 'am_auto_update_enabled' );
+
+// Delete internal tracking options
 delete_option( 'am_updater_last_error' );
 delete_option( 'am_updater_last_check' );
 

@@ -333,7 +333,7 @@ class AM_GitHub_Updater {
 
     public function enable_auto_updates( $update, $item ) {
         if ( isset( $item->slug ) && $item->slug === dirname( $this->slug ) ) {
-            return true;
+            return get_option( 'am_auto_update_enabled', '1' ) === '1';
         }
 
         return $update;
@@ -345,6 +345,205 @@ $abdulify_me_updater = new AM_GitHub_Updater(
     ABDULIFY_ME_GITHUB_REPO,
     ABDULIFY_ME_VERSION
 );
+
+// ---------------------------------------------------------------------------
+// Admin Settings Page for Updater
+// ---------------------------------------------------------------------------
+class AM_Admin_Settings {
+
+    private $updater;
+
+    public function __construct( $updater ) {
+        $this->updater = $updater;
+
+        add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
+        add_action( 'admin_init', array( $this, 'register_settings' ) );
+        add_action( 'admin_post_am_check_updates', array( $this, 'handle_manual_update_check' ) );
+        add_filter( 'auto_update_plugin', array( $this, 'enable_auto_updates' ), 10, 2 );
+    }
+
+    /**
+     * Add settings page under Settings menu
+     */
+    public function add_settings_page() {
+        add_options_page(
+            __( 'Abdulify Me Updates', 'abdulify-me' ),
+            __( 'Abdulify Me Updates', 'abdulify-me' ),
+            'manage_options',
+            'abdulify-me-updater',
+            array( $this, 'render_settings_page' )
+        );
+    }
+
+    /**
+     * Register plugin settings
+     */
+    public function register_settings() {
+        register_setting( 'am_updater_settings', 'am_auto_update_enabled' );
+    }
+
+    /**
+     * Enable auto-updates if setting is enabled
+     */
+    public function enable_auto_updates( $update, $item ) {
+        if ( isset( $item->slug ) && $item->slug === 'abdulify-me' ) {
+            return get_option( 'am_auto_update_enabled', '1' ) === '1';
+        }
+        return $update;
+    }
+
+    /**
+     * Handle manual update check
+     */
+    public function handle_manual_update_check() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( __( 'Unauthorized access', 'abdulify-me' ) );
+        }
+
+        check_admin_referer( 'am_check_updates' );
+
+        $this->updater->refresh_update_data( true );
+
+        // Redirect back with success message
+        wp_redirect( add_query_arg(
+            array(
+                'page'              => 'abdulify-me-updater',
+                'update_check_done' => '1',
+            ),
+            admin_url( 'options-general.php' )
+        ) );
+        exit;
+    }
+
+    /**
+     * Render the settings page
+     */
+    public function render_settings_page() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+
+        // Get current version and check for updates
+        $current_version = ABDULIFY_ME_VERSION;
+        $update_available = false;
+        $latest_version = $current_version;
+
+        // Check if there's an update available
+        $update_plugins = get_site_transient( 'update_plugins' );
+        if ( isset( $update_plugins->response['abdulify-me/abdulify-me.php'] ) ) {
+            $update_available = true;
+            $latest_version = $update_plugins->response['abdulify-me/abdulify-me.php']->new_version;
+        }
+
+        $auto_update_enabled = get_option( 'am_auto_update_enabled', '1' ) === '1';
+        $update_check_done = isset( $_GET['update_check_done'] ) && $_GET['update_check_done'] === '1';
+        $next_scheduled_check = wp_next_scheduled( ABDULIFY_ME_UPDATE_CRON_HOOK );
+        $last_successful_check = (int) get_option( 'am_updater_last_check', 0 );
+        $last_error = get_option( 'am_updater_last_error', '' );
+
+        ?>
+        <div class="wrap">
+            <h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+
+            <?php if ( $update_check_done ) : ?>
+                <div class="notice notice-success is-dismissible">
+                    <p><?php esc_html_e( 'Update check completed!', 'abdulify-me' ); ?></p>
+                </div>
+            <?php endif; ?>
+
+            <div class="card" style="max-width: 800px;">
+                <h2><?php esc_html_e( 'Version Information', 'abdulify-me' ); ?></h2>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row"><?php esc_html_e( 'Current Version:', 'abdulify-me' ); ?></th>
+                        <td><strong><?php echo esc_html( $current_version ); ?></strong></td>
+                    </tr>
+                    <?php if ( $update_available ) : ?>
+                        <tr>
+                            <th scope="row"><?php esc_html_e( 'Latest Version:', 'abdulify-me' ); ?></th>
+                            <td>
+                                <strong style="color: #d63638;"><?php echo esc_html( $latest_version ); ?></strong>
+                                <span style="margin-left: 10px; color: #d63638;">
+                                    <?php esc_html_e( '⚠️ Update Available', 'abdulify-me' ); ?>
+                                </span>
+                            </td>
+                        </tr>
+                    <?php else : ?>
+                        <tr>
+                            <th scope="row"><?php esc_html_e( 'Status:', 'abdulify-me' ); ?></th>
+                            <td>
+                                <span style="color: #00a32a;">
+                                    <?php esc_html_e( '✓ Up to date', 'abdulify-me' ); ?>
+                                </span>
+                            </td>
+                        </tr>
+                    <?php endif; ?>
+                </table>
+            </div>
+
+            <div class="card" style="max-width: 800px; margin-top: 20px;">
+                <h2><?php esc_html_e( 'Update Settings', 'abdulify-me' ); ?></h2>
+                <form method="post" action="options.php">
+                    <?php settings_fields( 'am_updater_settings' ); ?>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row"><?php esc_html_e( 'Enable Automatic Updates', 'abdulify-me' ); ?></th>
+                            <td>
+                                <label>
+                                    <input type="hidden" name="am_auto_update_enabled" value="0" />
+                                    <input type="checkbox" name="am_auto_update_enabled" value="1" <?php checked( $auto_update_enabled, true ); ?> />
+                                    <?php esc_html_e( 'Automatically update this plugin when a new version is available', 'abdulify-me' ); ?>
+                                </label>
+                                <p class="description"><?php esc_html_e( 'When enabled, Abdulify Me will automatically update to the latest version from GitHub.', 'abdulify-me' ); ?></p>
+                            </td>
+                        </tr>
+                    </table>
+                    <?php submit_button( __( 'Save Settings', 'abdulify-me' ) ); ?>
+                </form>
+            </div>
+
+            <div class="card" style="max-width: 800px; margin-top: 20px;">
+                <h2><?php esc_html_e( 'Manual Update Check', 'abdulify-me' ); ?></h2>
+                <p><?php esc_html_e( 'Click the button below to manually check for updates. This will refresh the update information immediately.', 'abdulify-me' ); ?></p>
+                <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+                    <input type="hidden" name="action" value="am_check_updates" />
+                    <?php wp_nonce_field( 'am_check_updates' ); ?>
+                    <?php submit_button( __( 'Check for Updates', 'abdulify-me' ), 'secondary' ); ?>
+                </form>
+            </div>
+
+            <div class="card" style="max-width: 800px; margin-top: 20px;">
+                <h2><?php esc_html_e( 'Update Status', 'abdulify-me' ); ?></h2>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row"><?php esc_html_e( 'Last Check:', 'abdulify-me' ); ?></th>
+                        <td>
+                            <?php
+                            if ( $last_successful_check > 0 ) {
+                                echo esc_html( wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $last_successful_check ) );
+                            } else {
+                                esc_html_e( 'Never', 'abdulify-me' );
+                            }
+                            ?>
+                        </td>
+                    </tr>
+                    <?php if ( ! empty( $last_error ) ) : ?>
+                        <tr>
+                            <th scope="row"><?php esc_html_e( 'Last Error:', 'abdulify-me' ); ?></th>
+                            <td>
+                                <span style="color: #d63638;"><?php echo esc_html( $last_error ); ?></span>
+                            </td>
+                        </tr>
+                    <?php endif; ?>
+                </table>
+            </div>
+        </div>
+        <?php
+    }
+}
+
+// Register the updater settings page
+$am_admin_settings = new AM_Admin_Settings( $abdulify_me_updater );
 
 function abdulify_me_register_cron_schedule( $schedules ) {
     $schedules[ ABDULIFY_ME_UPDATE_CRON_SCHEDULE ] = array(
