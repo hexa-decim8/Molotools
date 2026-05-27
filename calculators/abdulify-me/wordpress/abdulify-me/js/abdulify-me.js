@@ -204,6 +204,8 @@
     var selectedOverlayId = '';
     var overlayImageCache = {};
     var renderVersion = 0;
+    var maxRenderDimension = 16384;
+    var maxRenderPixels = 67108864;
     var defaultColors = {
       muted: '#5f6877',
       statusInfo: '#5f6877',
@@ -735,6 +737,72 @@
       return true;
     }
 
+    function clampRenderSize(width, height) {
+      var nextWidth = Math.round(width);
+      var nextHeight = Math.round(height);
+      var fit;
+      var pixelRatio;
+
+      if (!isFinitePositive(nextWidth) || !isFinitePositive(nextHeight)) {
+        return null;
+      }
+
+      if (nextWidth > maxRenderDimension || nextHeight > maxRenderDimension) {
+        fit = fitDimensions(nextWidth, nextHeight, maxRenderDimension);
+        nextWidth = fit.width;
+        nextHeight = fit.height;
+      }
+
+      if ((nextWidth * nextHeight) > maxRenderPixels) {
+        pixelRatio = Math.sqrt(maxRenderPixels / (nextWidth * nextHeight));
+        nextWidth = Math.max(1, Math.floor(nextWidth * pixelRatio));
+        nextHeight = Math.max(1, Math.floor(nextHeight * pixelRatio));
+      }
+
+      if (!isFinitePositive(nextWidth) || !isFinitePositive(nextHeight)) {
+        return null;
+      }
+
+      return {
+        width: nextWidth,
+        height: nextHeight
+      };
+    }
+
+    function computeExpandedCanvasSize(sourceWidth, sourceHeight, overlayImage) {
+      var overlayWidth = overlayImage.naturalWidth || overlayImage.width;
+      var overlayHeight = overlayImage.naturalHeight || overlayImage.height;
+      var overlayOrientation = overlayImage.exifOrientation || 1;
+      var overlayFitRect = computeFitRect(overlayWidth, overlayHeight, sourceWidth, sourceHeight, 'cover');
+      var swapDimensions;
+      var drawWidth;
+      var drawHeight;
+
+      if (!overlayFitRect) {
+        return null;
+      }
+
+      swapDimensions = overlayOrientation >= 5 && overlayOrientation <= 8;
+      drawWidth = swapDimensions ? overlayFitRect.height : overlayFitRect.width;
+      drawHeight = swapDimensions ? overlayFitRect.width : overlayFitRect.height;
+
+      return {
+        width: Math.max(sourceWidth, drawWidth),
+        height: Math.max(sourceHeight, drawHeight)
+      };
+    }
+
+    function renderSourceImage() {
+      ctx.filter = 'contrast(1.05) saturate(1.04)';
+      if (!drawImageOptimized(sourceImage, 'contain')) {
+        ctx.filter = 'none';
+        return false;
+      }
+
+      ctx.filter = 'none';
+      return true;
+    }
+
     function drawEffects() {
       if (!sourceImage) {
         return Promise.resolve();
@@ -744,6 +812,7 @@
       var sourceWidth = sourceImage.naturalWidth || sourceImage.width;
       var sourceHeight = sourceImage.naturalHeight || sourceImage.height;
       var selectedOverlay = getSelectedOverlay();
+      var baseRenderSize;
 
       if (!isFinitePositive(sourceWidth) || !isFinitePositive(sourceHeight)) {
         setStatus('Could not read the selected image dimensions.', true);
@@ -752,24 +821,29 @@
         return Promise.resolve();
       }
 
+      baseRenderSize = clampRenderSize(sourceWidth, sourceHeight);
+      if (!baseRenderSize) {
+        setStatus('Could not prepare the image for rendering.', true);
+        downloadButton.disabled = true;
+        updateFacebookButtonState();
+        return Promise.resolve();
+      }
+
       renderVersion = currentRender;
       selectedOverlayId = selectedOverlay ? selectedOverlay.id : '';
 
-      canvas.width = Math.round(sourceWidth);
-      canvas.height = Math.round(sourceHeight);
+      canvas.width = baseRenderSize.width;
+      canvas.height = baseRenderSize.height;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
-      ctx.filter = 'contrast(1.05) saturate(1.04)';
-      if (!drawImageOptimized(sourceImage, 'contain')) {
-        ctx.filter = 'none';
+      if (!renderSourceImage()) {
         setStatus('Could not render the selected image.', true);
         downloadButton.disabled = true;
         updateFacebookButtonState();
         return Promise.resolve();
       }
-      ctx.filter = 'none';
 
       if (!selectedOverlay) {
         setStatus('Select an AFS-Social border, then apply.', true);
@@ -780,8 +854,29 @@
 
       return loadOverlayImage(selectedOverlay.url)
         .then(function (overlayImage) {
+          var expandedSize;
+
           if (currentRender !== renderVersion) {
             return;
+          }
+
+          expandedSize = computeExpandedCanvasSize(baseRenderSize.width, baseRenderSize.height, overlayImage);
+          expandedSize = expandedSize && clampRenderSize(expandedSize.width, expandedSize.height);
+
+          if (!expandedSize) {
+            throw new Error('Selected border could not be prepared for rendering.');
+          }
+
+          if (canvas.width !== expandedSize.width || canvas.height !== expandedSize.height) {
+            canvas.width = expandedSize.width;
+            canvas.height = expandedSize.height;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+
+            if (!renderSourceImage()) {
+              throw new Error('Could not render the selected image.');
+            }
           }
 
           if (!drawImageOptimized(overlayImage, 'cover')) {
