@@ -689,6 +689,30 @@
       ctx.textAlign = 'left';
     }
 
+    function drawOverlayPreview() {
+      var selectedOverlay = getSelectedOverlay();
+      var colors = resolveColors();
+
+      if (!selectedOverlay) {
+        drawPlaceholder();
+        return Promise.resolve();
+      }
+
+      canvas.width = 1200;
+      canvas.height = 1200;
+      ctx.fillStyle = colors.placeholderBg;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      return loadOverlayImage(selectedOverlay.url)
+        .then(function (overlayImage) {
+          drawImageOptimized(overlayImage, 'cover');
+          setStatus('Upload a photo to apply this border.', false);
+        })
+        .catch(function () {
+          drawPlaceholder();
+        });
+    }
+
     function drawImageOptimized(image, mode) {
       var sourceWidth = image.naturalWidth || image.width;
       var sourceHeight = image.naturalHeight || image.height;
@@ -960,6 +984,8 @@
       selectedOverlayId = (overlaySelect.value || '').trim();
       if (sourceImage) {
         drawEffects();
+      } else {
+        drawOverlayPreview();
       }
     });
     initFacebookUi();
@@ -1001,9 +1027,11 @@
     populateOverlaySelect();
     applyButton.disabled = overlaySelect.disabled;
 
-    drawPlaceholder();
     if (overlaySelect.disabled) {
+      drawPlaceholder();
       setStatus('No AFS-Social borders were found in this plugin install.', true);
+    } else {
+      drawOverlayPreview();
     }
     updateFacebookButtonState();
   }
