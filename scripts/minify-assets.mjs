@@ -76,6 +76,42 @@ const pluginTargets = [
         ]
       }
     ]
+  },
+  {
+    pluginRoot: resolve(root, 'site-translator/wordpress/site-translator'),
+    assets: [
+      {
+        label: 'site translator JS',
+        src: 'js/site-translator.js',
+        out: 'js/site-translator.min.js',
+        command: 'npx',
+        args: [
+          '--yes',
+          'terser',
+          'js/site-translator.js',
+          '--compress',
+          '--mangle',
+          '--comments',
+          '/^!|@preserve|@license|@cc_on/i',
+          '--output',
+          'js/site-translator.min.js'
+        ]
+      },
+      {
+        label: 'site translator CSS',
+        src: 'css/site-translator.css',
+        out: 'css/site-translator.min.css',
+        command: 'npx',
+        args: [
+          '--yes',
+          'clean-css-cli',
+          '-O2',
+          '-o',
+          'css/site-translator.min.css',
+          'css/site-translator.css'
+        ]
+      }
+    ]
   }
 ];
 
