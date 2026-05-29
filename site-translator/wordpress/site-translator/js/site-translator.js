@@ -21,6 +21,8 @@
         reset: null
     };
     var conflictObserver = null;
+    var conflictSyncTimer = null;
+    var conflictSyncIntervalMs = 300;
 
     var defaultConflictSelectors = [
         '[data-site-translator-conflict]',
@@ -33,6 +35,13 @@
         '.pum-overlay',
         '[aria-modal="true"]'
     ];
+    var modalConflictSelectors = [
+        '.elementor-popup-modal',
+        '.pum-container',
+        '.pum-overlay',
+        '[aria-modal="true"]'
+    ];
+    var maxConflictNodesPerSelector = 8;
 
     function getConflictSelectors() {
         var config = window.siteTranslatorConfig || {};
@@ -143,21 +152,29 @@
     }
 
     function hasConflictUI() {
+        for (var m = 0; m < modalConflictSelectors.length; m++) {
+            var modalNodes = document.querySelectorAll(modalConflictSelectors[m]);
+            for (var j = 0; j < modalNodes.length && j < maxConflictNodesPerSelector; j++) {
+                if (isVisibleElement(modalNodes[j])) {
+                    return true;
+                }
+            }
+        }
+
         var selectors = getConflictSelectors();
 
         for (var s = 0; s < selectors.length; s++) {
+            if (modalConflictSelectors.indexOf(selectors[s]) !== -1) {
+                continue;
+            }
+
             var nodes = document.querySelectorAll(selectors[s]);
-            for (var i = 0; i < nodes.length; i++) {
+            for (var i = 0; i < nodes.length && i < maxConflictNodesPerSelector; i++) {
                 if (!isVisibleElement(nodes[i])) {
                     continue;
                 }
 
                 if (looksLikeDonateTakeover(nodes[i])) {
-                    return true;
-                }
-
-                // Any visible modal/popup should temporarily suspend translator UI.
-                if (selectors[s] === '[aria-modal="true"]' || selectors[s] === '.elementor-popup-modal' || selectors[s] === '.pum-container' || selectors[s] === '.pum-overlay') {
                     return true;
                 }
             }
@@ -178,6 +195,17 @@
         }
     }
 
+    function queueSuspendedStateSync() {
+        if (conflictSyncTimer) {
+            return;
+        }
+
+        conflictSyncTimer = window.setTimeout(function () {
+            conflictSyncTimer = null;
+            syncSuspendedState();
+        }, conflictSyncIntervalMs);
+    }
+
     function bindConflictObserver() {
         syncSuspendedState();
 
@@ -186,18 +214,28 @@
         }
 
         conflictObserver = new MutationObserver(function () {
-            syncSuspendedState();
+            queueSuspendedStateSync();
         });
 
-        conflictObserver.observe(document.documentElement, {
+        conflictObserver.observe(document.body, {
             childList: true,
             subtree: true,
             attributes: true,
             attributeFilter: ['class', 'style', 'aria-hidden']
         });
 
-        window.addEventListener('scroll', syncSuspendedState, { passive: true });
-        window.addEventListener('resize', syncSuspendedState);
+        window.addEventListener('scroll', queueSuspendedStateSync, { passive: true });
+        window.addEventListener('resize', queueSuspendedStateSync);
+        window.addEventListener('pagehide', function () {
+            if (conflictObserver) {
+                conflictObserver.disconnect();
+                conflictObserver = null;
+            }
+            if (conflictSyncTimer) {
+                window.clearTimeout(conflictSyncTimer);
+                conflictSyncTimer = null;
+            }
+        });
     }
 
     function setTranslateCookie(langCode) {
@@ -482,12 +520,12 @@
 
     function init() {
         buildBar();
-        initGoogleWidget();
         bindConflictObserver();
 
         /* Restore state from saved preference first, then cookie fallback. */
         var active = getPreferredLanguage() || getActiveLanguage();
         if (active) {
+            initGoogleWidget();
             setTranslateCookie(active);
             updateUI(active);
             setLanguage(active, 0, {
