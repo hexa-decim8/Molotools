@@ -177,14 +177,34 @@
     var applyButton = widget.querySelector('[data-am-apply]');
     var downloadButton = widget.querySelector('[data-am-download]');
     var facebookAvatarButton = widget.querySelector('[data-am-fb-avatar]');
+    var setProfileFbButton = widget.querySelector('[data-am-set-profile-fb]');
+    var setProfileIgButton = widget.querySelector('[data-am-set-profile-ig]');
+    var setProfileShareButton = widget.querySelector('[data-am-set-profile-share]');
     var status = widget.querySelector('[data-am-status]');
 
     if (!input || !canvas || !overlaySelect || !applyButton || !downloadButton || !status) {
       return;
     }
 
+    var zoomSlider = widget.querySelector('[data-am-zoom-slider]');
+    var zoomReset = widget.querySelector('[data-am-zoom-reset]');
+    var zoomValue = widget.querySelector('[data-am-zoom-value]');
+
     var ctx = canvas.getContext('2d');
     var sourceImage = null;
+    var imageScale = 1;
+    var imageOffsetX = 0;
+    var imageOffsetY = 0;
+    var minScale = 1;
+    var maxScale = 5;
+    var isDragging = false;
+    var dragStartX = 0;
+    var dragStartY = 0;
+    var dragStartOffsetX = 0;
+    var dragStartOffsetY = 0;
+    var lastTouchDist = 0;
+    var lastTouchCenterX = 0;
+    var lastTouchCenterY = 0;
     var config = window.abdulifyMeConfig || {};
     var actions = config.actions && typeof config.actions === 'object' ? config.actions : {};
     var facebook = config.facebook && typeof config.facebook === 'object' ? config.facebook : {};
@@ -676,6 +696,113 @@
       updateFacebookButtonState();
     }
 
+    function generateProfilePicBlob() {
+      var profileSize = 720;
+      var profileCanvas = document.createElement('canvas');
+      var profileCtx = profileCanvas.getContext('2d');
+      var side = Math.min(canvas.width, canvas.height);
+      var sx = (canvas.width - side) / 2;
+      var sy = (canvas.height - side) / 2;
+
+      profileCanvas.width = profileSize;
+      profileCanvas.height = profileSize;
+      profileCtx.imageSmoothingEnabled = true;
+      profileCtx.imageSmoothingQuality = 'high';
+      profileCtx.drawImage(canvas, sx, sy, side, side, 0, 0, profileSize, profileSize);
+
+      return new Promise(function (resolve) {
+        profileCanvas.toBlob(function (blob) {
+          resolve(blob);
+        }, 'image/png');
+      });
+    }
+
+    function triggerProfilePicDownload(blob) {
+      var url = URL.createObjectURL(blob);
+      var link = document.createElement('a');
+      link.href = url;
+      link.download = 'abdulified-profile-photo.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 5000);
+    }
+
+    function handleSetProfileFacebook() {
+      if (!sourceImage) { return; }
+
+      generateProfilePicBlob().then(function (blob) {
+        triggerProfilePicDownload(blob);
+        window.open('https://www.facebook.com/profile/picture/edit/', '_blank', 'noopener');
+        setStatus('Photo downloaded. Upload it on the Facebook tab that just opened.', false);
+      });
+    }
+
+    function handleSetProfileInstagram() {
+      if (!sourceImage) { return; }
+
+      generateProfilePicBlob().then(function (blob) {
+        triggerProfilePicDownload(blob);
+
+        var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        if (isMobile) {
+          window.open('instagram://app', '_blank', 'noopener');
+        }
+
+        setStatus('Photo downloaded. Open Instagram → Profile → Edit → Change Photo → Choose from Library.', false);
+      });
+    }
+
+    function handleSetProfileShare() {
+      if (!sourceImage) { return; }
+
+      generateProfilePicBlob().then(function (blob) {
+        var file = new File([blob], 'abdulified-profile-photo.png', { type: 'image/png' });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          navigator.share({
+            files: [file],
+            title: 'My Abdulified Profile Photo',
+            text: 'Set this as your profile picture!'
+          }).then(function () {
+            setStatus('Photo shared successfully.', false);
+          }).catch(function (err) {
+            if (err.name !== 'AbortError') {
+              setStatus('Share was cancelled or failed.', true);
+            }
+          });
+        } else {
+          triggerProfilePicDownload(blob);
+          setStatus('Photo downloaded. Share it from your device to set as profile picture.', false);
+        }
+      });
+    }
+
+    function updateProfilePicButtons() {
+      var ready = hasReadyCanvasImage();
+      setControlDisabled(setProfileFbButton, !ready);
+      setControlDisabled(setProfileIgButton, !ready);
+
+      if (setProfileShareButton) {
+        var hasShareApi = !!(navigator.share && navigator.canShare);
+        setControlDisabled(setProfileShareButton, !ready || !hasShareApi);
+        setProfileShareButton.style.display = hasShareApi ? '' : 'none';
+      }
+    }
+
+    function initProfilePicUi() {
+      if (setProfileFbButton) {
+        setProfileFbButton.addEventListener('click', handleSetProfileFacebook);
+      }
+      if (setProfileIgButton) {
+        setProfileIgButton.addEventListener('click', handleSetProfileInstagram);
+      }
+      if (setProfileShareButton) {
+        setProfileShareButton.addEventListener('click', handleSetProfileShare);
+      }
+      updateProfilePicButtons();
+    }
+
     function drawPlaceholder() {
       var colors = resolveColors();
       canvas.width = 1200;
@@ -817,13 +944,38 @@
     }
 
     function renderSourceImage() {
-      ctx.filter = 'contrast(1.05) saturate(1.04)';
-      if (!drawImageOptimized(sourceImage, 'contain')) {
-        ctx.filter = 'none';
+      var sourceWidth = sourceImage.naturalWidth || sourceImage.width;
+      var sourceHeight = sourceImage.naturalHeight || sourceImage.height;
+      var orientation = sourceImage.exifOrientation || 1;
+      var fitRect = computeFitRect(sourceWidth, sourceHeight, canvas.width, canvas.height, 'contain');
+
+      if (!fitRect) {
         return false;
       }
 
+      var swapDimensions = orientation >= 5 && orientation <= 8;
+      var scaledWidth = (swapDimensions ? fitRect.height : fitRect.width) * imageScale;
+      var scaledHeight = (swapDimensions ? fitRect.width : fitRect.height) * imageScale;
+      var cx = fitRect.x + (swapDimensions ? fitRect.height : fitRect.width) / 2 + imageOffsetX;
+      var cy = fitRect.y + (swapDimensions ? fitRect.width : fitRect.height) / 2 + imageOffsetY;
+
+      ctx.save();
+      ctx.filter = 'contrast(1.05) saturate(1.04)';
+      ctx.translate(cx, cy);
+
+      switch (orientation) {
+        case 2: ctx.scale(-1, 1); break;
+        case 3: ctx.rotate(Math.PI); break;
+        case 4: ctx.scale(1, -1); break;
+        case 5: ctx.scale(-1, 1); ctx.rotate(Math.PI / 2); break;
+        case 6: ctx.rotate(Math.PI / 2); break;
+        case 7: ctx.scale(1, -1); ctx.rotate(Math.PI / 2); break;
+        case 8: ctx.rotate(-Math.PI / 2); break;
+      }
+
+      ctx.drawImage(sourceImage, -(scaledWidth / 2), -(scaledHeight / 2), scaledWidth, scaledHeight);
       ctx.filter = 'none';
+      ctx.restore();
       return true;
     }
 
@@ -842,6 +994,7 @@
         setStatus('Could not read the selected image dimensions.', true);
         downloadButton.disabled = true;
         updateFacebookButtonState();
+        updateProfilePicButtons();
         return Promise.resolve();
       }
 
@@ -850,6 +1003,7 @@
         setStatus('Could not prepare the image for rendering.', true);
         downloadButton.disabled = true;
         updateFacebookButtonState();
+        updateProfilePicButtons();
         return Promise.resolve();
       }
 
@@ -866,6 +1020,7 @@
         setStatus('Could not render the selected image.', true);
         downloadButton.disabled = true;
         updateFacebookButtonState();
+        updateProfilePicButtons();
         return Promise.resolve();
       }
 
@@ -873,6 +1028,7 @@
         setStatus('Select an AFS-Social border, then apply.', true);
         downloadButton.disabled = true;
         updateFacebookButtonState();
+        updateProfilePicButtons();
         return Promise.resolve();
       }
 
@@ -909,7 +1065,8 @@
 
           downloadButton.disabled = false;
           updateFacebookButtonState();
-          setStatus('Border applied. Download is ready.', false);
+          updateProfilePicButtons();
+          setStatus('Border applied. Scroll to zoom, drag to reposition.', false);
         })
         .catch(function (error) {
           if (currentRender !== renderVersion) {
@@ -918,6 +1075,7 @@
 
           downloadButton.disabled = true;
           updateFacebookButtonState();
+          updateProfilePicButtons();
           setStatus(error.message || 'Could not apply selected border.', true);
         });
     }
@@ -942,8 +1100,10 @@
       loadImageFromFile(file)
         .then(function (image) {
           sourceImage = image;
+          resetImageTransform();
           applyButton.disabled = overlaySelect.disabled;
           downloadButton.disabled = true;
+          canvas.classList.add('am-canvas--interactive');
           return drawEffects();
         })
         .catch(function (error) {
@@ -977,6 +1137,178 @@
       setStatus('Download started.', false);
     }
 
+    function resetImageTransform() {
+      imageScale = 1;
+      imageOffsetX = 0;
+      imageOffsetY = 0;
+      updateZoomUi();
+    }
+
+    function updateZoomUi() {
+      if (zoomSlider) {
+        zoomSlider.value = String(imageScale);
+        zoomSlider.disabled = !sourceImage;
+      }
+      if (zoomValue) {
+        zoomValue.textContent = Math.round(imageScale * 100) + '%';
+      }
+      if (zoomReset) {
+        zoomReset.disabled = !sourceImage;
+      }
+    }
+
+    function canvasPointFromEvent(event) {
+      var rect = canvas.getBoundingClientRect();
+      var cssX = event.clientX - rect.left;
+      var cssY = event.clientY - rect.top;
+      return {
+        x: (cssX / rect.width) * canvas.width,
+        y: (cssY / rect.height) * canvas.height
+      };
+    }
+
+    function handleMouseDown(event) {
+      if (!sourceImage || event.button !== 0) { return; }
+      event.preventDefault();
+      isDragging = true;
+      dragStartX = event.clientX;
+      dragStartY = event.clientY;
+      dragStartOffsetX = imageOffsetX;
+      dragStartOffsetY = imageOffsetY;
+      canvas.classList.add('am-canvas--grabbing');
+    }
+
+    function handleMouseMove(event) {
+      if (!isDragging) { return; }
+      event.preventDefault();
+      var rect = canvas.getBoundingClientRect();
+      var scaleCSS = canvas.width / rect.width;
+      imageOffsetX = dragStartOffsetX + (event.clientX - dragStartX) * scaleCSS;
+      imageOffsetY = dragStartOffsetY + (event.clientY - dragStartY) * scaleCSS;
+      drawEffects();
+    }
+
+    function handleMouseUp() {
+      if (!isDragging) { return; }
+      isDragging = false;
+      canvas.classList.remove('am-canvas--grabbing');
+    }
+
+    function handleWheel(event) {
+      if (!sourceImage) { return; }
+      event.preventDefault();
+      var point = canvasPointFromEvent(event);
+      var delta = event.deltaY > 0 ? -0.1 : 0.1;
+      var prevScale = imageScale;
+      imageScale = Math.max(minScale, Math.min(maxScale, imageScale + delta));
+      var ratio = imageScale / prevScale;
+      imageOffsetX = point.x - ratio * (point.x - imageOffsetX);
+      imageOffsetY = point.y - ratio * (point.y - imageOffsetY);
+      updateZoomUi();
+      drawEffects();
+    }
+
+    function touchDistance(t1, t2) {
+      var dx = t1.clientX - t2.clientX;
+      var dy = t1.clientY - t2.clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function handleTouchStart(event) {
+      if (!sourceImage) { return; }
+      if (event.touches.length === 1) {
+        event.preventDefault();
+        isDragging = true;
+        dragStartX = event.touches[0].clientX;
+        dragStartY = event.touches[0].clientY;
+        dragStartOffsetX = imageOffsetX;
+        dragStartOffsetY = imageOffsetY;
+        canvas.classList.add('am-canvas--grabbing');
+      } else if (event.touches.length === 2) {
+        event.preventDefault();
+        isDragging = false;
+        lastTouchDist = touchDistance(event.touches[0], event.touches[1]);
+        lastTouchCenterX = (event.touches[0].clientX + event.touches[1].clientX) / 2;
+        lastTouchCenterY = (event.touches[0].clientY + event.touches[1].clientY) / 2;
+      }
+    }
+
+    function handleTouchMove(event) {
+      if (!sourceImage) { return; }
+      if (event.touches.length === 1 && isDragging) {
+        event.preventDefault();
+        var rect = canvas.getBoundingClientRect();
+        var scaleCSS = canvas.width / rect.width;
+        imageOffsetX = dragStartOffsetX + (event.touches[0].clientX - dragStartX) * scaleCSS;
+        imageOffsetY = dragStartOffsetY + (event.touches[0].clientY - dragStartY) * scaleCSS;
+        drawEffects();
+      } else if (event.touches.length === 2) {
+        event.preventDefault();
+        var dist = touchDistance(event.touches[0], event.touches[1]);
+        var centerX = (event.touches[0].clientX + event.touches[1].clientX) / 2;
+        var centerY = (event.touches[0].clientY + event.touches[1].clientY) / 2;
+        var rectP = canvas.getBoundingClientRect();
+        var scaleCSSP = canvas.width / rectP.width;
+        var prevScale = imageScale;
+        imageScale = Math.max(minScale, Math.min(maxScale, imageScale * (dist / lastTouchDist)));
+        var canvasX = ((centerX - rectP.left) / rectP.width) * canvas.width;
+        var canvasY = ((centerY - rectP.top) / rectP.height) * canvas.height;
+        var ratio = imageScale / prevScale;
+        imageOffsetX = canvasX - ratio * (canvasX - imageOffsetX);
+        imageOffsetY = canvasY - ratio * (canvasY - imageOffsetY);
+        imageOffsetX += (centerX - lastTouchCenterX) * scaleCSSP;
+        imageOffsetY += (centerY - lastTouchCenterY) * scaleCSSP;
+        lastTouchDist = dist;
+        lastTouchCenterX = centerX;
+        lastTouchCenterY = centerY;
+        updateZoomUi();
+        drawEffects();
+      }
+    }
+
+    function handleTouchEnd(event) {
+      if (event.touches.length === 0) {
+        isDragging = false;
+        canvas.classList.remove('am-canvas--grabbing');
+      } else if (event.touches.length === 1) {
+        isDragging = true;
+        dragStartX = event.touches[0].clientX;
+        dragStartY = event.touches[0].clientY;
+        dragStartOffsetX = imageOffsetX;
+        dragStartOffsetY = imageOffsetY;
+      }
+    }
+
+    canvas.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    canvas.addEventListener('wheel', handleWheel, { passive: false });
+    canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    canvas.addEventListener('touchend', handleTouchEnd);
+
+    if (zoomSlider) {
+      zoomSlider.addEventListener('input', function () {
+        if (!sourceImage) { return; }
+        var prevScale = imageScale;
+        imageScale = Math.max(minScale, Math.min(maxScale, parseFloat(zoomSlider.value) || 1));
+        var canvasCX = canvas.width / 2;
+        var canvasCY = canvas.height / 2;
+        var ratio = imageScale / prevScale;
+        imageOffsetX = canvasCX - ratio * (canvasCX - imageOffsetX);
+        imageOffsetY = canvasCY - ratio * (canvasCY - imageOffsetY);
+        updateZoomUi();
+        drawEffects();
+      });
+    }
+
+    if (zoomReset) {
+      zoomReset.addEventListener('click', function () {
+        resetImageTransform();
+        if (sourceImage) { drawEffects(); }
+      });
+    }
+
     input.addEventListener('change', handleFileSelect);
     applyButton.addEventListener('click', drawEffects);
     downloadButton.addEventListener('click', handleDownload);
@@ -989,6 +1321,7 @@
       }
     });
     initFacebookUi();
+    initProfilePicUi();
 
     function addDropZone(element, dragoverClass) {
       element.addEventListener('dragenter', function (event) {
@@ -1026,6 +1359,7 @@
 
     populateOverlaySelect();
     applyButton.disabled = overlaySelect.disabled;
+    updateZoomUi();
 
     if (overlaySelect.disabled) {
       drawPlaceholder();
@@ -1034,6 +1368,7 @@
       drawOverlayPreview();
     }
     updateFacebookButtonState();
+    updateProfilePicButtons();
   }
 
   function init() {
