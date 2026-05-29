@@ -19,14 +19,71 @@ body {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Floating button bar                                               */
+/*  Floating shell, launcher, and panel                               */
 /* ------------------------------------------------------------------ */
 
-.site-translator-bar {
+.site-translator-shell {
     position: fixed;
     bottom: 20px;
     right: 20px;
     z-index: 99999;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.site-translator-toggle {
+    all: unset;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+    background: #0073aa;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.22);
+    white-space: nowrap;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.site-translator-toggle:hover {
+    background: #005f8b;
+}
+
+.site-translator-toggle:active {
+    transform: scale(0.96);
+}
+
+.site-translator-toggle:focus-visible,
+.site-translator-quick-reset:focus-visible {
+    outline: 2px solid #111;
+    outline-offset: 2px;
+}
+
+.site-translator-quick-reset {
+    all: unset;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    color: #333;
+    background: #fff;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.22);
+    cursor: pointer;
+}
+
+.site-translator-bar {
+    position: absolute;
+    right: 0;
+    bottom: 48px;
     display: flex;
     gap: 6px;
     padding: 6px;
@@ -34,7 +91,18 @@ body {
     border-radius: 28px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    transition: right 0.3s ease, left 0.3s ease;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(8px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.site-translator-shell--open .site-translator-bar {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
 }
 
 /* ------------------------------------------------------------------ */
@@ -81,17 +149,15 @@ body {
     background: #005f8b;
 }
 
-/* Reset (✕) button */
+/* Reset button */
 .site-translator-btn--reset {
-    padding: 8px 12px;
-    font-size: 16px;
-    color: #888;
-    background: transparent;
+    color: #fff;
+    background: #444;
 }
 
 .site-translator-btn--reset:hover {
-    color: #c0392b;
-    background: #fdecea;
+    color: #fff;
+    background: #222;
 }
 
 /* ------------------------------------------------------------------ */
@@ -99,6 +165,11 @@ body {
 /* ------------------------------------------------------------------ */
 
 .site-translator-rtl .site-translator-bar {
+    right: auto;
+    left: 0;
+}
+
+.site-translator-rtl .site-translator-shell {
     right: auto;
     left: 20px;
 }
@@ -108,13 +179,18 @@ body {
 /* ------------------------------------------------------------------ */
 
 @media (max-width: 400px) {
-    .site-translator-bar {
-        flex-direction: column;
+    .site-translator-shell {
         bottom: 12px;
         right: 12px;
     }
 
-    .site-translator-rtl .site-translator-bar {
+    .site-translator-bar {
+        right: 0;
+        bottom: 44px;
+        flex-direction: column;
+    }
+
+    .site-translator-rtl .site-translator-shell {
         right: auto;
         left: 12px;
     }

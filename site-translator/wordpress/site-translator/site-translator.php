@@ -49,22 +49,11 @@ class Site_Translator_Plugin {
     }
 
     /**
-     * Output the hidden Google Translate Element container and load Google's script.
+     * Output the hidden Google Translate Element container.
      */
     public function render_translate_widget() {
         ?>
         <div id="site-translator-google" style="display:none;"></div>
-        <script>
-            function googleTranslateElementInit() {
-                new google.translate.TranslateElement({
-                    pageLanguage: 'en',
-                    includedLanguages: 'es,ar',
-                    autoDisplay: false,
-                    layout: google.translate.TranslateElement.InlineLayout.SIMPLE
-                }, 'site-translator-google');
-            }
-        </script>
-        <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
         <?php
     }
 }
