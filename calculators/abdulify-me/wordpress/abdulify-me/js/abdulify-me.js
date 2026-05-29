@@ -174,15 +174,13 @@
     var previewPanel = widget.querySelector('.am-preview-panel');
     var canvas = widget.querySelector('[data-am-canvas]');
     var overlaySelect = widget.querySelector('[data-am-overlay-select]');
-    var applyButton = widget.querySelector('[data-am-apply]');
     var downloadButton = widget.querySelector('[data-am-download]');
-    var facebookAvatarButton = widget.querySelector('[data-am-fb-avatar]');
     var setProfileFbButton = widget.querySelector('[data-am-set-profile-fb]');
     var setProfileIgButton = widget.querySelector('[data-am-set-profile-ig]');
     var setProfileShareButton = widget.querySelector('[data-am-set-profile-share]');
     var status = widget.querySelector('[data-am-status]');
 
-    if (!input || !canvas || !overlaySelect || !applyButton || !downloadButton || !status) {
+    if (!input || !canvas || !overlaySelect || !downloadButton || !status) {
       return;
     }
 
@@ -206,18 +204,6 @@
     var lastTouchCenterX = 0;
     var lastTouchCenterY = 0;
     var config = window.abdulifyMeConfig || {};
-    var actions = config.actions && typeof config.actions === 'object' ? config.actions : {};
-    var facebook = config.facebook && typeof config.facebook === 'object' ? config.facebook : {};
-    var isFacebookEnabled = !!(facebook.enabled && facebook.appId);
-    var facebookGraphVersion = String(facebook.graphVersion || 'v25.0');
-    var facebookPermissions = String(facebook.permissions || 'pages_show_list,pages_read_engagement,pages_manage_metadata');
-    var facebookUserToken = '';
-    var facebookPageToken = '';
-    var facebookPageId = '';
-    var facebookAuthStateKey = 'abdulifyMeFacebookAuthState';
-    var facebookTokenStorageKey = 'abdulifyMeFacebookUserToken';
-    var facebookPagesStorageKey = 'abdulifyMeFacebookPages';
-    var isUploadingFacebookAvatar = false;
     var configColors = config.colors && typeof config.colors === 'object' ? config.colors : {};
     var maxBytes = Number(config.maxBytes || 8 * 1024 * 1024);
     var availableOverlays = Array.isArray(config.overlays) ? config.overlays : [];
@@ -370,332 +356,6 @@
       return !!sourceImage;
     }
 
-    function updateFacebookButtonState() {
-      var canUpload = isFacebookEnabled && hasReadyCanvasImage() && !!facebookUserToken && !isUploadingFacebookAvatar;
-      setControlDisabled(facebookAvatarButton, !canUpload);
-    }
-
-    function clearFacebookAuthState() {
-      try {
-        window.localStorage.removeItem(facebookAuthStateKey);
-      } catch (e) {
-        // Ignore storage errors in restricted browser contexts.
-      }
-    }
-
-    function readFacebookAuthState() {
-      try {
-        return window.localStorage.getItem(facebookAuthStateKey) || '';
-      } catch (e) {
-        return '';
-      }
-    }
-
-    function writeFacebookAuthState(value) {
-      try {
-        window.localStorage.setItem(facebookAuthStateKey, value);
-      } catch (e) {
-        // Ignore storage errors in restricted browser contexts.
-      }
-    }
-
-    function storeFacebookUserToken(value) {
-      facebookUserToken = value || '';
-
-      try {
-        if (facebookUserToken) {
-          window.sessionStorage.setItem(facebookTokenStorageKey, facebookUserToken);
-        } else {
-          window.sessionStorage.removeItem(facebookTokenStorageKey);
-        }
-      } catch (e) {
-        // Ignore storage errors in restricted browser contexts.
-      }
-    }
-
-    function readStoredFacebookUserToken() {
-      try {
-        return window.sessionStorage.getItem(facebookTokenStorageKey) || '';
-      } catch (e) {
-        return '';
-      }
-    }
-
-    function storeFacebookPages(pages) {
-      try {
-        window.sessionStorage.setItem(facebookPagesStorageKey, JSON.stringify(pages || []));
-      } catch (e) {
-        // Ignore storage errors in restricted browser contexts.
-      }
-    }
-
-    function readStoredFacebookPages() {
-      try {
-        var raw = window.sessionStorage.getItem(facebookPagesStorageKey);
-        if (!raw) {
-          return [];
-        }
-
-        var parsed = JSON.parse(raw);
-        return Array.isArray(parsed) ? parsed : [];
-      } catch (e) {
-        return [];
-      }
-    }
-
-    function parseFragmentParams(hash) {
-      var result = {};
-      var raw = typeof hash === 'string' ? hash : '';
-      var trimmed = raw.replace(/^#/, '');
-      var entries;
-      var i;
-      var keyValue;
-
-      if (!trimmed) {
-        return result;
-      }
-
-      entries = trimmed.split('&');
-      for (i = 0; i < entries.length; i += 1) {
-        if (!entries[i]) {
-          continue;
-        }
-
-        keyValue = entries[i].split('=');
-        result[decodeURIComponent(keyValue[0] || '')] = decodeURIComponent(keyValue[1] || '');
-      }
-
-      return result;
-    }
-
-    function randomState() {
-      return 'amfb_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
-    }
-
-    function getRedirectUrl() {
-      return window.location.origin + window.location.pathname + window.location.search;
-    }
-
-    function buildFacebookLoginUrl(state) {
-      var params = new URLSearchParams({
-        client_id: String(facebook.appId),
-        redirect_uri: getRedirectUrl(),
-        response_type: 'token',
-        scope: facebookPermissions,
-        state: state
-      });
-
-      return 'https://www.facebook.com/' + facebookGraphVersion + '/dialog/oauth?' + params.toString();
-    }
-
-    function clearFacebookHashFromUrl() {
-      if (window.history && typeof window.history.replaceState === 'function') {
-        window.history.replaceState(null, document.title, getRedirectUrl());
-      }
-    }
-
-    function loadFacebookPagesFromGraph(userToken) {
-      var accountsUrl;
-
-      if (!userToken) {
-        return Promise.resolve([]);
-      }
-
-      accountsUrl = 'https://graph.facebook.com/' + facebookGraphVersion + '/me/accounts?fields=id,name,access_token,tasks&access_token=' + encodeURIComponent(userToken);
-
-      return fetch(accountsUrl)
-        .then(function (response) {
-          return response.json().then(function (json) {
-            if (!response.ok) {
-              throw new Error((json && json.error && json.error.message) || 'Could not read Facebook Pages.');
-            }
-
-            return json;
-          });
-        })
-        .then(function (json) {
-          var pages = Array.isArray(json.data) ? json.data : [];
-          var manageable = pages.filter(function (page) {
-            return page && page.id && page.name && page.access_token;
-          });
-
-          storeFacebookPages(manageable);
-          return manageable;
-        });
-    }
-
-    function hydrateFacebookFromHash() {
-      var params = parseFragmentParams(window.location.hash || '');
-      var expectedState = readFacebookAuthState();
-      var token = params.access_token || '';
-      var returnedState = params.state || '';
-
-      if (!token) {
-        return false;
-      }
-
-      if (!expectedState || returnedState !== expectedState) {
-        clearFacebookAuthState();
-        clearFacebookHashFromUrl();
-        setStatus('Facebook login state mismatch. Please connect again.', true);
-        return false;
-      }
-
-      clearFacebookAuthState();
-      clearFacebookHashFromUrl();
-      storeFacebookUserToken(token);
-      return true;
-    }
-
-    function redirectToFacebookLogin() {
-      var state;
-
-      if (!isFacebookEnabled) {
-        setStatus('Facebook is not configured for this site.', true);
-        return;
-      }
-
-      state = randomState();
-      writeFacebookAuthState(state);
-      window.location.assign(buildFacebookLoginUrl(state));
-    }
-
-    function selectFirstManageablePage(pages) {
-      if (!Array.isArray(pages) || !pages.length) {
-        return null;
-      }
-
-      for (var i = 0; i < pages.length; i += 1) {
-        var page = pages[i];
-        if (page && page.id && page.access_token && page.tasks) {
-          var hasManageTask = Array.isArray(page.tasks) && page.tasks.indexOf('MANAGE') !== -1;
-          if (hasManageTask) {
-            return page;
-          }
-        }
-      }
-
-      return pages[0] || null;
-    }
-
-    function loadPagesAndUpload() {
-      if (!facebookUserToken) {
-        setStatus('No Facebook authorization found. Please connect first.', true);
-        updateFacebookButtonState();
-        return;
-      }
-
-      loadFacebookPagesFromGraph(facebookUserToken)
-        .then(function (pages) {
-          var selectedPage = selectFirstManageablePage(pages);
-          if (!selectedPage) {
-            throw new Error('No manageable Facebook Pages found. Please ensure your account has at least one page to manage.');
-          }
-
-          facebookPageId = selectedPage.id || '';
-          facebookPageToken = selectedPage.access_token || '';
-          return uploadImageToFacebook();
-        })
-        .catch(function (error) {
-          setStatus(error.message || 'Could not complete Facebook upload.', true);
-          isUploadingFacebookAvatar = false;
-          updateFacebookButtonState();
-        });
-    }
-
-    function handleFacebookAvatarClick() {
-      if (!isFacebookEnabled || !hasReadyCanvasImage()) {
-        return;
-      }
-
-      if (!facebookUserToken) {
-        redirectToFacebookLogin();
-        return;
-      }
-
-      loadPagesAndUpload();
-    }
-
-    function uploadImageToFacebook() {
-      var imageData;
-      var payload;
-      var effectsData;
-
-      if (!facebookPageId || !facebookPageToken) {
-        throw new Error('Page information not available. Please try again.');
-      }
-
-      if (!config.ajaxUrl || !actions.setFacebookAvatar || !config.facebookAvatarNonce) {
-        throw new Error('Facebook upload endpoint is not configured.');
-      }
-
-      imageData = canvas.toDataURL('image/png');
-      isUploadingFacebookAvatar = true;
-      updateFacebookButtonState();
-      setStatus('Uploading image to Facebook...', false);
-
-      effectsData = {
-        overlay: selectedOverlayId || ''
-      };
-
-      payload = new URLSearchParams();
-      payload.set('action', actions.setFacebookAvatar);
-      payload.set('nonce', String(config.facebookAvatarNonce));
-      payload.set('pageId', facebookPageId);
-      payload.set('pageAccessToken', facebookPageToken);
-      payload.set('imageData', imageData);
-      payload.set('effectsUsed', JSON.stringify(effectsData));
-
-      return fetch(String(config.ajaxUrl), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-        },
-        body: payload.toString()
-      })
-        .then(function (response) {
-          return response.json().then(function (json) {
-            if (!response.ok || !json || !json.success) {
-              throw new Error((json && json.data && json.data.message) || 'Facebook avatar update failed.');
-            }
-            return json;
-          });
-        })
-        .then(function (json) {
-          setStatus((json.data && json.data.message) || 'Facebook Page avatar updated.', false);
-        })
-        .catch(function (error) {
-          setStatus(error.message || 'Facebook avatar update failed.', true);
-          throw error;
-        })
-        .finally(function () {
-          isUploadingFacebookAvatar = false;
-          updateFacebookButtonState();
-        });
-    }
-
-    function initFacebookUi() {
-      var fromHash;
-
-      if (!facebookAvatarButton) {
-        return;
-      }
-
-      if (!isFacebookEnabled) {
-        setControlDisabled(facebookAvatarButton, true);
-        facebookAvatarButton.title = 'Facebook App ID must be configured in WordPress settings.';
-        return;
-      }
-
-      fromHash = hydrateFacebookFromHash();
-      if (!fromHash) {
-        storeFacebookUserToken(readStoredFacebookUserToken());
-      }
-
-      facebookAvatarButton.addEventListener('click', handleFacebookAvatarClick);
-      updateFacebookButtonState();
-    }
-
     function generateProfilePicBlob() {
       var profileSize = 720;
       var profileCanvas = document.createElement('canvas');
@@ -733,8 +393,8 @@
 
       generateProfilePicBlob().then(function (blob) {
         triggerProfilePicDownload(blob);
-        window.open('https://www.facebook.com/profile/picture/edit/', '_blank', 'noopener');
-        setStatus('Photo downloaded. Upload it on the Facebook tab that just opened.', false);
+        window.open('https://www.facebook.com/profile', '_blank', 'noopener');
+        setStatus('Photo downloaded. On the Facebook tab, click your profile picture to change it.', false);
       });
     }
 
@@ -747,6 +407,8 @@
         var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         if (isMobile) {
           window.open('instagram://app', '_blank', 'noopener');
+        } else {
+          window.open('https://www.instagram.com/', '_blank', 'noopener');
         }
 
         setStatus('Photo downloaded. Open Instagram → Profile → Edit → Change Photo → Choose from Library.', false);
@@ -993,7 +655,6 @@
       if (!isFinitePositive(sourceWidth) || !isFinitePositive(sourceHeight)) {
         setStatus('Could not read the selected image dimensions.', true);
         downloadButton.disabled = true;
-        updateFacebookButtonState();
         updateProfilePicButtons();
         return Promise.resolve();
       }
@@ -1002,7 +663,6 @@
       if (!baseRenderSize) {
         setStatus('Could not prepare the image for rendering.', true);
         downloadButton.disabled = true;
-        updateFacebookButtonState();
         updateProfilePicButtons();
         return Promise.resolve();
       }
@@ -1019,15 +679,13 @@
       if (!renderSourceImage()) {
         setStatus('Could not render the selected image.', true);
         downloadButton.disabled = true;
-        updateFacebookButtonState();
         updateProfilePicButtons();
         return Promise.resolve();
       }
 
       if (!selectedOverlay) {
-        setStatus('Select an AFS-Social border, then apply.', true);
+        setStatus('Select an AFS-Social border to continue.', true);
         downloadButton.disabled = true;
-        updateFacebookButtonState();
         updateProfilePicButtons();
         return Promise.resolve();
       }
@@ -1064,7 +722,6 @@
           }
 
           downloadButton.disabled = false;
-          updateFacebookButtonState();
           updateProfilePicButtons();
           setStatus('Border applied. Scroll to zoom, drag to reposition.', false);
         })
@@ -1074,7 +731,6 @@
           }
 
           downloadButton.disabled = true;
-          updateFacebookButtonState();
           updateProfilePicButtons();
           setStatus(error.message || 'Could not apply selected border.', true);
         });
@@ -1101,7 +757,6 @@
         .then(function (image) {
           sourceImage = image;
           resetImageTransform();
-          applyButton.disabled = overlaySelect.disabled;
           downloadButton.disabled = true;
           canvas.classList.add('am-canvas--interactive');
           return drawEffects();
@@ -1310,7 +965,6 @@
     }
 
     input.addEventListener('change', handleFileSelect);
-    applyButton.addEventListener('click', drawEffects);
     downloadButton.addEventListener('click', handleDownload);
     overlaySelect.addEventListener('change', function () {
       selectedOverlayId = (overlaySelect.value || '').trim();
@@ -1320,7 +974,6 @@
         drawOverlayPreview();
       }
     });
-    initFacebookUi();
     initProfilePicUi();
 
     function addDropZone(element, dragoverClass) {
@@ -1358,7 +1011,6 @@
     }
 
     populateOverlaySelect();
-    applyButton.disabled = overlaySelect.disabled;
     updateZoomUi();
 
     if (overlaySelect.disabled) {
@@ -1367,7 +1019,6 @@
     } else {
       drawOverlayPreview();
     }
-    updateFacebookButtonState();
     updateProfilePicButtons();
   }
 

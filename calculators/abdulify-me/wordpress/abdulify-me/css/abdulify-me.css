@@ -206,44 +206,6 @@
   color: var(--am-status-info);
 }
 
-.am-facebook {
-  margin-top: 12px;
-  display: flex;
-  justify-content: flex-start;
-}
-
-.am-facebook-avatar {
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border-radius: 8px;
-  background: #1877f2;
-  color: #ffffff;
-  font-weight: 700;
-  font-size: 22px;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #1877f2;
-  cursor: pointer;
-  transition: background 200ms, border-color 200ms;
-}
-
-.am-facebook-avatar:hover:not(:disabled) {
-  background: #165ac2;
-  border-color: #165ac2;
-}
-
-.am-facebook-avatar:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.am-facebook-icon {
-  display: inline-block;
-}
-
 .am-set-profile {
   margin-top: 14px;
 }

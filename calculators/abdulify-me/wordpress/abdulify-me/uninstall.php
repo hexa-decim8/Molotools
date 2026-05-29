@@ -24,7 +24,6 @@ $wpdb->query(
 );
 
 // Delete user-facing settings
-delete_option( 'abdulify_me_facebook_app_id' );
 delete_option( 'am_auto_update_enabled' );
 
 // Delete internal tracking options
