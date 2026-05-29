@@ -10,8 +10,6 @@
     'use strict';
 
     var widgetReady = false;
-    var pendingLang = '';
-    var maxWidgetLookupAttempts = 8;
     var languagePreferenceKey = 'siteTranslatorPreferredLanguage';
     var ui = {
         shell: null,
@@ -244,27 +242,6 @@
         document.cookie = 'googtrans=' + value + '; path=/; domain=' + window.location.hostname;
     }
 
-    function triggerChange(select) {
-        try {
-            select.dispatchEvent(new Event('change', { bubbles: true }));
-        } catch (e) {
-            var legacyEvent = document.createEvent('HTMLEvents');
-            legacyEvent.initEvent('change', true, false);
-            select.dispatchEvent(legacyEvent);
-        }
-    }
-
-    function getTranslateSelect() {
-        var container = document.getElementById('site-translator-google');
-        if (container) {
-            var inContainer = container.querySelector('select.goog-te-combo');
-            if (inContainer) {
-                return inContainer;
-            }
-        }
-        return document.querySelector('select.goog-te-combo');
-    }
-
     function ensureGoogleScriptLoaded() {
         if (document.querySelector('script[data-site-translator-google]')) {
             return;
@@ -304,12 +281,6 @@
                     'site-translator-google'
                 );
                 widgetReady = true;
-
-                if (pendingLang) {
-                    var lang = pendingLang;
-                    pendingLang = '';
-                    setLanguage(lang);
-                }
             }
         };
 
@@ -321,71 +292,23 @@
     /* ------------------------------------------------------------------ */
 
     /**
-     * Set the Google Translate widget to the given language code.
-     * Works by finding the injected <select> inside the hidden widget div
-     * and programmatically changing its value + dispatching a change event.
+     * Set the active language by writing the googtrans cookie and reloading the
+     * page.  Google Translate auto-applies the cookie on the fresh load so the
+     * whole page is translated cleanly without any in-page DOM juggling.
      */
-    function setLanguage(langCode, attempt, options) {
-        var config = options || {};
-        var shouldPersist = config.persist !== false;
-        var currentAttempt = typeof attempt === 'number' ? attempt : 0;
-        var select = getTranslateSelect();
-
-        if (!select) {
-            if (!widgetReady) {
-                pendingLang = langCode;
-                initGoogleWidget();
-            }
-
-            if (currentAttempt < maxWidgetLookupAttempts) {
-                window.setTimeout(function () {
-                    setLanguage(langCode, currentAttempt + 1);
-                }, 250);
-                return;
-            }
-
-            // Fallback: persist target language and keep UI state without reloading.
-            setTranslateCookie(langCode);
-            if (shouldPersist) {
-                savePreferredLanguage(langCode);
-            }
-            updateUI(langCode);
-            setPanelOpen(false);
-            return;
-        }
-
-        select.value = langCode;
-        triggerChange(select);
+    function setLanguage(langCode) {
         setTranslateCookie(langCode);
-        if (shouldPersist) {
-            savePreferredLanguage(langCode);
-        }
-        updateUI(langCode);
-        setPanelOpen(false);
+        savePreferredLanguage(langCode);
+        window.location.reload();
     }
 
     /**
-     * Reset translation back to the original page language.
+     * Reset translation back to the original page language via a full reload.
      */
     function resetTranslation() {
         deleteCookie('googtrans');
         clearPreferredLanguage();
-
-        /* Trigger the widget to revert by selecting the original language. */
-        var select = getTranslateSelect();
-        if (select) {
-            select.value = 'en';
-            triggerChange(select);
-        }
-
-        /* Also remove the Google Translate iframe/banner that may linger. */
-        var frame = document.querySelector('.skiptranslate iframe');
-        if (frame) {
-            frame.parentNode.style.display = 'none';
-        }
-
-        updateUI('');
-        setPanelOpen(false);
+        window.location.reload();
     }
 
     /* ------------------------------------------------------------------ */
@@ -525,13 +448,9 @@
         /* Restore state from saved preference first, then cookie fallback. */
         var active = getPreferredLanguage() || getActiveLanguage();
         if (active) {
+            /* Cookie is already set; Google Translate widget will auto-apply it. */
             initGoogleWidget();
-            setTranslateCookie(active);
             updateUI(active);
-            setLanguage(active, 0, {
-                persist: false,
-                allowReloadFallback: false
-            });
         }
     }
 
