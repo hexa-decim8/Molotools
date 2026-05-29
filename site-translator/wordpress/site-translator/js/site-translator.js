@@ -20,6 +20,27 @@
         quickReset: null,
         reset: null
     };
+    var conflictObserver = null;
+
+    var defaultConflictSelectors = [
+        '[data-site-translator-conflict]',
+        '.donate-takeover',
+        '.takeover',
+        '.popup',
+        '.modal',
+        '.elementor-popup-modal',
+        '.pum-container',
+        '.pum-overlay',
+        '[aria-modal="true"]'
+    ];
+
+    function getConflictSelectors() {
+        var config = window.siteTranslatorConfig || {};
+        if (Array.isArray(config.conflictSelectors) && config.conflictSelectors.length) {
+            return config.conflictSelectors;
+        }
+        return defaultConflictSelectors;
+    }
 
     /* ------------------------------------------------------------------ */
     /*  Helpers                                                           */
@@ -90,9 +111,93 @@
             return;
         }
 
+        if (open && ui.shell.classList.contains('site-translator-shell--suspended')) {
+            return;
+        }
+
         ui.shell.classList.toggle('site-translator-shell--open', open);
         ui.panel.setAttribute('aria-hidden', open ? 'false' : 'true');
         ui.toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    function isVisibleElement(el) {
+        if (!el || !el.ownerDocument || !el.ownerDocument.documentElement.contains(el)) {
+            return false;
+        }
+
+        var style = window.getComputedStyle(el);
+        if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity || '1') <= 0) {
+            return false;
+        }
+
+        var rect = el.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0;
+    }
+
+    function looksLikeDonateTakeover(el) {
+        var text = (el.textContent || '').toLowerCase();
+        if (text.indexOf('donate now') === -1) {
+            return false;
+        }
+        return text.indexOf('close') !== -1 || text.indexOf('oligarch') !== -1;
+    }
+
+    function hasConflictUI() {
+        var selectors = getConflictSelectors();
+
+        for (var s = 0; s < selectors.length; s++) {
+            var nodes = document.querySelectorAll(selectors[s]);
+            for (var i = 0; i < nodes.length; i++) {
+                if (!isVisibleElement(nodes[i])) {
+                    continue;
+                }
+
+                if (looksLikeDonateTakeover(nodes[i])) {
+                    return true;
+                }
+
+                // Any visible modal/popup should temporarily suspend translator UI.
+                if (selectors[s] === '[aria-modal="true"]' || selectors[s] === '.elementor-popup-modal' || selectors[s] === '.pum-container' || selectors[s] === '.pum-overlay') {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    function syncSuspendedState() {
+        if (!ui.shell) {
+            return;
+        }
+
+        var suspended = hasConflictUI();
+        ui.shell.classList.toggle('site-translator-shell--suspended', suspended);
+        if (suspended) {
+            setPanelOpen(false);
+        }
+    }
+
+    function bindConflictObserver() {
+        syncSuspendedState();
+
+        if (conflictObserver) {
+            return;
+        }
+
+        conflictObserver = new MutationObserver(function () {
+            syncSuspendedState();
+        });
+
+        conflictObserver.observe(document.documentElement, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['class', 'style', 'aria-hidden']
+        });
+
+        window.addEventListener('scroll', syncSuspendedState, { passive: true });
+        window.addEventListener('resize', syncSuspendedState);
     }
 
     function setTranslateCookie(langCode) {
@@ -185,7 +290,6 @@
     function setLanguage(langCode, attempt, options) {
         var config = options || {};
         var shouldPersist = config.persist !== false;
-        var allowReloadFallback = config.allowReloadFallback !== false;
         var currentAttempt = typeof attempt === 'number' ? attempt : 0;
         var select = getTranslateSelect();
 
@@ -202,15 +306,13 @@
                 return;
             }
 
-            // Fallback: persist target language and reload so Google applies on next render.
+            // Fallback: persist target language and keep UI state without reloading.
             setTranslateCookie(langCode);
             if (shouldPersist) {
                 savePreferredLanguage(langCode);
             }
             updateUI(langCode);
-            if (allowReloadFallback) {
-                window.location.reload();
-            }
+            setPanelOpen(false);
             return;
         }
 
@@ -245,9 +347,7 @@
         }
 
         updateUI('');
-        window.setTimeout(function () {
-            window.location.reload();
-        }, 20);
+        setPanelOpen(false);
     }
 
     /* ------------------------------------------------------------------ */
@@ -383,6 +483,7 @@
     function init() {
         buildBar();
         initGoogleWidget();
+        bindConflictObserver();
 
         /* Restore state from saved preference first, then cookie fallback. */
         var active = getPreferredLanguage() || getActiveLanguage();
