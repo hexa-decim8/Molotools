@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Site Translator
  * Plugin URI:  https://github.com/hexa-decim8/Molotools
- * Description: Adds floating translate buttons to translate the entire site into Spanish or Arabic using Google Translate. Includes RTL support for Arabic.
+ * Description: Adds floating translate buttons to translate the entire site into Spanish, Arabic, or Banga using Google Translate. Includes RTL support for Arabic.
  * Version:     0.1.1
  * Author:      Molotools
  * License:     GPL v2 or later

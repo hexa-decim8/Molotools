@@ -1,11 +1,11 @@
 # Site Translator
 
-A lightweight WordPress plugin that adds floating translate buttons to translate the entire site into **Spanish** or **Arabic** using the free Google Translate Element widget. No API key required.
+A lightweight WordPress plugin that adds floating translate buttons to translate the entire site into **Spanish**, **Arabic**, or **Banga** using the free Google Translate Element widget. No API key required.
 
 ## Features
 
 - **Floating button bar** — fixed in the bottom-right corner on every page
-- **Two languages** — Español and العربية
+- **Three languages** — Español, العربية, and বাংলা
 - **RTL support** — automatically flips page direction to right-to-left when Arabic is active
 - **Persistent** — translation survives page navigation via the `googtrans` cookie
 - **Zero configuration** — activate the plugin and it works immediately

@@ -1,8 +1,8 @@
 /**
- * Site Translator – Floating translate buttons for Spanish / Arabic.
+ * Site Translator – Floating translate buttons for Spanish / Arabic / Banga.
  *
  * Relies on Google Translate Element being loaded via the footer snippet.
- * Hides the default Google UI and exposes two language buttons + a reset button.
+ * Hides the default Google UI and exposes three language buttons + a reset button.
  *
  * @license GPL-2.0-or-later
  */
@@ -256,7 +256,7 @@
                 new window.google.translate.TranslateElement(
                     {
                         pageLanguage: 'en',
-                        includedLanguages: 'es,ar',
+                        includedLanguages: 'es,ar,bn',
                         autoDisplay: false,
                         layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE
                     },
@@ -359,7 +359,8 @@
 
         var langs = [
             { code: 'es', label: 'Español' },
-            { code: 'ar', label: 'العربية' }
+            { code: 'ar', label: 'العربية' },
+            { code: 'bn', label: 'বাংলা' }
         ];
 
         for (var i = 0; i < langs.length; i++) {
