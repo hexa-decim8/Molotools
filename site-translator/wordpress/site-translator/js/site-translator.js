@@ -23,22 +23,9 @@
     var conflictSyncIntervalMs = 300;
 
     var defaultConflictSelectors = [
-        '[data-site-translator-conflict]',
-        '.donate-takeover',
-        '.takeover',
-        '.popup',
-        '.modal',
-        '.elementor-popup-modal',
-        '.pum-container',
-        '.pum-overlay',
-        '[aria-modal="true"]'
+        '[data-site-translator-conflict]'
     ];
-    var modalConflictSelectors = [
-        '.elementor-popup-modal',
-        '.pum-container',
-        '.pum-overlay',
-        '[aria-modal="true"]'
-    ];
+    var modalConflictSelectors = [];
     var maxConflictNodesPerSelector = 8;
 
     function getConflictSelectors() {
@@ -47,6 +34,11 @@
             return config.conflictSelectors;
         }
         return defaultConflictSelectors;
+    }
+
+    function hasCustomConflictSelectors() {
+        var config = window.siteTranslatorConfig || {};
+        return Array.isArray(config.conflictSelectors) && config.conflictSelectors.length;
     }
 
     /* ------------------------------------------------------------------ */
@@ -141,25 +133,9 @@
         return rect.width > 0 && rect.height > 0;
     }
 
-    function looksLikeDonateTakeover(el) {
-        var text = (el.textContent || '').toLowerCase();
-        if (text.indexOf('donate now') === -1) {
-            return false;
-        }
-        return text.indexOf('close') !== -1 || text.indexOf('oligarch') !== -1;
-    }
-
     function hasConflictUI() {
-        for (var m = 0; m < modalConflictSelectors.length; m++) {
-            var modalNodes = document.querySelectorAll(modalConflictSelectors[m]);
-            for (var j = 0; j < modalNodes.length && j < maxConflictNodesPerSelector; j++) {
-                if (isVisibleElement(modalNodes[j])) {
-                    return true;
-                }
-            }
-        }
-
         var selectors = getConflictSelectors();
+        var useCustomSelectors = hasCustomConflictSelectors();
 
         for (var s = 0; s < selectors.length; s++) {
             if (modalConflictSelectors.indexOf(selectors[s]) !== -1) {
@@ -172,7 +148,13 @@
                     continue;
                 }
 
-                if (looksLikeDonateTakeover(nodes[i])) {
+                // If selectors are user-provided, trust them.
+                if (useCustomSelectors) {
+                    return true;
+                }
+
+                // Default behavior for non-modal conflicts must be explicit opt-in.
+                if (nodes[i].hasAttribute('data-site-translator-conflict')) {
                     return true;
                 }
             }
