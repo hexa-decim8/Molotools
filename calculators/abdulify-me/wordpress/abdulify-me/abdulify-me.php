@@ -582,6 +582,10 @@ final class Abdulify_Me_Plugin {
         add_shortcode( self::SHORTCODE, array( $this, 'render_shortcode' ) );
         add_action( 'admin_menu', array( $this, 'register_settings_page' ) );
         add_action( 'admin_init', array( $this, 'register_settings' ) );
+        add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
+        add_action( 'wp_ajax_am_overlay_upload', array( $this, 'handle_overlay_upload' ) );
+        add_action( 'wp_ajax_am_overlay_rename', array( $this, 'handle_overlay_rename' ) );
+        add_action( 'wp_ajax_am_overlay_delete', array( $this, 'handle_overlay_delete' ) );
     }
 
     public function register_settings_page() {
@@ -595,7 +599,105 @@ final class Abdulify_Me_Plugin {
     }
 
     public function register_settings() {
-        // No settings currently registered; kept for future use.
+        register_setting(
+            self::SETTINGS_GROUP,
+            'abdulify_me_overlay_names',
+            array(
+                'type'              => 'string',
+                'sanitize_callback' => array( $this, 'sanitize_overlay_names' ),
+                'show_in_rest'      => false,
+            )
+        );
+    }
+
+    /**
+     * Sanitize overlay names option (JSON-encoded associative array)
+     */
+    public function sanitize_overlay_names( $value ) {
+        if ( empty( $value ) ) {
+            return '{}';
+        }
+
+        if ( is_string( $value ) ) {
+            $decoded = json_decode( $value, true );
+            if ( ! is_array( $decoded ) ) {
+                return '{}';
+            }
+        } elseif ( is_array( $value ) ) {
+            $decoded = $value;
+        } else {
+            return '{}';
+        }
+
+        // Sanitize each value
+        $sanitized = array();
+        foreach ( $decoded as $overlay_id => $custom_name ) {
+            $overlay_id = sanitize_key( (string) $overlay_id );
+            $custom_name = sanitize_text_field( (string) $custom_name );
+            if ( ! empty( $overlay_id ) && ! empty( $custom_name ) ) {
+                $sanitized[ $overlay_id ] = $custom_name;
+            }
+        }
+
+        return wp_json_encode( $sanitized );
+    }
+
+    /**
+     * Get custom name for an overlay by ID, or false if not set
+     */
+    private function get_overlay_custom_name( $overlay_id ) {
+        $overlay_id = sanitize_key( (string) $overlay_id );
+        if ( empty( $overlay_id ) ) {
+            return false;
+        }
+
+        $names = $this->get_all_overlay_custom_names();
+        return isset( $names[ $overlay_id ] ) ? $names[ $overlay_id ] : false;
+    }
+
+    /**
+     * Get all custom overlay names as an associative array
+     */
+    private function get_all_overlay_custom_names() {
+        $option = get_option( 'abdulify_me_overlay_names', '{}' );
+        $names = json_decode( $option, true );
+        return is_array( $names ) ? $names : array();
+    }
+
+    /**
+     * Update custom name for an overlay
+     */
+    private function update_overlay_custom_name( $overlay_id, $name ) {
+        $overlay_id = sanitize_key( (string) $overlay_id );
+        $name = sanitize_text_field( (string) $name );
+
+        if ( empty( $overlay_id ) || empty( $name ) ) {
+            return false;
+        }
+
+        $names = $this->get_all_overlay_custom_names();
+        $names[ $overlay_id ] = $name;
+
+        return update_option( 'abdulify_me_overlay_names', wp_json_encode( $names ) );
+    }
+
+    /**
+     * Delete custom name for an overlay
+     */
+    private function delete_overlay_custom_name( $overlay_id ) {
+        $overlay_id = sanitize_key( (string) $overlay_id );
+
+        if ( empty( $overlay_id ) ) {
+            return false;
+        }
+
+        $names = $this->get_all_overlay_custom_names();
+        if ( isset( $names[ $overlay_id ] ) ) {
+            unset( $names[ $overlay_id ] );
+            return update_option( 'abdulify_me_overlay_names', wp_json_encode( $names ) );
+        }
+
+        return false;
     }
 
     public function render_settings_page() {
@@ -603,16 +705,112 @@ final class Abdulify_Me_Plugin {
             return;
         }
 
+        $overlays = $this->get_available_overlays();
+        $custom_names = $this->get_all_overlay_custom_names();
+
         ?>
         <div class="wrap">
             <h1><?php esc_html_e( 'Abdulify Me Settings', 'abdulify-me' ); ?></h1>
-            <form method="post" action="options.php">
-                <?php
-                settings_fields( self::SETTINGS_GROUP );
-                do_settings_sections( self::SETTINGS_GROUP );
-                submit_button();
-                ?>
-            </form>
+
+            <!-- Overlay Management Section -->
+            <div class="card" style="max-width: 1000px; margin-top: 20px;">
+                <h2><?php esc_html_e( 'Manage Overlays', 'abdulify-me' ); ?></h2>
+
+                <!-- Upload Form -->
+                <div style="margin-bottom: 30px; padding: 20px; background: #f1f1f1; border-radius: 4px;">
+                    <h3><?php esc_html_e( 'Add New Overlay', 'abdulify-me' ); ?></h3>
+                    <form id="am-overlay-upload-form" enctype="multipart/form-data" style="display: flex; gap: 10px; align-items: flex-end;">
+                        <?php wp_nonce_field( 'am_overlay_upload', 'am_overlay_nonce' ); ?>
+                        <div style="flex: 1;">
+                            <label for="am-overlay-file" style="display: block; margin-bottom: 8px; font-weight: bold;">
+                                <?php esc_html_e( 'Select Image File', 'abdulify-me' ); ?>
+                            </label>
+                            <input 
+                                type="file" 
+                                id="am-overlay-file" 
+                                name="overlay_file" 
+                                accept=".png,.jpg,.jpeg,.webp,.svg" 
+                                required
+                                style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"
+                            >
+                            <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">
+                                <?php esc_html_e( 'Supported: PNG, JPG, JPEG, WebP, SVG (Max 8 MB)', 'abdulify-me' ); ?>
+                            </p>
+                        </div>
+                        <button type="submit" class="button button-primary" style="padding: 8px 15px;">
+                            <?php esc_html_e( 'Upload Overlay', 'abdulify-me' ); ?>
+                        </button>
+                    </form>
+                    <div id="am-upload-message" style="margin-top: 10px; display: none;"></div>
+                </div>
+
+                <!-- Existing Overlays List -->
+                <h3><?php esc_html_e( 'Existing Overlays', 'abdulify-me' ); ?></h3>
+                <?php if ( ! empty( $overlays ) ) : ?>
+                    <div id="am-overlays-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+                        <?php foreach ( $overlays as $overlay ) : ?>
+                            <div class="am-overlay-card" data-overlay-id="<?php echo esc_attr( $overlay['id'] ); ?>" style="border: 1px solid #ddd; border-radius: 4px; padding: 15px; background: #fff;">
+                                <!-- Preview Image -->
+                                <div style="margin-bottom: 12px; text-align: center;">
+                                    <img 
+                                        src="<?php echo esc_url( $overlay['url'] ); ?>" 
+                                        alt="<?php echo esc_attr( $overlay['label'] ); ?>"
+                                        style="max-width: 100%; height: auto; max-height: 120px; border: 1px solid #eee; border-radius: 3px;"
+                                    >
+                                </div>
+
+                                <!-- Filename -->
+                                <p style="margin: 8px 0; font-size: 12px; color: #666;">
+                                    <strong><?php esc_html_e( 'File:', 'abdulify-me' ); ?></strong><br>
+                                    <?php echo esc_html( $overlay['file'] ); ?>
+                                </p>
+
+                                <!-- Custom Name Input -->
+                                <div style="margin: 12px 0;">
+                                    <label for="am-name-<?php echo esc_attr( $overlay['id'] ); ?>" style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px;">
+                                        <?php esc_html_e( 'Display Name', 'abdulify-me' ); ?>
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        id="am-name-<?php echo esc_attr( $overlay['id'] ); ?>"
+                                        class="am-overlay-name-input" 
+                                        value="<?php echo esc_attr( isset( $custom_names[ $overlay['id'] ] ) ? $custom_names[ $overlay['id'] ] : $overlay['label'] ); ?>"
+                                        maxlength="100"
+                                        style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 3px; box-sizing: border-box;"
+                                    >
+                                    <small style="display: block; margin-top: 3px; color: #666;">
+                                        <?php esc_html_e( 'Shows in the border dropdown on the website', 'abdulify-me' ); ?>
+                                    </small>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div style="display: flex; gap: 8px; margin-top: 12px;">
+                                    <button 
+                                        type="button" 
+                                        class="am-overlay-rename-btn button" 
+                                        data-overlay-id="<?php echo esc_attr( $overlay['id'] ); ?>"
+                                        style="flex: 1;"
+                                    >
+                                        <?php esc_html_e( 'Save Name', 'abdulify-me' ); ?>
+                                    </button>
+                                    <button 
+                                        type="button" 
+                                        class="am-overlay-delete-btn button button-secondary" 
+                                        data-overlay-id="<?php echo esc_attr( $overlay['id'] ); ?>"
+                                        data-overlay-label="<?php echo esc_attr( $overlay['label'] ); ?>"
+                                    >
+                                        <?php esc_html_e( 'Delete', 'abdulify-me' ); ?>
+                                    </button>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else : ?>
+                    <p style="color: #666; font-style: italic;">
+                        <?php esc_html_e( 'No overlays found. Upload your first overlay above.', 'abdulify-me' ); ?>
+                    </p>
+                <?php endif; ?>
+            </div>
         </div>
         <?php
     }
@@ -663,6 +861,7 @@ final class Abdulify_Me_Plugin {
         $allowed_extensions = array( 'png', 'jpg', 'jpeg', 'webp', 'svg' );
         $overlay_url_base   = $this->get_overlay_dir_url();
         $overlays           = array();
+        $custom_names       = $this->get_all_overlay_custom_names();
 
         foreach ( $files as $file_name ) {
             if ( ! is_string( $file_name ) || '.' === $file_name || '..' === $file_name ) {
@@ -686,9 +885,12 @@ final class Abdulify_Me_Plugin {
             $base_name = (string) pathinfo( $file_name, PATHINFO_FILENAME );
             $overlay_id = $this->normalize_overlay_id( $base_name );
 
+            // Use custom name if set, otherwise use formatted default
+            $label = isset( $custom_names[ $overlay_id ] ) ? $custom_names[ $overlay_id ] : $this->format_overlay_label( $base_name );
+
             $overlays[ $overlay_id ] = array(
                 'id'    => $overlay_id,
-                'label' => $this->format_overlay_label( $base_name ),
+                'label' => $label,
                 'url'   => $overlay_url_base . rawurlencode( $file_name ),
                 'file'  => $file_name,
             );
@@ -706,6 +908,224 @@ final class Abdulify_Me_Plugin {
         );
 
         return array_values( $overlays );
+    }
+
+    public function enqueue_admin_assets() {
+        // Only load on abdulify-me admin page
+        if ( ! isset( $_GET['page'] ) || 'abdulify-me-settings' !== $_GET['page'] ) {
+            return;
+        }
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+
+        wp_enqueue_script(
+            'abdulify-me-admin',
+            plugin_dir_url( __FILE__ ) . 'js/abdulify-me-admin.js',
+            array(),
+            ABDULIFY_ME_VERSION,
+            true
+        );
+
+        wp_localize_script(
+            'abdulify-me-admin',
+            'abdulifyMeAdmin',
+            array(
+                'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+                'uploadNonce' => wp_create_nonce( 'am_overlay_upload' ),
+                'renameNonce' => wp_create_nonce( 'am_overlay_rename' ),
+                'deleteNonce' => wp_create_nonce( 'am_overlay_delete' ),
+                'i18n' => array(
+                    'uploadSuccess' => __( 'Overlay uploaded successfully!', 'abdulify-me' ),
+                    'uploadError' => __( 'Error uploading overlay', 'abdulify-me' ),
+                    'renameSuccess' => __( 'Overlay name updated!', 'abdulify-me' ),
+                    'renameError' => __( 'Error updating overlay name', 'abdulify-me' ),
+                    'deleteConfirm' => __( 'Are you sure you want to delete this overlay?', 'abdulify-me' ),
+                    'deleteSuccess' => __( 'Overlay deleted successfully!', 'abdulify-me' ),
+                    'deleteError' => __( 'Error deleting overlay', 'abdulify-me' ),
+                    'invalidFile' => __( 'Invalid file type', 'abdulify-me' ),
+                    'fileTooLarge' => __( 'File is too large (max 8 MB)', 'abdulify-me' ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Handle overlay upload via AJAX
+     */
+    public function handle_overlay_upload() {
+        check_ajax_referer( 'am_overlay_upload', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( array( 'message' => __( 'Unauthorized', 'abdulify-me' ) ) );
+        }
+
+        if ( ! isset( $_FILES['file'] ) ) {
+            wp_send_json_error( array( 'message' => __( 'No file provided', 'abdulify-me' ) ) );
+        }
+
+        $file = $_FILES['file'];
+        $allowed_types = array( 'image/png', 'image/jpeg', 'image/webp', 'image/svg+xml' );
+        $max_size = 8 * 1024 * 1024; // 8 MB
+
+        // Validate file
+        $ftype = wp_check_filetype( $file['name'] );
+        if ( ! in_array( $ftype['type'], $allowed_types, true ) ) {
+            wp_send_json_error( array( 'message' => __( 'Invalid file type. Allowed: PNG, JPG, WebP, SVG', 'abdulify-me' ) ) );
+        }
+
+        if ( $file['size'] > $max_size ) {
+            wp_send_json_error( array( 'message' => __( 'File too large. Maximum 8 MB allowed', 'abdulify-me' ) ) );
+        }
+
+        // Read file contents
+        $file_contents = file_get_contents( $file['tmp_name'] );
+        if ( false === $file_contents ) {
+            wp_send_json_error( array( 'message' => __( 'Error reading file', 'abdulify-me' ) ) );
+        }
+
+        // Sanitize filename and add prefix
+        $original_name = sanitize_file_name( basename( $file['name'] ) );
+        $extension = strtolower( pathinfo( $original_name, PATHINFO_EXTENSION ) );
+        $base_name = pathinfo( $original_name, PATHINFO_FILENAME );
+        $base_name = preg_replace( '/[^a-z0-9._-]/i', '-', $base_name );
+        $base_name = trim( $base_name, '-' );
+
+        if ( empty( $base_name ) ) {
+            $base_name = 'overlay';
+        }
+
+        // Create filename with prefix
+        $new_filename = self::OVERLAY_PREFIX . '_' . $base_name . '.' . $extension;
+
+        // Get upload directory
+        $overlay_dir = $this->get_overlay_dir_path();
+
+        // Create directory if it doesn't exist
+        if ( ! is_dir( $overlay_dir ) ) {
+            if ( ! mkdir( $overlay_dir, 0755, true ) ) {
+                wp_send_json_error( array( 'message' => __( 'Error creating overlays directory', 'abdulify-me' ) ) );
+            }
+        }
+
+        // Check if file already exists
+        $target_path = $overlay_dir . $new_filename;
+        if ( file_exists( $target_path ) ) {
+            // Add counter to make filename unique
+            $counter = 1;
+            while ( file_exists( $overlay_dir . self::OVERLAY_PREFIX . '_' . $base_name . '-' . $counter . '.' . $extension ) ) {
+                $counter++;
+            }
+            $new_filename = self::OVERLAY_PREFIX . '_' . $base_name . '-' . $counter . '.' . $extension;
+            $target_path = $overlay_dir . $new_filename;
+        }
+
+        // Write file
+        if ( ! file_put_contents( $target_path, $file_contents ) ) {
+            wp_send_json_error( array( 'message' => __( 'Error saving file', 'abdulify-me' ) ) );
+        }
+
+        // File uploaded successfully
+        wp_send_json_success( array(
+            'message' => __( 'Overlay uploaded successfully!', 'abdulify-me' ),
+        ) );
+    }
+
+    /**
+     * Handle overlay rename via AJAX
+     */
+    public function handle_overlay_rename() {
+        check_ajax_referer( 'am_overlay_rename', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( array( 'message' => __( 'Unauthorized', 'abdulify-me' ) ) );
+        }
+
+        if ( ! isset( $_POST['overlay_id'] ) || ! isset( $_POST['name'] ) ) {
+            wp_send_json_error( array( 'message' => __( 'Missing required data', 'abdulify-me' ) ) );
+        }
+
+        $overlay_id = sanitize_key( $_POST['overlay_id'] );
+        $new_name = sanitize_text_field( $_POST['name'] );
+
+        if ( empty( $overlay_id ) || empty( $new_name ) ) {
+            wp_send_json_error( array( 'message' => __( 'Invalid overlay ID or name', 'abdulify-me' ) ) );
+        }
+
+        // Verify overlay exists
+        $overlays = $this->get_available_overlays();
+        $overlay_exists = false;
+        foreach ( $overlays as $overlay ) {
+            if ( $overlay['id'] === $overlay_id ) {
+                $overlay_exists = true;
+                break;
+            }
+        }
+
+        if ( ! $overlay_exists ) {
+            wp_send_json_error( array( 'message' => __( 'Overlay not found', 'abdulify-me' ) ) );
+        }
+
+        // Update custom name
+        $this->update_overlay_custom_name( $overlay_id, $new_name );
+
+        wp_send_json_success( array(
+            'message' => __( 'Overlay name updated!', 'abdulify-me' ),
+        ) );
+    }
+
+    /**
+     * Handle overlay delete via AJAX
+     */
+    public function handle_overlay_delete() {
+        check_ajax_referer( 'am_overlay_delete', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( array( 'message' => __( 'Unauthorized', 'abdulify-me' ) ) );
+        }
+
+        if ( ! isset( $_POST['overlay_id'] ) ) {
+            wp_send_json_error( array( 'message' => __( 'Missing overlay ID', 'abdulify-me' ) ) );
+        }
+
+        $overlay_id = sanitize_key( $_POST['overlay_id'] );
+
+        if ( empty( $overlay_id ) ) {
+            wp_send_json_error( array( 'message' => __( 'Invalid overlay ID', 'abdulify-me' ) ) );
+        }
+
+        // Find overlay file
+        $overlays = $this->get_available_overlays();
+        $file_to_delete = null;
+
+        foreach ( $overlays as $overlay ) {
+            if ( $overlay['id'] === $overlay_id ) {
+                $file_to_delete = $overlay['file'];
+                break;
+            }
+        }
+
+        if ( null === $file_to_delete ) {
+            wp_send_json_error( array( 'message' => __( 'Overlay not found', 'abdulify-me' ) ) );
+        }
+
+        $overlay_dir = $this->get_overlay_dir_path();
+        $file_path = $overlay_dir . $file_to_delete;
+
+        // Delete file
+        if ( file_exists( $file_path ) ) {
+            if ( ! unlink( $file_path ) ) {
+                wp_send_json_error( array( 'message' => __( 'Error deleting file', 'abdulify-me' ) ) );
+            }
+        }
+
+        // Delete custom name if exists
+        $this->delete_overlay_custom_name( $overlay_id );
+
+        wp_send_json_success( array(
+            'message' => __( 'Overlay deleted successfully!', 'abdulify-me' ),
+        ) );
     }
 
     public function enqueue_assets() {
