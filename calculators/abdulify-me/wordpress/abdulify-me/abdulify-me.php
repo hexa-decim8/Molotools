@@ -3,7 +3,7 @@
  * Plugin Name: Abdulify Me
  * Plugin URI:  https://github.com/hexa-decim8/Molotools
  * Description: Upload a photo, add lightweight Abdul El-Sayed support overlays, and download the result directly in the browser. Embed with [abdulify_me].
- * Version:     0.1.13
+ * Version:     0.1.14
  * Author:      Molotools
  * License:     GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
