@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'ABDULIFY_ME_VERSION', '0.1.13' );
+define( 'ABDULIFY_ME_VERSION', '0.1.14' );
 define( 'ABDULIFY_ME_PLUGIN_BASENAME', 'abdulify-me/abdulify-me.php' );
 define( 'ABDULIFY_ME_GITHUB_REPO', 'hexa-decim8/Molotools' );
 define( 'ABDULIFY_ME_RELEASE_ASSET', 'abdulify-me.zip' );
