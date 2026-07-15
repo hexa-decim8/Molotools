@@ -793,7 +793,6 @@ final class Abdulify_Me_Plugin {
                                     >
                                         <?php esc_html_e( 'Save Name', 'abdulify-me' ); ?>
                                     </button>
-                                    <?php if ( $overlay['deletable'] ) : ?>
                                     <button
                                         type="button"
                                         class="am-overlay-delete-btn button button-secondary"
@@ -802,7 +801,6 @@ final class Abdulify_Me_Plugin {
                                     >
                                         <?php esc_html_e( 'Delete', 'abdulify-me' ); ?>
                                     </button>
-                                    <?php endif; ?>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -859,6 +857,42 @@ final class Abdulify_Me_Plugin {
         return ucwords( strtolower( $label ) );
     }
 
+    private function maybe_seed_bundled_overlays() {
+        $src_dir  = $this->get_overlay_dir_path();
+        $dest_dir = $this->get_upload_overlay_dir_path();
+
+        if ( ! is_dir( $src_dir ) ) {
+            return;
+        }
+
+        if ( ! is_dir( $dest_dir ) ) {
+            wp_mkdir_p( $dest_dir );
+        }
+
+        $allowed_extensions = array( 'png', 'jpg', 'jpeg', 'webp', 'svg' );
+        $files = scandir( $src_dir );
+        if ( false === $files ) {
+            return;
+        }
+
+        foreach ( $files as $file_name ) {
+            if ( ! is_string( $file_name ) || '.' === $file_name || '..' === $file_name ) {
+                continue;
+            }
+            if ( 0 !== stripos( $file_name, self::OVERLAY_PREFIX ) ) {
+                continue;
+            }
+            $ext = strtolower( (string) pathinfo( $file_name, PATHINFO_EXTENSION ) );
+            if ( ! in_array( $ext, $allowed_extensions, true ) ) {
+                continue;
+            }
+            $dest_path = $dest_dir . $file_name;
+            if ( ! file_exists( $dest_path ) ) {
+                copy( $src_dir . $file_name, $dest_path );
+            }
+        }
+    }
+
     private function scan_overlay_dir( $dir_path, $url_base, $deletable, $custom_names ) {
         $overlays           = array();
         $allowed_extensions = array( 'png', 'jpg', 'jpeg', 'webp', 'svg' );
@@ -907,26 +941,16 @@ final class Abdulify_Me_Plugin {
     }
 
     private function get_available_overlays() {
+        $this->maybe_seed_bundled_overlays();
+
         $custom_names = $this->get_all_overlay_custom_names();
 
-        // Bundled overlays (read-only, shipped with the plugin)
         $overlays = $this->scan_overlay_dir(
-            $this->get_overlay_dir_path(),
-            $this->get_overlay_dir_url(),
-            false,
-            $custom_names
-        );
-
-        // User-uploaded overlays (writable, stored in wp-content/uploads)
-        // Uploaded entries override bundled ones if IDs collide
-        $uploaded = $this->scan_overlay_dir(
             $this->get_upload_overlay_dir_path(),
             $this->get_upload_overlay_dir_url(),
             true,
             $custom_names
         );
-
-        $overlays = array_merge( $overlays, $uploaded );
 
         if ( empty( $overlays ) ) {
             return array();
