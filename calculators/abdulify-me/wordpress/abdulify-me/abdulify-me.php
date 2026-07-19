@@ -608,6 +608,40 @@ final class Abdulify_Me_Plugin {
                 'show_in_rest'      => false,
             )
         );
+
+        register_setting(
+            self::SETTINGS_GROUP,
+            'abdulify_me_deleted_bundled_overlays',
+            array(
+                'type'              => 'string',
+                'sanitize_callback' => array( $this, 'sanitize_deleted_bundled_overlays' ),
+                'show_in_rest'      => false,
+            )
+        );
+    }
+
+    /**
+     * Sanitize deleted bundled overlays option (JSON-encoded array of overlay IDs)
+     */
+    public function sanitize_deleted_bundled_overlays( $value ) {
+        if ( empty( $value ) ) {
+            return '[]';
+        }
+
+        if ( is_string( $value ) ) {
+            $decoded = json_decode( $value, true );
+            if ( ! is_array( $decoded ) ) {
+                return '[]';
+            }
+        } elseif ( is_array( $value ) ) {
+            $decoded = $value;
+        } else {
+            return '[]';
+        }
+
+        $sanitized = array_values( array_unique( array_filter( array_map( 'sanitize_key', $decoded ) ) ) );
+
+        return wp_json_encode( $sanitized );
     }
 
     /**
@@ -698,6 +732,53 @@ final class Abdulify_Me_Plugin {
         }
 
         return false;
+    }
+
+    /**
+     * Get list of overlay IDs that have been deleted and should not be re-seeded
+     */
+    private function get_deleted_bundled_overlays() {
+        $option = get_option( 'abdulify_me_deleted_bundled_overlays', '[]' );
+        $ids = json_decode( $option, true );
+        return is_array( $ids ) ? $ids : array();
+    }
+
+    /**
+     * Record an overlay ID as deleted so it is not re-seeded from the bundled directory
+     */
+    private function add_deleted_bundled_overlay( $overlay_id ) {
+        $overlay_id = sanitize_key( (string) $overlay_id );
+
+        if ( empty( $overlay_id ) ) {
+            return false;
+        }
+
+        $ids = $this->get_deleted_bundled_overlays();
+        if ( ! in_array( $overlay_id, $ids, true ) ) {
+            $ids[] = $overlay_id;
+        }
+
+        return update_option( 'abdulify_me_deleted_bundled_overlays', wp_json_encode( $ids ) );
+    }
+
+    /**
+     * Remove an overlay ID from the deleted list, e.g. when it is re-uploaded
+     */
+    private function remove_deleted_bundled_overlay( $overlay_id ) {
+        $overlay_id = sanitize_key( (string) $overlay_id );
+
+        if ( empty( $overlay_id ) ) {
+            return false;
+        }
+
+        $ids = $this->get_deleted_bundled_overlays();
+        $filtered = array_values( array_diff( $ids, array( $overlay_id ) ) );
+
+        if ( count( $filtered ) === count( $ids ) ) {
+            return false;
+        }
+
+        return update_option( 'abdulify_me_deleted_bundled_overlays', wp_json_encode( $filtered ) );
     }
 
     public function render_settings_page() {
@@ -875,6 +956,8 @@ final class Abdulify_Me_Plugin {
             return;
         }
 
+        $deleted_ids = $this->get_deleted_bundled_overlays();
+
         foreach ( $files as $file_name ) {
             if ( ! is_string( $file_name ) || '.' === $file_name || '..' === $file_name ) {
                 continue;
@@ -886,6 +969,13 @@ final class Abdulify_Me_Plugin {
             if ( ! in_array( $ext, $allowed_extensions, true ) ) {
                 continue;
             }
+
+            $base_name  = (string) pathinfo( $file_name, PATHINFO_FILENAME );
+            $overlay_id = $this->normalize_overlay_id( $base_name );
+            if ( in_array( $overlay_id, $deleted_ids, true ) ) {
+                continue;
+            }
+
             $dest_path = $dest_dir . $file_name;
             if ( ! file_exists( $dest_path ) ) {
                 copy( $src_dir . $file_name, $dest_path );
@@ -1082,6 +1172,10 @@ final class Abdulify_Me_Plugin {
             wp_send_json_error( array( 'message' => __( 'Error saving file', 'abdulify-me' ) ) );
         }
 
+        // Allow this overlay ID to be re-seeded/used again if it was previously deleted
+        $uploaded_base_name = (string) pathinfo( $new_filename, PATHINFO_FILENAME );
+        $this->remove_deleted_bundled_overlay( $this->normalize_overlay_id( $uploaded_base_name ) );
+
         // File uploaded successfully
         wp_send_json_success( array(
             'message' => __( 'Overlay uploaded successfully!', 'abdulify-me' ),
@@ -1184,6 +1278,9 @@ final class Abdulify_Me_Plugin {
 
         // Delete custom name if exists
         $this->delete_overlay_custom_name( $overlay_id );
+
+        // Prevent this overlay from being re-seeded if it's a bundled default
+        $this->add_deleted_bundled_overlay( $overlay_id );
 
         wp_send_json_success( array(
             'message' => __( 'Overlay deleted successfully!', 'abdulify-me' ),
